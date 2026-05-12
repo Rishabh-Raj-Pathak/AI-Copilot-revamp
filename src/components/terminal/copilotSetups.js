@@ -1,0 +1,66 @@
+/** Mock setups — Figma Terminal / AI Copilot (e.g. 4039:11883). Chart: 4039:11895 (single image). */
+export const COPILOT_SETUPS = [
+  {
+    id: 'sui',
+    tokenIcon: '/copilot-tokens/sui.png',
+    symbol: 'SUI',
+    price: 3.98,
+    balance: '6.93',
+    title: 'SUI Compression Short: Fading Resistance at $4',
+    direction: 'short',
+    chips: [
+      { kind: 'side', label: 'Short' },
+      { kind: 'win', label: 'Winning %: 82%' },
+      { kind: 'muted', label: 'R/R: 4:1' },
+      { kind: 'review', label: 'Review: 6h' },
+    ],
+    additional: {
+      liquidation: '$3.8732',
+      positionValue: '$800',
+      marginReq: '$252',
+      winning: '90%',
+    },
+  },
+  {
+    id: 'sol',
+    tokenIcon: '/copilot-tokens/sol.png',
+    symbol: 'SOL',
+    price: 142.31,
+    balance: '12.40',
+    title: 'SOL Bounce Play: Risk-On Around Mid Range',
+    direction: 'long',
+    chips: [
+      { kind: 'side', label: 'Long' },
+      { kind: 'win', label: 'Winning %: 82%' },
+      { kind: 'muted', label: 'R/R: 3:1' },
+      { kind: 'review', label: 'Review: 4h' },
+    ],
+    additional: {
+      liquidation: '$138.20',
+      positionValue: '$620',
+      marginReq: '$198',
+      winning: '88%',
+    },
+  },
+  {
+    id: 'eth',
+    tokenIcon: '/copilot-tokens/eth.png',
+    symbol: 'ETH',
+    price: 3642.5,
+    balance: '2.10',
+    title: 'ETH Trend Continuation: Riding Strength above $3.6K',
+    direction: 'long',
+    chips: [
+      { kind: 'side', label: 'Long' },
+      { kind: 'win', label: 'Winning %: 79%' },
+      { kind: 'muted', label: 'R/R: 2.5:1' },
+      { kind: 'review', label: 'Review: 12h' },
+    ],
+    additional: {
+      liquidation: '$3588.00',
+      positionValue: '$1,200',
+      marginReq: '$310',
+      winning: '85%',
+    },
+  },
+]

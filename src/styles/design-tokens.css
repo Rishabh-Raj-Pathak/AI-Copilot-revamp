@@ -1,0 +1,560 @@
+/**
+ * HyprEarn semantic design tokens (CSS variables).
+ * Dark-first; light theme overrides are TODO until defined in Figma.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /*
+   * Raw ramps — HyprEarn Figma «styles» canvas (node 0:1) → Color / Global Swatches.
+   * Semantic tokens below reference these for traceability.
+   */
+  --palette-neutral-0: #000000;
+  --palette-neutral-5: #121212;
+  --palette-neutral-10: #242424;
+  /* Between 10 and 15 — terminal outline controls on pure black (e.g. View Thesis) */
+  --palette-neutral-12: #333333;
+  --palette-neutral-15: #313131;
+  --palette-neutral-20: #454545;
+  --palette-neutral-30: #585858;
+  --palette-neutral-35: #656565;
+  --palette-neutral-40: #757575;
+  --palette-neutral-45: #858585;
+  --palette-neutral-50: #929292;
+  --palette-neutral-55: #aaaaaa;
+  --palette-neutral-60: #bfbfbf;
+  --palette-neutral-65: #d6d6d6;
+  --palette-neutral-70: #e6e6e6;
+  --palette-neutral-75: #f2f2f2;
+  --palette-neutral-100: #ffffff;
+
+  --palette-amber-70: #f2b500;
+  --palette-amber-5: #171200;
+  --palette-aquamarine-80: #00f3b6;
+  --palette-aquamarine-5: #001610;
+  --palette-red-50: #d53d3d;
+  --palette-green-55: #269755;
+  /* Terminal navbar — Connect Wallet CTA (Figma Terminal `1017:35291`) */
+  --palette-terminal-connect-wallet-start: #f1d302;
+  --palette-terminal-connect-wallet-end: #24e5af;
+
+  /* Surfaces (neutral ramp) */
+  --ds-background: var(--palette-neutral-0);
+  --ds-foreground: var(--palette-neutral-100);
+  --ds-surface: var(--palette-neutral-5);
+  --ds-surface-muted: var(--palette-neutral-10);
+  --ds-surface-elevated: var(--palette-neutral-15);
+  --ds-border: var(--palette-neutral-10);
+  --ds-border-strong: var(--palette-neutral-20);
+  --ds-ring: var(--palette-amber-70);
+
+  /* Brand (core colors) */
+  --ds-primary: var(--palette-amber-70);
+  --ds-primary-foreground: var(--palette-amber-5);
+  --ds-secondary: var(--palette-neutral-10);
+  --ds-secondary-foreground: var(--palette-neutral-75);
+  --ds-accent: var(--palette-aquamarine-80);
+  --ds-accent-foreground: var(--palette-aquamarine-5);
+
+  /* Semantic */
+  --ds-muted: var(--palette-neutral-10);
+  --ds-muted-foreground: var(--palette-neutral-60);
+  --ds-destructive: var(--palette-red-50);
+  --ds-destructive-foreground: var(--palette-neutral-100);
+  --ds-success: var(--palette-green-55);
+  --ds-success-foreground: var(--palette-neutral-100);
+  --ds-warning: var(--palette-amber-70);
+  --ds-warning-foreground: var(--palette-amber-5);
+  /* No dedicated «info» swatch on styles canvas — cool accent for callouts */
+  --ds-info: #4f8ad8;
+  --ds-info-foreground: var(--palette-neutral-100);
+
+  /* Input chrome */
+  --ds-input: var(--palette-neutral-5);
+  --ds-input-border: var(--palette-neutral-10);
+  --ds-input-placeholder: var(--palette-neutral-40);
+
+  /* Typography (Figma text styles → semantic roles) */
+  --ds-font-sans: "Onest", system-ui, sans-serif;
+  --ds-text-display-size: 3rem;
+  --ds-text-display-leading: 1.05;
+  --ds-text-display-weight: 600;
+  --ds-text-display-tracking: -0.02em;
+
+  --ds-text-h1-size: 2.25rem;
+  --ds-text-h1-leading: 1.1;
+  --ds-text-h1-weight: 600;
+  --ds-text-h1-tracking: -0.02em;
+
+  --ds-text-h2-size: 1.875rem;
+  --ds-text-h2-leading: 1.15;
+  --ds-text-h2-weight: 600;
+  --ds-text-h2-tracking: -0.015em;
+
+  --ds-text-h3-size: 1.5rem;
+  --ds-text-h3-leading: 1.2;
+  --ds-text-h3-weight: 600;
+  --ds-text-h3-tracking: -0.01em;
+
+  --ds-text-h4-size: 1.25rem;
+  --ds-text-h4-leading: 1.25;
+  --ds-text-h4-weight: 600;
+  --ds-text-h4-tracking: -0.01em;
+
+  --ds-text-body-lg-size: 1.125rem;
+  --ds-text-body-lg-leading: 1.5;
+  --ds-text-body-lg-weight: 400;
+
+  --ds-text-body-size: 1rem;
+  --ds-text-body-leading: 1.5;
+  --ds-text-body-weight: 400;
+
+  --ds-text-body-sm-size: 0.875rem;
+  --ds-text-body-sm-leading: 1.45;
+  --ds-text-body-sm-weight: 400;
+
+  --ds-text-caption-size: 0.75rem;
+  --ds-text-caption-leading: 1.35;
+  --ds-text-caption-weight: 400;
+  --ds-text-caption-tracking: 0.01em;
+
+  --ds-text-label-size: 0.75rem;
+  --ds-text-label-leading: 1.25;
+  --ds-text-label-weight: 500;
+  --ds-text-label-tracking: 0.04em;
+  --ds-text-label-transform: uppercase;
+
+  --ds-text-button-size: 0.875rem;
+  --ds-text-button-leading: 1.25;
+  --ds-text-button-weight: 500;
+
+  /*
+   * Corner radius — Figma «Corner Radius» (styles canvas): sharp 0, xxxs 2 … 3xl 24, round 9999.
+   * Tailwind `rounded-*` below maps steps to that ladder (md in Figma = 10px → --radius-xl).
+   */
+  --ds-radius-none: 0;
+  --ds-radius-xxxs: 0.125rem; /* 2px */
+  --ds-radius-xxs: 0.25rem; /* 4px */
+  --ds-radius-xs: 0.375rem; /* 6px */
+  --ds-radius-sm: 0.5rem; /* 8px */
+  --ds-radius-md: 0.625rem; /* 10px */
+  --ds-radius-lg: 0.75rem; /* 12px */
+  --ds-radius-xl: 1rem; /* 16px */
+  --ds-radius-2xl: 1.25rem; /* 20px */
+  --ds-radius-3xl: 1.5rem; /* 24px */
+  --ds-radius-full: 9999px;
+
+  /* Shadows (Figma «drop-shadow» — generic elevation; tune per screenshot when available) */
+  --ds-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+  --ds-shadow-md: 0 4px 12px rgb(0 0 0 / 0.45);
+  --ds-shadow-lg: 0 12px 40px rgb(0 0 0 / 0.55);
+  --ds-shadow-ring: 0 0 0 2px rgb(242 181 0 / 0.35);
+
+  /* Stroke */
+  --ds-stroke-width: 1px;
+  --ds-stroke-width-strong: 1.5px;
+
+  /* Button heights (Figma component frame sizes: xs 22, sm 29, md 40, lg 48) */
+  --ds-height-btn-xs: 1.375rem;
+  --ds-height-btn-sm: 1.8125rem;
+  --ds-height-btn-md: 2.5rem;
+  --ds-height-btn-lg: 3rem;
+
+  /*
+   * Terminal — Copilot «View Thesis» (outline pill on black; Lucide `File` + label).
+   * Pixel spec: border 1px #333; radius 12–16px; py 8px px 16px; gap 8px; label white medium.
+   */
+  --ds-terminal-view-thesis-bg: var(--palette-neutral-0);
+  --ds-terminal-view-thesis-fg: var(--palette-neutral-100);
+  --ds-terminal-view-thesis-border: var(--palette-neutral-12);
+  --ds-terminal-view-thesis-radius: var(--ds-radius-xs); /* 6px — subtle corners (Figma ref ~4–6px) */
+  --ds-terminal-view-thesis-padding-y: 0.5rem; /* 8px */
+  --ds-terminal-view-thesis-padding-x: 1rem; /* 16px */
+  --ds-terminal-view-thesis-gap: 0.5rem; /* 8px */
+  --ds-terminal-view-thesis-font-size: 0.75rem; /* 12px */
+  --ds-terminal-view-thesis-line-height: 1.25;
+  --ds-terminal-view-thesis-font-weight: 500;
+  --ds-terminal-view-thesis-icon-size: 1rem; /* 16px — matches Lucide `size` */
+
+  /*
+   * Brand horizontal ramp — terminal KPI stat values, setup sliders (`DetailsPanel`).
+   */
+  --ds-brand-gradient-horizontal: linear-gradient(
+    90deg,
+    var(--palette-amber-70) 0%,
+    var(--palette-aquamarine-80) 100%
+  );
+
+  /*
+   * Terminal — market filters bar KPI strip (`MarketFiltersBar`).
+   * Value text: `background-clip: text` + `--ds-brand-gradient-horizontal`.
+   */
+  --ds-terminal-kpi-label-color: var(--palette-neutral-50);
+  --ds-terminal-kpi-label-font-size: 0.8125rem; /* 13px */
+  --ds-terminal-kpi-value-font-size: 0.9375rem; /* 15px */
+  --ds-terminal-kpi-value-gradient: var(--ds-brand-gradient-horizontal);
+
+  /*
+   * Terminal — setup sliders (margin %, leverage) in `DetailsPanel`.
+   * Rail: dimmed overlay on brand ramp; fill + thumb track: full brand ramp.
+   */
+  --ds-terminal-slider-track-height: 0.5rem;
+  --ds-terminal-slider-thumb-touch: 2.5rem; /* invisible native range thumb hit area */
+  --ds-terminal-slider-rail-overlay: linear-gradient(
+    90deg,
+    rgb(0 0 0 / 0.82),
+    rgb(0 0 0 / 0.82)
+  );
+
+  /*
+   * Terminal — filled gradient CTA (navbar **Connect Wallet**, suggestions toolbar **Refresh**).
+   * Figma Connect Wallet `1017:35291` — radius matches **Deposit** (`rounded-md` → `--ds-radius-xs` / 6px).
+   */
+  --ds-terminal-connect-wallet-gradient: linear-gradient(
+    90deg,
+    var(--palette-terminal-connect-wallet-start) 0%,
+    var(--palette-terminal-connect-wallet-end) 100%
+  );
+  --ds-terminal-connect-wallet-fg: var(--palette-neutral-0);
+  --ds-terminal-connect-wallet-padding-y: 0.475rem; /* `py-1.5` — same as Deposit / nav */
+  --ds-terminal-connect-wallet-padding-x: 0.75rem; /* `px-3` */
+  --ds-terminal-connect-wallet-font-size: 0.875rem;
+  --ds-terminal-connect-wallet-font-weight: 500;
+  --ds-terminal-connect-wallet-radius: var(--ds-radius-xs);
+}
+
+dialog::backdrop {
+  background: oklch(0% 0 0 / 0.65);
+}
+
+@theme inline {
+  --font-sans: var(--ds-font-sans);
+
+  --color-background: var(--ds-background);
+  --color-foreground: var(--ds-foreground);
+  --color-surface: var(--ds-surface);
+  --color-surface-muted: var(--ds-surface-muted);
+  --color-surface-elevated: var(--ds-surface-elevated);
+  --color-border: var(--ds-border);
+  --color-border-strong: var(--ds-border-strong);
+  --color-ring: var(--ds-ring);
+
+  --color-primary: var(--ds-primary);
+  --color-primary-foreground: var(--ds-primary-foreground);
+  --color-secondary: var(--ds-secondary);
+  --color-secondary-foreground: var(--ds-secondary-foreground);
+  --color-accent: var(--ds-accent);
+  --color-accent-foreground: var(--ds-accent-foreground);
+
+  --color-muted: var(--ds-muted);
+  --color-muted-foreground: var(--ds-muted-foreground);
+  --color-destructive: var(--ds-destructive);
+  --color-destructive-foreground: var(--ds-destructive-foreground);
+  --color-success: var(--ds-success);
+  --color-success-foreground: var(--ds-success-foreground);
+  --color-warning: var(--ds-warning);
+  --color-warning-foreground: var(--ds-warning-foreground);
+  --color-info: var(--ds-info);
+  --color-info-foreground: var(--ds-info-foreground);
+
+  --color-input: var(--ds-input);
+  --color-input-border: var(--ds-input-border);
+  --color-input-placeholder: var(--ds-input-placeholder);
+
+  --color-terminal-view-thesis-border: var(--ds-terminal-view-thesis-border);
+  --color-terminal-view-thesis-fg: var(--ds-terminal-view-thesis-fg);
+  --color-terminal-view-thesis-bg: var(--ds-terminal-view-thesis-bg);
+
+  /* Maps Tailwind rounded-* to Figma corner ladder (see :root --ds-radius-*) */
+  --radius-xs: var(--ds-radius-xxxs);
+  --radius-sm: var(--ds-radius-xxs);
+  --radius-md: var(--ds-radius-xs);
+  --radius-lg: var(--ds-radius-sm);
+  --radius-xl: var(--ds-radius-md);
+  --radius-2xl: var(--ds-radius-lg);
+  --radius-3xl: var(--ds-radius-xl);
+  --radius-4xl: var(--ds-radius-2xl);
+  --radius-full: var(--ds-radius-full);
+
+  --shadow-ds-sm: var(--ds-shadow-sm);
+  --shadow-ds-md: var(--ds-shadow-md);
+  --shadow-ds-lg: var(--ds-shadow-lg);
+  --shadow-ds-ring: var(--ds-shadow-ring);
+
+  --spacing-btn-xs: var(--ds-height-btn-xs);
+  --spacing-btn-sm: var(--ds-height-btn-sm);
+  --spacing-btn-md: var(--ds-height-btn-md);
+  --spacing-btn-lg: var(--ds-height-btn-lg);
+}
+
+@layer components {
+  .ds-text-display {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-display-size);
+    line-height: var(--ds-text-display-leading);
+    font-weight: var(--ds-text-display-weight);
+    letter-spacing: var(--ds-text-display-tracking);
+  }
+  .ds-text-heading-1 {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-h1-size);
+    line-height: var(--ds-text-h1-leading);
+    font-weight: var(--ds-text-h1-weight);
+    letter-spacing: var(--ds-text-h1-tracking);
+  }
+  .ds-text-heading-2 {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-h2-size);
+    line-height: var(--ds-text-h2-leading);
+    font-weight: var(--ds-text-h2-weight);
+    letter-spacing: var(--ds-text-h2-tracking);
+  }
+  .ds-text-heading-3 {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-h3-size);
+    line-height: var(--ds-text-h3-leading);
+    font-weight: var(--ds-text-h3-weight);
+    letter-spacing: var(--ds-text-h3-tracking);
+  }
+  .ds-text-heading-4 {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-h4-size);
+    line-height: var(--ds-text-h4-leading);
+    font-weight: var(--ds-text-h4-weight);
+    letter-spacing: var(--ds-text-h4-tracking);
+  }
+  .ds-text-body-lg {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-body-lg-size);
+    line-height: var(--ds-text-body-lg-leading);
+    font-weight: var(--ds-text-body-lg-weight);
+  }
+  .ds-text-body {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-body-size);
+    line-height: var(--ds-text-body-leading);
+    font-weight: var(--ds-text-body-weight);
+  }
+  .ds-text-body-sm {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-body-sm-size);
+    line-height: var(--ds-text-body-sm-leading);
+    font-weight: var(--ds-text-body-sm-weight);
+  }
+  .ds-text-caption {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-caption-size);
+    line-height: var(--ds-text-caption-leading);
+    font-weight: var(--ds-text-caption-weight);
+    letter-spacing: var(--ds-text-caption-tracking);
+  }
+  .ds-text-label {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-label-size);
+    line-height: var(--ds-text-label-leading);
+    font-weight: var(--ds-text-label-weight);
+    letter-spacing: var(--ds-text-label-tracking);
+    text-transform: var(--ds-text-label-transform);
+  }
+  .ds-text-button {
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-button-size);
+    line-height: var(--ds-text-button-leading);
+    font-weight: var(--ds-text-button-weight);
+  }
+
+  .ds-terminal-view-thesis-button {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--ds-terminal-view-thesis-gap);
+    box-sizing: border-box;
+    padding: var(--ds-terminal-view-thesis-padding-y) var(--ds-terminal-view-thesis-padding-x);
+    border-radius: var(--ds-terminal-view-thesis-radius);
+    border: var(--ds-stroke-width) solid var(--ds-terminal-view-thesis-border);
+    background-color: var(--ds-terminal-view-thesis-bg);
+    color: var(--ds-terminal-view-thesis-fg);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-terminal-view-thesis-font-size);
+    line-height: var(--ds-terminal-view-thesis-line-height);
+    font-weight: var(--ds-terminal-view-thesis-font-weight);
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .ds-terminal-view-thesis-button:hover {
+    background-color: rgb(255 255 255 / 0.05);
+    border-color: var(--palette-neutral-20);
+  }
+
+  .ds-terminal-view-thesis-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ds-ring), 0 0 0 4px var(--ds-background);
+  }
+
+  .ds-terminal-kpi-label {
+    color: var(--ds-terminal-kpi-label-color);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-terminal-kpi-label-font-size);
+    font-weight: 400;
+    line-height: 1.25;
+  }
+
+  .ds-terminal-kpi-value {
+    display: inline-block;
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-terminal-kpi-value-font-size);
+    font-weight: 600;
+    line-height: 1.25;
+    background-image: var(--ds-terminal-kpi-value-gradient);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Terminal setup sliders — margin %, leverage (native range + Figma thumb asset) */
+  .ds-terminal-slider {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0%;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ds-terminal-slider__well {
+    position: relative;
+    height: 1.25rem;
+    min-height: 1.25rem;
+    min-width: 0;
+    flex: 1 1 0%;
+    flex-shrink: 1;
+    border-radius: var(--ds-radius-xxs);
+  }
+
+  .ds-terminal-slider__well:has(.ds-terminal-slider__input:focus-visible) {
+    box-shadow: var(--ds-shadow-ring);
+  }
+
+  .ds-terminal-slider__input {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0;
+    appearance: none;
+  }
+
+  .ds-terminal-slider__input::-webkit-slider-thumb {
+    height: var(--ds-terminal-slider-thumb-touch);
+    width: var(--ds-terminal-slider-thumb-touch);
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .ds-terminal-slider__input::-moz-range-thumb {
+    height: var(--ds-terminal-slider-thumb-touch);
+    width: var(--ds-terminal-slider-thumb-touch);
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+  }
+
+  .ds-terminal-slider__track-rail {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: var(--ds-terminal-slider-track-height);
+    transform: translateY(-50%);
+    border-radius: var(--ds-radius-full);
+    pointer-events: none;
+    background-image: var(--ds-terminal-slider-rail-overlay), var(--ds-brand-gradient-horizontal);
+  }
+
+  .ds-terminal-slider__track-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: var(--ds-terminal-slider-track-height);
+    max-width: 100%;
+    transform: translateY(-50%);
+    border-radius: var(--ds-radius-full);
+    pointer-events: none;
+    background-image: var(--ds-brand-gradient-horizontal);
+  }
+
+  .ds-terminal-slider__thumb-wrap {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    width: 1.25rem;
+    height: 1.25rem;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .ds-terminal-slider__thumb-hit {
+    position: absolute;
+    inset: -20% -10% -20% -30%;
+  }
+
+  .ds-terminal-slider__value {
+    position: relative;
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-body-sm-size);
+    line-height: 1.2;
+    font-weight: 500;
+    color: var(--ds-foreground);
+  }
+
+  .ds-terminal-gradient-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: var(--ds-terminal-connect-wallet-padding-y) var(--ds-terminal-connect-wallet-padding-x);
+    border-radius: var(--ds-terminal-connect-wallet-radius);
+    border: none;
+    background-image: var(--ds-terminal-connect-wallet-gradient);
+    color: var(--ds-terminal-connect-wallet-fg);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-terminal-connect-wallet-font-size);
+    line-height: 1.25;
+    font-weight: var(--ds-terminal-connect-wallet-font-weight);
+    cursor: pointer;
+    transition:
+      filter 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .ds-terminal-gradient-cta:hover {
+    filter: brightness(0.96);
+  }
+
+  .ds-terminal-gradient-cta:focus-visible {
+    outline: none;
+    box-shadow: var(--ds-shadow-ring);
+  }
+
+  .ds-terminal-gradient-cta:active {
+    filter: brightness(0.92);
+  }
+}
+
+@layer utilities {
+  /** Figma corner «3xl» (24px) — largest step; use when `rounded-4xl` (20px) is too tight. */
+  .rounded-ds-3xl {
+    border-radius: var(--ds-radius-3xl);
+  }
+}
