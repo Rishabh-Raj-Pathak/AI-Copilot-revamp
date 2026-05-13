@@ -222,6 +222,15 @@
   --ds-terminal-connect-wallet-font-size: 0.875rem;
   --ds-terminal-connect-wallet-font-weight: 500;
   --ds-terminal-connect-wallet-radius: var(--ds-radius-xs);
+  /*
+   * Copilot product-tour popover frame — Figma Terminal `4054:12769` (gradient stroke).
+   * Vertical ramp: aquamarine top → brand amber bottom (canvas / screenshot; codegen omits stroke detail).
+   */
+  --ds-terminal-copilot-tour-popover-border-gradient: linear-gradient(
+    180deg,
+    var(--palette-aquamarine-80) 0%,
+    var(--palette-amber-70) 100%
+  );
 }
 
 dialog::backdrop {

@@ -112,57 +112,30 @@ function removeHyprearnTourPopoverExtras(popover) {
     .forEach((n) => n.remove());
 }
 
-/**
- * @param {import('driver.js').PopoverDOM} popover
- * @param {CopilotProductTourHandlers} handlers
- * @param {{ driver: import('driver.js').Driver }} opts
- */
-function mountSuggestionExploreAction(popover, handlers, opts) {
-  const row = document.createElement("div");
-  row.dataset.hyprearnTourUi = "1";
-  row.className = "hyprearn-tour-popover-extra";
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "hyprearn-tour-secondary-action";
-  btn.textContent = "Explore Other Suggestions";
-  let busy = false;
-  btn.addEventListener("click", () => {
-    if (busy) return;
-    busy = true;
-    btn.disabled = true;
-    void (async () => {
-      try {
-        await handlers.cycleTourSuggestion?.();
-      } catch {
-        /* graceful — keep tour usable */
-      } finally {
-        busy = false;
-        btn.disabled = false;
-        if (opts.driver.isActive()) opts.driver.refresh();
-      }
-    })();
-  });
-  row.appendChild(btn);
-  popover.footer.insertBefore(row, popover.footer.firstChild);
-}
+const SVG_NS = "http://www.w3.org/2000/svg";
 
-/**
- * @param {import('driver.js').PopoverDOM} popover
- * @param {{ driver: import('driver.js').Driver }} opts
- */
-function mountExploreMoreAction(popover, opts) {
-  const row = document.createElement("div");
-  row.dataset.hyprearnTourUi = "1";
-  row.className = "hyprearn-tour-popover-extra";
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "hyprearn-tour-secondary-action";
-  btn.textContent = "Explore More";
-  btn.addEventListener("click", () => {
-    opts.driver.destroy();
-  });
-  row.appendChild(btn);
-  popover.footer.insertBefore(row, popover.footer.firstChild);
+/** @param {HTMLButtonElement} closeButton */
+function mountTourCloseIcon(closeButton) {
+  closeButton.textContent = "";
+  closeButton.replaceChildren();
+  closeButton.setAttribute("aria-label", "Close guided tour");
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("width", "12");
+  svg.setAttribute("height", "12");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  const p1 = document.createElementNS(SVG_NS, "path");
+  p1.setAttribute("d", "M18 6 6 18");
+  const p2 = document.createElementNS(SVG_NS, "path");
+  p2.setAttribute("d", "m6 6 12 12");
+  svg.append(p1, p2);
+  closeButton.appendChild(svg);
 }
 
 /**
@@ -171,8 +144,6 @@ function mountExploreMoreAction(popover, opts) {
  * Active step index while driving, or `-1` when the tour is not active.
  * @property {() => void | Promise<void>} [prepareSuggestionTourStep]
  * When entering the suggestions step: ensure a setup is opened and allow layout to settle.
- * @property {() => void | Promise<void>} [cycleTourSuggestion]
- * User-triggered: advance to the next real suggestion in UI order (deterministic).
  * @property {() => void | Promise<void>} [onSimulateFirstTrade]
  * Reserved for tour flows that need to stage UI before advancing (unused on the final open-trade step).
  * @property {() => string | null | undefined} [getTerminalPlatformId]
@@ -287,11 +258,9 @@ function buildCopilotTourSteps(handlers) {
         showButtons: ["next", "previous", "close"],
         ...rowPopover,
         onPopoverRender: (popover, opts) => {
-          popover.closeButton.textContent = "Close";
-          popover.closeButton.setAttribute("aria-label", "Close guided tour");
+          mountTourCloseIcon(popover.closeButton);
+          popover.nextButton?.classList?.add("ds-terminal-gradient-cta");
           removeHyprearnTourPopoverExtras(popover);
-          if (stepIndex === 2) mountSuggestionExploreAction(popover, handlers, opts);
-          if (stepIndex === 4) mountExploreMoreAction(popover, opts);
           rowPopover?.onPopoverRender?.(popover, opts);
         },
       },
@@ -318,7 +287,7 @@ export function startCopilotProductTour(handlers = {}) {
     animate: true,
     smoothScroll: true,
     allowClose: true,
-    /** Clicks on the dimmed overlay must not end the tour — only Close / Done / Explore More. */
+    /** Clicks on the dimmed overlay must not end the tour — only Close / footer actions. */
     overlayClickBehavior: () => {},
     disableActiveInteraction: false,
     overlayOpacity: 0.66,

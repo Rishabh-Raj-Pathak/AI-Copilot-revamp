@@ -55,28 +55,6 @@ export default function TerminalCopilotPage() {
     [],
   );
 
-  const cycleTourSuggestion = useCallback(
-    () =>
-      new Promise((resolve) => {
-        const order = COPILOT_SETUPS.map((s) => s.id);
-        if (order.length === 0) {
-          resolve();
-          return;
-        }
-        setSelectedId((prev) => {
-          const cur = prev ?? order[0];
-          const idx = Math.max(0, order.indexOf(cur));
-          return order[(idx + 1) % order.length];
-        });
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.setTimeout(resolve, 64);
-          });
-        });
-      }),
-    [],
-  );
-
   useEffect(() => {
     terminalPlatformRef.current = terminalPlatform;
   }, [terminalPlatform]);
@@ -110,10 +88,9 @@ export default function TerminalCopilotPage() {
     () => ({
       onStepIndexChange: setCopilotTourStepIndex,
       prepareSuggestionTourStep,
-      cycleTourSuggestion,
       getTerminalPlatformId: () => terminalPlatformRef.current,
     }),
-    [prepareSuggestionTourStep, cycleTourSuggestion],
+    [prepareSuggestionTourStep],
   );
 
   const runProductTour = useCallback(() => {
