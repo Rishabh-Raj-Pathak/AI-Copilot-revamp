@@ -140,15 +140,14 @@ export default function TradeSuccessModal({
             id="trade-success-title"
             className="w-full text-center text-xl font-semibold leading-[1.2] text-white"
           >
-            Position Opened Successfully
+            You're in—position opened
           </h2>
           <p className="w-full text-center text-base font-normal leading-[1.2] text-[#bfbfbf]">
-            You can track all your trades from the{" "}
+            Follow size, PnL, and exits anytime from your{" "}
             <span className="bg-linear-to-r from-[#f7bb08] from-[65.388%] to-[#2fffce] bg-clip-text font-semibold text-transparent">
               Portfolio
-            </span>{" "}
-            page. Would you like to share this setup with your friends &
-            followers?
+            </span>
+            . Want to show friends what you just put on? You can share this setup in one tap.
           </p>
           <div className="flex w-full flex-col gap-3">
             <button

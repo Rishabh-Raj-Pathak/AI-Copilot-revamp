@@ -18,9 +18,17 @@ import {
 
 const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
 
-export default function TerminalCopilotPage() {
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [terminalPlatform, setTerminalPlatform] = useState("hyperliquid");
+export default function TerminalCopilotPage({
+  walletConnected: walletConnectedProp,
+  onWalletConnected,
+  terminalPlatform: terminalPlatformProp,
+  onTerminalPlatformChange,
+  onOpenVaults,
+}) {
+  const [localWallet, setLocalWallet] = useState(false);
+  const [localPlatform, setLocalPlatform] = useState("hyperliquid");
+  const walletConnected = walletConnectedProp ?? localWallet;
+  const terminalPlatform = terminalPlatformProp ?? localPlatform;
   const terminalPlatformRef = useRef("hyperliquid");
   const [copilotTourStepIndex, setCopilotTourStepIndex] = useState(-1);
   const [tourFirstTradeDemo, setTourFirstTradeDemo] = useState(false);
@@ -125,11 +133,20 @@ export default function TerminalCopilotPage() {
     [copilotTourStepIndex],
   );
 
-  const handleTerminalPlatformChange = useCallback((id) => {
-    setTerminalPlatform(id);
-    notifyCopilotTourTerminalPlatformChanged(id);
-    refreshCopilotTourIfActive();
-  }, []);
+  const handleWalletConnected = useCallback(() => {
+    onWalletConnected?.();
+    if (walletConnectedProp === undefined) setLocalWallet(true);
+  }, [onWalletConnected, walletConnectedProp]);
+
+  const handleTerminalPlatformChange = useCallback(
+    (id) => {
+      onTerminalPlatformChange?.(id);
+      if (terminalPlatformProp === undefined) setLocalPlatform(id);
+      notifyCopilotTourTerminalPlatformChanged(id);
+      refreshCopilotTourIfActive();
+    },
+    [onTerminalPlatformChange, terminalPlatformProp],
+  );
 
   useEffect(() => {
     if (!walletConnected || isCopilotTourCompleted()) return;
@@ -178,8 +195,13 @@ export default function TerminalCopilotPage() {
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
       <HeaderTerminal
         onProductTour={runProductTour}
+        activeNavItem="AI Copilot"
+        onNavItemClick={(label) => {
+          if (label === "Vaults") onOpenVaults?.();
+        }}
+        showProductTour
         walletConnected={walletConnected}
-        onWalletConnected={() => setWalletConnected(true)}
+        onWalletConnected={handleWalletConnected}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
@@ -226,7 +248,7 @@ export default function TerminalCopilotPage() {
           setup={selectedSetup}
           openTradeCtaLabel={
             copilotTourStepIndex >= 3 && copilotTourStepIndex <= 4
-              ? "Open your first trade"
+              ? "Place my trade"
               : undefined
           }
           onOpenTradeCtaClick={handleOpenTradeCtaClick}

@@ -1,0 +1,124 @@
+/**
+ * Scoped Vaults theme — import once from `VaultsPage` (or root if preferred).
+ */
+.vaults-root {
+  --vaults-font: Onest, ui-sans-serif, system-ui, sans-serif;
+  --vaults-bg: #000000;
+  --vaults-surface: #0c0a08;
+  --vaults-surface-raised: #1e1b18;
+  --vaults-cream: #e8d5b5;
+  --vaults-muted: #717182;
+  --vaults-gold: #ccb17f;
+  --vaults-border-subtle: rgba(255, 255, 255, 0.05);
+}
+
+.vaults-root {
+  font-family: var(--vaults-font);
+}
+
+.vaults-stat-value-gradient {
+  background-image: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #e8d5b5 50%,
+    #ccb17f 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vaults-hero-title-gradient {
+  background-image: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #e8d5b5 50%,
+    #785a28 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vaults-minimal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.vaults-minimal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+/** Figma `4421:6261` / `4421:6471` — section title hairline. */
+.vaults-section-hairline {
+  height: 1px;
+  min-width: 0;
+  flex: 1 0 0;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(231, 231, 231, 0.046) 7.1429%,
+    rgba(208, 208, 208, 0.043) 14.286%,
+    rgba(185, 185, 185, 0.039) 21.429%,
+    rgba(163, 163, 163, 0.036) 28.571%,
+    rgba(141, 141, 141, 0.032) 35.714%,
+    rgba(120, 120, 120, 0.029) 42.857%,
+    rgba(99, 99, 99, 0.025) 50%,
+    rgba(79, 79, 79, 0.021) 57.143%,
+    rgba(60, 60, 60, 0.018) 64.286%,
+    rgba(42, 42, 42, 0.014) 71.429%,
+    rgba(25, 25, 25, 0.011) 78.571%,
+    rgba(10, 10, 10, 0.007) 85.714%,
+    rgba(1, 1, 1, 0.004) 92.857%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+/** Figma `4421:6264` row shell — invisible range for hit target over custom track. */
+.vaults-range-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.vaults-range-input:focus-visible {
+  outline: 2px solid rgba(204, 177, 127, 0.45);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.vaults-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.vaults-range-input::-webkit-slider-runnable-track {
+  height: 18px;
+  background: transparent;
+  border: none;
+}
+
+.vaults-range-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+}
+
+.vaults-range-input::-moz-range-track {
+  height: 18px;
+  background: transparent;
+  border: none;
+}

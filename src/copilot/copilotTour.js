@@ -183,13 +183,13 @@ function buildCopilotTourSteps(handlers) {
     {
       element: '[data-tour="copilot-overview"]',
       popover: {
-        title: "Your AI Copilot",
+        title: "Meet HyprEarn Copilot",
         description:
-          "Ideas for entries, targets, and risk—drafted for you. You choose what to use; nothing moves until you say so.",
+          "Copilot trade setups with entries, targets and risk levels. You approve every trade before it goes live.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
-        nextBtnText: "Next",
+        nextBtnText: "Let's go",
       },
     },
     {
@@ -202,9 +202,9 @@ function buildCopilotTourSteps(handlers) {
         });
       },
       popover: {
-        title: "Pick Your Venue",
+        title: "Trade across DEXs",
         description:
-          "Switch DEXs anytime—same workflow. Try another venue now, or continue when you are ready.",
+          "Switch venues anytime without changing your workflow. Copilot works the same way across supported DEXs.",
         side: "bottom",
         align: "end",
         showButtons: ["next", "previous", "close"],
@@ -229,9 +229,9 @@ function buildCopilotTourSteps(handlers) {
         })();
       },
       popover: {
-        title: "More Than One Idea",
+        title: "Review suggested setups",
         description:
-          "Copilot surfaces multiple setups—each a different read on the market. Open one to preview details on the right.",
+          "Each card is a different AI setup. Open one to inspect and customize the trade.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -245,9 +245,9 @@ function buildCopilotTourSteps(handlers) {
         el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
       },
       popover: {
-        title: "Make It Yours",
+        title: "Tune the trade",
         description:
-          "Tweak leverage, targets, stop, and size like you normally would. Nothing executes until you confirm.",
+          "Adjust leverage, size, stops and targets to match your risk profile. Nothing goes live until you confirm it.",
         side: "left",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -261,9 +261,9 @@ function buildCopilotTourSteps(handlers) {
         el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
       },
       popover: {
-        title: "When You Are Ready",
+        title: "Place your first trade",
         description:
-          "There is no rush—review, adjust, or keep exploring. When you are ready, use Open trade to place the position; we will confirm it in a quick summary.",
+          "You're set—venue chosen, setup reviewed, and risk dialed in how you want it. Tap Open trade when you're ready; you'll see a quick summary to confirm before anything goes live.",
         side: "top",
         align: "center",
         showButtons: ["previous", "close"],
@@ -315,7 +315,7 @@ export function startCopilotProductTour(handlers = {}) {
     overlayOpacity: 0.66,
     overlayColor: "#000",
     showProgress: true,
-    progressText: "{{current}} of {{total}}",
+    progressText: "Step {{current}} of {{total}}",
     showButtons: ["next", "previous", "close"],
     popoverClass: "hyprearn-copilot-driver-popover",
     popoverOffset: 14,

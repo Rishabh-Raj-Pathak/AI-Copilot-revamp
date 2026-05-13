@@ -36,6 +36,7 @@ function Logo({ className = "h-5 w-[15px] shrink-0 relative" }) {
 
 const nav = [
   "AI Copilot",
+  "Vaults",
   "Trade",
   "Portfolio",
   "PnL Calendar",
@@ -45,6 +46,9 @@ const nav = [
 
 export default function HeaderTerminal({
   onProductTour,
+  activeNavItem = "AI Copilot",
+  onNavItemClick,
+  showProductTour = true,
   walletConnected,
   onWalletConnected,
   terminalPlatform,
@@ -69,11 +73,12 @@ export default function HeaderTerminal({
         </div>
         <nav className="flex items-end gap-2">
           {nav.map((label) => {
-            const active = label === "AI Copilot";
+            const active = label === activeNavItem;
             return (
               <button
                 key={label}
                 type="button"
+                onClick={() => onNavItemClick?.(label)}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   active
                     ? "bg-[#3e2e00] text-[#f2b500]"
@@ -91,7 +96,7 @@ export default function HeaderTerminal({
             More
             <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
           </button>
-          {typeof onProductTour === "function" ? (
+          {showProductTour && typeof onProductTour === "function" ? (
             <button
               type="button"
               onClick={onProductTour}
