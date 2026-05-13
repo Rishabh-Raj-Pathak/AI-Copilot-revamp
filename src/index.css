@@ -409,6 +409,15 @@ body.driver-active [data-tour="dex-selector"] [role="listbox"] {
   z-index: 1000000001;
 }
 
+/**
+ * driver.css: `body.driver-active * { pointer-events: none }` except the highlighted
+ * element and the popover — the trade-success portal would otherwise ignore backdrop taps.
+ */
+body.driver-active .hyprearn-trade-success-modal-root,
+body.driver-active .hyprearn-trade-success-modal-root * {
+  pointer-events: auto !important;
+}
+
 /** Slanted running sheen on the demo position row (2s highlight window from React). */
 @keyframes copilot-position-row-sheen {
   0% {

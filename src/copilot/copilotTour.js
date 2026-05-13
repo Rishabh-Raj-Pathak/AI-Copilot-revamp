@@ -58,19 +58,28 @@ export function advanceCopilotTourToPositionsFromOpenTradeClick() {
   const i = activeTourDriver.getActiveIndex();
   if (typeof i !== "number" || i !== OPEN_TRADE_TOUR_STEP_INDEX) return false;
 
-  const drv = activeTourDriver;
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      try {
-        if (!drv.isActive?.()) return;
-        drv.destroy();
-      } catch {
-        /* noop */
-      }
-    });
-  });
+  try {
+    if (activeTourDriver.isActive?.()) activeTourDriver.destroy();
+  } catch {
+    /* noop */
+  }
 
   return true;
+}
+
+/**
+ * If the guided tour is still active when the trade-success modal is shown (e.g. user
+ * was not on the final step), tear it down so `body.driver-active` is cleared.
+ * driver.js sets `pointer-events: none` on almost the whole page while active, which
+ * blocks taps on the success overlay until the driver is destroyed.
+ */
+export function destroyCopilotProductTourIfStillActive() {
+  if (!activeTourDriver?.isActive?.()) return;
+  try {
+    activeTourDriver.destroy();
+  } catch {
+    /* noop */
+  }
 }
 
 function markCopilotTourCompleted() {

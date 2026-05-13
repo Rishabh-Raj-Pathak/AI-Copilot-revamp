@@ -9,6 +9,7 @@ import CopilotBottomActivityDock from "./CopilotBottomActivityDock.jsx";
 import { COPILOT_SETUPS } from "./copilotSetups.js";
 import {
   advanceCopilotTourToPositionsFromOpenTradeClick,
+  destroyCopilotProductTourIfStillActive,
   isCopilotTourCompleted,
   notifyCopilotTourTerminalPlatformChanged,
   refreshCopilotTourIfActive,
@@ -145,16 +146,20 @@ export default function TerminalCopilotPage() {
 
   const dismissTradeSuccessModal = useCallback(() => {
     setTradeSuccessOpen(false);
-    if (tourFirstTradeDemo) {
-      setHighlightOpenedPositionRow(true);
-      window.setTimeout(() => setHighlightOpenedPositionRow(false), 2500);
-    }
+    if (!tourFirstTradeDemo) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setHighlightOpenedPositionRow(true);
+        window.setTimeout(() => setHighlightOpenedPositionRow(false), 2800);
+      });
+    });
   }, [tourFirstTradeDemo]);
 
   const handleOpenTradeCtaClick = useCallback(() => {
+    advanceCopilotTourToPositionsFromOpenTradeClick();
+    destroyCopilotProductTourIfStillActive();
     setTradeSuccessOpen(true);
     setTourFirstTradeDemo(true);
-    advanceCopilotTourToPositionsFromOpenTradeClick();
   }, []);
 
   const handleRefresh = () => {
