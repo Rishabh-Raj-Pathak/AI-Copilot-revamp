@@ -212,7 +212,8 @@ function buildCopilotTourSteps(handlers) {
       },
     },
     {
-      element: () => document.querySelector('[data-tour="copilot-suggestions-list"]'),
+      element: () =>
+        document.querySelector('[data-tour="copilot-suggestions-list"]'),
       disableActiveInteraction: false,
       onHighlighted: (el, _step, { driver: drv }) => {
         el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
@@ -239,7 +240,8 @@ function buildCopilotTourSteps(handlers) {
       },
     },
     {
-      element: () => document.querySelector('[data-tour="copilot-trade-setup"]'),
+      element: () =>
+        document.querySelector('[data-tour="copilot-trade-setup"]'),
       disableActiveInteraction: false,
       onHighlighted: (el) => {
         el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
@@ -262,8 +264,7 @@ function buildCopilotTourSteps(handlers) {
       },
       popover: {
         title: "Place your first trade",
-        description:
-          "You're set—venue chosen, setup reviewed, and risk dialed in how you want it. Tap Open trade when you're ready; you'll see a quick summary to confirm before anything goes live.",
+        description: "Congrats, your setup is ready. Place your first trade.",
         side: "top",
         align: "center",
         showButtons: ["previous", "close"],
