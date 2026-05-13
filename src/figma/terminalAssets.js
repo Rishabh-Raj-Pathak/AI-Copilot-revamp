@@ -18,6 +18,12 @@ export const terminalAssets = {
   dollarIcon: 'https://www.figma.com/api/mcp/asset/57bd382d-8f41-4089-837a-148f67d55e7c',
   chevronPair: 'https://www.figma.com/api/mcp/asset/de37000e-7e2d-4b14-bcd1-4609348283ae',
   chevronUp: 'https://www.figma.com/api/mcp/asset/73871a7c-9881-4396-8ee5-58297a54e431',
+  /** Figma node 1017:37097 — icon/check-rosette-filled */
+  tradeSuccessCheckRosette:
+    'https://www.figma.com/api/mcp/asset/437f7cda-a905-4a67-b08e-2e755a3203f0',
+  /** Figma Share Setup leading icon (1017:37102) */
+  tradeSuccessShareLeadingIcon:
+    'https://www.figma.com/api/mcp/asset/dae3ae83-9790-4e61-aea9-3e780e793f06',
 }
 
 /** Figma node 4039:11895 — full Price Chart export (static asset in /public). */

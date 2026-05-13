@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const GREEN = "#269755";
 const RED = "#d53d3d";
@@ -6,7 +6,7 @@ const GOLD = "#f2b500";
 const BADGE_BG = "rgba(62, 46, 0, 0.85)";
 const BORDER = "#242424";
 
-const TABS = [
+const TABS_BASE = [
   { id: "positions", label: "Positions", count: 0 },
   { id: "openOrders", label: "Open Orders", count: 0 },
   { id: "orderHistory", label: "Order History", count: 1903 },
@@ -111,6 +111,12 @@ function directionColor(direction) {
   return "#e5e5e5";
 }
 
+function positionSideColor(side) {
+  if (side === "Long") return GREEN;
+  if (side === "Short") return RED;
+  return "#e5e5e5";
+}
+
 function ExternalLinkIcon({ className }) {
   return (
     <svg
@@ -136,16 +142,43 @@ const MIN_H = 196;
 const MAX_H = 520;
 const WHEEL_STEP = 48;
 
-export default function CopilotBottomActivityDock() {
+export default function CopilotBottomActivityDock({
+  tourDemoPosition = null,
+  highlightOpenedPositionRow = false,
+}) {
   const [activeTab, setActiveTab] = useState("tradeHistory");
   const [panelHeight, setPanelHeight] = useState(MIN_H);
   const dockRef = useRef(null);
   const bodyRef = useRef(null);
+  const openedPositionRowRef = useRef(null);
   const panelHeightRef = useRef(MIN_H);
+
+  const tabs = useMemo(() => {
+    return TABS_BASE.map((t) =>
+      t.id === "positions"
+        ? { ...t, count: tourDemoPosition ? 1 : t.count }
+        : t,
+    );
+  }, [tourDemoPosition]);
+
+  useEffect(() => {
+    if (tourDemoPosition) {
+      setActiveTab("positions");
+    }
+  }, [tourDemoPosition]);
 
   useEffect(() => {
     panelHeightRef.current = panelHeight;
   }, [panelHeight]);
+
+  useEffect(() => {
+    if (!highlightOpenedPositionRow) return;
+    const row = openedPositionRowRef.current;
+    if (!row) return;
+    requestAnimationFrame(() => {
+      row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, [highlightOpenedPositionRow, tourDemoPosition]);
 
   const onWheel = useCallback((e) => {
     const body = bodyRef.current;
@@ -203,7 +236,7 @@ export default function CopilotBottomActivityDock() {
     >
       <div className="flex shrink-0 flex-col border-b border-[#1a1a1a] pt-1 pb-0.5">
         <div className="flex w-full min-w-0 items-end gap-1 overflow-x-auto px-3 pb-0 minimal-scrollbar">
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const active = tab.id === activeTab;
             return (
               <button
@@ -306,9 +339,69 @@ export default function CopilotBottomActivityDock() {
               })}
             </div>
           </>
+        ) : activeTab === "positions" && tourDemoPosition ? (
+          <>
+            <div
+              className="grid shrink-0 grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
+              style={{ borderColor: BORDER }}
+            >
+              <span>Opened</span>
+              <span>Coin</span>
+              <span>Side</span>
+              <span className="text-right">Size</span>
+              <span className="text-right">Entry</span>
+              <span className="text-right">Mark</span>
+              <span className="text-right">uPnL</span>
+            </div>
+            <div
+              ref={bodyRef}
+              data-tour="copilot-positions-body"
+              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+            >
+              <div
+                ref={openedPositionRowRef}
+                data-tour="copilot-demo-position-row"
+                className={`relative grid grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2.5 text-xs tabular-nums ${
+                  highlightOpenedPositionRow
+                    ? "overflow-hidden copilot-position-row-highlight [&>*]:relative [&>*]:z-[1]"
+                    : ""
+                }`}
+                style={{ borderColor: "#1a1a1a" }}
+              >
+                <span className="text-[#bfbfbf]">{tourDemoPosition.openedAt}</span>
+                <span
+                  className="font-semibold"
+                  style={{ color: positionSideColor(tourDemoPosition.side) }}
+                >
+                  {tourDemoPosition.symbol}
+                </span>
+                <span
+                  className="font-medium"
+                  style={{ color: positionSideColor(tourDemoPosition.side) }}
+                >
+                  {tourDemoPosition.side}
+                </span>
+                <span className="text-right text-[#e5e5e5]">
+                  {tourDemoPosition.sizeLabel}
+                </span>
+                <span className="text-right text-[#e5e5e5]">
+                  {tourDemoPosition.entry}
+                </span>
+                <span className="text-right text-[#e5e5e5]">
+                  {tourDemoPosition.mark}
+                </span>
+                <span
+                  className="text-right font-semibold"
+                  style={{ color: GREEN }}
+                >
+                  {tourDemoPosition.upnl}
+                </span>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-6 text-center text-sm text-[#8c8c8c]">
-            {TABS.find((t) => t.id === activeTab)?.label} view is a placeholder
+            {tabs.find((t) => t.id === activeTab)?.label} view is a placeholder
             — connect your account data here.
           </div>
         )}

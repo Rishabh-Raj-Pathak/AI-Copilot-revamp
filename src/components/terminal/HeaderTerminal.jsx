@@ -1,4 +1,3 @@
-import { useState } from "react";
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
 import TerminalPlatformSelect from "./TerminalPlatformSelect.jsx";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
@@ -44,10 +43,13 @@ const nav = [
   "Rewards",
 ];
 
-export default function HeaderTerminal({ onProductTour }) {
-  // TODO: replace with real session from your wallet stack (e.g. wagmi `useAccount`).
-  const [walletConnected, setWalletConnected] = useState(false);
-
+export default function HeaderTerminal({
+  onProductTour,
+  walletConnected,
+  onWalletConnected,
+  terminalPlatform,
+  onTerminalPlatformChange,
+}) {
   return (
     <header className="flex h-16 w-full shrink-0 items-center justify-between border-b border-[#242424] bg-black px-5 py-3">
       <div
@@ -100,8 +102,11 @@ export default function HeaderTerminal({ onProductTour }) {
           ) : null}
         </nav>
       </div>
-      <div className="flex shrink-0 items-center justify-end gap-3">
-        <TerminalPlatformSelect />
+      <div className="terminal-header-actions flex shrink-0 items-center justify-end gap-3">
+        <TerminalPlatformSelect
+          value={terminalPlatform}
+          onChange={onTerminalPlatformChange}
+        />
         <div
           data-tour="wallet-connect"
           className="flex shrink-0 items-center gap-3"
@@ -130,7 +135,7 @@ export default function HeaderTerminal({ onProductTour }) {
               <NavChevron className="size-4 shrink-0 text-[#757575]" />
             </button>
           ) : (
-            <ConnectWalletButton onConnect={() => setWalletConnected(true)} />
+            <ConnectWalletButton onConnect={() => onWalletConnected?.()} />
           )}
         </div>
       </div>

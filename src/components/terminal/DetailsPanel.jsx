@@ -170,7 +170,7 @@ function CollapseHeading({ title, open, onToggle }) {
   );
 }
 
-function DetailsPanelInner({ setup }) {
+function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
   const balanceNum = Number.parseFloat(setup.balance) || 0;
 
   const [direction, setDirection] = useState("short");
@@ -194,8 +194,8 @@ function DetailsPanelInner({ setup }) {
     setMarginPct(10);
     setLeverage(10);
     setSize(20);
-    setTakeProfit(Number(setup.price) * 0.96);
-    setStopLoss(Number(setup.price) * 1.02);
+    setTakeProfit(Math.round(Number(setup.price) * 0.96 * 100) / 100);
+    setStopLoss(Math.round(Number(setup.price) * 1.02 * 100) / 100);
     setGainPct(20);
     setLossPct(20);
     setActiveRow(0);
@@ -235,7 +235,10 @@ function DetailsPanelInner({ setup }) {
           <span className="font-medium text-white">${setup.price}</span>
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        data-tour="copilot-trade-setup"
+      >
         <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-5">
           <div className="flex flex-col gap-3">
             <div
@@ -325,7 +328,7 @@ function DetailsPanelInner({ setup }) {
                 Limit
               </button>
             </div>
-            <div className="flex flex-col gap-3" data-tour="risk-details">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                   <StepperField
@@ -490,10 +493,7 @@ function DetailsPanelInner({ setup }) {
             </div>
           </div>
         </div>
-        <div
-          className="flex shrink-0 flex-col gap-3 border-t border-[#242424] px-5 py-5"
-          data-tour="trade-review"
-        >
+        <div className="flex shrink-0 flex-col gap-3 border-t border-[#242424] px-5 py-5">
           <label className="flex cursor-pointer items-center gap-3">
             <Checkbox checked={openAtMark} onChange={setOpenAtMark} />
             <span className="text-sm font-medium text-white">
@@ -502,9 +502,11 @@ function DetailsPanelInner({ setup }) {
           </label>
           <button
             type="button"
-            className="w-full rounded-[10px] border border-[#d53d3d] bg-[#d53d3d] py-3 text-lg font-medium text-white hover:brightness-110"
+            data-tour="trade-open-cta"
+            onClick={() => onOpenTradeCtaClick?.()}
+            className="w-full rounded-lg border border-[#d53d3d] bg-[#d53d3d] py-2 text-md font-medium text-white hover:brightness-110"
           >
-            Open {setup.symbol} {dirLabel}
+            {openTradeCtaLabel ?? `Open ${setup.symbol} ${dirLabel}`}
           </button>
         </div>
       </div>
@@ -512,7 +514,11 @@ function DetailsPanelInner({ setup }) {
   );
 }
 
-export default function DetailsPanel({ setup }) {
+export default function DetailsPanel({
+  setup,
+  openTradeCtaLabel,
+  onOpenTradeCtaClick,
+}) {
   if (!setup) {
     return (
       <aside className="flex h-full min-h-0 min-w-0 flex-[1_1_0] basis-0 flex-col overflow-hidden border-l border-[#242424] bg-black">
@@ -524,5 +530,11 @@ export default function DetailsPanel({ setup }) {
       </aside>
     );
   }
-  return <DetailsPanelInner setup={setup} />;
+  return (
+    <DetailsPanelInner
+      setup={setup}
+      openTradeCtaLabel={openTradeCtaLabel}
+      onOpenTradeCtaClick={onOpenTradeCtaClick}
+    />
+  );
 }

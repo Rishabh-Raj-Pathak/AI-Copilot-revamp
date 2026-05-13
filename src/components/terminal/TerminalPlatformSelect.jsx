@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { refreshCopilotTourIfActive } from "../../copilot/copilotTour.js";
 import {
   terminalPlatformSelect as s,
   terminalPlatforms,
@@ -100,6 +101,7 @@ function PlatformMark({ id }) {
 export default function TerminalPlatformSelect({
   value,
   onChange,
+  onPlatformChange,
   defaultValue = "hyperliquid",
 }) {
   const isControlled = value !== undefined;
@@ -132,6 +134,11 @@ export default function TerminalPlatformSelect({
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    requestAnimationFrame(() => refreshCopilotTourIfActive());
   }, [open]);
 
   return (
@@ -168,6 +175,9 @@ export default function TerminalPlatformSelect({
                 aria-selected={active}
                 className={`${s.menuItem} ${active ? s.menuItemActive : ""}`}
                 onClick={() => {
+                  if (p.id !== selected) {
+                    onPlatformChange?.(p.id);
+                  }
                   setSelected(p.id);
                   setOpen(false);
                 }}

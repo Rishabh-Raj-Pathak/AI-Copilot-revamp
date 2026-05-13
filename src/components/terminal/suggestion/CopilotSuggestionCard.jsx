@@ -13,13 +13,11 @@ export default function CopilotSuggestionCard({
   expanded,
   selected,
   onSelect,
-  dataTour,
 }) {
   return (
     <article
       role="button"
       tabIndex={0}
-      {...(dataTour ? { "data-tour": dataTour } : {})}
       onClick={() => onSelect?.(setup.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -52,31 +50,16 @@ export default function CopilotSuggestionCard({
               {setup.title}
             </h2>
           </div>
-          {expanded ? (
-            <div className="flex shrink-0 flex-col items-end gap-2">
-              <SetupRadio selected={selected} />
-              <ViewThesisButton onClick={(e) => e.stopPropagation()} />
-            </div>
-          ) : (
-            <SetupRadio selected={selected} />
-          )}
+          <SetupRadio selected={selected} />
         </div>
-        {expanded ? (
-          <div className="flex w-full flex-wrap items-center gap-1.5">
+        <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {setup.chips.map((c, i) => (
               <SetupChip key={`${setup.id}-${i}-${c.label}`} chip={c} />
             ))}
           </div>
-        ) : (
-          <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-              {setup.chips.map((c, i) => (
-                <SetupChip key={`${setup.id}-${i}-${c.label}`} chip={c} />
-              ))}
-            </div>
-            <ViewThesisButton onClick={(e) => e.stopPropagation()} />
-          </div>
-        )}
+          <ViewThesisButton onClick={(e) => e.stopPropagation()} />
+        </div>
       </div>
 
       {expanded ? <SuggestionPriceChart active={expanded} delayMs={3} /> : null}
