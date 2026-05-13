@@ -138,6 +138,18 @@ function mountTourCloseIcon(closeButton) {
   closeButton.appendChild(svg);
 }
 
+/** @param {HTMLElement} wrapper @param {import('driver.js').Popover | undefined} popoverConfig */
+function setHyprearnTourPopoverBeakDataset(wrapper, popoverConfig) {
+  const s = popoverConfig?.side;
+  if (s === "top" || s === "bottom" || s === "left" || s === "right") {
+    wrapper.dataset.hyprearnArrowSide = s;
+  } else if (s === "over") {
+    delete wrapper.dataset.hyprearnArrowSide;
+  } else {
+    wrapper.dataset.hyprearnArrowSide = "bottom";
+  }
+}
+
 /**
  * @typedef {object} CopilotProductTourHandlers
  * @property {(index: number) => void} [onStepIndexChange]
@@ -261,6 +273,7 @@ function buildCopilotTourSteps(handlers) {
           mountTourCloseIcon(popover.closeButton);
           popover.nextButton?.classList?.add("ds-terminal-gradient-cta");
           removeHyprearnTourPopoverExtras(popover);
+          setHyprearnTourPopoverBeakDataset(popover.wrapper, rowPopover);
           rowPopover?.onPopoverRender?.(popover, opts);
         },
       },
