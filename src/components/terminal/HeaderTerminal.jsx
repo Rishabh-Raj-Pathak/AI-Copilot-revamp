@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
 import TerminalPlatformSelect from "./TerminalPlatformSelect.jsx";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
@@ -46,6 +47,8 @@ const nav = [
 
 export default function HeaderTerminal({
   onProductTour,
+  onProductTour1,
+  onProductTour2,
   activeNavItem = "AI Copilot",
   onNavItemClick,
   showProductTour = true,
@@ -54,6 +57,31 @@ export default function HeaderTerminal({
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
+  const [productTourMenuOpen, setProductTourMenuOpen] = useState(false);
+  const productTourMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!productTourMenuOpen) return;
+    const close = (e) => {
+      const el = productTourMenuRef.current;
+      if (el && !el.contains(e.target)) setProductTourMenuOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setProductTourMenuOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [productTourMenuOpen]);
+
+  const showDualProductTour =
+    showProductTour &&
+    typeof onProductTour1 === "function" &&
+    typeof onProductTour2 === "function";
+
   return (
     <header className="flex min-h-16 shrink-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-[#242424] bg-black px-3 py-2.5 sm:gap-x-3 sm:px-5 sm:py-3 lg:h-16 lg:flex-nowrap lg:gap-4 lg:py-3">
       <div
@@ -96,7 +124,50 @@ export default function HeaderTerminal({
             More
             <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
           </button>
-          {showProductTour && typeof onProductTour === "function" ? (
+          {showDualProductTour ? (
+            <div className="relative shrink-0" ref={productTourMenuRef}>
+              <button
+                type="button"
+                aria-expanded={productTourMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setProductTourMenuOpen((o) => !o)}
+                className="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-[#bfbfbf] hover:bg-white/5 hover:text-white sm:px-3 sm:text-sm"
+              >
+                <span className="sm:hidden">Tour</span>
+                <span className="hidden sm:inline">Product Tour</span>
+                <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
+              </button>
+              {productTourMenuOpen ? (
+                <div
+                  className="absolute right-0 top-full z-[120] mt-1 min-w-[11rem] rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
+                  role="menu"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    onClick={() => {
+                      onProductTour1?.();
+                      setProductTourMenuOpen(false);
+                    }}
+                  >
+                    Product tour 1
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    onClick={() => {
+                      onProductTour2?.();
+                      setProductTourMenuOpen(false);
+                    }}
+                  >
+                    Product tour 2
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : showProductTour && typeof onProductTour === "function" ? (
             <button
               type="button"
               onClick={onProductTour}

@@ -63,6 +63,9 @@ export default function CopilotSuggestionCard({
             ))}
           </div>
           <ViewThesisButton
+            dataTour={
+              selected && expanded ? "copilot-view-thesis" : undefined
+            }
             onClick={(e) => {
               e.stopPropagation();
               onViewThesis?.();

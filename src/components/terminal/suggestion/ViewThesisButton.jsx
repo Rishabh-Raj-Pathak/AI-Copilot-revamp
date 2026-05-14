@@ -1,12 +1,13 @@
 import { File } from 'lucide-react'
 import { terminalViewThesisButton } from '../../../design-system/tokens/terminalViewThesis'
 
-export default function ViewThesisButton({ onClick }) {
+export default function ViewThesisButton({ onClick, dataTour }) {
   return (
     <button
       type="button"
       className={terminalViewThesisButton.componentClassName}
       onClick={onClick}
+      {...(dataTour ? { "data-tour": dataTour } : {})}
     >
       <File
         aria-hidden

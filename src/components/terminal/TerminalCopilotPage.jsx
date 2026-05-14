@@ -9,9 +9,13 @@ import CopilotBottomActivityDock from "./CopilotBottomActivityDock.jsx";
 import { AiCopilotThesisModal } from "./AiCopilotThesisModal.tsx";
 import { COPILOT_SETUPS } from "./copilotSetups.js";
 import {
+  advanceCopilotTourMoveNextIfActive,
   advanceCopilotTourToPositionsFromOpenTradeClick,
+  COPILOT_TOUR_VARIANT_1,
+  COPILOT_TOUR_VARIANT_2,
   destroyCopilotProductTourIfStillActive,
-  isCopilotTourCompleted,
+  isCopilotTour2Completed,
+  isCopilotTourOnViewThesisStep,
   notifyCopilotTourTerminalPlatformChanged,
   refreshCopilotTourIfActive,
   startCopilotProductTour,
@@ -32,12 +36,18 @@ export default function TerminalCopilotPage({
   const terminalPlatform = terminalPlatformProp ?? localPlatform;
   const terminalPlatformRef = useRef("hyperliquid");
   const [copilotTourStepIndex, setCopilotTourStepIndex] = useState(-1);
+  const [copilotTourVariant, setCopilotTourVariant] = useState(
+    /** @type {null | typeof COPILOT_TOUR_VARIANT_1 | typeof COPILOT_TOUR_VARIANT_2} */ (
+      null
+    ),
+  );
   const [tourFirstTradeDemo, setTourFirstTradeDemo] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [tradeSuccessOpen, setTradeSuccessOpen] = useState(false);
   const [thesisOpen, setThesisOpen] = useState(false);
   const [thesisInstrumentTitle, setThesisInstrumentTitle] =
     useState("BTC/USDC");
+  const viewThesisModalOpenedOnTourStepRef = useRef(false);
   const [highlightOpenedPositionRow, setHighlightOpenedPositionRow] =
     useState(false);
   const [activeFilter, setActiveFilter] = useState("trending");
@@ -54,6 +64,15 @@ export default function TerminalCopilotPage({
     }, 1000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const onViewThesisStep =
+      (copilotTourVariant === COPILOT_TOUR_VARIANT_1 &&
+        copilotTourStepIndex === 3) ||
+      (copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
+        copilotTourStepIndex === 2);
+    if (!onViewThesisStep) viewThesisModalOpenedOnTourStepRef.current = false;
+  }, [copilotTourStepIndex, copilotTourVariant]);
 
   const prepareSuggestionTourStep = useCallback(
     () =>
@@ -128,53 +147,83 @@ export default function TerminalCopilotPage({
     };
   }, [tourFirstTradeDemo, selectedSetup]);
 
+  const handleTourContextChange = useCallback((ctx) => {
+    setCopilotTourStepIndex(ctx.stepIndex);
+    setCopilotTourVariant(ctx.variant);
+  }, []);
+
   const copilotTourHandlers = useMemo(
     () => ({
-      onStepIndexChange: setCopilotTourStepIndex,
+      onTourContextChange: handleTourContextChange,
       prepareSuggestionTourStep,
       ensureThesisClosedForTour,
       ensureThesisOpenForTour,
       getTerminalPlatformId: () => terminalPlatformRef.current,
     }),
     [
+      handleTourContextChange,
       prepareSuggestionTourStep,
       ensureThesisClosedForTour,
       ensureThesisOpenForTour,
     ],
   );
 
-  const runProductTour = useCallback(() => {
+  const resetTourPageState = useCallback(() => {
     setCopilotTourStepIndex(-1);
+    setCopilotTourVariant(null);
     setTourFirstTradeDemo(false);
     setHighlightOpenedPositionRow(false);
     setSelectedId(null);
+    setThesisOpen(false);
+  }, []);
+
+  const runProductTour1 = useCallback(() => {
+    resetTourPageState();
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        startCopilotProductTour(copilotTourHandlers);
+        startCopilotProductTour(copilotTourHandlers, COPILOT_TOUR_VARIANT_1);
       });
     });
-  }, [copilotTourHandlers]);
+  }, [copilotTourHandlers, resetTourPageState]);
+
+  const runProductTour2 = useCallback(() => {
+    resetTourPageState();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        startCopilotProductTour(copilotTourHandlers, COPILOT_TOUR_VARIANT_2);
+      });
+    });
+  }, [copilotTourHandlers, resetTourPageState]);
 
   const handleSuggestionSelect = useCallback(
     (id) => {
+      const maxLockStep =
+        copilotTourVariant === COPILOT_TOUR_VARIANT_1 ? 5 : 4;
       setSelectedId((cur) => {
         if (cur === id) {
-          if (copilotTourStepIndex >= 2 && copilotTourStepIndex <= 4)
+          if (
+            copilotTourStepIndex >= 2 &&
+            copilotTourStepIndex <= maxLockStep
+          )
             return cur;
           return null;
         }
         return id;
       });
-      if (
-        copilotTourStepIndex === 2 ||
-        copilotTourStepIndex === 3
-      ) {
+      const refreshTour1 =
+        copilotTourVariant === COPILOT_TOUR_VARIANT_1 &&
+        copilotTourStepIndex >= 2 &&
+        copilotTourStepIndex <= 4;
+      const refreshTour2 =
+        copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
+        (copilotTourStepIndex === 2 || copilotTourStepIndex === 3);
+      if (refreshTour1 || refreshTour2) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => refreshCopilotTourIfActive());
         });
       }
     },
-    [copilotTourStepIndex],
+    [copilotTourStepIndex, copilotTourVariant],
   );
 
   const handleWalletConnected = useCallback(() => {
@@ -193,17 +242,39 @@ export default function TerminalCopilotPage({
   );
 
   useEffect(() => {
-    if (!walletConnected || isCopilotTourCompleted()) return;
+    if (!walletConnected || isCopilotTour2Completed()) return;
     let cancelled = false;
     const frame = requestAnimationFrame(() => {
       if (cancelled) return;
-      startCopilotProductTour(copilotTourHandlers);
+      startCopilotProductTour(copilotTourHandlers, COPILOT_TOUR_VARIANT_2);
     });
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
     };
   }, [walletConnected, copilotTourHandlers]);
+
+  const handleThesisOpenChange = useCallback((open) => {
+    setThesisOpen(open);
+    if (open) {
+      if (isCopilotTourOnViewThesisStep()) {
+        viewThesisModalOpenedOnTourStepRef.current = true;
+      }
+      return;
+    }
+    if (
+      viewThesisModalOpenedOnTourStepRef.current &&
+      isCopilotTourOnViewThesisStep()
+    ) {
+      viewThesisModalOpenedOnTourStepRef.current = false;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          advanceCopilotTourMoveNextIfActive();
+          refreshCopilotTourIfActive();
+        });
+      });
+    }
+  }, []);
 
   const dismissTradeSuccessModal = useCallback(() => {
     setTradeSuccessOpen(false);
@@ -238,7 +309,8 @@ export default function TerminalCopilotPage({
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
       <HeaderTerminal
-        onProductTour={runProductTour}
+        onProductTour1={runProductTour1}
+        onProductTour2={runProductTour2}
         activeNavItem="AI Copilot"
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
@@ -305,7 +377,12 @@ export default function TerminalCopilotPage({
           <DetailsPanel
             setup={selectedSetup}
             openTradeCtaLabel={
-              copilotTourStepIndex === 4 ? "Place my trade" : undefined
+              (copilotTourVariant === COPILOT_TOUR_VARIANT_1 &&
+                copilotTourStepIndex === 5) ||
+              (copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
+                copilotTourStepIndex === 4)
+                ? "Place my trade"
+                : undefined
             }
             onOpenTradeCtaClick={handleOpenTradeCtaClick}
           />
@@ -318,7 +395,7 @@ export default function TerminalCopilotPage({
       />
       <AiCopilotThesisModal
         open={thesisOpen}
-        onOpenChange={setThesisOpen}
+        onOpenChange={handleThesisOpenChange}
         instrumentTitle={thesisInstrumentTitle}
       />
     </div>
