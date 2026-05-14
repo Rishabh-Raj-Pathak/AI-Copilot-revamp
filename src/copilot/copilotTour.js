@@ -308,7 +308,7 @@ function buildCopilotTour1Steps(handlers) {
     {
       element: '[data-tour="copilot-overview"]',
       popover: {
-        title: "AI copilot",
+        title: "AI Copilot",
         description:
           "Copilot trade setups with entries, targets and risk levels. You approve every trade before it goes live.",
         side: "bottom",
@@ -372,7 +372,7 @@ function buildCopilotTour1Steps(handlers) {
         })();
       },
       popover: {
-        title: "Open a setup",
+        title: "Open a Setup",
         description:
           "Each card is an AI-suggested setup. The selected card expands so you can review context before opening thesis.",
         side: "bottom",
@@ -454,7 +454,7 @@ function buildCopilotTour1Steps(handlers) {
         })();
       },
       popover: {
-        title: "Tune the trade",
+        title: "Review Your Trade",
         description:
           "Adjust leverage, size, stops and targets to match your risk profile. Nothing goes live until you confirm it.",
         side: isNarrowViewport ? "bottom" : "left",

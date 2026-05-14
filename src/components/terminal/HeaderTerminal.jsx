@@ -145,9 +145,6 @@ export default function HeaderTerminal({
               >
                 {showDualProductTour ? (
                   <>
-                    <p className="px-3 pb-1 pt-2 text-[11px] font-medium text-[#9a9a9a]">
-                      Get started
-                    </p>
                     <button
                       type="button"
                       role="menuitem"
