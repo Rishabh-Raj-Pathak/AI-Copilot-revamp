@@ -73,6 +73,7 @@ export default function VaultRow({
   onAmountStrChange,
   onMaxClick,
   onActivate,
+  tourControlsDataTour,
 }) {
   const {
     name,
@@ -163,7 +164,12 @@ export default function VaultRow({
 
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] lg:mx-2 lg:block" />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:flex-row lg:items-center lg:justify-end lg:gap-3 lg:flex-[1.4]">
+        <div
+          className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:flex-row lg:items-center lg:justify-end lg:gap-3 lg:flex-[1.4]"
+          {...(tourControlsDataTour
+            ? { "data-tour": tourControlsDataTour }
+            : {})}
+        >
           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex min-w-[140px] flex-1 items-center gap-2">
               <div className="relative flex h-[18px] flex-1 items-center px-0.5">

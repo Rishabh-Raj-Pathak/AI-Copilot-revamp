@@ -15,7 +15,10 @@ const ACTIVE_TAB_GRADIENT =
  */
 export default function VaultsDexTabs({ activeId, onChange, tabs }) {
   return (
-    <div className="vaults-root min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-0.5 [scrollbar-width:thin]">
+    <div
+      className="vaults-root min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-0.5 [scrollbar-width:thin]"
+      data-tour="vaults-dex-tabs"
+    >
       <div
         className="inline-flex h-[49px] shrink-0 items-center gap-1 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#121212] p-1"
         role="tablist"

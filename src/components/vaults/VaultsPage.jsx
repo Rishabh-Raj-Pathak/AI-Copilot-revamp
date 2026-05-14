@@ -1,4 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "../../design-system/vaults/index.css";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
@@ -10,6 +17,13 @@ import VaultsSectionHeader from "./VaultsSectionHeader.jsx";
 import VaultsPositionsHistoryTable from "./VaultsPositionsHistoryTable.jsx";
 import VaultsStatsRow from "./VaultsStatsRow.jsx";
 import { DEFAULT_SHARE_PCT } from "./vaultUiUtils.js";
+import {
+  advanceVaultsTourAfterFeaturedActivateClick,
+  isVaultsTourCompleted,
+  notifyVaultsTourDexChanged,
+  refreshVaultsTourIfActive,
+  startVaultsProductTour,
+} from "../../copilot/vaultsTour.js";
 import {
   availableVaults,
   dexTabs,
@@ -50,12 +64,69 @@ export default function VaultsPage({
   const [dexId, setDexId] = useState("all");
   const [rowUi, setRowUi] = useState(buildInitialRowUi);
 
+  const dexIdRef = useRef(dexId);
+  dexIdRef.current = dexId;
+
+  const pendingVaultTourAdvanceRef = useRef(false);
+
+  const vaultsTourHandlers = useMemo(
+    () => ({
+      getVaultsDexId: () => dexIdRef.current,
+    }),
+    [],
+  );
+
+  const runVaultsProductTour = useCallback(() => {
+    setViewMode("list");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        startVaultsProductTour(vaultsTourHandlers);
+      });
+    });
+  }, [vaultsTourHandlers]);
+
+  useEffect(() => {
+    if (isVaultsTourCompleted()) return;
+    let cancelled = false;
+    setViewMode("list");
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        startVaultsProductTour(vaultsTourHandlers);
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [vaultsTourHandlers]);
+
   const patchRow = useCallback((id, partial) => {
     setRowUi((prev) => {
       const cur = prev[id];
       if (!cur) return prev;
+      if (partial?.activated) {
+        const firstInactiveFeaturedId = featuredVaults.find(
+          (v) => !prev[v.id]?.activated,
+        )?.id;
+        if (firstInactiveFeaturedId === id) {
+          pendingVaultTourAdvanceRef.current = true;
+        }
+      }
       return { ...prev, [id]: { ...cur, ...partial } };
     });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!pendingVaultTourAdvanceRef.current) return;
+    pendingVaultTourAdvanceRef.current = false;
+    advanceVaultsTourAfterFeaturedActivateClick();
+  }, [rowUi]);
+
+  const handleDexChange = useCallback((nextId) => {
+    setDexId(nextId);
+    notifyVaultsTourDexChanged(nextId);
+    refreshVaultsTourIfActive();
   }, []);
 
   const filteredFeatured = useMemo(
@@ -102,7 +173,8 @@ export default function VaultsPage({
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
         }}
-        showProductTour={false}
+        showProductTour
+        onProductTour={runVaultsProductTour}
         walletConnected={walletConnected}
         onWalletConnected={onWalletConnected}
         terminalPlatform={terminalPlatform}
@@ -120,7 +192,11 @@ export default function VaultsPage({
               onViewModeChange={setViewMode}
             />
 
-            <VaultsDexTabs tabs={dexTabs} activeId={dexId} onChange={setDexId} />
+            <VaultsDexTabs
+              tabs={dexTabs}
+              activeId={dexId}
+              onChange={handleDexChange}
+            />
 
             {viewMode === "list" ? (
               <div className="flex flex-col gap-10">
@@ -136,12 +212,15 @@ export default function VaultsPage({
                   vaults={inactiveFeatured}
                   rowUi={rowUi}
                   onPatch={patchRow}
+                  sectionDataTour="vaults-featured-section"
+                  tourFeaturedFirstControls
                 />
                 <VaultsListSection
                   title="Available Vaults"
                   vaults={inactiveAvailable}
                   rowUi={rowUi}
                   onPatch={patchRow}
+                  sectionDataTour="vaults-available-section"
                 />
               </div>
             ) : (

@@ -5,7 +5,10 @@ import ActivatedVaultRow from "./ActivatedVaultRow.jsx";
  */
 export default function VaultsActivatedSection({ vaults, rowUi, onPatch }) {
   return (
-    <section className="vaults-root flex w-full flex-col gap-4">
+    <section
+      className="vaults-root flex w-full flex-col gap-4"
+      data-tour="vaults-activated-section"
+    >
       <div className="flex items-center gap-3">
         <h3 className="shrink-0 text-[10px] font-semibold uppercase leading-[15px] tracking-[2px] text-[#ccb17f]">
           Activated Vaults

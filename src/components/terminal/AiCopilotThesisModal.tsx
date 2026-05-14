@@ -564,7 +564,10 @@ export function AiCopilotThesisModal({
         aria-label="Close AI Copilot thesis"
         onClick={() => onOpenChange(false)}
       />
-      <div className="relative z-[201] w-full max-w-[940px] max-h-[min(96vh,980px)] overflow-hidden">
+      <div
+        className="relative z-[201] w-full max-w-[940px] max-h-[min(96vh,980px)] overflow-hidden"
+        data-tour="copilot-thesis-modal"
+      >
         <AiCopilotThesisPanel
           instrumentTitle={instrumentTitle}
           onClose={() => onOpenChange(false)}

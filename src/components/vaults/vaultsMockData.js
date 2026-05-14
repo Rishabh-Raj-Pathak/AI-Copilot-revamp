@@ -92,5 +92,5 @@ export const dexTabs = [
   { id: "all", label: "All Dexs" },
   { id: "hyperliquid", label: "Hyperliquid" },
   { id: "paradex", label: "Paradex" },
-  { id: "nado", label: "Nado" },
+  { id: "nado", label: "Add DEX" },
 ];

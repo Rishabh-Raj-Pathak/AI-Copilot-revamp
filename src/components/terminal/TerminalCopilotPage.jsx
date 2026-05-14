@@ -68,6 +68,37 @@ export default function TerminalCopilotPage({
     [],
   );
 
+  const ensureThesisClosedForTour = useCallback(
+    () =>
+      new Promise((resolve) => {
+        setThesisOpen(false);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.setTimeout(resolve, 56);
+          });
+        });
+      }),
+    [],
+  );
+
+  const ensureThesisOpenForTour = useCallback(
+    () =>
+      new Promise((resolve) => {
+        const id = selectedId ?? FIRST_SETUP_ID ?? null;
+        const s = id
+          ? (COPILOT_SETUPS.find((x) => x.id === id) ?? COPILOT_SETUPS[0])
+          : COPILOT_SETUPS[0];
+        if (s) setThesisInstrumentTitle(`${s.symbol}/USDC`);
+        setThesisOpen(true);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.setTimeout(resolve, 80);
+          });
+        });
+      }),
+    [selectedId],
+  );
+
   useEffect(() => {
     terminalPlatformRef.current = terminalPlatform;
   }, [terminalPlatform]);
@@ -101,9 +132,15 @@ export default function TerminalCopilotPage({
     () => ({
       onStepIndexChange: setCopilotTourStepIndex,
       prepareSuggestionTourStep,
+      ensureThesisClosedForTour,
+      ensureThesisOpenForTour,
       getTerminalPlatformId: () => terminalPlatformRef.current,
     }),
-    [prepareSuggestionTourStep],
+    [
+      prepareSuggestionTourStep,
+      ensureThesisClosedForTour,
+      ensureThesisOpenForTour,
+    ],
   );
 
   const runProductTour = useCallback(() => {
@@ -128,7 +165,10 @@ export default function TerminalCopilotPage({
         }
         return id;
       });
-      if (copilotTourStepIndex === 2) {
+      if (
+        copilotTourStepIndex === 2 ||
+        copilotTourStepIndex === 3
+      ) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => refreshCopilotTourIfActive());
         });
@@ -209,7 +249,10 @@ export default function TerminalCopilotPage({
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      <div
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row"
+        data-tour="copilot-suggestion-and-setup"
+      >
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:h-full lg:flex-[3_1_0] lg:basis-0 lg:border-r lg:border-[#242424]">
           <MarketFiltersBar
             activeFilter={activeFilter}
@@ -262,9 +305,7 @@ export default function TerminalCopilotPage({
           <DetailsPanel
             setup={selectedSetup}
             openTradeCtaLabel={
-              copilotTourStepIndex >= 3 && copilotTourStepIndex <= 4
-                ? "Place my trade"
-                : undefined
+              copilotTourStepIndex === 4 ? "Place my trade" : undefined
             }
             onOpenTradeCtaClick={handleOpenTradeCtaClick}
           />

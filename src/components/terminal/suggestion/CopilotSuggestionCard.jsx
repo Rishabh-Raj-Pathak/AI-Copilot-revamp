@@ -17,6 +17,9 @@ export default function CopilotSuggestionCard({
 }) {
   return (
     <article
+      data-tour={
+        selected && expanded ? "copilot-expanded-suggestion" : undefined
+      }
       role="button"
       tabIndex={0}
       onClick={() => onSelect?.(setup.id)}
