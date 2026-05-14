@@ -59,7 +59,7 @@
 .hyprearn-copilot-driver-popover .driver-popover-title {
   display: block;
   margin: 0;
-  padding-right: calc(1.5rem + 1.25rem + 0.25rem);
+  padding-right: calc(3.5rem + 1.25rem + 0.25rem);
   color: var(--ds-foreground);
   font-size: var(--ds-text-body-lg-size);
   line-height: 1.2;
@@ -86,32 +86,29 @@
   top: 1.25rem;
   right: 1.25rem;
   z-index: 8;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  padding: 0.125rem 0.125rem 0.0625rem;
   margin: 0;
   border-radius: var(--ds-radius-xs);
   border: none;
   background-color: transparent;
-  color: var(--ds-muted-foreground);
+  color: var(--ds-foreground);
   cursor: pointer;
-  line-height: 0;
-  font-size: 0;
+  font-size: var(--ds-text-body-sm-size);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
-}
-
-.hyprearn-copilot-driver-popover .driver-popover-close-btn svg {
-  display: block;
-  flex-shrink: 0;
-  width: 0.75rem;
-  height: 0.75rem;
-  margin: 0;
-  overflow: visible;
 }
 
 .hyprearn-copilot-driver-popover .driver-popover-close-btn:hover,
@@ -347,7 +344,7 @@
     font-size: var(--ds-text-body-lg-size);
     line-height: 1.2;
     letter-spacing: normal;
-    padding-right: calc(1.5rem + 1.125rem + 0.25rem);
+    padding-right: calc(3.5rem + 1.125rem + 0.25rem);
   }
 
   .hyprearn-copilot-driver-popover .driver-popover-footer {

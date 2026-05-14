@@ -57,17 +57,29 @@ export default function HeaderTerminal({
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
-  const [productTourMenuOpen, setProductTourMenuOpen] = useState(false);
-  const productTourMenuRef = useRef(null);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef(null);
+
+  const showDualProductTour =
+    showProductTour &&
+    typeof onProductTour1 === "function" &&
+    typeof onProductTour2 === "function";
+
+  const showSingleProductTour =
+    showProductTour &&
+    typeof onProductTour === "function" &&
+    !showDualProductTour;
+
+  const moreMenuHasTour = showDualProductTour || showSingleProductTour;
 
   useEffect(() => {
-    if (!productTourMenuOpen) return;
+    if (!moreMenuOpen) return;
     const close = (e) => {
-      const el = productTourMenuRef.current;
-      if (el && !el.contains(e.target)) setProductTourMenuOpen(false);
+      const el = moreMenuRef.current;
+      if (el && !el.contains(e.target)) setMoreMenuOpen(false);
     };
     const onKey = (e) => {
-      if (e.key === "Escape") setProductTourMenuOpen(false);
+      if (e.key === "Escape") setMoreMenuOpen(false);
     };
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", onKey);
@@ -75,12 +87,7 @@ export default function HeaderTerminal({
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", onKey);
     };
-  }, [productTourMenuOpen]);
-
-  const showDualProductTour =
-    showProductTour &&
-    typeof onProductTour1 === "function" &&
-    typeof onProductTour2 === "function";
+  }, [moreMenuOpen]);
 
   return (
     <header className="flex min-h-16 shrink-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-[#242424] bg-black px-3 py-2.5 sm:gap-x-3 sm:px-5 sm:py-3 lg:h-16 lg:flex-nowrap lg:gap-4 lg:py-3">
@@ -117,66 +124,72 @@ export default function HeaderTerminal({
               </button>
             );
           })}
-          <button
-            type="button"
-            className="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/5 sm:px-3 sm:text-sm"
-          >
-            More
-            <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
-          </button>
-          {showDualProductTour ? (
-            <div className="relative shrink-0" ref={productTourMenuRef}>
-              <button
-                type="button"
-                aria-expanded={productTourMenuOpen}
-                aria-haspopup="menu"
-                onClick={() => setProductTourMenuOpen((o) => !o)}
-                className="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-[#bfbfbf] hover:bg-white/5 hover:text-white sm:px-3 sm:text-sm"
-              >
-                <span className="sm:hidden">Tour</span>
-                <span className="hidden sm:inline">Product Tour</span>
-                <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
-              </button>
-              {productTourMenuOpen ? (
-                <div
-                  className="absolute right-0 top-full z-[120] mt-1 min-w-[11rem] rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
-                  role="menu"
-                >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
-                    onClick={() => {
-                      onProductTour1?.();
-                      setProductTourMenuOpen(false);
-                    }}
-                  >
-                    Product tour 1
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
-                    onClick={() => {
-                      onProductTour2?.();
-                      setProductTourMenuOpen(false);
-                    }}
-                  >
-                    Product tour 2
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ) : showProductTour && typeof onProductTour === "function" ? (
+          <div className="relative shrink-0" ref={moreMenuRef}>
             <button
               type="button"
-              onClick={onProductTour}
-              className="shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium text-[#bfbfbf] hover:bg-white/5 hover:text-white sm:px-3 sm:text-sm"
+              aria-expanded={moreMenuHasTour ? moreMenuOpen : undefined}
+              aria-haspopup={moreMenuHasTour ? "menu" : undefined}
+              onClick={() => {
+                if (!moreMenuHasTour) return;
+                setMoreMenuOpen((o) => !o);
+              }}
+              className="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/5 sm:px-3 sm:text-sm"
             >
-              <span className="sm:hidden">Tour</span>
-              <span className="hidden sm:inline">Product Tour</span>
+              More
+              <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
             </button>
-          ) : null}
+            {moreMenuOpen && moreMenuHasTour ? (
+              <div
+                className="absolute right-0 top-full z-[120] mt-1 min-w-[11rem] rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
+                role="menu"
+              >
+                {showDualProductTour ? (
+                  <>
+                    <p className="px-3 pb-1 pt-2 text-[11px] font-medium text-[#9a9a9a]">
+                      Get started
+                    </p>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                      onClick={() => {
+                        onProductTour1?.();
+                        setMoreMenuOpen(false);
+                      }}
+                    >
+                      Get started 1
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                      onClick={() => {
+                        onProductTour2?.();
+                        setMoreMenuOpen(false);
+                      }}
+                    >
+                      Get started 2
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    onClick={() => {
+                      onProductTour?.();
+                      setMoreMenuOpen(false);
+                    }}
+                  >
+                    Get started
+                  </button>
+                )}
+                <p className="border-t border-[#242424] px-3 pb-2 pt-1.5 text-[10px] leading-snug text-[#757575]">
+                  For our reference
+                </p>
+              </div>
+            ) : null}
+          </div>
         </nav>
       </div>
       <div className="terminal-header-actions flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto sm:gap-3">

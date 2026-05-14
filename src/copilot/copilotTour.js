@@ -48,12 +48,12 @@ export function getActiveCopilotTourStepIndex() {
   }
 }
 
-/** Driver index of the View Thesis spotlight (highlights the control; modal opens only if the user clicks). */
+/** Driver index of the Backtest spotlight (highlights the control; modal opens only if the user clicks). */
 const VIEW_THESIS_STEP_INDEX_TOUR1 = 3;
 const VIEW_THESIS_STEP_INDEX_TOUR2 = 2;
 
 /**
- * True when the active tour is on the step that spotlights **View Thesis** (the button).
+ * True when the active tour is on the step that spotlights **Backtest** (the button).
  * - User can press tour **Next** without opening the modal.
  * - If they open the modal then close it, the page should call {@link advanceCopilotTourMoveNextIfActive}.
  */
@@ -67,7 +67,7 @@ export function isCopilotTourOnViewThesisStep() {
   return false;
 }
 
-/** Advance one driver step while the tour is active (after thesis modal closes on the View Thesis step). */
+/** Advance one driver step while the tour is active (after thesis modal closes on the Backtest step). */
 export function advanceCopilotTourMoveNextIfActive() {
   try {
     if (!activeTourDriver?.isActive?.()) return false;
@@ -267,30 +267,11 @@ function mountHyprearnTourStepSegments(popover, opts) {
   wrapper.insertBefore(bar, footer);
 }
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
 /** @param {HTMLButtonElement} closeButton */
-function mountTourCloseIcon(closeButton) {
-  closeButton.textContent = "";
+function mountTourSkipLabel(closeButton) {
   closeButton.replaceChildren();
-  closeButton.setAttribute("aria-label", "Close guided tour");
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("width", "12");
-  svg.setAttribute("height", "12");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "2");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  const p1 = document.createElementNS(SVG_NS, "path");
-  p1.setAttribute("d", "M18 6 6 18");
-  const p2 = document.createElementNS(SVG_NS, "path");
-  p2.setAttribute("d", "m6 6 12 12");
-  svg.append(p1, p2);
-  closeButton.appendChild(svg);
+  closeButton.textContent = "Skip";
+  closeButton.setAttribute("aria-label", "Skip guided tour");
 }
 
 /**
@@ -327,7 +308,7 @@ function buildCopilotTour1Steps(handlers) {
     {
       element: '[data-tour="copilot-overview"]',
       popover: {
-        title: "Meet HyprEarn Copilot",
+        title: "AI copilot",
         description:
           "Copilot trade setups with entries, targets and risk levels. You approve every trade before it goes live.",
         side: "bottom",
@@ -346,7 +327,7 @@ function buildCopilotTour1Steps(handlers) {
         });
       },
       popover: {
-        title: "Trade across DEXs",
+        title: "Select Dex",
         description:
           "Switch venues anytime without changing your workflow. Copilot works the same way across supported DEXs.",
         side: "bottom",
@@ -426,9 +407,9 @@ function buildCopilotTour1Steps(handlers) {
         })();
       },
       popover: {
-        title: "View thesis",
+        title: "Backtest",
         description:
-          "This opens the full strategy write-up. Tap View Thesis to read it, or press Next to continue without opening.",
+          "This opens the full strategy write-up. Tap Backtest to read it, or press Next to continue without opening.",
         side: "bottom",
         align: "center",
         showButtons: ["next", "previous", "close"],
@@ -534,7 +515,7 @@ function buildCopilotTour2Steps(handlers) {
     {
       element: '[data-tour="copilot-overview"]',
       popover: {
-        title: "Meet HyprEarn Copilot",
+        title: "Ai copilot",
         description:
           "Copilot trade setups with entries, targets and risk levels. You approve every trade before it goes live.",
         side: "bottom",
@@ -553,7 +534,7 @@ function buildCopilotTour2Steps(handlers) {
         });
       },
       popover: {
-        title: "Trade across DEXs",
+        title: "Select Dex",
         description:
           "Switch venues anytime without changing your workflow. Copilot works the same way across supported DEXs.",
         side: "bottom",
@@ -598,9 +579,9 @@ function buildCopilotTour2Steps(handlers) {
         })();
       },
       popover: {
-        title: "View thesis",
+        title: "Backtest",
         description:
-          "This opens the full strategy write-up. Tap View Thesis to read it, or press Next to continue without opening.",
+          "This opens the full strategy write-up. Tap Backtest to read it, or press Next to continue without opening.",
         side: "bottom",
         align: "center",
         showButtons: ["next", "previous", "close"],
@@ -699,7 +680,7 @@ function mapPopoverBlueprint(blueprint) {
         showButtons: ["next", "previous", "close"],
         ...rowPopover,
         onPopoverRender: (popover, opts) => {
-          mountTourCloseIcon(popover.closeButton);
+          mountTourSkipLabel(popover.closeButton);
           popover.nextButton?.classList?.add("ds-terminal-gradient-cta");
           removeHyprearnTourPopoverExtras(popover);
           mountHyprearnTourStepSegments(popover, opts);

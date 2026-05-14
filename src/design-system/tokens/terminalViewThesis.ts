@@ -1,8 +1,8 @@
 /**
- * Terminal Copilot — «View Thesis» outline control.
+ * Terminal Copilot — «Backtest» control (opens strategy write-up).
  *
- * Visual spec: black fill, 1px `#333` border, ~6px corner radius, 8×16px padding,
- * 8px gap, 12px medium label, Lucide **`File`** (outline document) only — no custom SVG.
+ * Visual spec: black fill, 1px brand horizontal gradient border, ~6px corner radius,
+ * 8×16px padding, 8px gap, 12px medium label, Lucide **`ScanSearch`** only — no custom SVG.
  *
  * Implementation: CSS variables `--ds-terminal-view-thesis-*` and
  * `.ds-terminal-view-thesis-button` in `src/styles/design-tokens.css`.
@@ -26,7 +26,7 @@ export const terminalViewThesisButton = {
   /** Apply to `<button type="button">` (see design-tokens.css `@layer components`). */
   componentClassName: 'ds-terminal-view-thesis-button',
   /** Lucide component name — do not substitute other icons for this product control. */
-  lucideIcon: 'File' as const,
+  lucideIcon: 'ScanSearch' as const,
   iconSizePx: 16,
   iconStrokeWidth: 2,
 } as const

@@ -13,7 +13,7 @@
   --palette-neutral-0: #000000;
   --palette-neutral-5: #121212;
   --palette-neutral-10: #242424;
-  /* Between 10 and 15 — terminal outline controls on pure black (e.g. View Thesis) */
+  /* Between 10 and 15 — terminal outline controls on pure black (e.g. Backtest) */
   --palette-neutral-12: #333333;
   --palette-neutral-15: #313131;
   --palette-neutral-20: #454545;
@@ -162,8 +162,8 @@
   --ds-height-btn-lg: 3rem;
 
   /*
-   * Terminal — Copilot «View Thesis» (outline pill on black; Lucide `File` + label).
-   * Pixel spec: border 1px #333; radius 12–16px; py 8px px 16px; gap 8px; label white medium.
+   * Terminal — Copilot «Backtest» (brand-gradient stroke on black; Lucide `ScanSearch` + label).
+   * Pixel spec: 1px brand ramp border; radius 12–16px; py 8px px 16px; gap 8px; label white medium.
    */
   --ds-terminal-view-thesis-bg: var(--palette-neutral-0);
   --ds-terminal-view-thesis-fg: var(--palette-neutral-100);
@@ -381,22 +381,25 @@ dialog::backdrop {
     box-sizing: border-box;
     padding: var(--ds-terminal-view-thesis-padding-y) var(--ds-terminal-view-thesis-padding-x);
     border-radius: var(--ds-terminal-view-thesis-radius);
-    border: var(--ds-stroke-width) solid var(--ds-terminal-view-thesis-border);
-    background-color: var(--ds-terminal-view-thesis-bg);
+    border: var(--ds-stroke-width) solid transparent;
+    background-color: transparent;
+    background-image:
+      linear-gradient(var(--ds-terminal-view-thesis-bg), var(--ds-terminal-view-thesis-bg)),
+      var(--ds-brand-gradient-horizontal);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
     color: var(--ds-terminal-view-thesis-fg);
     font-family: var(--ds-font-sans);
     font-size: var(--ds-terminal-view-thesis-font-size);
     line-height: var(--ds-terminal-view-thesis-line-height);
     font-weight: var(--ds-terminal-view-thesis-font-weight);
     cursor: pointer;
-    transition:
-      background-color 0.15s ease,
-      border-color 0.15s ease;
   }
 
   .ds-terminal-view-thesis-button:hover {
-    background-color: rgb(255 255 255 / 0.05);
-    border-color: var(--palette-neutral-20);
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.06)),
+      var(--ds-brand-gradient-horizontal);
   }
 
   .ds-terminal-view-thesis-button:focus-visible {

@@ -1,4 +1,4 @@
-import { File } from 'lucide-react'
+import { ScanSearch } from 'lucide-react'
 import { terminalViewThesisButton } from '../../../design-system/tokens/terminalViewThesis'
 
 export default function ViewThesisButton({ onClick, dataTour }) {
@@ -9,13 +9,13 @@ export default function ViewThesisButton({ onClick, dataTour }) {
       onClick={onClick}
       {...(dataTour ? { "data-tour": dataTour } : {})}
     >
-      <File
+      <ScanSearch
         aria-hidden
         size={terminalViewThesisButton.iconSizePx}
         strokeWidth={terminalViewThesisButton.iconStrokeWidth}
         className="shrink-0"
       />
-      View Thesis
+      Backtest
     </button>
   )
 }
