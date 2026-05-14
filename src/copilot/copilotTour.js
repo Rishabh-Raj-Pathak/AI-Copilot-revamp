@@ -626,9 +626,9 @@ function buildCopilotTour2Steps(handlers) {
         })();
       },
       popover: {
-        title: "Customize Your Trade",
+        title: "Review Trade Setup",
         description:
-          "Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
+          "Every card is a live AI suggested setup. Tap to expand and review the full chart context before committing and Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
         side: isNarrowViewport ? "bottom" : "top",
         align: "start",
         showButtons: ["next", "previous", "close"],

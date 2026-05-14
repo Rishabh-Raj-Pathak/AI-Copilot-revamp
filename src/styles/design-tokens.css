@@ -396,12 +396,6 @@ dialog::backdrop {
     cursor: pointer;
   }
 
-  .ds-terminal-view-thesis-button:hover {
-    background-image:
-      linear-gradient(rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.06)),
-      var(--ds-brand-gradient-horizontal);
-  }
-
   .ds-terminal-view-thesis-button:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--ds-ring), 0 0 0 4px var(--ds-background);
