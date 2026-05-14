@@ -308,9 +308,9 @@ function buildCopilotTour1Steps(handlers) {
     {
       element: '[data-tour="copilot-overview"]',
       popover: {
-        title: "AI Copilot",
+        title: "AI-Copilot",
         description:
-          "Copilot trade setups with entries, targets and risk levels. You approve every trade before it goes live.",
+          "AI-Copilot builds complete trade setups, entry, target, and stop loss included. You stay in control, always.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -329,7 +329,7 @@ function buildCopilotTour1Steps(handlers) {
       popover: {
         title: "Select Dex",
         description:
-          "Switch venues anytime without changing your workflow. Copilot works the same way across supported DEXs.",
+          "One workflow, multiple DEXs. Switch exchanges instantly, your trading experience never changes.",
         side: "bottom",
         align: isNarrowViewport ? "start" : "end",
         showButtons: ["next", "previous", "close"],
@@ -372,9 +372,9 @@ function buildCopilotTour1Steps(handlers) {
         })();
       },
       popover: {
-        title: "Open a Setup",
+        title: "Review Trade Setup",
         description:
-          "Each card is an AI-suggested setup. The selected card expands so you can review context before opening thesis.",
+          "Every card is a live AI suggested setup. Tap to expand and review the full chart context before committing.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -409,7 +409,7 @@ function buildCopilotTour1Steps(handlers) {
       popover: {
         title: "Backtest",
         description:
-          "This opens the full strategy write-up. Tap Backtest to read it, or press Next to continue without opening.",
+          "Read the backtest behind every trade. Understand the reasoning before you execute.",
         side: "bottom",
         align: "center",
         showButtons: ["next", "previous", "close"],
@@ -454,9 +454,9 @@ function buildCopilotTour1Steps(handlers) {
         })();
       },
       popover: {
-        title: "Review Your Trade",
+        title: "Customize Your Trade",
         description:
-          "Adjust leverage, size, stops and targets to match your risk profile. Nothing goes live until you confirm it.",
+          "Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
         side: isNarrowViewport ? "bottom" : "left",
         align: isNarrowViewport ? "center" : "start",
         showButtons: ["next", "previous", "close"],
@@ -488,7 +488,8 @@ function buildCopilotTour1Steps(handlers) {
       },
       popover: {
         title: "Place your first trade",
-        description: "Congrats, your setup is ready. Place your first trade.",
+        description:
+          "You're all set. Hit the button and place your first trade.",
         side: "top",
         align: "center",
         showButtons: ["previous", "close"],
@@ -515,9 +516,9 @@ function buildCopilotTour2Steps(handlers) {
     {
       element: '[data-tour="copilot-overview"]',
       popover: {
-        title: "Ai copilot",
+        title: "AI-Copilot",
         description:
-          "Copilot trade setups with entries, targets and risk levels. You approve every trade before it goes live.",
+          "AI-Copilot builds complete trade setups - entry, target, and stop loss included. You stay in control, always.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -536,7 +537,7 @@ function buildCopilotTour2Steps(handlers) {
       popover: {
         title: "Select Dex",
         description:
-          "Switch venues anytime without changing your workflow. Copilot works the same way across supported DEXs.",
+          "One workflow, multiple DEXs. Switch exchanges instantly, your trading experience never changes.",
         side: "bottom",
         align: isNarrowViewport ? "start" : "end",
         showButtons: ["next", "previous", "close"],
@@ -581,7 +582,7 @@ function buildCopilotTour2Steps(handlers) {
       popover: {
         title: "Backtest",
         description:
-          "This opens the full strategy write-up. Tap Backtest to read it, or press Next to continue without opening.",
+          "Read the backtest behind every trade. Understand the reasoning before you execute.",
         side: "bottom",
         align: "center",
         showButtons: ["next", "previous", "close"],
@@ -625,9 +626,9 @@ function buildCopilotTour2Steps(handlers) {
         })();
       },
       popover: {
-        title: "Suggestions and setup",
+        title: "Customize Your Trade",
         description:
-          "You have the AI suggestion on one side and execution controls on the other. Tune leverage, size, stops, and targets—nothing goes live until you confirm.",
+          "Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
         side: isNarrowViewport ? "bottom" : "top",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -659,7 +660,8 @@ function buildCopilotTour2Steps(handlers) {
       },
       popover: {
         title: "Place your first trade",
-        description: "Congrats, your setup is ready. Place your first trade.",
+        description:
+          "You're all set. Hit the button and place your first trade.",
         side: "top",
         align: "center",
         showButtons: ["previous", "close"],
