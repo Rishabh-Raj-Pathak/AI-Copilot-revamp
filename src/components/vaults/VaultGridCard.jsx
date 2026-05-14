@@ -136,7 +136,9 @@ export default function VaultGridCard({ vault, ui, onPatch }) {
       <button
         type="button"
         disabled={activated}
-        onClick={() => onPatch(vault.id, { activated: true })}
+        onClick={() =>
+          onPatch(vault.id, { activated: true, activatedAt: Date.now() })
+        }
         className={`mt-auto h-9 w-full rounded-lg border border-[rgba(120,90,40,0.25)] text-xs font-medium uppercase tracking-[0.35px] transition-colors ${
           activated
             ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"

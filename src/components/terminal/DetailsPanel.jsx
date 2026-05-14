@@ -227,10 +227,10 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
   const dirLabel = direction === "long" ? "Long" : "Short";
 
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-[1_1_0] basis-0 flex-col overflow-hidden border-l border-[#242424] bg-black">
-      <div className="flex shrink-0 items-center justify-between border-b border-[#242424] px-5 py-5">
+    <aside className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden bg-black lg:border-l lg:border-[#242424]">
+      <div className="flex shrink-0 flex-col gap-2 border-b border-[#242424] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
         <span className="text-lg font-semibold text-white">{setup.symbol}</span>
-        <div className="flex items-end gap-1 whitespace-nowrap text-base">
+        <div className="flex flex-wrap items-end gap-1 text-base whitespace-nowrap">
           <span className="text-[#bfbfbf]">Current Price:</span>
           <span className="font-medium text-white">${setup.price}</span>
         </div>
@@ -239,7 +239,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
         data-tour="copilot-trade-setup"
       >
-        <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-5">
+        <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4 sm:px-5 sm:py-5">
           <div className="flex flex-col gap-3">
             <div
               className="flex items-start justify-between gap-3 rounded-lg border border-[#f2b500] p-3"
@@ -493,7 +493,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 flex-col gap-3 border-t border-[#242424] px-5 py-5">
+        <div className="flex shrink-0 flex-col gap-3 border-t border-[#242424] px-3 py-4 sm:px-5 sm:py-5">
           <label className="flex cursor-pointer items-center gap-3">
             <Checkbox checked={openAtMark} onChange={setOpenAtMark} />
             <span className="text-sm font-medium text-white">
@@ -521,8 +521,8 @@ export default function DetailsPanel({
 }) {
   if (!setup) {
     return (
-      <aside className="flex h-full min-h-0 min-w-0 flex-[1_1_0] basis-0 flex-col overflow-hidden border-l border-[#242424] bg-black">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center">
+      <aside className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden bg-black lg:border-l lg:border-[#242424]">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 text-center sm:px-6">
           <p className="max-w-[280px] text-sm leading-relaxed text-[#757575]">
             When you select a trade, details will show up here.
           </p>

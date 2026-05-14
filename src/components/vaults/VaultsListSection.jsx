@@ -1,4 +1,4 @@
-import { DEFAULT_MAX_USDC } from "./vaultUiUtils.js";
+import { parseMaxUsdcFromLabel } from "./vaultUiUtils.js";
 import VaultRow from "./VaultRow.jsx";
 
 /**
@@ -39,9 +39,11 @@ export default function VaultsListSection({ title, vaults, rowUi, onPatch }) {
             onShareChange={(n) => onPatch(v.id, { sharePct: n })}
             onAmountStrChange={(s) => onPatch(v.id, { amountStr: s })}
             onMaxClick={() =>
-              onPatch(v.id, { amountStr: String(DEFAULT_MAX_USDC) })
+              onPatch(v.id, { amountStr: String(parseMaxUsdcFromLabel(v.maxLabel)) })
             }
-            onActivate={() => onPatch(v.id, { activated: true })}
+            onActivate={() =>
+              onPatch(v.id, { activated: true, activatedAt: Date.now() })
+            }
           />
         ))}
       </div>

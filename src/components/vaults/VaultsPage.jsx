@@ -4,10 +4,11 @@ import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
 import VaultsHero from "./VaultsHero.jsx";
 import VaultGridCard from "./VaultGridCard.jsx";
+import VaultsActivatedSection from "./VaultsActivatedSection.jsx";
 import VaultsListSection from "./VaultsListSection.jsx";
 import VaultsSectionHeader from "./VaultsSectionHeader.jsx";
+import VaultsPositionsHistoryTable from "./VaultsPositionsHistoryTable.jsx";
 import VaultsStatsRow from "./VaultsStatsRow.jsx";
-import VaultsTrustBadge from "./VaultsTrustBadge.jsx";
 import { DEFAULT_SHARE_PCT } from "./vaultUiUtils.js";
 import {
   availableVaults,
@@ -24,6 +25,7 @@ function buildInitialRowUi() {
         sharePct: DEFAULT_SHARE_PCT,
         amountStr: "5",
         activated: false,
+        activatedAt: null,
       },
     ]),
   );
@@ -70,6 +72,29 @@ export default function VaultsPage({
     [filteredFeatured, filteredAvailable],
   );
 
+  const allVaults = useMemo(
+    () => [...featuredVaults, ...availableVaults],
+    [],
+  );
+
+  const activatedVaultsOrdered = useMemo(() => {
+    return allVaults
+      .filter((v) => rowUi[v.id]?.activated)
+      .sort(
+        (a, b) =>
+          (rowUi[a.id]?.activatedAt ?? 0) - (rowUi[b.id]?.activatedAt ?? 0),
+      );
+  }, [allVaults, rowUi]);
+
+  const inactiveFeatured = useMemo(
+    () => filteredFeatured.filter((v) => !rowUi[v.id]?.activated),
+    [filteredFeatured, rowUi],
+  );
+  const inactiveAvailable = useMemo(
+    () => filteredAvailable.filter((v) => !rowUi[v.id]?.activated),
+    [filteredAvailable, rowUi],
+  );
+
   return (
     <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
       <HeaderTerminal
@@ -95,24 +120,26 @@ export default function VaultsPage({
               onViewModeChange={setViewMode}
             />
 
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <VaultsDexTabs tabs={dexTabs} activeId={dexId} onChange={setDexId} />
-              <div className="shrink-0 lg:pl-4">
-                <VaultsTrustBadge />
-              </div>
-            </div>
+            <VaultsDexTabs tabs={dexTabs} activeId={dexId} onChange={setDexId} />
 
             {viewMode === "list" ? (
               <div className="flex flex-col gap-10">
+                {activatedVaultsOrdered.length > 0 ? (
+                  <VaultsActivatedSection
+                    vaults={activatedVaultsOrdered}
+                    rowUi={rowUi}
+                    onPatch={patchRow}
+                  />
+                ) : null}
                 <VaultsListSection
                   title="Featured Opportunities"
-                  vaults={filteredFeatured}
+                  vaults={inactiveFeatured}
                   rowUi={rowUi}
                   onPatch={patchRow}
                 />
                 <VaultsListSection
                   title="Available Vaults"
-                  vaults={filteredAvailable}
+                  vaults={inactiveAvailable}
                   rowUi={rowUi}
                   onPatch={patchRow}
                 />
@@ -136,6 +163,8 @@ export default function VaultsPage({
               </p>
             ) : null}
           </div>
+
+          <VaultsPositionsHistoryTable />
         </div>
       </div>
     </div>

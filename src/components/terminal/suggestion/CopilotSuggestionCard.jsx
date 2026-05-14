@@ -13,6 +13,7 @@ export default function CopilotSuggestionCard({
   expanded,
   selected,
   onSelect,
+  onViewThesis,
 }) {
   return (
     <article
@@ -58,7 +59,12 @@ export default function CopilotSuggestionCard({
               <SetupChip key={`${setup.id}-${i}-${c.label}`} chip={c} />
             ))}
           </div>
-          <ViewThesisButton onClick={(e) => e.stopPropagation()} />
+          <ViewThesisButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewThesis?.();
+            }}
+          />
         </div>
       </div>
 

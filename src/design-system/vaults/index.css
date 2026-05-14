@@ -122,3 +122,73 @@
   background: transparent;
   border: none;
 }
+
+/** Enter motion when a vault moves into “Activated Vaults”. */
+@keyframes vaults-activated-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vaults-activated-row-animate {
+  animation: vaults-activated-row-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vaults-activated-row-animate {
+    animation: none;
+  }
+}
+
+/** Figma `4421:6680` — positions / history wide table column tracks. */
+.vaults-positions-header-grid,
+.vaults-positions-row-grid {
+  display: grid;
+  grid-template-columns:
+    105px 75px 82px 78px 82px 105px 76px 90px 62px 104px 108px 62px;
+  column-gap: 0;
+  align-items: center;
+}
+
+.vaults-positions-header-grid > [role="columnheader"]:last-child {
+  text-align: right;
+}
+
+/** PNL cell radial wash — `4421:6778` / `4421:6930`. */
+.vaults-pnl-cell-positive {
+  background: radial-gradient(
+    ellipse 115% 120% at 0% 50%,
+    rgba(0, 212, 146, 0.07) 0%,
+    transparent 65%
+  );
+}
+
+.vaults-pnl-cell-negative {
+  background: radial-gradient(
+    ellipse 115% 120% at 0% 50%,
+    rgba(229, 72, 77, 0.07) 0%,
+    transparent 65%
+  );
+}
+
+.vaults-history-header-grid,
+.vaults-history-row-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(128px, 1.25fr)
+    minmax(44px, 0.45fr)
+    minmax(52px, 0.5fr)
+    minmax(88px, 0.95fr)
+    minmax(72px, 0.85fr)
+    minmax(72px, 0.85fr)
+    minmax(72px, 0.75fr)
+    minmax(88px, 0.85fr)
+    minmax(88px, 0.85fr);
+  column-gap: 12px;
+  align-items: center;
+}

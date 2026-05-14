@@ -1,8 +1,8 @@
 import { Activity, Hexagon, Zap } from "lucide-react";
 import {
-  DEFAULT_MAX_USDC,
   clampAmountStr,
   feePctFromShare,
+  parseMaxUsdcFromLabel,
 } from "./vaultUiUtils.js";
 
 const ICONS = {
@@ -92,6 +92,7 @@ export default function VaultRow({
   const amountStr = ui.amountStr;
   const activated = ui.activated;
   const feeLabel = feePctFromShare(sharePct);
+  const vaultMaxUsdc = parseMaxUsdcFromLabel(maxLabel);
 
   const paddedForStrip = Boolean(bronzeStrip);
 
@@ -206,7 +207,7 @@ export default function VaultRow({
                 value={amountStr}
                 onChange={(e) => onAmountStrChange(e.target.value)}
                 onBlur={() =>
-                  onAmountStrChange(clampAmountStr(amountStr, DEFAULT_MAX_USDC))
+                  onAmountStrChange(clampAmountStr(amountStr, vaultMaxUsdc))
                 }
                 className="ml-1 min-w-0 flex-1 bg-transparent text-right text-sm font-semibold leading-[21px] text-[#f0f0f0] outline-none"
                 aria-label={`${name} USDC amount`}

@@ -15,8 +15,8 @@ function formatVol(n) {
 
 export default function MarketFiltersBar({ activeFilter, onFilterChange, stats }) {
   return (
-    <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#242424] px-5 py-3">
-      <div className="flex flex-wrap items-start gap-2">
+    <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-[#242424] px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
+      <div className="flex min-w-0 flex-1 flex-wrap items-start gap-1.5 sm:gap-2">
         {filterDefs.map((f) => {
           const active = f.id === activeFilter
           return (
@@ -38,7 +38,7 @@ export default function MarketFiltersBar({ activeFilter, onFilterChange, stats }
           )
         })}
       </div>
-      <div className="flex shrink-0 flex-wrap items-start justify-end gap-5 leading-tight whitespace-nowrap">
+      <div className="flex w-full shrink-0 flex-wrap items-start justify-start gap-x-3 gap-y-1.5 leading-tight sm:w-auto sm:justify-end sm:gap-5 sm:whitespace-nowrap">
         <div className="flex items-center gap-2">
           <span className={terminalKpiBar.labelClassName}>Total Volume:</span>
           <span className={terminalKpiBar.valueClassName}>{formatVol(stats.volume)}</span>

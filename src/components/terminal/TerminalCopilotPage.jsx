@@ -6,6 +6,7 @@ import CopilotSuggestionCard from "./suggestion/CopilotSuggestionCard.jsx";
 import DetailsPanel from "./DetailsPanel.jsx";
 import TradeSuccessModal from "./TradeSuccessModal.jsx";
 import CopilotBottomActivityDock from "./CopilotBottomActivityDock.jsx";
+import { AiCopilotThesisModal } from "./AiCopilotThesisModal.tsx";
 import { COPILOT_SETUPS } from "./copilotSetups.js";
 import {
   advanceCopilotTourToPositionsFromOpenTradeClick,
@@ -34,6 +35,9 @@ export default function TerminalCopilotPage({
   const [tourFirstTradeDemo, setTourFirstTradeDemo] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [tradeSuccessOpen, setTradeSuccessOpen] = useState(false);
+  const [thesisOpen, setThesisOpen] = useState(false);
+  const [thesisInstrumentTitle, setThesisInstrumentTitle] =
+    useState("BTC/USDC");
   const [highlightOpenedPositionRow, setHighlightOpenedPositionRow] =
     useState(false);
   const [activeFilter, setActiveFilter] = useState("trending");
@@ -205,14 +209,14 @@ export default function TerminalCopilotPage({
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden">
-        <main className="flex h-full min-h-0 min-w-0 flex-[3_1_0] basis-0 flex-col overflow-hidden border-r border-[#242424]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:h-full lg:flex-[3_1_0] lg:basis-0 lg:border-r lg:border-[#242424]">
           <MarketFiltersBar
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             stats={stats}
           />
-          <div className="shrink-0 px-5 pt-5 pb-5">
+          <div className="shrink-0 px-3 pt-4 pb-4 sm:px-5 sm:pt-5 sm:pb-5">
             <SuggestionToolbar
               expireSeconds={expireSec}
               onRefresh={handleRefresh}
@@ -220,7 +224,7 @@ export default function TerminalCopilotPage({
           </div>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div
-              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pb-5"
+              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pb-4 sm:px-5 sm:pb-5"
               data-tour="copilot-suggestions-list"
             >
               <div className="flex flex-col gap-4">
@@ -233,6 +237,10 @@ export default function TerminalCopilotPage({
                       expanded={isSelected}
                       selected={isSelected}
                       onSelect={handleSuggestionSelect}
+                      onViewThesis={() => {
+                        setThesisInstrumentTitle(`${setup.symbol}/USDC`);
+                        setThesisOpen(true);
+                      }}
                     />
                   );
                 })}
@@ -244,20 +252,33 @@ export default function TerminalCopilotPage({
             />
           </div>
         </main>
-        <DetailsPanel
-          setup={selectedSetup}
-          openTradeCtaLabel={
-            copilotTourStepIndex >= 3 && copilotTourStepIndex <= 4
-              ? "Place my trade"
-              : undefined
+        <div
+          className={
+            selectedSetup
+              ? "flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black max-lg:h-[min(52vh,28rem)] max-lg:max-h-[60vh] lg:h-full lg:flex-[1_1_0] lg:basis-0 lg:border-t-0 lg:border-l"
+              : "hidden min-h-0 w-full min-w-0 lg:flex lg:h-full lg:flex-[1_1_0] lg:basis-0 lg:border-l lg:border-[#242424]"
           }
-          onOpenTradeCtaClick={handleOpenTradeCtaClick}
-        />
+        >
+          <DetailsPanel
+            setup={selectedSetup}
+            openTradeCtaLabel={
+              copilotTourStepIndex >= 3 && copilotTourStepIndex <= 4
+                ? "Place my trade"
+                : undefined
+            }
+            onOpenTradeCtaClick={handleOpenTradeCtaClick}
+          />
+        </div>
       </div>
       <TradeSuccessModal
         open={tradeSuccessOpen}
         onViewPortfolio={dismissTradeSuccessModal}
         onShareSetup={dismissTradeSuccessModal}
+      />
+      <AiCopilotThesisModal
+        open={thesisOpen}
+        onOpenChange={setThesisOpen}
+        instrumentTitle={thesisInstrumentTitle}
       />
     </div>
   );

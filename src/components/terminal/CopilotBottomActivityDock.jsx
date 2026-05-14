@@ -230,7 +230,7 @@ export default function CopilotBottomActivityDock({
     <section
       ref={dockRef}
       data-tour="position-tracking"
-      className="flex shrink-0 flex-col border-t border-[#242424] bg-black"
+      className="flex min-h-0 min-w-0 shrink-0 flex-col border-t border-[#242424] bg-black"
       style={{ height: panelHeight, transition: "height 0.18s ease-out" }}
       aria-label="Activity"
     >
@@ -273,129 +273,143 @@ export default function CopilotBottomActivityDock({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {activeTab === "tradeHistory" ? (
           <>
-            <div
-              className="grid shrink-0 grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
-              style={{ borderColor: BORDER }}
-            >
-              <span>Time</span>
-              <span>Coin</span>
-              <span>Direction</span>
-              <span className="text-right">Price</span>
-              <span className="text-right">Size</span>
-              <span className="text-right">Trade Value</span>
-              <span className="text-right">Fee</span>
-              <span className="text-right">Closed PNL</span>
-            </div>
-            <div
-              ref={bodyRef}
-              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
-            >
-              {MOCK_TRADES.map((row, i) => {
-                const dColor = directionColor(row.direction);
-                const showPnlIcon = row.closedPnl !== "—";
-                return (
-                  <div
-                    key={`${row.time}-${i}`}
-                    className="grid grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-xs tabular-nums"
-                    style={{ borderColor: "#1a1a1a" }}
-                  >
-                    <span className="text-[#e5e5e5]">{row.time}</span>
-                    <span className="font-medium" style={{ color: dColor }}>
-                      {row.coin}
-                    </span>
-                    <span className="font-medium" style={{ color: dColor }}>
-                      {row.direction}
-                    </span>
-                    <span className="text-right text-[#e5e5e5]">
-                      {row.price}
-                    </span>
-                    <span className="text-right text-[#e5e5e5]">
-                      {row.size}
-                    </span>
-                    <span className="text-right text-[#e5e5e5]">
-                      {row.tradeValue}
-                    </span>
-                    <span className="text-right text-[#e5e5e5]">{row.fee}</span>
-                    <span className="flex items-center justify-end gap-1 text-right font-medium">
-                      {row.pnlPositive === true ? (
-                        <span style={{ color: GREEN }}>{row.closedPnl}</span>
-                      ) : row.pnlPositive === false ? (
-                        <span style={{ color: RED }}>{row.closedPnl}</span>
-                      ) : (
-                        <span className="text-[#8c8c8c]">{row.closedPnl}</span>
-                      )}
-                      {showPnlIcon ? (
-                        <button
-                          type="button"
-                          className="text-[#8c8c8c] hover:text-white"
-                          aria-label="View trade details"
-                        >
-                          <ExternalLinkIcon className="inline" />
-                        </button>
-                      ) : null}
-                    </span>
-                  </div>
-                );
-              })}
+            <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
+              <div className="flex min-h-0 min-w-[720px] flex-1 flex-col">
+                <div
+                  className="grid shrink-0 grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
+                  style={{ borderColor: BORDER }}
+                >
+                  <span>Time</span>
+                  <span>Coin</span>
+                  <span>Direction</span>
+                  <span className="text-right">Price</span>
+                  <span className="text-right">Size</span>
+                  <span className="text-right">Trade Value</span>
+                  <span className="text-right">Fee</span>
+                  <span className="text-right">Closed PNL</span>
+                </div>
+                <div
+                  ref={bodyRef}
+                  className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+                >
+                  {MOCK_TRADES.map((row, i) => {
+                    const dColor = directionColor(row.direction);
+                    const showPnlIcon = row.closedPnl !== "—";
+                    return (
+                      <div
+                        key={`${row.time}-${i}`}
+                        className="grid grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-xs tabular-nums"
+                        style={{ borderColor: "#1a1a1a" }}
+                      >
+                        <span className="text-[#e5e5e5]">{row.time}</span>
+                        <span className="font-medium" style={{ color: dColor }}>
+                          {row.coin}
+                        </span>
+                        <span className="font-medium" style={{ color: dColor }}>
+                          {row.direction}
+                        </span>
+                        <span className="text-right text-[#e5e5e5]">
+                          {row.price}
+                        </span>
+                        <span className="text-right text-[#e5e5e5]">
+                          {row.size}
+                        </span>
+                        <span className="text-right text-[#e5e5e5]">
+                          {row.tradeValue}
+                        </span>
+                        <span className="text-right text-[#e5e5e5]">
+                          {row.fee}
+                        </span>
+                        <span className="flex items-center justify-end gap-1 text-right font-medium">
+                          {row.pnlPositive === true ? (
+                            <span style={{ color: GREEN }}>{row.closedPnl}</span>
+                          ) : row.pnlPositive === false ? (
+                            <span style={{ color: RED }}>{row.closedPnl}</span>
+                          ) : (
+                            <span className="text-[#8c8c8c]">
+                              {row.closedPnl}
+                            </span>
+                          )}
+                          {showPnlIcon ? (
+                            <button
+                              type="button"
+                              className="text-[#8c8c8c] hover:text-white"
+                              aria-label="View trade details"
+                            >
+                              <ExternalLinkIcon className="inline" />
+                            </button>
+                          ) : null}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </>
         ) : activeTab === "positions" && tourDemoPosition ? (
           <>
-            <div
-              className="grid shrink-0 grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
-              style={{ borderColor: BORDER }}
-            >
-              <span>Opened</span>
-              <span>Coin</span>
-              <span>Side</span>
-              <span className="text-right">Size</span>
-              <span className="text-right">Entry</span>
-              <span className="text-right">Mark</span>
-              <span className="text-right">uPnL</span>
-            </div>
-            <div
-              ref={bodyRef}
-              data-tour="copilot-positions-body"
-              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
-            >
-              <div
-                ref={openedPositionRowRef}
-                data-tour="copilot-demo-position-row"
-                className={`relative grid grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2.5 text-xs tabular-nums ${
-                  highlightOpenedPositionRow
-                    ? "overflow-hidden copilot-position-row-highlight [&>*]:relative [&>*]:z-[1]"
-                    : ""
-                }`}
-                style={{ borderColor: "#1a1a1a" }}
-              >
-                <span className="text-[#bfbfbf]">{tourDemoPosition.openedAt}</span>
-                <span
-                  className="font-semibold"
-                  style={{ color: positionSideColor(tourDemoPosition.side) }}
+            <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
+              <div className="flex min-h-0 min-w-[560px] flex-1 flex-col">
+                <div
+                  className="grid shrink-0 grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
+                  style={{ borderColor: BORDER }}
                 >
-                  {tourDemoPosition.symbol}
-                </span>
-                <span
-                  className="font-medium"
-                  style={{ color: positionSideColor(tourDemoPosition.side) }}
+                  <span>Opened</span>
+                  <span>Coin</span>
+                  <span>Side</span>
+                  <span className="text-right">Size</span>
+                  <span className="text-right">Entry</span>
+                  <span className="text-right">Mark</span>
+                  <span className="text-right">uPnL</span>
+                </div>
+                <div
+                  ref={bodyRef}
+                  data-tour="copilot-positions-body"
+                  className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
                 >
-                  {tourDemoPosition.side}
-                </span>
-                <span className="text-right text-[#e5e5e5]">
-                  {tourDemoPosition.sizeLabel}
-                </span>
-                <span className="text-right text-[#e5e5e5]">
-                  {tourDemoPosition.entry}
-                </span>
-                <span className="text-right text-[#e5e5e5]">
-                  {tourDemoPosition.mark}
-                </span>
-                <span
-                  className="text-right font-semibold"
-                  style={{ color: GREEN }}
-                >
-                  {tourDemoPosition.upnl}
-                </span>
+                  <div
+                    ref={openedPositionRowRef}
+                    data-tour="copilot-demo-position-row"
+                    className={`relative grid grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2.5 text-xs tabular-nums ${
+                      highlightOpenedPositionRow
+                        ? "overflow-hidden copilot-position-row-highlight [&>*]:relative [&>*]:z-[1]"
+                        : ""
+                    }`}
+                    style={{ borderColor: "#1a1a1a" }}
+                  >
+                    <span className="text-[#bfbfbf]">
+                      {tourDemoPosition.openedAt}
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{ color: positionSideColor(tourDemoPosition.side) }}
+                    >
+                      {tourDemoPosition.symbol}
+                    </span>
+                    <span
+                      className="font-medium"
+                      style={{ color: positionSideColor(tourDemoPosition.side) }}
+                    >
+                      {tourDemoPosition.side}
+                    </span>
+                    <span className="text-right text-[#e5e5e5]">
+                      {tourDemoPosition.sizeLabel}
+                    </span>
+                    <span className="text-right text-[#e5e5e5]">
+                      {tourDemoPosition.entry}
+                    </span>
+                    <span className="text-right text-[#e5e5e5]">
+                      {tourDemoPosition.mark}
+                    </span>
+                    <span
+                      className="text-right font-semibold"
+                      style={{ color: GREEN }}
+                    >
+                      {tourDemoPosition.upnl}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </>

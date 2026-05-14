@@ -14,3 +14,20 @@ export function clampAmountStr(raw, max = DEFAULT_MAX_USDC) {
   if (!Number.isFinite(n) || n < 0) return "0";
   return String(Math.min(Math.round(n * 100) / 100, max));
 }
+
+/** Parses trailing number from labels like `MAX: 10,000`. */
+export function parseMaxUsdcFromLabel(maxLabel) {
+  const m = String(maxLabel ?? "").match(/([\d,]+)\s*$/);
+  if (!m) return DEFAULT_MAX_USDC;
+  const n = Number(m[1].replace(/,/g, ""));
+  return Number.isFinite(n) ? n : DEFAULT_MAX_USDC;
+}
+
+export function formatUsdcAmountDisplay(amountStr) {
+  const n = Number(String(amountStr ?? "").replace(/,/g, ""));
+  if (!Number.isFinite(n)) return "0";
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(n);
+}

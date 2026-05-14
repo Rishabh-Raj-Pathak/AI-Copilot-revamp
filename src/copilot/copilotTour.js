@@ -116,9 +116,47 @@ function destroyActiveTourDriverSilently() {
 
 /** @param {import('driver.js').PopoverDOM} popover */
 function removeHyprearnTourPopoverExtras(popover) {
-  popover.footer
+  popover.wrapper
     .querySelectorAll("[data-hyprearn-tour-ui]")
     .forEach((n) => n.remove());
+}
+
+/**
+ * Capsule segment bar below description, above footer (step count + nav). Rebuilt each popover render.
+ * @param {import('driver.js').PopoverDOM} popover
+ * @param {{ driver?: import('driver.js').Driver }} opts
+ */
+function mountHyprearnTourStepSegments(popover, opts) {
+  const drv = opts?.driver;
+  const steps = drv?.getConfig?.()?.steps;
+  const total = Array.isArray(steps) ? steps.length : 0;
+  const rawIdx = drv?.getActiveIndex?.();
+  const idx =
+    typeof rawIdx === "number" && rawIdx >= 0 ? Math.min(rawIdx, total - 1) : 0;
+
+  const wrapper = popover.wrapper;
+  const footer = popover.footer;
+  if (!wrapper || !footer || total <= 0) return;
+
+  const bar = document.createElement("div");
+  bar.className = "hyprearn-tour-step-segments";
+  bar.setAttribute("data-hyprearn-tour-ui", "");
+  bar.setAttribute("role", "progressbar");
+  bar.setAttribute("aria-valuemin", "1");
+  bar.setAttribute("aria-valuemax", String(total));
+  bar.setAttribute("aria-valuenow", String(idx + 1));
+  bar.setAttribute("aria-label", `Guided tour step ${idx + 1} of ${total}`);
+
+  for (let i = 0; i < total; i++) {
+    const seg = document.createElement("span");
+    seg.className =
+      i === idx
+        ? "hyprearn-tour-step-segment hyprearn-tour-step-segment--active"
+        : "hyprearn-tour-step-segment";
+    bar.appendChild(seg);
+  }
+
+  wrapper.insertBefore(bar, footer);
 }
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -147,18 +185,6 @@ function mountTourCloseIcon(closeButton) {
   closeButton.appendChild(svg);
 }
 
-/** @param {HTMLElement} wrapper @param {import('driver.js').Popover | undefined} popoverConfig */
-function setHyprearnTourPopoverBeakDataset(wrapper, popoverConfig) {
-  const s = popoverConfig?.side;
-  if (s === "top" || s === "bottom" || s === "left" || s === "right") {
-    wrapper.dataset.hyprearnArrowSide = s;
-  } else if (s === "over") {
-    delete wrapper.dataset.hyprearnArrowSide;
-  } else {
-    wrapper.dataset.hyprearnArrowSide = "bottom";
-  }
-}
-
 /**
  * @typedef {object} CopilotProductTourHandlers
  * @property {(index: number) => void} [onStepIndexChange]
@@ -177,6 +203,9 @@ function setHyprearnTourPopoverBeakDataset(wrapper, popoverConfig) {
  */
 function buildCopilotTourSteps(handlers) {
   const prepareSuggestionTourStep = handlers.prepareSuggestionTourStep;
+  const isNarrowViewport =
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 1023px)").matches;
 
   /** @type {import('driver.js').DriveStep[]} */
   const blueprint = [
@@ -206,7 +235,7 @@ function buildCopilotTourSteps(handlers) {
         description:
           "Switch venues anytime without changing your workflow. Copilot works the same way across supported DEXs.",
         side: "bottom",
-        align: "end",
+        align: isNarrowViewport ? "start" : "end",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
       },
@@ -250,8 +279,8 @@ function buildCopilotTourSteps(handlers) {
         title: "Tune the trade",
         description:
           "Adjust leverage, size, stops and targets to match your risk profile. Nothing goes live until you confirm it.",
-        side: "left",
-        align: "start",
+        side: isNarrowViewport ? "bottom" : "left",
+        align: isNarrowViewport ? "center" : "start",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
       },
@@ -283,7 +312,7 @@ function buildCopilotTourSteps(handlers) {
           mountTourCloseIcon(popover.closeButton);
           popover.nextButton?.classList?.add("ds-terminal-gradient-cta");
           removeHyprearnTourPopoverExtras(popover);
-          setHyprearnTourPopoverBeakDataset(popover.wrapper, rowPopover);
+          mountHyprearnTourStepSegments(popover, opts);
           rowPopover?.onPopoverRender?.(popover, opts);
         },
       },

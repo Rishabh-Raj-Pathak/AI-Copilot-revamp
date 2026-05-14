@@ -55,9 +55,9 @@ export default function HeaderTerminal({
   onTerminalPlatformChange,
 }) {
   return (
-    <header className="flex h-16 w-full shrink-0 items-center justify-between border-b border-[#242424] bg-black px-5 py-3">
+    <header className="flex min-h-16 shrink-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-[#242424] bg-black px-3 py-2.5 sm:gap-x-3 sm:px-5 sm:py-3 lg:h-16 lg:flex-nowrap lg:gap-4 lg:py-3">
       <div
-        className="flex min-w-0 items-center gap-5"
+        className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5"
         data-tour="copilot-overview"
       >
         <div className="flex h-[29px] shrink-0 items-center gap-2 overflow-hidden">
@@ -71,7 +71,7 @@ export default function HeaderTerminal({
             </span>
           </p>
         </div>
-        <nav className="flex items-end gap-2">
+        <nav className="minimal-scrollbar flex min-w-0 flex-1 items-end gap-1.5 overflow-x-auto sm:gap-2 lg:flex-initial lg:overflow-visible">
           {nav.map((label) => {
             const active = label === activeNavItem;
             return (
@@ -79,7 +79,7 @@ export default function HeaderTerminal({
                 key={label}
                 type="button"
                 onClick={() => onNavItemClick?.(label)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
                   active
                     ? "bg-[#3e2e00] text-[#f2b500]"
                     : "text-white hover:bg-white/5"
@@ -91,7 +91,7 @@ export default function HeaderTerminal({
           })}
           <button
             type="button"
-            className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white hover:bg-white/5"
+            className="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/5 sm:px-3 sm:text-sm"
           >
             More
             <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
@@ -100,14 +100,15 @@ export default function HeaderTerminal({
             <button
               type="button"
               onClick={onProductTour}
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-[#bfbfbf] hover:bg-white/5 hover:text-white"
+              className="shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium text-[#bfbfbf] hover:bg-white/5 hover:text-white sm:px-3 sm:text-sm"
             >
-              Product Tour
+              <span className="sm:hidden">Tour</span>
+              <span className="hidden sm:inline">Product Tour</span>
             </button>
           ) : null}
         </nav>
       </div>
-      <div className="terminal-header-actions flex shrink-0 items-center justify-end gap-3">
+      <div className="terminal-header-actions flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto sm:gap-3">
         <TerminalPlatformSelect
           value={terminalPlatform}
           onChange={onTerminalPlatformChange}
