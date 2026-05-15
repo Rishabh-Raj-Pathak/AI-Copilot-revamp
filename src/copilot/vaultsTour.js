@@ -2,11 +2,23 @@ import { driver } from "driver.js";
 
 export const VAULTS_TOUR_STORAGE_KEY = "hyprearn_vaults_tour_completed";
 
+/** @readonly */
+export const VAULTS_TOUR_STEP = Object.freeze({
+  OVERVIEW: 0,
+  DEX: 1,
+  EXPLORE: 2,
+  ACTIVATE: 3,
+  ACTIVATED: 4,
+});
+
 /** Step index where the user must click Activate on the highlighted featured vault (no Next). */
-const VAULTS_ACTIVATE_STEP_INDEX = 3;
+const VAULTS_ACTIVATE_STEP_INDEX = VAULTS_TOUR_STEP.ACTIVATE;
 
 /** Step index for multi-DEX filter — auto-advance after the user picks a different venue tab. */
-const VAULTS_DEX_STEP_INDEX = 1;
+const VAULTS_DEX_STEP_INDEX = VAULTS_TOUR_STEP.DEX;
+
+/** Final step — activated vaults list. */
+const VAULTS_ACTIVATED_STEP_INDEX = VAULTS_TOUR_STEP.ACTIVATED;
 
 export function isVaultsTourCompleted() {
   try {
@@ -36,8 +48,15 @@ export function notifyVaultsTourDexChanged(dexId) {
   try {
     if (!activeVaultsTourDriver?.isActive?.()) return;
     const i = activeVaultsTourDriver.getActiveIndex();
-    if (i !== VAULTS_DEX_STEP_INDEX) return;
-    if (dexId === tourVaultsDexBaselineId) return;
+    if (
+      !shouldVaultsTourAutoAdvanceOnDexChange(
+        i,
+        tourVaultsDexBaselineId,
+        dexId,
+      )
+    ) {
+      return;
+    }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         try {
@@ -57,29 +76,80 @@ export function notifyVaultsTourDexChanged(dexId) {
 }
 
 /**
- * After the user activates the first featured vault row while the tour is on the
- * activate step, advance to the Activated Vaults highlight.
- * @returns {boolean} true if the tour advanced from the activate step
+ * Resolves how the tour should advance after the first featured vault is activated.
+ * - On the tune/activate step: advance one step (activated section).
+ * - On overview, DEX, or explore: skip tune/activate and jump to activated vaults.
+ * - On activated or later: no advance.
+ *
+ * @param {number} activeIndex driver step index
+ * @returns {{ type: 'next' } | { type: 'jump'; stepIndex: number } | null}
  */
-export function advanceVaultsTourAfterFeaturedActivateClick() {
-  if (!activeVaultsTourDriver?.isActive?.()) return false;
-  const i = activeVaultsTourDriver.getActiveIndex();
-  if (typeof i !== "number" || i !== VAULTS_ACTIVATE_STEP_INDEX) return false;
+export function getVaultsTourAdvanceTargetAfterFeaturedActivate(activeIndex) {
+  if (typeof activeIndex !== "number" || activeIndex < 0) return null;
+  if (activeIndex === VAULTS_ACTIVATE_STEP_INDEX) return { type: "next" };
+  if (activeIndex < VAULTS_ACTIVATE_STEP_INDEX) {
+    return { type: "jump", stepIndex: VAULTS_ACTIVATED_STEP_INDEX };
+  }
+  return null;
+}
 
+/**
+ * True when a DEX change should auto-advance the tour (only on the DEX step, new id).
+ * @param {number} activeIndex
+ * @param {string | null | undefined} baselineDexId
+ * @param {string} nextDexId
+ */
+export function shouldVaultsTourAutoAdvanceOnDexChange(
+  activeIndex,
+  baselineDexId,
+  nextDexId,
+) {
+  if (activeIndex !== VAULTS_DEX_STEP_INDEX) return false;
+  if (baselineDexId == null) return false;
+  return nextDexId !== baselineDexId;
+}
+
+function runVaultsTourAdvance(target) {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       try {
         if (!activeVaultsTourDriver?.isActive?.()) return;
-        if (activeVaultsTourDriver.getActiveIndex() !== VAULTS_ACTIVATE_STEP_INDEX)
+        const cur = activeVaultsTourDriver.getActiveIndex();
+        const expected = getVaultsTourAdvanceTargetAfterFeaturedActivate(cur);
+        if (
+          !expected ||
+          expected.type !== target.type ||
+          (expected.type === "jump" &&
+            target.type === "jump" &&
+            expected.stepIndex !== target.stepIndex)
+        ) {
           return;
+        }
         activeVaultsTourDriver.refresh?.();
-        activeVaultsTourDriver.moveNext?.();
+        if (target.type === "next") {
+          activeVaultsTourDriver.moveNext?.();
+        } else {
+          activeVaultsTourDriver.drive?.(target.stepIndex);
+        }
       } catch {
         /* noop */
       }
     });
   });
+}
 
+/**
+ * After the user activates the first featured vault row, advance the tour:
+ * - From explore (or earlier): jump to activated vaults (skip tune/activate).
+ * - From tune/activate: move to activated vaults.
+ * @returns {boolean} true if the tour scheduled an advance
+ */
+export function advanceVaultsTourAfterFeaturedActivateClick() {
+  if (!activeVaultsTourDriver?.isActive?.()) return false;
+  const i = activeVaultsTourDriver.getActiveIndex();
+  const target = getVaultsTourAdvanceTargetAfterFeaturedActivate(i);
+  if (!target) return false;
+  runVaultsTourAdvance(target);
   return true;
 }
 
@@ -185,6 +255,7 @@ function mountTourSkipLabel(closeButton) {
 function buildVaultsTourSteps(handlers) {
   const isNarrowViewport =
     typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width: 1023px)").matches;
 
   /** @type {import('driver.js').DriveStep[]} */
