@@ -233,7 +233,7 @@
   max-width: min(26rem, calc(100vw - 1.25rem));
   padding: 1.25rem;
   border-radius: 14px;
-  border: 1px solid rgba(120, 90, 40, 0.32);
+  border: 2px solid rgba(120, 90, 40, 0.32);
   background-color: #0c0a08;
   background-image: linear-gradient(
     168deg,
