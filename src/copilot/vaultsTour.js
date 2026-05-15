@@ -265,7 +265,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Vaults",
         description:
-          "Discover vault opportunities across supported DEXs. Choose a vault, set your allocation, and activate it in a few clicks.",
+          "Discover vault opportunities across Multiple DEXs. Choose a vault, set your allocation, and activate it in a clicks.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -284,7 +284,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Select DEX",
         description:
-          "Filter vaults by venue: All DEXs, Hyperliquid, Paradex, or Add DEX. The vault workflow stays the same across venues.",
+          "Filter vaults by DEX: All DEXs, Hyperliquid, Paradex, Pacifica and other DEXs. The vault workflow stays the same across venues.",
         side: "bottom",
         align: isNarrowViewport ? "start" : "end",
         showButtons: ["next", "previous", "close"],
@@ -303,7 +303,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Explore opportunities",
         description:
-          "Browse featured and available vaults. Compare APR, volume, users and set margin before choosing where to allocate.",
+          "Browse featured and available vaults. Compare APR, volume, users and set margin before Activating.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -320,7 +320,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Tune and activate",
         description:
-          "Set your performance fee share, enter your USDC size, then click Activate to add this vault to your active allocations.",
+          "Set your Margin or enter your USDC size, then click Activate to add this vault to your active vaults.",
         side: isNarrowViewport ? "top" : "left",
         align: "center",
         showButtons: ["previous", "close"],
@@ -336,7 +336,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Activated vaults",
         description:
-          "Your active vaults appear here. Review fee share, size, and status, or remove a vault anytime to free the slot.",
+          "Your active vaults appear here. Review your PnL, status or deactivate a vault anytime.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
