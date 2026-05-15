@@ -207,21 +207,24 @@ export default function VaultsPage({
                     onPatch={patchRow}
                   />
                 ) : null}
-                <VaultsListSection
-                  title="Featured Opportunities"
-                  vaults={inactiveFeatured}
-                  rowUi={rowUi}
-                  onPatch={patchRow}
-                  sectionDataTour="vaults-featured-section"
-                  tourFeaturedFirstControls
-                />
-                <VaultsListSection
-                  title="Available Vaults"
-                  vaults={inactiveAvailable}
-                  rowUi={rowUi}
-                  onPatch={patchRow}
-                  sectionDataTour="vaults-available-section"
-                />
+                <div
+                  data-tour="vaults-opportunities"
+                  className="flex flex-col gap-10"
+                >
+                  <VaultsListSection
+                    title="Featured Opportunities"
+                    vaults={inactiveFeatured}
+                    rowUi={rowUi}
+                    onPatch={patchRow}
+                    tourFeaturedFirstControls
+                  />
+                  <VaultsListSection
+                    title="Available Vaults"
+                    vaults={inactiveAvailable}
+                    rowUi={rowUi}
+                    onPatch={patchRow}
+                  />
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">

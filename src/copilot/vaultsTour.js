@@ -6,7 +6,7 @@ export const VAULTS_TOUR_STORAGE_KEY = "hyprearn_vaults_tour_completed";
 const VAULTS_ACTIVATE_STEP_INDEX = 3;
 
 /** Step index for multi-DEX filter — auto-advance after the user picks a different venue tab. */
-const VAULTS_DEX_STEP_INDEX = 0;
+const VAULTS_DEX_STEP_INDEX = 1;
 
 export function isVaultsTourCompleted() {
   try {
@@ -165,30 +165,11 @@ function mountHyprearnTourStepSegments(popover, opts) {
   wrapper.insertBefore(bar, footer);
 }
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
 /** @param {HTMLButtonElement} closeButton */
-function mountTourCloseIcon(closeButton) {
-  closeButton.textContent = "";
+function mountTourSkipLabel(closeButton) {
   closeButton.replaceChildren();
-  closeButton.setAttribute("aria-label", "Close guided tour");
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("width", "12");
-  svg.setAttribute("height", "12");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "2");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  const p1 = document.createElementNS(SVG_NS, "path");
-  p1.setAttribute("d", "M18 6 6 18");
-  const p2 = document.createElementNS(SVG_NS, "path");
-  p2.setAttribute("d", "m6 6 12 12");
-  svg.append(p1, p2);
-  closeButton.appendChild(svg);
+  closeButton.textContent = "Skip";
+  closeButton.setAttribute("aria-label", "Skip guided tour");
 }
 
 /**
@@ -209,6 +190,18 @@ function buildVaultsTourSteps(handlers) {
   /** @type {import('driver.js').DriveStep[]} */
   const blueprint = [
     {
+      element: '[data-tour="vaults-overview"]',
+      popover: {
+        title: "Vaults",
+        description:
+          "Discover vault opportunities across supported DEXs. Choose a vault, set your allocation, and activate it in a few clicks.",
+        side: "bottom",
+        align: "start",
+        showButtons: ["next", "previous", "close"],
+        nextBtnText: "Let's go",
+      },
+    },
+    {
       element: '[data-tour="vaults-dex-tabs"]',
       disableActiveInteraction: false,
       onHighlighted: (_el, _step, { driver: drv }) => {
@@ -218,41 +211,28 @@ function buildVaultsTourSteps(handlers) {
         });
       },
       popover: {
-        title: "Multi-DEX vaults",
+        title: "Select DEX",
         description:
-          "Filter opportunities by venue: All Dexs, Hyperliquid, Paradex, or Add DEX. The same vault workflow applies across supported venues.",
+          "Filter vaults by venue: All DEXs, Hyperliquid, Paradex, or Add DEX. The vault workflow stays the same across venues.",
         side: "bottom",
-        align: "start",
+        align: isNarrowViewport ? "start" : "end",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
       },
     },
     {
-      element: '[data-tour="vaults-featured-section"]',
+      element: '[data-tour="vaults-opportunities"]',
       disableActiveInteraction: false,
-      onHighlighted: (el) => {
+      onHighlighted: (el, _step, { driver: drv }) => {
         el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        requestAnimationFrame(() => {
+          if (drv.isActive()) drv.refresh();
+        });
       },
       popover: {
-        title: "Featured opportunities",
+        title: "Explore opportunities",
         description:
-          "Curated vaults with strong traction or standout terms. Open any row to adjust performance fee share, size, and activation.",
-        side: "bottom",
-        align: "start",
-        showButtons: ["next", "previous", "close"],
-        nextBtnText: "Next",
-      },
-    },
-    {
-      element: '[data-tour="vaults-available-section"]',
-      disableActiveInteraction: false,
-      onHighlighted: (el) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-      },
-      popover: {
-        title: "Available vaults",
-        description:
-          "Browse the full catalog. Each row shows volume, APR, and community size so you can compare before you allocate.",
+          "Browse featured and available vaults. Compare APR, volume, users and set margin before choosing where to allocate.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -269,7 +249,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Tune and activate",
         description:
-          "Drag the performance fee slider to set your share, edit USDC size, then tap Activate to move this vault into your active allocations.",
+          "Set your performance fee share, enter your USDC size, then click Activate to add this vault to your active allocations.",
         side: isNarrowViewport ? "top" : "left",
         align: "center",
         showButtons: ["previous", "close"],
@@ -285,7 +265,7 @@ function buildVaultsTourSteps(handlers) {
       popover: {
         title: "Activated vaults",
         description:
-          "Active allocations live here so you can review fee share, size, and status at a glance. Remove a vault anytime to free the slot.",
+          "Your active vaults appear here. Review fee share, size, and status, or remove a vault anytime to free the slot.",
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -302,7 +282,7 @@ function buildVaultsTourSteps(handlers) {
         showButtons: ["next", "previous", "close"],
         ...rowPopover,
         onPopoverRender: (popover, opts) => {
-          mountTourCloseIcon(popover.closeButton);
+          mountTourSkipLabel(popover.closeButton);
           popover.nextButton?.classList?.add("vaults-tour-next-cta");
           removeHyprearnTourPopoverExtras(popover);
           mountHyprearnTourStepSegments(popover, opts);
