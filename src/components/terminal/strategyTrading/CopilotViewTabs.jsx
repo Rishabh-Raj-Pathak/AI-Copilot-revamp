@@ -1,6 +1,7 @@
 const VIEWS = [
   { id: "suggestions", label: "AI Copilot" },
-  { id: "strategy-trading", label: "Strategy Trading" },
+  { id: "strategy-trading", label: "Strategy Copilot" },
+  { id: "agents", label: "Agents" },
 ];
 
 export default function CopilotViewTabs({ activeView, onViewChange }) {

@@ -13,6 +13,11 @@ import CopilotTutorialToast from "./CopilotTutorialToast.jsx";
 import CopilotMobileTourBar from "./CopilotMobileTourBar.jsx";
 import OnboardingOverlay from "./OnboardingOverlay.jsx";
 import CopilotViewTabs from "./strategyTrading/CopilotViewTabs.jsx";
+import {
+  StrategyCopilotProvider,
+  useStrategyCopilot,
+} from "./strategyTrading/StrategyCopilotContext.jsx";
+import StrategyAgentsHub from "./strategyTrading/StrategyAgentsHub.jsx";
 import StrategyTradingPage from "./strategyTrading/StrategyTradingPage.jsx";
 import {
   hasSeenCopilotWelcome,
@@ -43,6 +48,27 @@ import {
 } from "../../copilot/copilotTour.js";
 
 const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
+
+function StrategyCopilotViews({
+  copilotView,
+  terminalPlatform,
+  onSwitchToStrategy,
+}) {
+  const { lastSetup } = useStrategyCopilot();
+
+  if (copilotView === "strategy-trading") {
+    return <StrategyTradingPage terminalPlatform={terminalPlatform} />;
+  }
+  if (copilotView === "agents") {
+    return (
+      <StrategyAgentsHub
+        onOpenStrategyCopilot={onSwitchToStrategy}
+        lastSetup={lastSetup}
+      />
+    );
+  }
+  return null;
+}
 
 export default function TerminalCopilotPage({
   walletConnected: walletConnectedProp,
@@ -518,10 +544,15 @@ export default function TerminalCopilotPage({
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
-      <CopilotViewTabs activeView={copilotView} onViewChange={setCopilotView} />
-      {copilotView === "strategy-trading" ? (
-        <StrategyTradingPage terminalPlatform={terminalPlatform} />
-      ) : (
+      <StrategyCopilotProvider>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <CopilotViewTabs activeView={copilotView} onViewChange={setCopilotView} />
+          <StrategyCopilotViews
+            copilotView={copilotView}
+            terminalPlatform={terminalPlatform}
+            onSwitchToStrategy={() => setCopilotView("strategy-trading")}
+          />
+          {copilotView !== "strategy-trading" && copilotView !== "agents" ? (
       <div
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:flex-row"
         data-tour="copilot-suggestion-and-setup"
@@ -657,7 +688,9 @@ export default function TerminalCopilotPage({
           />
         </div>
       </div>
-      )}
+      ) : null}
+        </div>
+      </StrategyCopilotProvider>
       <TradeSuccessModal
         open={tradeSuccessOpen}
         onViewPortfolio={dismissTradeSuccessModal}

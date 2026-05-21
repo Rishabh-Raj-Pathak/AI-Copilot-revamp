@@ -178,6 +178,81 @@ export const QUICK_PROMPTS = [
   "Create custom agent",
 ];
 
+/** Minara-inspired strategy studio template cards. */
+export const TEMPLATE_CARDS = [
+  {
+    id: "btc-mean-reversion",
+    title: "BTC Mean Reversion Setup",
+    tags: ["Conservative", "BTC", "15m", "Medium Risk"],
+    description: "Find bounce setups near support with clear invalidation.",
+    prompt: "Find me a low-risk BTC mean reversion setup on 15m with clear invalidation.",
+    modelId: "conservative",
+    strategyId: "mean-reversion",
+    marketId: "btc",
+  },
+  {
+    id: "eth-funding",
+    title: "ETH Funding Capture",
+    tags: ["Funding", "ETH", "Multi-DEX", "Medium Risk"],
+    description: "Monitor funding differences and identify carry opportunities.",
+    prompt: "Compare ETH funding across DEXes and identify favorable carry setups.",
+    modelId: "funding",
+    strategyId: "funding-capture",
+    marketId: "eth",
+  },
+  {
+    id: "sol-breakout",
+    title: "SOL Momentum Breakout",
+    tags: ["Aggressive", "SOL", "5m/15m", "High Risk"],
+    description: "Watch for breakout confirmation with volume and open interest.",
+    prompt: "Find a SOL momentum breakout setup with volume and OI confirmation.",
+    modelId: "aggressive",
+    strategyId: "momentum-breakout",
+    marketId: "sol",
+  },
+  {
+    id: "hype-trend",
+    title: "HYPE Trend Following",
+    tags: ["Quant", "HYPE", "1h", "Medium Risk"],
+    description: "Follow higher-timeframe trend with rule-based entries.",
+    prompt: "Build a HYPE trend-following setup using rule-based entries on 1h.",
+    modelId: "quant",
+    strategyId: "trend-following",
+    marketId: "hype",
+  },
+  {
+    id: "multi-dex",
+    title: "Multi-DEX Opportunity Scan",
+    tags: ["Funding", "BTC/ETH", "DEX Compare"],
+    description:
+      "Compare funding, fees, liquidity, and momentum across supported DEXes.",
+    prompt: "Scan BTC and ETH for funding, fee, and liquidity edges across DEXes.",
+    modelId: "funding",
+    strategyId: "funding-capture",
+    marketId: "btc",
+  },
+  {
+    id: "custom-prompt",
+    title: "Custom Prompt Strategy",
+    tags: ["Custom", "Any Market", "Flexible"],
+    description: "Describe your own strategy idea in plain English.",
+    prompt: "Build a custom strategy that avoids high volatility and waits for favorable funding.",
+    modelId: "custom",
+    strategyId: "custom",
+    marketId: "btc",
+  },
+];
+
+export const AGENT_RULE_CHIPS = [
+  "Skip high volatility",
+  "Avoid high funding",
+  "Require volume confirmation",
+  "Notify only",
+  "Reduce risk",
+  "Use tighter invalidation",
+  "Watch only for 4 hours",
+];
+
 export const EMPTY_STATE_ACTIONS = [
   {
     id: "find-idea",

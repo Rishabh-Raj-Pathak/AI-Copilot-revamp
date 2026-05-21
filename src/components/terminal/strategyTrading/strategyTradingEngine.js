@@ -97,6 +97,53 @@ export function generateStrategySetup({
   const title = `${symbol} ${strategy.name} Setup`;
   const direction = DIRECTION_BY_MODEL[modelId] ?? "Long";
 
+  const personalizationNote = buildPersonalizationNote(preferences);
+
+  const strategyLogic = [
+    "Enter only if price reclaims the entry zone.",
+    "Confirm with RSI recovery from oversold.",
+    "Avoid entry if funding spikes or volatility expands.",
+    "Invalidate if price closes below the stop zone.",
+  ];
+
+  const flowSteps = [
+    {
+      step: "Market condition",
+      detail: `${symbol} near support after a fast selloff.`,
+    },
+    {
+      step: "Entry trigger",
+      detail: "RSI recovers + price reclaims entry zone.",
+    },
+    {
+      step: "Risk filter",
+      detail: "Skip if funding or volatility spikes.",
+    },
+    {
+      step: "Exit rule",
+      detail: `TP at ${SAMPLE_SETUP.takeProfit.replace("BTC", symbol)} or SL at ${SAMPLE_SETUP.stopLoss.replace("67", symbol === "ETH" ? "34" : "67")}.`,
+    },
+    {
+      step: "Agent action",
+      detail:
+        preferences.executionPreference === "manual-approval"
+          ? "Notify before trade · manual approval"
+          : "Notify when conditions align",
+    },
+  ];
+
+  const whySetup = [
+    `${symbol} is approaching local support after a fast selloff.`,
+    "Selling momentum is slowing but confirmation is not complete.",
+    `${model.name} model requires confirmation before entry.`,
+  ];
+
+  const riskConcerns = [
+    "Price may continue trending down instead of mean reverting.",
+    "Funding spike can make the trade less attractive.",
+    "High volatility can invalidate the setup quickly.",
+  ];
+
   return {
     title,
     direction,
@@ -112,16 +159,33 @@ export function generateStrategySetup({
     confidence,
     riskLevel,
     reasoning,
+    whySetup,
+    strategyLogic,
+    flowSteps,
     waitFor: [...SAMPLE_SETUP.waitFor],
-    warnings: [...SAMPLE_SETUP.warnings],
+    warnings: riskConcerns,
     nextActions: [...SAMPLE_SETUP.nextActions],
-    personalizationNote:
-      personalizationNotes.length > 0
-        ? personalizationNotes.join(" ")
-        : "Adjusted for your trading preferences.",
+    suggestedLeverage: `Max ${preferences.maxLeverage} based on preference`,
+    personalizationNote,
     promptEcho: prompt,
     generatedAt: new Date().toISOString(),
   };
+}
+
+function buildPersonalizationNote(prefs) {
+  const risk =
+    prefs.riskPreference === "low"
+      ? "low-risk"
+      : prefs.riskPreference === "high"
+        ? "higher-risk"
+        : "balanced";
+  const exec =
+    prefs.executionPreference === "manual-approval"
+      ? "manual approval"
+      : prefs.executionPreference === "explain-only"
+        ? "explain-only"
+        : prefs.executionPreference.replace("-", " ");
+  return `Adjusted for your ${risk} profile, max ${prefs.maxLeverage} leverage, and ${exec} preference.`;
 }
 
 /**
@@ -155,5 +219,6 @@ export function buildAgentFromSetup(setup, prefs, overrides = {}) {
       "Skip if funding is unfavorable",
     ],
     updateLog: [],
+    recentlyUpdated: false,
   };
 }

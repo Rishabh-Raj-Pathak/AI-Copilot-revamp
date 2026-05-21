@@ -1,5 +1,6 @@
 import { Badge } from "../../ui/badge.jsx";
 import { Button } from "../../ui/button.jsx";
+import StrategyFlowStepper from "./StrategyFlowStepper.jsx";
 
 function directionVariant(dir) {
   const d = (dir ?? "").toLowerCase();
@@ -8,121 +9,144 @@ function directionVariant(dir) {
   return "neutral";
 }
 
-function Metric({ label, value }) {
+function MetricTile({ label, value }) {
   return (
-    <div className="min-w-0">
+    <div className="rounded-md border border-[#242424] bg-[#121212] px-3 py-2.5">
       <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
         {label}
       </p>
-      <p className="mt-0.5 truncate text-sm font-medium text-white">{value}</p>
+      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
     </div>
+  );
+}
+
+function BulletSection({ title, items, warn = false }) {
+  if (!items?.length) return null;
+  return (
+    <section>
+      <h4
+        className={`text-xs font-semibold ${warn ? "text-[#d53d3d]" : "text-[#bfbfbf]"}`}
+      >
+        {title}
+      </h4>
+      <ul className="mt-2 space-y-1.5">
+        {items.map((item, i) => (
+          <li
+            key={`${title}-${i}`}
+            className="flex gap-2 text-xs leading-relaxed text-[#929292]"
+          >
+            <span className="text-[#585858]">·</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
 export default function GeneratedSetupCard({
   setup,
   onCreateAgent,
-  onModifyPrompt,
+  onModifySetup,
   onAskFollowUp,
 }) {
   if (!setup) return null;
 
   return (
-    <article className="rounded-lg border border-[#242424] bg-[#0a0a0a]">
-      <header className="border-b border-[#242424] px-4 py-3 sm:px-5">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-white sm:text-base">
-              {setup.title}
-            </h3>
-            <p className="mt-1 text-xs text-[#929292]">
-              {setup.market} · {setup.preferredDex} · {setup.timeframe}
+    <article className="space-y-4">
+      <div className="rounded-lg border border-[#242424] bg-[#0a0a0a]">
+        <header className="border-b border-[#242424] px-4 py-3.5 sm:px-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-white">
+                {setup.title}
+              </h3>
+              <p className="mt-1 text-xs text-[#929292]">
+                {setup.market} · {setup.preferredDex} · {setup.timeframe}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant={directionVariant(setup.direction)} size="sm">
+                {setup.direction}
+              </Badge>
+              <Badge variant="brand" size="sm">
+                {setup.confidence} confidence
+              </Badge>
+              <Badge variant="outline" size="sm">
+                Risk: {setup.riskLevel}
+              </Badge>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid gap-2 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3 xl:grid-cols-5">
+          <MetricTile label="Entry zone" value={setup.entryZone} />
+          <MetricTile label="Stop loss" value={setup.stopLoss} />
+          <MetricTile label="Take profit" value={setup.takeProfit} />
+          <MetricTile label="Risk / reward" value={setup.riskReward} />
+          <MetricTile
+            label="Suggested leverage"
+            value={setup.suggestedLeverage ?? `Max 3x`}
+          />
+        </div>
+
+        {setup.personalizationNote ? (
+          <div className="mx-4 mb-4 rounded-md border border-[#3e2e00]/40 bg-[#171200]/50 px-3 py-2.5 sm:mx-5">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-[#f2b500]/80">
+              Personalization
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-[#f2b500]">
+              {setup.personalizationNote}
             </p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Badge variant={directionVariant(setup.direction)} size="sm">
-              {setup.direction}
-            </Badge>
-            <Badge variant="brand" size="sm">
-              {setup.confidence} confidence
-            </Badge>
-            <Badge variant="outline" size="sm">
-              Risk: {setup.riskLevel}
-            </Badge>
-          </div>
-        </div>
-      </header>
-
-      <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
-        <Metric label="Strategy" value={setup.strategy} />
-        <Metric label="Model" value={setup.model} />
-        <Metric label="Entry zone" value={setup.entryZone} />
-        <Metric label="Stop loss" value={setup.stopLoss} />
-        <Metric label="Take profit" value={setup.takeProfit} />
-        <Metric label="Risk / reward" value={setup.riskReward} />
+        ) : null}
       </div>
 
-      {setup.personalizationNote ? (
-        <div className="mx-4 mb-3 rounded-md border border-[#3e2e00]/50 bg-[#171200]/60 px-3 py-2 sm:mx-5">
-          <p className="text-xs text-[#f2b500]">{setup.personalizationNote}</p>
-        </div>
-      ) : null}
+      <StrategyFlowStepper steps={setup.flowSteps} />
 
-      <div className="space-y-3 border-t border-[#242424] px-4 py-4 sm:px-5">
-        <Section title="Reasoning" items={setup.reasoning} />
-        <Section title="Wait for" items={setup.waitFor} />
-        <Section title="What could go wrong" items={setup.warnings} warn />
-        <Section title="Suggested next actions" items={setup.nextActions} />
+      <div className="rounded-lg border border-[#242424] bg-[#0a0a0a] px-4 py-4 sm:px-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <BulletSection title="Strategy logic" items={setup.strategyLogic} />
+          <BulletSection title="Why this setup" items={setup.whySetup ?? setup.reasoning} />
+          <BulletSection title="Wait for" items={setup.waitFor} />
+          <BulletSection
+            title="What could go wrong"
+            items={setup.warnings}
+            warn
+          />
+        </div>
       </div>
 
-      <footer className="flex flex-wrap gap-2 border-t border-[#242424] px-4 py-3 sm:px-5">
+      <footer className="flex flex-wrap gap-2">
         <Button size="sm" variant="default" onClick={onCreateAgent}>
-          Create watcher
+          Create agent
         </Button>
-        <Button size="sm" variant="outline" onClick={onModifyPrompt}>
-          Modify prompt
+        <Button size="sm" variant="outline" onClick={onModifySetup}>
+          Modify setup
         </Button>
         <Button size="sm" variant="ghost" onClick={onAskFollowUp}>
           Ask follow-up
         </Button>
         <Button size="sm" variant="ghost" disabled title="Prototype">
-          Save setup
+          Save idea
         </Button>
         <Button size="sm" variant="ghost" disabled title="Prototype">
           Paper trade
         </Button>
-        <Button size="sm" variant="ghost" disabled title="Prototype">
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled
+          title="Manual execution integration not enabled yet."
+        >
           Place manually
         </Button>
       </footer>
 
-      <p className="border-t border-[#242424] px-4 py-2 text-[10px] leading-relaxed text-[#757575] sm:px-5">
-        AI-generated setups are for analysis only. Review risk before taking
-        action.
+      <p className="text-[10px] leading-relaxed text-[#585858]">
+        AI-generated setups are for analysis and decision support only. Review
+        risk before taking any trade.
       </p>
     </article>
-  );
-}
-
-function Section({ title, items, warn = false }) {
-  if (!items?.length) return null;
-  return (
-    <div>
-      <h4
-        className={`text-xs font-semibold ${warn ? "text-[#d53d3d]" : "text-[#bfbfbf]"}`}
-      >
-        {title}
-      </h4>
-      <ul className="mt-1.5 space-y-1">
-        {items.map((item, i) => (
-          <li
-            key={`${title}-${i}`}
-            className="text-xs leading-relaxed text-[#929292]"
-          >
-            · {item}
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

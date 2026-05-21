@@ -11,7 +11,7 @@ import { Input } from "../../ui/input.jsx";
 import { Select } from "../../ui/select.jsx";
 import { Textarea } from "../../ui/textarea.jsx";
 
-const EXPIRY_OPTIONS = ["1 hour", "4 hours", "1 day", "Until manually stopped"];
+const EXPIRY_OPTIONS = ["1 hour", "4 hours", "1 day", "Until stopped"];
 const ACTION_MODES = [
   { id: "notify", label: "Notify only" },
   { id: "suggest", label: "Suggest trade" },
@@ -34,9 +34,11 @@ export default function CreateAgentDialog({
     if (!open || !setup) return;
     setName(`${setup.market.split("-")[0]} ${setup.strategy} Watcher`);
     setCondition(
-      `Watch ${setup.market} and notify when price enters the entry zone (${setup.entryZone}).`,
+      `Notify when ${setup.market} enters the entry zone (${setup.entryZone}) and RSI starts recovering.`,
     );
-    setRiskRule("Skip if volatility spikes or funding becomes unfavorable.");
+    setRiskRule(
+      "Skip if volatility spikes, funding becomes unfavorable, or price closes below invalidation.",
+    );
     setExpiry("4 hours");
     setActionMode("notify");
   }, [open, setup]);
@@ -54,12 +56,23 @@ export default function CreateAgentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="w-[min(28rem,calc(100%-1.5rem))]">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      className="w-[min(30rem,calc(100%-1.5rem))]"
+    >
       <form onSubmit={handleSubmit}>
         <DialogHeader>
-          <DialogTitle>Create on-demand watcher</DialogTitle>
+          <DialogTitle>Create on-demand agent</DialogTitle>
+          <p className="mt-1 text-xs leading-relaxed text-[#929292]">
+            Turn this setup into a temporary watcher that monitors conditions
+            and updates you when the trade becomes valid.
+          </p>
         </DialogHeader>
         <DialogBody className="flex flex-col gap-3">
+          <ReadOnlyField label="Market" value={setup?.market} />
+          <ReadOnlyField label="Model" value={setup?.model} />
+          <ReadOnlyField label="Strategy" value={setup?.strategy} />
           <label className="flex flex-col gap-1">
             <span className="text-xs text-[#929292]">Agent name</span>
             <Input value={name} onChange={(e) => setName(e.target.value)} required />
@@ -113,10 +126,20 @@ export default function CreateAgentDialog({
             Cancel
           </Button>
           <Button type="submit" variant="default">
-            Create watcher
+            Create agent
           </Button>
         </DialogFooter>
       </form>
     </Dialog>
+  );
+}
+
+function ReadOnlyField({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className="flex justify-between gap-2 text-xs">
+      <span className="text-[#757575]">{label}</span>
+      <span className="font-medium text-white">{value}</span>
+    </div>
   );
 }

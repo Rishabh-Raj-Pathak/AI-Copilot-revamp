@@ -1,108 +1,296 @@
 import { useCallback, useMemo, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs.jsx";
 import { Toast, ToastViewport } from "../../ui/toast.jsx";
-import AgentCard from "./AgentCard.jsx";
 import CreateAgentDialog from "./CreateAgentDialog.jsx";
 import EditAgentPromptDialog from "./EditAgentPromptDialog.jsx";
-import GeneratedSetupCard from "./GeneratedSetupCard.jsx";
-import StrategyControlsBar from "./StrategyControlsBar.jsx";
-import StrategyEmptyState from "./StrategyEmptyState.jsx";
-import StrategyPromptPanel from "./StrategyPromptPanel.jsx";
-import TradingPreferencesPanel from "./TradingPreferencesPanel.jsx";
+import { useStrategyCopilot } from "./StrategyCopilotContext.jsx";
+import { DEFAULT_PREFERENCES } from "./strategyTradingMockData.js";
+import { buildAgentFromSetup } from "./strategyTradingEngine.js";
+import DeployReviewModal from "./workstation/DeployReviewModal.jsx";
+import StrategyCenterWorkspace from "./workstation/StrategyCenterWorkspace.jsx";
+import StrategyChatPanel from "./workstation/StrategyChatPanel.jsx";
+import StrategySidebar from "./workstation/StrategySidebar.jsx";
 import {
-  buildAgentFromSetup,
-  generateStrategySetup,
-} from "./strategyTradingEngine.js";
-import {
-  DEFAULT_PREFERENCES,
-  INITIAL_AGENTS,
-  STRATEGY_MODELS,
-  STRATEGY_TYPES,
-} from "./strategyTradingMockData.js";
+  applyBacktest,
+  applyPaperTrading,
+  applySaferRules,
+  buildChatResponse,
+  createDraftStrategy,
+} from "./strategyWorkstationEngine.js";
+
+const MOBILE_PANELS = [
+  { id: "strategies", label: "Strategies" },
+  { id: "workspace", label: "Workspace" },
+  { id: "chat", label: "Chat" },
+];
 
 export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }) {
+  const {
+    strategies,
+    setStrategies,
+    selectedStrategyId,
+    setSelectedStrategyId,
+    setAgents,
+    appendLog,
+    setLastSetup,
+  } = useStrategyCopilot();
+
   const [modelId, setModelId] = useState("conservative");
-  const [strategyId, setStrategyId] = useState("mean-reversion");
+  const [strategyTypeId, setStrategyTypeId] = useState("mean-reversion");
   const [marketId, setMarketId] = useState("btc");
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [prompt, setPrompt] = useState("");
-  const [chatMessages, setChatMessages] = useState([]);
-  const [generatedSetup, setGeneratedSetup] = useState(null);
-  const [agents, setAgents] = useState(INITIAL_AGENTS);
   const [loading, setLoading] = useState(false);
-  const [rightTab, setRightTab] = useState("context");
-  const [bottomTab, setBottomTab] = useState("ideas");
+  const [sidebarFilter, setSidebarFilter] = useState("all");
+  const [workspaceTab, setWorkspaceTab] = useState("overview");
+  const [mobilePanel, setMobilePanel] = useState("workspace");
+  const [backtestLoading, setBacktestLoading] = useState(false);
+  const [deployOpen, setDeployOpen] = useState(false);
   const [createAgentOpen, setCreateAgentOpen] = useState(false);
   const [editAgent, setEditAgent] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const selectedModel = useMemo(
-    () => STRATEGY_MODELS.find((m) => m.id === modelId) ?? STRATEGY_MODELS[0],
-    [modelId],
-  );
   const selectedStrategy = useMemo(
-    () => STRATEGY_TYPES.find((s) => s.id === strategyId) ?? STRATEGY_TYPES[0],
-    [strategyId],
+    () => strategies.find((s) => s.id === selectedStrategyId) ?? null,
+    [strategies, selectedStrategyId],
   );
+
+  const chatMessages = selectedStrategy?.chatMessages ?? [];
 
   const showToast = useCallback((message, variant = "success") => {
     setToast({ message, variant });
     window.setTimeout(() => setToast(null), 4000);
   }, []);
 
+  const updateStrategy = useCallback(
+    (id, updater) => {
+      setStrategies((prev) =>
+        prev.map((s) => (s.id === id ? updater(s) : s)),
+      );
+    },
+    [setStrategies],
+  );
+
+  const pushChat = useCallback(
+    (strategyId, userText, aiPayload) => {
+      updateStrategy(strategyId, (s) => ({
+        ...s,
+        chatMessages: [
+          ...s.chatMessages,
+          { id: `u-${Date.now()}`, role: "user", text: userText },
+          {
+            id: `a-${Date.now()}`,
+            role: "assistant",
+            text: aiPayload.text,
+            cards: aiPayload.cards,
+          },
+        ],
+      }));
+    },
+    [updateStrategy],
+  );
+
   const runPrompt = useCallback(
     async (text) => {
       const trimmed = (text ?? prompt).trim();
       if (!trimmed) return;
 
-      const userMsg = {
-        id: `u-${Date.now()}`,
-        role: "user",
-        text: trimmed,
-      };
-      setChatMessages((prev) => [...prev, userMsg]);
-      setPrompt("");
       setLoading(true);
+      setPrompt("");
 
-      await new Promise((r) => window.setTimeout(r, 650));
+      await new Promise((r) => window.setTimeout(r, 600));
 
-      const setup = generateStrategySetup({
-        prompt: trimmed,
-        modelId,
-        strategyId,
-        marketId,
-        preferences: {
-          ...preferences,
-          riskPreference: preferences.riskPreference,
-        },
-        terminalPlatform,
-      });
+      let targetId = selectedStrategyId;
+      let draft;
 
-      setGeneratedSetup(setup);
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          role: "assistant",
-          text: `Generated ${setup.title} — ${setup.direction} on ${setup.market} (${setup.confidence} confidence, ${setup.riskLevel} risk).`,
-        },
-      ]);
+      if (selectedStrategy && selectedStrategy.status === "Draft") {
+        draft = createDraftStrategy({
+          prompt: trimmed,
+          modelId,
+          strategyId: strategyTypeId,
+          marketId,
+          preferences,
+          terminalPlatform,
+          name: selectedStrategy.name,
+        });
+        draft.id = selectedStrategy.id;
+        draft.chatMessages = selectedStrategy.chatMessages;
+        updateStrategy(selectedStrategy.id, () => ({
+          ...draft,
+          chatMessages: [
+            ...selectedStrategy.chatMessages,
+            { id: `u-${Date.now()}`, role: "user", text: trimmed },
+            {
+              id: `a-${Date.now() + 1}`,
+              role: "assistant",
+              text: `I updated ${draft.name}. It waits for price to reclaim the entry zone, confirms RSI recovery, and skips trades during high volatility.`,
+              cards: ["Strategy updated", "Backtest available"],
+            },
+          ],
+        }));
+        targetId = selectedStrategy.id;
+      } else {
+        draft = createDraftStrategy({
+          prompt: trimmed,
+          modelId,
+          strategyId: strategyTypeId,
+          marketId,
+          preferences,
+          terminalPlatform,
+        });
+        draft.chatMessages = [
+          { id: `u-${Date.now()}`, role: "user", text: trimmed },
+          {
+            id: `a-${Date.now() + 1}`,
+            role: "assistant",
+            text: `I created a ${draft.model.toLowerCase()} ${draft.name} draft. It waits for price to reclaim the entry zone, confirms RSI recovery, and skips trades during high volatility.`,
+            cards: ["Strategy created", "Backtest available", "Paper trading available"],
+          },
+        ];
+        setStrategies((prev) => [draft, ...prev]);
+        targetId = draft.id;
+        setSelectedStrategyId(draft.id);
+      }
+
+      setLastSetup(draft.setup);
+      appendLog("Strategy draft created from prompt");
       setLoading(false);
-      setBottomTab("ideas");
+      setMobilePanel("workspace");
+      setWorkspaceTab("overview");
     },
-    [prompt, modelId, strategyId, marketId, preferences, terminalPlatform],
+    [
+      prompt,
+      selectedStrategy,
+      selectedStrategyId,
+      modelId,
+      strategyTypeId,
+      marketId,
+      preferences,
+      terminalPlatform,
+      updateStrategy,
+      setStrategies,
+      setSelectedStrategyId,
+      setLastSetup,
+      appendLog,
+    ],
+  );
+
+  const handleRunBacktest = useCallback(async () => {
+    if (!selectedStrategy) return;
+    setBacktestLoading(true);
+    setWorkspaceTab("backtest");
+    appendLog("Backtest started");
+    await new Promise((r) => window.setTimeout(r, 800));
+    const updated = applyBacktest(selectedStrategy);
+    updateStrategy(selectedStrategy.id, () => updated);
+    const resp = buildChatResponse("Run backtest", updated);
+    pushChat(selectedStrategy.id, "Run backtest", resp);
+    setBacktestLoading(false);
+    showToast("Backtest complete");
+  }, [selectedStrategy, updateStrategy, pushChat, appendLog, showToast]);
+
+  const handleStartPaper = useCallback(() => {
+    if (!selectedStrategy) return;
+    const updated = applyPaperTrading(selectedStrategy);
+    updateStrategy(selectedStrategy.id, () => updated);
+    const resp = buildChatResponse("Start paper trade", updated);
+    pushChat(selectedStrategy.id, "Start paper trade", resp);
+    setWorkspaceTab("paper");
+    appendLog("Paper trading started");
+    showToast("Paper trading active");
+  }, [selectedStrategy, updateStrategy, pushChat, appendLog, showToast]);
+
+  const handleQuickAction = useCallback(
+    async (action) => {
+      if (!selectedStrategy && action !== "Create watcher") {
+        showToast("Select or create a strategy first.", "default");
+        return;
+      }
+
+      if (action === "Run backtest") {
+        await handleRunBacktest();
+        return;
+      }
+      if (action === "Start paper trade") {
+        handleStartPaper();
+        return;
+      }
+      if (action === "Deploy with manual approval") {
+        setDeployOpen(true);
+        return;
+      }
+      if (action === "Create watcher") {
+        setCreateAgentOpen(true);
+        return;
+      }
+
+      const userText = action;
+      let updated = selectedStrategy;
+
+      if (action === "Make it safer") {
+        updated = applySaferRules(selectedStrategy);
+        updateStrategy(selectedStrategy.id, () => updated);
+      }
+
+      const resp = buildChatResponse(action, updated);
+      pushChat(selectedStrategy.id, userText, resp);
+      setPrompt("");
+    },
+    [
+      selectedStrategy,
+      handleRunBacktest,
+      handleStartPaper,
+      updateStrategy,
+      pushChat,
+      showToast,
+    ],
+  );
+
+  const handleNewStrategy = useCallback(() => {
+    setSelectedStrategyId(null);
+    setPrompt("");
+    setMobilePanel("chat");
+    document.querySelector("[data-strategy-chat-input] textarea")?.focus();
+  }, [setSelectedStrategyId]);
+
+  const handleTemplate = useCallback(
+    (template) => {
+      setModelId(template.modelId);
+      setStrategyTypeId(template.strategyId);
+      setMarketId(template.marketId);
+      setPrompt(template.prompt);
+      setMobilePanel("chat");
+      runPrompt(template.prompt);
+    },
+    [runPrompt],
   );
 
   const handleCreateAgent = useCallback(
     (overrides) => {
-      if (!generatedSetup) return;
-      const agent = buildAgentFromSetup(generatedSetup, preferences, overrides);
+      if (!selectedStrategy?.setup) return;
+      const agent = buildAgentFromSetup(selectedStrategy.setup, preferences, overrides);
       setAgents((prev) => [agent, ...prev]);
-      setBottomTab("agents");
-      setRightTab("agents");
-      showToast(`Watcher "${agent.name}" is now active.`);
+      updateStrategy(selectedStrategy.id, (s) => ({
+        ...s,
+        status: "Watching",
+        isAgent: true,
+      }));
+      pushChat(
+        selectedStrategy.id,
+        "Create watcher",
+        buildChatResponse("Create watcher", selectedStrategy),
+      );
+      appendLog(`Agent created: ${agent.name}`);
+      showToast(`Agent created: ${agent.name}`);
     },
-    [generatedSetup, preferences, showToast],
+    [
+      selectedStrategy,
+      preferences,
+      setAgents,
+      updateStrategy,
+      pushChat,
+      appendLog,
+      showToast,
+    ],
   );
 
   const handleSaveAgentEdit = useCallback(
@@ -113,262 +301,122 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             ? {
                 ...a,
                 ...updates,
-                updateLog: [
-                  ...(a.updateLog ?? []),
-                  "Agent instructions updated.",
-                ],
+                recentlyUpdated: true,
+                updateLog: [...(a.updateLog ?? []), "Agent instructions updated."],
               }
             : a,
         ),
       );
+      if (selectedStrategy) {
+        pushChat(
+          selectedStrategy.id,
+          "Edit agent",
+          {
+            text: "I updated the watcher. It will now skip setups when funding is too high or volatility expands.",
+            cards: ["Agent updated"],
+          },
+        );
+      }
       showToast("Agent instructions updated.");
     },
-    [showToast],
+    [setAgents, selectedStrategy, pushChat, showToast],
   );
-
-  const handlePauseAgent = useCallback((id) => {
-    setAgents((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "Paused" } : a)),
-    );
-  }, []);
-
-  const handleStopAgent = useCallback((id) => {
-    setAgents((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "Completed" } : a)),
-    );
-  }, []);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-black text-white">
-      <header className="shrink-0 border-b border-[#242424] px-3 py-3 sm:px-5 sm:py-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-base font-semibold text-white sm:text-lg">
-              Strategy Trading
-            </h1>
-            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#929292] sm:text-sm">
-              Build personalized trading setups with AI models, strategy
-              templates, and on-demand agents.
-            </p>
-          </div>
-          <StrategyControlsBar
-            modelId={modelId}
-            strategyId={strategyId}
-            marketId={marketId}
-            riskPreference={preferences.riskPreference}
-            onModelChange={setModelId}
-            onStrategyChange={setStrategyId}
-            onMarketChange={setMarketId}
-            onRiskChange={(v) =>
-              setPreferences((p) => ({ ...p, riskPreference: v }))
-            }
-            compact
+      {/* Mobile panel switcher */}
+      <div className="flex shrink-0 border-b border-[#242424] tablet:hidden">
+        {MOBILE_PANELS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setMobilePanel(p.id)}
+            className={`flex-1 py-2.5 text-xs font-medium ${
+              mobilePanel === p.id
+                ? "border-b-2 border-[#f2b500] text-[#f2b500]"
+                : "text-[#929292]"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div
+          className={`${
+            mobilePanel === "strategies" ? "flex" : "hidden"
+          } h-full min-h-0 w-full shrink-0 tablet:flex`}
+        >
+          <StrategySidebar
+            strategies={strategies}
+            selectedId={selectedStrategyId}
+            filter={sidebarFilter}
+            onFilterChange={setSidebarFilter}
+            onSelect={(id) => {
+              setSelectedStrategyId(id);
+              setMobilePanel("workspace");
+            }}
+            onNewStrategy={handleNewStrategy}
+            preferences={preferences}
           />
         </div>
-      </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden tablet:flex-row">
-        {/* Left — prompt / chat */}
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-[#242424] p-3 sm:p-4 tablet:h-full tablet:max-w-[17rem] tablet:flex-[0_0_17rem] tablet:border-b-0 tablet:border-r xl:max-w-[19rem] xl:flex-[0_0_19rem]">
-          <p className="mb-2 text-xs font-semibold text-[#bfbfbf]">Prompt</p>
-          <StrategyPromptPanel
+        <div
+          className={`min-h-0 min-w-0 flex-1 ${
+            mobilePanel === "workspace" ? "flex" : "hidden"
+          } flex-col tablet:flex`}
+        >
+          <StrategyCenterWorkspace
+            strategy={selectedStrategy}
+            activeTab={workspaceTab}
+            onTabChange={setWorkspaceTab}
+            onRunBacktest={handleRunBacktest}
+            onStartPaper={handleStartPaper}
+            onDeploy={() => setDeployOpen(true)}
+            backtestLoading={backtestLoading}
+            onTemplateClick={handleTemplate}
+          />
+        </div>
+
+        <div
+          className={`${
+            mobilePanel === "chat" ? "flex" : "hidden"
+          } h-full min-h-0 w-full shrink-0 tablet:flex`}
+        >
+          <StrategyChatPanel
+            strategy={selectedStrategy}
+            messages={chatMessages}
             prompt={prompt}
             onPromptChange={setPrompt}
             onSubmit={() => runPrompt(prompt)}
             loading={loading}
-            chatMessages={chatMessages}
-            onQuickPrompt={(chip) => {
-              setPrompt(chip);
-              runPrompt(chip);
-            }}
+            modelId={modelId}
+            strategyId={strategyTypeId}
+            onModelChange={setModelId}
+            onStrategyChange={setStrategyTypeId}
+            preferences={preferences}
+            onPreferencesChange={setPreferences}
+            onQuickAction={handleQuickAction}
           />
-        </aside>
-
-        {/* Center — workspace */}
-        <main className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto p-3 sm:p-4 tablet:h-full">
-          {!generatedSetup && !loading ? (
-            <div className="mx-auto max-w-2xl">
-              <div className="mb-6 hidden sm:block">
-                <h2 className="text-lg font-semibold text-white">
-                  Build personalized trading strategies with AI
-                </h2>
-                <p className="mt-2 text-sm text-[#929292]">
-                  Choose a trading model, select a strategy style, and create
-                  on-demand agents that analyze, monitor, and adapt to your
-                  prompts.
-                </p>
-              </div>
-              <StrategyEmptyState
-                onActionClick={(p) => {
-                  setPrompt(p);
-                  runPrompt(p);
-                }}
-              />
-            </div>
-          ) : loading ? (
-            <div className="flex min-h-[12rem] items-center justify-center">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <span className="size-8 animate-spin rounded-full border-2 border-[#f2b500] border-t-transparent" />
-                <p className="text-sm text-[#929292]">
-                  Hyprearn is building your setup…
-                </p>
-              </div>
-            </div>
-          ) : (
-            <GeneratedSetupCard
-              setup={generatedSetup}
-              onCreateAgent={() => setCreateAgentOpen(true)}
-              onModifyPrompt={() => {
-                setPrompt(generatedSetup?.promptEcho ?? "");
-                document
-                  .querySelector("[data-strategy-prompt]")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-              onAskFollowUp={() => {
-                setPrompt("Can you refine this setup with tighter risk?");
-              }}
-            />
-          )}
-        </main>
-
-        {/* Right — context / agents / prefs */}
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-t border-[#242424] tablet:h-full tablet:max-w-[15rem] tablet:flex-[0_0_15rem] tablet:border-t-0 tablet:border-l xl:max-w-[17rem] xl:flex-[0_0_17rem]">
-          <Tabs value={rightTab} onValueChange={setRightTab} className="min-h-0 flex-1">
-            <TabsList className="mx-3 mt-3 !flex w-auto flex-wrap gap-1 border-[#242424] bg-[#0a0a0a] p-1">
-              <TabsTrigger value="context" size="sm" className="!text-xs">
-                Context
-              </TabsTrigger>
-              <TabsTrigger value="agents" size="sm" className="!text-xs">
-                Agents
-              </TabsTrigger>
-              <TabsTrigger value="prefs" size="sm" className="!text-xs">
-                Prefs
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-              <TabsContent value="context" className="mt-3">
-                <ContextCard title="Active model" subtitle={selectedModel.name}>
-                  <p className="text-xs leading-relaxed text-[#929292]">
-                    {selectedModel.description}
-                  </p>
-                  <p className="mt-2 text-[10px] text-[#757575]">
-                    Best for: {selectedModel.bestFor.join(", ")}
-                  </p>
-                </ContextCard>
-                <ContextCard
-                  title="Active strategy"
-                  subtitle={selectedStrategy.name}
-                  className="mt-3"
-                >
-                  <p className="text-xs leading-relaxed text-[#929292]">
-                    {selectedStrategy.description}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-[#757575]">
-                    <span>Risk: {selectedStrategy.risk}</span>
-                    <span>·</span>
-                    <span>{selectedStrategy.timeframe}</span>
-                  </div>
-                </ContextCard>
-                <ContextCard title="Personal rules" className="mt-3">
-                  <ul className="space-y-1 text-xs text-[#929292]">
-                    <li>· Risk: {preferences.riskPreference}</li>
-                    <li>· Max leverage: {preferences.maxLeverage}</li>
-                    <li>· Execution: {preferences.executionPreference}</li>
-                    {(agents[0]?.memoryRules ?? []).slice(0, 3).map((r) => (
-                      <li key={r}>· {r}</li>
-                    ))}
-                  </ul>
-                </ContextCard>
-              </TabsContent>
-
-              <TabsContent value="agents" className="mt-3 space-y-2">
-                {agents.length === 0 ? (
-                  <p className="text-xs text-[#757575]">
-                    No active watchers. Create one from a setup.
-                  </p>
-                ) : (
-                  agents.map((agent) => (
-                    <AgentCard
-                      key={agent.id}
-                      agent={agent}
-                      onEditPrompt={setEditAgent}
-                      onPause={handlePauseAgent}
-                      onStop={handleStopAgent}
-                    />
-                  ))
-                )}
-              </TabsContent>
-
-              <TabsContent value="prefs" className="mt-3">
-                <TradingPreferencesPanel
-                  preferences={preferences}
-                  onChange={setPreferences}
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </aside>
+        </div>
       </div>
 
-      {/* Bottom tabs */}
-      <footer className="shrink-0 border-t border-[#242424] bg-[#0a0a0a] px-3 py-2 sm:px-5">
-        <Tabs value={bottomTab} onValueChange={setBottomTab}>
-          <TabsList className="!inline-flex w-auto border-[#242424] bg-black">
-            <TabsTrigger value="ideas" className="!text-xs">
-              AI Copilot
-            </TabsTrigger>
-            <TabsTrigger value="agents" className="!text-xs">
-              Active Agents ({agents.filter((a) => a.status === "Watching").length})
-            </TabsTrigger>
-            <TabsTrigger value="history" className="!text-xs">
-              History
-            </TabsTrigger>
-            <TabsTrigger value="logs" className="!text-xs">
-              Logs
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="ideas" className="mt-2 text-xs text-[#757575]">
-            {generatedSetup
-              ? `${generatedSetup.title} — ${generatedSetup.direction} (${generatedSetup.confidence} confidence)`
-              : "Submit a prompt to generate structured trade ideas in the workspace above."}
-          </TabsContent>
-          <TabsContent value="agents" className="mt-2 text-xs text-[#757575]">
-            {agents.length === 0
-              ? "No watchers yet."
-              : agents.map((a) => (
-                  <p key={a.id}>
-                    {a.name} — {a.status} · {a.market}
-                  </p>
-                ))}
-          </TabsContent>
-          <TabsContent value="history" className="mt-2 text-xs text-[#757575]">
-            {chatMessages.length === 0
-              ? "Prompt history will appear here after your first analysis."
-              : chatMessages.map((m) => (
-                  <p key={m.id} className="py-0.5">
-                    [{m.role}] {m.text}
-                  </p>
-                ))}
-          </TabsContent>
-          <TabsContent value="logs" className="mt-2 text-xs text-[#757575]">
-            {agents.flatMap((a) => a.updateLog ?? []).length === 0
-              ? "Agent update logs will appear here."
-              : agents.flatMap((a) =>
-                  (a.updateLog ?? []).map((log, i) => (
-                    <p key={`${a.id}-${i}`}>
-                      {a.name}: {log}
-                    </p>
-                  )),
-                )}
-          </TabsContent>
-        </Tabs>
-      </footer>
+      <DeployReviewModal
+        open={deployOpen}
+        onOpenChange={setDeployOpen}
+        strategy={selectedStrategy}
+        preferences={preferences}
+        onConfirm={() => {
+          setDeployOpen(false);
+          showToast("Deployment is disabled in this prototype.", "default");
+        }}
+      />
 
       <CreateAgentDialog
         open={createAgentOpen}
         onOpenChange={setCreateAgentOpen}
-        setup={generatedSetup}
+        setup={selectedStrategy?.setup}
         onCreate={handleCreateAgent}
       />
 
@@ -384,22 +432,6 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
           <Toast variant={toast.variant}>{toast.message}</Toast>
         </ToastViewport>
       ) : null}
-    </div>
-  );
-}
-
-function ContextCard({ title, subtitle, children, className = "" }) {
-  return (
-    <div
-      className={`rounded-lg border border-[#242424] bg-[#0a0a0a] p-3 ${className}`}
-    >
-      <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
-        {title}
-      </p>
-      {subtitle ? (
-        <p className="mt-0.5 text-sm font-semibold text-white">{subtitle}</p>
-      ) : null}
-      <div className="mt-2">{children}</div>
     </div>
   );
 }

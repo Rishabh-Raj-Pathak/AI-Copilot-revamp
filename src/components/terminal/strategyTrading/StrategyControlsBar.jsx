@@ -20,12 +20,9 @@ export default function StrategyControlsBar({
   onStrategyChange,
   onMarketChange,
   onRiskChange,
-  compact = false,
 }) {
   return (
-    <div
-      className={`flex flex-wrap items-center gap-2 ${compact ? "" : "sm:gap-3"}`}
-    >
+    <div className="flex flex-wrap items-end gap-2 sm:gap-2.5 max-tablet:minimal-scrollbar max-tablet:overflow-x-auto max-tablet:pb-0.5">
       <label className="flex min-w-[7.5rem] flex-1 flex-col gap-1 sm:min-w-[9rem] sm:max-w-[11rem]">
         <span className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
           Model
