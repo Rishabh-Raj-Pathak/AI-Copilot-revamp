@@ -12,6 +12,8 @@ import { AiCopilotThesisModal } from "./AiCopilotThesisModal.tsx";
 import CopilotTutorialToast from "./CopilotTutorialToast.jsx";
 import CopilotMobileTourBar from "./CopilotMobileTourBar.jsx";
 import OnboardingOverlay from "./OnboardingOverlay.jsx";
+import CopilotViewTabs from "./strategyTrading/CopilotViewTabs.jsx";
+import StrategyTradingPage from "./strategyTrading/StrategyTradingPage.jsx";
 import {
   hasSeenCopilotWelcome,
   markCopilotWelcomeSeen,
@@ -82,6 +84,7 @@ export default function TerminalCopilotPage({
   });
   const [mobileDetailsSheetDismissed, setMobileDetailsSheetDismissed] =
     useState(false);
+  const [copilotView, setCopilotView] = useState("suggestions");
   const [activeFilter, setActiveFilter] = useState("trending");
   const [expireSec, setExpireSec] = useState(0);
   const [stats, setStats] = useState({
@@ -515,6 +518,10 @@ export default function TerminalCopilotPage({
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
+      <CopilotViewTabs activeView={copilotView} onViewChange={setCopilotView} />
+      {copilotView === "strategy-trading" ? (
+        <StrategyTradingPage terminalPlatform={terminalPlatform} />
+      ) : (
       <div
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:flex-row"
         data-tour="copilot-suggestion-and-setup"
@@ -650,6 +657,7 @@ export default function TerminalCopilotPage({
           />
         </div>
       </div>
+      )}
       <TradeSuccessModal
         open={tradeSuccessOpen}
         onViewPortfolio={dismissTradeSuccessModal}
