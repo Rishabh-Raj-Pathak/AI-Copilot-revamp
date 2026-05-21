@@ -238,6 +238,9 @@ dialog::backdrop {
 }
 
 @theme inline {
+  /* Figma grid: mobile < 834px, tablet/desktop >= 834px (`tablet:` / `max-tablet:`) */
+  --breakpoint-tablet: 52.125rem;
+
   --font-sans: var(--ds-font-sans);
 
   --color-background: var(--ds-background);

@@ -145,7 +145,9 @@ const WHEEL_STEP = 48;
 export default function CopilotBottomActivityDock({
   tourDemoPosition = null,
   highlightOpenedPositionRow = false,
+  compact = false,
 }) {
+  const minHeight = compact ? 128 : MIN_H;
   const [activeTab, setActiveTab] = useState("tradeHistory");
   const [panelHeight, setPanelHeight] = useState(MIN_H);
   const dockRef = useRef(null);
@@ -172,6 +174,10 @@ export default function CopilotBottomActivityDock({
   }, [panelHeight]);
 
   useEffect(() => {
+    setPanelHeight((h) => Math.max(minHeight, Math.min(MAX_H, h)));
+  }, [minHeight]);
+
+  useEffect(() => {
     if (!highlightOpenedPositionRow) return;
     const row = openedPositionRowRef.current;
     if (!row) return;
@@ -193,7 +199,7 @@ export default function CopilotBottomActivityDock({
       }
       if (dy < 0) {
         e.preventDefault();
-        setPanelHeight((prev) => Math.max(MIN_H, prev - WHEEL_STEP));
+        setPanelHeight((prev) => Math.max(minHeight, prev - WHEEL_STEP));
         return;
       }
     }
@@ -215,9 +221,9 @@ export default function CopilotBottomActivityDock({
     }
     if (dy < 0 && atTop) {
       e.preventDefault();
-      setPanelHeight((prev) => Math.max(MIN_H, prev - WHEEL_STEP));
+      setPanelHeight((prev) => Math.max(minHeight, prev - WHEEL_STEP));
     }
-  }, []);
+  }, [minHeight]);
 
   useEffect(() => {
     const el = dockRef.current;
@@ -243,7 +249,7 @@ export default function CopilotBottomActivityDock({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`group relative flex shrink-0 items-center gap-1.5 px-2 py-2 text-xs font-medium whitespace-nowrap ${
+                className={`group relative flex shrink-0 items-center gap-1.5 px-2 py-2 text-xs font-medium whitespace-nowrap max-tablet:min-h-10 max-tablet:px-2.5 ${
                   active ? "text-white" : "text-[#8c8c8c] hover:text-[#bfbfbf]"
                 }`}
               >

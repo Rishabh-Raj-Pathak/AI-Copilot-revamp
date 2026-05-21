@@ -59,6 +59,9 @@ export default function VaultsPage({
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
+  onOpenCopilotTutorial,
+  runProductTourOnEnter = false,
+  onProductTourEnterConsumed,
 }) {
   const [viewMode, setViewMode] = useState("list");
   const [dexId, setDexId] = useState("all");
@@ -100,6 +103,16 @@ export default function VaultsPage({
       cancelAnimationFrame(frame);
     };
   }, [vaultsTourHandlers]);
+
+  useEffect(() => {
+    if (!runProductTourOnEnter) return;
+    onProductTourEnterConsumed?.();
+    runVaultsProductTour();
+  }, [
+    runProductTourOnEnter,
+    onProductTourEnterConsumed,
+    runVaultsProductTour,
+  ]);
 
   const patchRow = useCallback((id, partial) => {
     setRowUi((prev) => {
@@ -173,8 +186,9 @@ export default function VaultsPage({
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
         }}
-        showProductTour
-        onProductTour={runVaultsProductTour}
+        onCopilotTutorial={onOpenCopilotTutorial}
+        onVaultTutorial={runVaultsProductTour}
+        showCopilotTutorial={!!onOpenCopilotTutorial}
         walletConnected={walletConnected}
         onWalletConnected={onWalletConnected}
         terminalPlatform={terminalPlatform}

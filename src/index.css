@@ -13,6 +13,28 @@
   }
 }
 
+/** More menu — short pulse after the user skips the AI Copilot tutorial. */
+@keyframes hyprearn-more-tutorial-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(247, 187, 8, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(247, 187, 8, 0.45);
+  }
+}
+
+.hyprearn-more-tutorial-pulse {
+  animation: hyprearn-more-tutorial-pulse 1.15s ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hyprearn-more-tutorial-pulse {
+    animation: none;
+    box-shadow: 0 0 0 2px rgba(247, 187, 8, 0.55);
+  }
+}
+
 /**
  * driver.js onboarding popover — HyprEarn design system (`design-tokens.css`).
  * Overrides library defaults (Helvetica, 300px max-width, tight padding).
@@ -329,44 +351,202 @@
   display: none !important;
 }
 
-@media (max-width: 1023px) {
-  .hyprearn-copilot-driver-popover.driver-popover {
-    min-width: min(100%, calc(100vw - 1.25rem));
-    padding: 1.125rem;
+/**
+ * Mobile tour: driver.js = spotlight only; copy/nav in CopilotMobileTourBar.
+ */
+@media (max-width: 833px) {
+  body.copilot-mobile-tour-active .hyprearn-copilot-driver-popover.driver-popover {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
-  .hyprearn-copilot-driver-popover .driver-popover-close-btn {
-    top: 1.125rem;
-    right: 1.125rem;
+  body.copilot-mobile-tour-active .copilot-mobile-tour-bar,
+  body.copilot-mobile-tour-active .copilot-mobile-tour-bar * {
+    pointer-events: auto !important;
   }
 
-  .hyprearn-copilot-driver-popover .driver-popover-title {
+  body.copilot-mobile-tour-active.driver-active .driver-active-element {
+    border-radius: 0.625rem;
+    box-shadow:
+      0 0 0 2px rgb(247 187 8 / 0.85),
+      0 0 20px rgb(247 187 8 / 0.2);
+  }
+
+  /* Bottom coach card — same chrome as desktop `.hyprearn-copilot-driver-popover` */
+  .copilot-mobile-tour-card {
+    box-sizing: border-box;
+    position: relative;
+    min-height: 8.75rem;
+    padding: 1rem;
+    border-radius: var(--ds-radius-lg);
+    border: 1px solid transparent;
+    background-color: var(--ds-background);
+    background-image:
+      linear-gradient(
+        168deg,
+        rgb(12 14 13 / 0.86) 0%,
+        rgb(8 10 9 / 0.93) 52%,
+        rgb(11 13 12 / 0.9) 100%
+      ),
+      var(--ds-terminal-copilot-tour-popover-border-gradient);
+    background-clip: padding-box, border-box;
+    background-origin: padding-box, border-box;
+    color: var(--ds-foreground);
+    box-shadow: var(--ds-shadow-lg);
+    font-family: var(--ds-font-sans);
+  }
+
+  .copilot-mobile-tour-card__header {
+    position: relative;
+    padding-right: 3.25rem;
+  }
+
+  .copilot-mobile-tour-card__title {
+    margin: 0;
+    color: var(--ds-foreground);
     font-size: var(--ds-text-body-lg-size);
     line-height: 1.2;
-    letter-spacing: normal;
-    padding-right: calc(3.5rem + 1.125rem + 0.25rem);
+    font-weight: 600;
+    transition: opacity 0.2s ease;
   }
 
-  .hyprearn-copilot-driver-popover .driver-popover-footer {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
+  .copilot-mobile-tour-card__skip {
+    all: unset;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.125rem 0.125rem 0.0625rem;
+    color: var(--ds-foreground);
+    cursor: pointer;
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-text-body-sm-size);
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
   }
 
-  .hyprearn-copilot-driver-popover .driver-popover-navigation-btns {
-    flex-basis: auto;
-    justify-content: stretch;
-    gap: 0.5rem;
+  .copilot-mobile-tour-card__skip:hover,
+  .copilot-mobile-tour-card__skip:focus-visible {
+    background-color: rgb(255 255 255 / 0.06);
+    border-radius: var(--ds-radius-xs);
   }
 
-  .hyprearn-copilot-driver-popover
-    .driver-popover-navigation-btns
-    .driver-popover-prev-btn,
-  .hyprearn-copilot-driver-popover
-    .driver-popover-navigation-btns
-    .driver-popover-next-btn {
-    flex: 1 1 0;
-    min-width: 0;
+  .copilot-mobile-tour-card__skip:focus-visible {
+    outline: none;
+    box-shadow: var(--ds-shadow-ring);
+  }
+
+  .copilot-mobile-tour-card__description {
+    display: -webkit-box;
+    margin: 0.375rem 0 0;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--ds-muted-foreground);
+    font-size: var(--ds-text-body-sm-size);
+    line-height: var(--ds-text-body-sm-leading);
+    font-weight: 400;
+    transition: opacity 0.2s ease;
+  }
+
+  .copilot-mobile-tour-card .copilot-mobile-tour-card__segments.hyprearn-tour-step-segments {
+    margin: 0.625rem 0 0;
+    gap: 0.375rem;
+  }
+
+  .copilot-mobile-tour-card__footer {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: var(--ds-height-btn-md);
+    margin-top: 0.625rem;
+  }
+
+  .copilot-mobile-tour-card__prev {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-height: 2.25rem;
+    padding: 0.4375rem 1rem;
+    border-radius: var(--ds-radius-md);
+    color: var(--ds-foreground);
+    cursor: pointer;
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-terminal-connect-wallet-font-size);
+    line-height: 1.25;
+    font-weight: var(--ds-terminal-connect-wallet-font-weight);
+    transition: opacity 0.15s ease;
+  }
+
+  .copilot-mobile-tour-card__prev:hover:not(:disabled),
+  .copilot-mobile-tour-card__prev:focus-visible:not(:disabled) {
+    background-color: rgb(255 255 255 / 0.06);
+  }
+
+  .copilot-mobile-tour-card__prev:focus-visible {
+    outline: none;
+    box-shadow: var(--ds-shadow-ring);
+  }
+
+  .copilot-mobile-tour-card__prev:disabled {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .copilot-mobile-tour-card__next {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0;
+    min-height: 2.25rem !important;
+    min-width: 5.5rem;
+    padding: 0.3125rem 1.25rem !important;
+    margin-left: auto;
+    border-radius: var(--ds-terminal-connect-wallet-radius) !important;
+    border: none !important;
+    background-color: transparent !important;
+    background-image: var(--ds-terminal-connect-wallet-gradient) !important;
+    color: var(--ds-terminal-connect-wallet-fg) !important;
+    cursor: pointer;
+    font-family: var(--ds-font-sans) !important;
+    font-size: var(--ds-terminal-connect-wallet-font-size) !important;
+    line-height: 1.25 !important;
+    font-weight: var(--ds-terminal-connect-wallet-font-weight) !important;
+    transition: opacity 0.15s ease, filter 0.15s ease;
+  }
+
+  .copilot-mobile-tour-card__next:hover:not(:disabled) {
+    filter: brightness(0.96);
+  }
+
+  .copilot-mobile-tour-card__next:active:not(:disabled) {
+    filter: brightness(0.92);
+  }
+
+  .copilot-mobile-tour-card__next:focus-visible {
+    outline: none;
+    box-shadow: var(--ds-shadow-ring);
+  }
+
+  .copilot-mobile-tour-card__next:disabled {
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 @layer base {
@@ -410,7 +590,8 @@
  * element whose direct child is `.driver-active-element`. That clips the
  * absolutely positioned venue menu (parent row becomes the clipping edge).
  */
-.terminal-header-actions:has([data-tour="dex-selector"].driver-active-element) {
+.terminal-header-actions:has([data-tour="dex-selector"].driver-active-element),
+header:has([data-tour="dex-selector"].driver-active-element) {
   overflow: visible !important;
 }
 
@@ -443,6 +624,22 @@ body.driver-active .hyprearn-trade-success-modal-root * {
 
 .copilot-position-row-highlight {
   isolation: isolate;
+}
+
+@media (max-width: 833px) {
+  body.driver-active .driver-overlay {
+    touch-action: none;
+  }
+
+  /**
+   * Trade-setup tour steps (4–5): fade bottom nav so the sheet CTA stays primary.
+   * `TerminalCopilotPage` toggles `copilot-tour-mobile-trade-steps` on body.
+   */
+  body.driver-active.copilot-tour-mobile-trade-steps
+    nav[aria-label="Primary"] {
+    opacity: 0.35;
+    pointer-events: none;
+  }
 }
 
 .copilot-position-row-highlight::before {

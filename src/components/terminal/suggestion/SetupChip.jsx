@@ -43,6 +43,20 @@ export default function SetupChip({ chip }) {
     )
   }
 
+  if (chip.kind === 'rr') {
+    return (
+      <span className="text-xs font-medium text-[#f2b500]">{chip.label}</span>
+    )
+  }
+
+  if (chip.kind === 'range') {
+    return (
+      <span className="rounded-full border border-[#242424] bg-[#121212] px-2.5 py-0.5 text-xs font-medium text-[#bfbfbf]">
+        {chip.label}
+      </span>
+    )
+  }
+
   return (
     <span className="rounded-full border border-[#242424] bg-[#121212] px-2 py-0.5 text-xs font-medium text-white">
       {chip.label}

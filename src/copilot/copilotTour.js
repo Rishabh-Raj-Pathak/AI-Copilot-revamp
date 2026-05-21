@@ -1,4 +1,9 @@
 import { driver } from "driver.js";
+import {
+  isNarrowViewport,
+  queryVisibleTourTarget,
+  scrollTourTarget,
+} from "../styles/breakpoints.js";
 
 /** @typedef {'copilot-tour-1' | 'copilot-tour-2'} CopilotProductTourVariant */
 
@@ -11,6 +16,152 @@ export const COPILOT_TOUR_2_STORAGE_KEY = "hyprearn_copilot_tour_2_completed";
 /** @deprecated Use {@link COPILOT_TOUR_2_STORAGE_KEY}; kept for older localStorage reads. */
 export const COPILOT_TOUR_STORAGE_KEY = "hyprearn_copilot_tour_completed";
 
+export const COPILOT_TUTORIAL_STATUS_KEY = "hyprearn_copilot_tutorial_status";
+export const COPILOT_TUTORIAL_DISMISS_COUNT_KEY =
+  "hyprearn_copilot_tutorial_dismiss_count";
+export const COPILOT_TUTORIAL_ENGAGEMENT_KEY = "hyprearn_copilot_tutorial_engagement";
+export const COPILOT_TUTORIAL_SESSION_DISMISSED_KEY =
+  "hyprearn_copilot_tutorial_dismissed_session";
+
+/** Max automatic tutorial retries after the user skips (across sessions). */
+export const COPILOT_TUTORIAL_MAX_AUTO_DISMISS_RETRIES = 3;
+
+/** @typedef {'never_seen' | 'dismissed' | 'completed'} CopilotTutorialStatus */
+/** @typedef {'completed' | 'dismissed'} CopilotTutorialEndReason */
+
+let legacyTutorialStorageMigrated = false;
+
+function migrateLegacyTutorialStorage() {
+  if (legacyTutorialStorageMigrated) return;
+  legacyTutorialStorageMigrated = true;
+  try {
+    const status = localStorage.getItem(COPILOT_TUTORIAL_STATUS_KEY);
+    if (
+      status === "never_seen" ||
+      status === "dismissed" ||
+      status === "completed"
+    ) {
+      return;
+    }
+    if (
+      localStorage.getItem(COPILOT_TOUR_2_STORAGE_KEY) === "1" ||
+      localStorage.getItem(COPILOT_TOUR_STORAGE_KEY) === "1"
+    ) {
+      localStorage.setItem(COPILOT_TUTORIAL_STATUS_KEY, "completed");
+    }
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+/** @returns {CopilotTutorialStatus} */
+export function getCopilotTutorialStatus() {
+  migrateLegacyTutorialStorage();
+  try {
+    const status = localStorage.getItem(COPILOT_TUTORIAL_STATUS_KEY);
+    if (status === "dismissed" || status === "completed") return status;
+  } catch {
+    /* noop */
+  }
+  return "never_seen";
+}
+
+export function isCopilotTutorialCompleted() {
+  return getCopilotTutorialStatus() === "completed";
+}
+
+/** @returns {boolean} Whether the tutorial should auto-start after wallet connect. */
+export function shouldAutoStartCopilotTutorial() {
+  if (isCopilotTutorialCompleted()) return false;
+  const status = getCopilotTutorialStatus();
+  if (status === "never_seen") return true;
+  if (status === "dismissed") {
+    try {
+      if (
+        sessionStorage.getItem(COPILOT_TUTORIAL_SESSION_DISMISSED_KEY) === "1"
+      ) {
+        return false;
+      }
+      const count = Number.parseInt(
+        localStorage.getItem(COPILOT_TUTORIAL_DISMISS_COUNT_KEY) ?? "0",
+        10,
+      );
+      if (
+        Number.isFinite(count) &&
+        count >= COPILOT_TUTORIAL_MAX_AUTO_DISMISS_RETRIES
+      ) {
+        return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** @returns {{ stepIndex: number; variant: CopilotProductTourVariant } | null} */
+export function getCopilotTutorialEngagement() {
+  migrateLegacyTutorialStorage();
+  try {
+    const raw = localStorage.getItem(COPILOT_TUTORIAL_ENGAGEMENT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed?.stepIndex !== "number" ||
+      (parsed.variant !== COPILOT_TOUR_VARIANT_1 &&
+        parsed.variant !== COPILOT_TOUR_VARIANT_2)
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/** Clears same-session dismiss guard so a manual restart from More can run immediately. */
+export function clearCopilotTutorialSessionDismissed() {
+  try {
+    sessionStorage.removeItem(COPILOT_TUTORIAL_SESSION_DISMISSED_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
+function markCopilotTutorialCompleted() {
+  try {
+    localStorage.setItem(COPILOT_TUTORIAL_STATUS_KEY, "completed");
+    localStorage.removeItem(COPILOT_TUTORIAL_ENGAGEMENT_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
+/** @param {{ stepIndex: number; variant: CopilotProductTourVariant | null }} engagement */
+function markCopilotTutorialDismissed(engagement) {
+  try {
+    localStorage.setItem(COPILOT_TUTORIAL_STATUS_KEY, "dismissed");
+    const count = Number.parseInt(
+      localStorage.getItem(COPILOT_TUTORIAL_DISMISS_COUNT_KEY) ?? "0",
+      10,
+    );
+    localStorage.setItem(
+      COPILOT_TUTORIAL_DISMISS_COUNT_KEY,
+      String(Number.isFinite(count) ? count + 1 : 1),
+    );
+    sessionStorage.setItem(COPILOT_TUTORIAL_SESSION_DISMISSED_KEY, "1");
+    if (engagement?.variant) {
+      localStorage.setItem(
+        COPILOT_TUTORIAL_ENGAGEMENT_KEY,
+        JSON.stringify(engagement),
+      );
+    }
+  } catch {
+    /* noop */
+  }
+}
+
 export function isCopilotTour1Completed() {
   try {
     return localStorage.getItem(COPILOT_TOUR_1_STORAGE_KEY) === "1";
@@ -20,17 +171,12 @@ export function isCopilotTour1Completed() {
 }
 
 export function isCopilotTour2Completed() {
-  try {
-    if (localStorage.getItem(COPILOT_TOUR_2_STORAGE_KEY) === "1") return true;
-    return localStorage.getItem(COPILOT_TOUR_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return isCopilotTutorialCompleted();
 }
 
-/** @returns {boolean} Legacy helper: same as {@link isCopilotTour2Completed}. */
+/** @returns {boolean} Legacy helper: same as {@link isCopilotTutorialCompleted}. */
 export function isCopilotTourCompleted() {
-  return isCopilotTour2Completed();
+  return isCopilotTutorialCompleted();
 }
 
 /** @returns {CopilotProductTourVariant | null} */
@@ -48,9 +194,97 @@ export function getActiveCopilotTourStepIndex() {
   }
 }
 
+/** @returns {boolean} */
+export function isCopilotProductTourActive() {
+  try {
+    return Boolean(activeTourDriver?.isActive?.());
+  } catch {
+    return false;
+  }
+}
+
+/** Push driver active index into React (mobile bar reads `onTourContextChange`). */
+function syncCopilotTourContextFromDriver() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      try {
+        if (!activeTourDriver?.isActive?.()) return;
+        const i = activeTourDriver.getActiveIndex();
+        const stepIndex = typeof i === "number" ? i : -1;
+        activeTourHandlers?.onStepIndexChange?.(stepIndex);
+        activeTourHandlers?.onTourContextChange?.({
+          stepIndex,
+          variant:
+            stepIndex >= 0 && activeTourVariant ? activeTourVariant : null,
+        });
+      } catch {
+        /* noop */
+      }
+    });
+  });
+}
+
+/** Mobile coach bar: advance (mirrors desktop onNext for steps that need prep). */
+export function copilotTourMobileMoveNext() {
+  try {
+    if (!activeTourDriver?.isActive?.()) return;
+    const i = activeTourDriver.getActiveIndex();
+    if (typeof i !== "number" || i >= 5) return;
+
+    if (i === 1) {
+      void (async () => {
+        try {
+          if (typeof activeTourHandlers?.prepareSuggestionTourStep === "function") {
+            await activeTourHandlers.prepareSuggestionTourStep();
+          }
+        } catch {
+          /* keep tour alive */
+        } finally {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (activeTourDriver?.isActive?.()) {
+                activeTourDriver.moveNext?.();
+                syncCopilotTourContextFromDriver();
+              }
+            });
+          });
+        }
+      })();
+      return;
+    }
+
+    activeTourDriver.moveNext?.();
+    syncCopilotTourContextFromDriver();
+  } catch {
+    /* noop */
+  }
+}
+
+/** Mobile coach bar: go back one step. */
+export function copilotTourMobileMovePrevious() {
+  try {
+    if (!activeTourDriver?.isActive?.()) return;
+    activeTourDriver.movePrevious?.();
+    syncCopilotTourContextFromDriver();
+  } catch {
+    /* noop */
+  }
+}
+
+/** Mobile coach bar: skip / dismiss tutorial. */
+export function copilotTourMobileSkip() {
+  try {
+    if (!activeTourDriver?.isActive?.()) return;
+    pendingTutorialEndReason = "dismissed";
+    activeTourDriver.destroy();
+  } catch {
+    /* noop */
+  }
+}
+
 /** Driver index of the Backtest spotlight (highlights the control; modal opens only if the user clicks). */
 const VIEW_THESIS_STEP_INDEX_TOUR1 = 3;
-const VIEW_THESIS_STEP_INDEX_TOUR2 = 2;
+const VIEW_THESIS_STEP_INDEX_TOUR2 = 3;
 
 /**
  * True when the active tour is on the step that spotlights **Backtest** (the button).
@@ -72,6 +306,7 @@ export function advanceCopilotTourMoveNextIfActive() {
   try {
     if (!activeTourDriver?.isActive?.()) return false;
     activeTourDriver.moveNext?.();
+    syncCopilotTourContextFromDriver();
     return true;
   } catch {
     return false;
@@ -133,7 +368,7 @@ export function notifyCopilotTourTerminalPlatformChanged(platformId) {
 }
 
 const OPEN_TRADE_TOUR_STEP_INDEX_TOUR1 = 5;
-const OPEN_TRADE_TOUR_STEP_INDEX_TOUR2 = 4;
+const OPEN_TRADE_TOUR_STEP_INDEX_TOUR2 = 5;
 
 /**
  * When the user clicks the primary open-trade CTA on the final tour step, end the
@@ -150,6 +385,7 @@ export function advanceCopilotTourToPositionsFromOpenTradeClick() {
       : OPEN_TRADE_TOUR_STEP_INDEX_TOUR2;
   if (i !== expected) return false;
 
+  pendingTutorialEndReason = "completed";
   try {
     if (activeTourDriver.isActive?.()) activeTourDriver.destroy();
   } catch {
@@ -165,11 +401,12 @@ export function advanceCopilotTourToPositionsFromOpenTradeClick() {
  * driver.js sets `pointer-events: none` on almost the whole page while active, which
  * blocks taps on the success overlay until the driver is destroyed.
  *
- * @param {{ skipCompletionMark?: boolean }} [opts]
+ * @param {{ skipCompletionMark?: boolean; markCompleted?: boolean }} [opts]
  */
 export function destroyCopilotProductTourIfStillActive(opts = {}) {
   if (!activeTourDriver?.isActive?.()) return;
   if (opts.skipCompletionMark) suppressTourCompletionMark = true;
+  else if (opts.markCompleted) pendingTutorialEndReason = "completed";
   try {
     activeTourDriver.destroy();
   } catch {
@@ -200,6 +437,9 @@ let activeTourDriver = null;
 
 let suppressTourCompletionMark = false;
 
+/** @type {CopilotTutorialEndReason | null} */
+let pendingTutorialEndReason = null;
+
 /** @type {CopilotProductTourHandlers | null} */
 let activeTourHandlers = null;
 
@@ -217,6 +457,7 @@ function destroyActiveTourDriverSilently() {
   } catch {
     /* noop */
   } finally {
+    document.body.classList.remove("copilot-mobile-tour-active");
     suppressTourCompletionMark = false;
     activeTourDriver = null;
   }
@@ -253,7 +494,7 @@ function mountHyprearnTourStepSegments(popover, opts) {
   bar.setAttribute("aria-valuemin", "1");
   bar.setAttribute("aria-valuemax", String(total));
   bar.setAttribute("aria-valuenow", String(idx + 1));
-  bar.setAttribute("aria-label", `Guided tour step ${idx + 1} of ${total}`);
+  bar.setAttribute("aria-label", `Tutorial step ${idx + 1} of ${total}`);
 
   for (let i = 0; i < total; i++) {
     const seg = document.createElement("span");
@@ -264,6 +505,21 @@ function mountHyprearnTourStepSegments(popover, opts) {
     bar.appendChild(seg);
   }
 
+  if (isNarrowViewport()) {
+    const count = document.createElement("span");
+    count.className = "hyprearn-tour-step-count";
+    count.setAttribute("data-hyprearn-tour-ui", "");
+    count.textContent = `${idx + 1}/${total}`;
+    bar.appendChild(count);
+    popover.wrapper?.classList?.add(
+      "hyprearn-copilot-driver-popover--mobile-coach",
+    );
+  } else {
+    popover.wrapper?.classList?.remove(
+      "hyprearn-copilot-driver-popover--mobile-coach",
+    );
+  }
+
   wrapper.insertBefore(bar, footer);
 }
 
@@ -271,7 +527,32 @@ function mountHyprearnTourStepSegments(popover, opts) {
 function mountTourSkipLabel(closeButton) {
   closeButton.replaceChildren();
   closeButton.textContent = "Skip";
-  closeButton.setAttribute("aria-label", "Skip guided tour");
+  closeButton.setAttribute("aria-label", "Skip tutorial");
+}
+
+function collectTutorialEngagement() {
+  try {
+    const i = activeTourDriver?.getActiveIndex?.();
+    return {
+      stepIndex: typeof i === "number" && i >= 0 ? i : 0,
+      variant: activeTourVariant,
+    };
+  } catch {
+    return { stepIndex: 0, variant: activeTourVariant };
+  }
+}
+
+function applyTutorialEndState(variant) {
+  const reason = pendingTutorialEndReason ?? "dismissed";
+  pendingTutorialEndReason = null;
+  if (reason === "completed") {
+    markCopilotTutorialCompleted();
+    if (variant) markTourVariantCompleted(variant);
+  } else {
+    markCopilotTutorialDismissed(collectTutorialEngagement());
+  }
+  const engagement = getCopilotTutorialEngagement();
+  activeTourHandlers?.onTutorialEnded?.({ reason, engagement });
 }
 
 /**
@@ -290,7 +571,103 @@ function mountTourSkipLabel(closeButton) {
  * Reserved for tour flows that need to stage UI before advancing.
  * @property {() => string | null | undefined} [getTerminalPlatformId]
  * Current venue id (for DEX step baseline and auto-advance).
+ * @property {(payload: { reason: CopilotTutorialEndReason; engagement: ReturnType<typeof getCopilotTutorialEngagement> }) => void} [onTutorialEnded]
+ * Fired when the tutorial ends (skip, complete, or trade CTA on final step).
+ * @property {() => void | Promise<void>} [ensureMobileTradeSheetForTour]
+ * On narrow viewports, selects a setup and opens the fullscreen trade setup sheet.
+ * @property {() => void | Promise<void>} [ensureMobileFeedVisibleForTour]
+ * On narrow viewports, closes the trade sheet so list steps (2–3) stay visible.
  */
+
+/** @typedef {'reviewSetup' | 'backtest' | 'customize'} TourStepCopyKey */
+
+const TOUR_STEP_COPY = {
+  reviewSetup: {
+    desktop: {
+      title: "Review Trade Setup",
+      description:
+        "Every card is a live AI suggested setup. Tap to expand and review the full chart context before committing.",
+    },
+    narrow: {
+      title: "Review setup",
+      description: "Tap a setup card in the list to select it.",
+    },
+  },
+  backtest: {
+    desktop: {
+      title: "Backtest",
+      description:
+        "Read the backtest behind every trade. Understand the reasoning before you execute.",
+    },
+    narrow: {
+      title: "Backtest",
+      description: "Tap Backtest on the selected card.",
+    },
+  },
+  customize: {
+    desktop: {
+      title: "Customize Your Trade",
+      description:
+        "Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
+    },
+    narrow: {
+      title: "Customize trade",
+      description: "Tune size, leverage, and exits here.",
+    },
+  },
+};
+
+/** @param {TourStepCopyKey} key @param {boolean} narrow */
+function getTourStepCopy(key, narrow) {
+  const block = TOUR_STEP_COPY[key];
+  return narrow ? block.narrow : block.desktop;
+}
+
+/**
+ * @param {CopilotProductTourHandlers} handlers
+ * @param {Element | undefined} el
+ * @param {{ driver: import('driver.js').Driver }} opts
+ */
+async function prepareFeedTourHighlight(handlers, el, { driver: drv }) {
+  const ensureThesisClosedForTour = handlers.ensureThesisClosedForTour;
+  try {
+    if (typeof handlers.ensureMobileFeedVisibleForTour === "function") {
+      await handlers.ensureMobileFeedVisibleForTour();
+    }
+    if (typeof ensureThesisClosedForTour === "function") {
+      await ensureThesisClosedForTour();
+    }
+  } catch {
+    /* keep tour alive */
+  } finally {
+    scrollTourTarget(el);
+    if (drv.isActive()) drv.refresh();
+  }
+}
+
+/**
+ * @param {CopilotProductTourHandlers} handlers
+ * @param {Element | undefined} el
+ * @param {{ driver: import('driver.js').Driver }} opts
+ */
+async function prepareTradeSetupTourHighlight(handlers, el, { driver: drv }) {
+  const ensureThesisClosedForTour = handlers.ensureThesisClosedForTour;
+  try {
+    if (typeof handlers.ensureMobileTradeSheetForTour === "function") {
+      await handlers.ensureMobileTradeSheetForTour();
+    }
+    if (typeof ensureThesisClosedForTour === "function") {
+      await ensureThesisClosedForTour();
+    }
+  } catch {
+    /* keep tour alive */
+  } finally {
+    if (drv.isActive()) {
+      scrollTourTarget(el);
+      drv.refresh();
+    }
+  }
+}
 
 /**
  * @param {CopilotProductTourHandlers} handlers
@@ -299,14 +676,12 @@ function mountTourSkipLabel(closeButton) {
 function buildCopilotTour1Steps(handlers) {
   const prepareSuggestionTourStep = handlers.prepareSuggestionTourStep;
   const ensureThesisClosedForTour = handlers.ensureThesisClosedForTour;
-  const isNarrowViewport =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 1023px)").matches;
+  const narrow = isNarrowViewport();
 
   /** @type {import('driver.js').DriveStep[]} */
   const blueprint = [
     {
-      element: '[data-tour="copilot-overview"]',
+      element: () => queryVisibleTourTarget('[data-tour="copilot-overview"]'),
       popover: {
         title: "AI-Copilot",
         description:
@@ -318,10 +693,11 @@ function buildCopilotTour1Steps(handlers) {
       },
     },
     {
-      element: '[data-tour="dex-selector"]',
+      element: () => queryVisibleTourTarget('[data-tour="dex-selector"]'),
       disableActiveInteraction: false,
-      onHighlighted: (_el, _step, { driver: drv }) => {
+      onHighlighted: (el, _step, { driver: drv }) => {
         tourDexBaselinePlatformId = handlers.getTerminalPlatformId?.() ?? null;
+        scrollTourTarget(el);
         requestAnimationFrame(() => {
           if (drv.isActive()) drv.refresh();
         });
@@ -331,7 +707,7 @@ function buildCopilotTour1Steps(handlers) {
         description:
           "One workflow, multiple DEXs. Switch exchanges instantly, your trading experience never changes.",
         side: "bottom",
-        align: isNarrowViewport ? "start" : "end",
+        align: narrow ? "start" : "end",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
         onNextClick: (_el, _step, { driver: drv }) => {
@@ -355,26 +731,13 @@ function buildCopilotTour1Steps(handlers) {
     },
     {
       element: () =>
-        document.querySelector('[data-tour="copilot-expanded-suggestion"]'),
+        queryVisibleTourTarget('[data-tour="copilot-expanded-suggestion"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el, _step, { driver: drv }) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-        void (async () => {
-          try {
-            if (typeof ensureThesisClosedForTour === "function") {
-              await ensureThesisClosedForTour();
-            }
-          } catch {
-            /* keep tour alive */
-          } finally {
-            if (drv.isActive()) drv.refresh();
-          }
-        })();
+      onHighlighted: (el, _step, opts) => {
+        void prepareFeedTourHighlight(handlers, el, opts);
       },
       popover: {
-        title: "Review Trade Setup",
-        description:
-          "Every card is a live AI suggested setup. Tap to expand and review the full chart context before committing.",
+        ...getTourStepCopy("reviewSetup", narrow),
         side: "bottom",
         align: "start",
         showButtons: ["next", "previous", "close"],
@@ -390,26 +753,13 @@ function buildCopilotTour1Steps(handlers) {
     },
     {
       element: () =>
-        document.querySelector('[data-tour="copilot-view-thesis"]'),
+        queryVisibleTourTarget('[data-tour="copilot-view-thesis"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el, _step, { driver: drv }) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-        void (async () => {
-          try {
-            if (typeof ensureThesisClosedForTour === "function") {
-              await ensureThesisClosedForTour();
-            }
-          } catch {
-            /* keep tour alive */
-          } finally {
-            if (drv.isActive()) drv.refresh();
-          }
-        })();
+      onHighlighted: (el, _step, opts) => {
+        void prepareFeedTourHighlight(handlers, el, opts);
       },
       popover: {
-        title: "Backtest",
-        description:
-          "Read the backtest behind every trade. Understand the reasoning before you execute.",
+        ...getTourStepCopy("backtest", narrow),
         side: "bottom",
         align: "center",
         showButtons: ["next", "previous", "close"],
@@ -435,30 +785,15 @@ function buildCopilotTour1Steps(handlers) {
     },
     {
       element: () =>
-        document.querySelector('[data-tour="copilot-trade-setup"]'),
+        queryVisibleTourTarget('[data-tour="copilot-trade-setup"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el, _step, { driver: drv }) => {
-        void (async () => {
-          try {
-            if (typeof ensureThesisClosedForTour === "function") {
-              await ensureThesisClosedForTour();
-            }
-          } catch {
-            /* keep tour alive */
-          } finally {
-            if (drv.isActive()) {
-              el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-              drv.refresh();
-            }
-          }
-        })();
+      onHighlighted: (el, _step, opts) => {
+        void prepareTradeSetupTourHighlight(handlers, el, opts);
       },
       popover: {
-        title: "Customize Your Trade",
-        description:
-          "Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
-        side: isNarrowViewport ? "bottom" : "left",
-        align: isNarrowViewport ? "center" : "start",
+        ...getTourStepCopy("customize", narrow),
+        side: narrow ? "top" : "left",
+        align: narrow ? "center" : "start",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
         onPrevClick: (_el, _step, { driver: drv }) => {
@@ -481,15 +816,16 @@ function buildCopilotTour1Steps(handlers) {
       },
     },
     {
-      element: () => document.querySelector('[data-tour="trade-open-cta"]'),
+      element: () => queryVisibleTourTarget('[data-tour="trade-open-cta"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+      onHighlighted: (el, _step, opts) => {
+        void prepareTradeSetupTourHighlight(handlers, el, opts);
       },
       popover: {
         title: "Place your first trade",
-        description:
-          "You're all set. Hit the button and place your first trade.",
+        description: narrow
+          ? "Tap the red button below to place your demo trade."
+          : "You're all set. Hit the button and place your first trade.",
         side: "top",
         align: "center",
         showButtons: ["previous", "close"],
@@ -507,14 +843,12 @@ function buildCopilotTour1Steps(handlers) {
 function buildCopilotTour2Steps(handlers) {
   const prepareSuggestionTourStep = handlers.prepareSuggestionTourStep;
   const ensureThesisClosedForTour = handlers.ensureThesisClosedForTour;
-  const isNarrowViewport =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 1023px)").matches;
+  const narrow = isNarrowViewport();
 
   /** @type {import('driver.js').DriveStep[]} */
   const blueprint = [
     {
-      element: '[data-tour="copilot-overview"]',
+      element: () => queryVisibleTourTarget('[data-tour="copilot-overview"]'),
       popover: {
         title: "AI-Copilot",
         description:
@@ -526,10 +860,11 @@ function buildCopilotTour2Steps(handlers) {
       },
     },
     {
-      element: '[data-tour="dex-selector"]',
+      element: () => queryVisibleTourTarget('[data-tour="dex-selector"]'),
       disableActiveInteraction: false,
-      onHighlighted: (_el, _step, { driver: drv }) => {
+      onHighlighted: (el, _step, { driver: drv }) => {
         tourDexBaselinePlatformId = handlers.getTerminalPlatformId?.() ?? null;
+        scrollTourTarget(el);
         requestAnimationFrame(() => {
           if (drv.isActive()) drv.refresh();
         });
@@ -539,7 +874,7 @@ function buildCopilotTour2Steps(handlers) {
         description:
           "One workflow, multiple DEXs. Switch exchanges instantly, your trading experience never changes.",
         side: "bottom",
-        align: isNarrowViewport ? "start" : "end",
+        align: narrow ? "start" : "end",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
         onNextClick: (_el, _step, { driver: drv }) => {
@@ -563,26 +898,35 @@ function buildCopilotTour2Steps(handlers) {
     },
     {
       element: () =>
-        document.querySelector('[data-tour="copilot-view-thesis"]'),
+        queryVisibleTourTarget('[data-tour="copilot-expanded-suggestion"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el, _step, { driver: drv }) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-        void (async () => {
-          try {
-            if (typeof ensureThesisClosedForTour === "function") {
-              await ensureThesisClosedForTour();
-            }
-          } catch {
-            /* keep tour alive */
-          } finally {
-            if (drv.isActive()) drv.refresh();
-          }
-        })();
+      onHighlighted: (el, _step, opts) => {
+        void prepareFeedTourHighlight(handlers, el, opts);
       },
       popover: {
-        title: "Backtest",
-        description:
-          "Read the backtest behind every trade. Understand the reasoning before you execute.",
+        ...getTourStepCopy("reviewSetup", narrow),
+        side: "bottom",
+        align: "start",
+        showButtons: ["next", "previous", "close"],
+        nextBtnText: "Next",
+        onNextClick: (_el, _step, { driver: drv }) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (drv.isActive()) drv.moveNext();
+            });
+          });
+        },
+      },
+    },
+    {
+      element: () =>
+        queryVisibleTourTarget('[data-tour="copilot-view-thesis"]'),
+      disableActiveInteraction: false,
+      onHighlighted: (el, _step, opts) => {
+        void prepareFeedTourHighlight(handlers, el, opts);
+      },
+      popover: {
+        ...getTourStepCopy("backtest", narrow),
         side: "bottom",
         align: "center",
         showButtons: ["next", "previous", "close"],
@@ -607,30 +951,16 @@ function buildCopilotTour2Steps(handlers) {
       },
     },
     {
-      element: '[data-tour="copilot-suggestion-and-setup"]',
+      element: () =>
+        queryVisibleTourTarget('[data-tour="copilot-trade-setup"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el, _step, { driver: drv }) => {
-        void (async () => {
-          try {
-            if (typeof ensureThesisClosedForTour === "function") {
-              await ensureThesisClosedForTour();
-            }
-          } catch {
-            /* keep tour alive */
-          } finally {
-            if (drv.isActive()) {
-              el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-              drv.refresh();
-            }
-          }
-        })();
+      onHighlighted: (el, _step, opts) => {
+        void prepareTradeSetupTourHighlight(handlers, el, opts);
       },
       popover: {
-        title: "Review Trade Setup",
-        description:
-          "Every card is a live AI suggested setup. Tap to expand and review the full chart context before committing and Dial in your leverage, size, and exits to fit your risk appetite. Nothing executes without your confirmation.",
-        side: isNarrowViewport ? "bottom" : "top",
-        align: "start",
+        ...getTourStepCopy("customize", narrow),
+        side: narrow ? "top" : "left",
+        align: narrow ? "center" : "start",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Next",
         onPrevClick: (_el, _step, { driver: drv }) => {
@@ -653,15 +983,16 @@ function buildCopilotTour2Steps(handlers) {
       },
     },
     {
-      element: () => document.querySelector('[data-tour="trade-open-cta"]'),
+      element: () => queryVisibleTourTarget('[data-tour="trade-open-cta"]'),
       disableActiveInteraction: false,
-      onHighlighted: (el) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+      onHighlighted: (el, _step, opts) => {
+        void prepareTradeSetupTourHighlight(handlers, el, opts);
       },
       popover: {
         title: "Place your first trade",
-        description:
-          "You're all set. Hit the button and place your first trade.",
+        description: narrow
+          ? "Tap the red button below to place your demo trade."
+          : "You're all set. Hit the button and place your first trade.",
         side: "top",
         align: "center",
         showButtons: ["previous", "close"],
@@ -674,14 +1005,24 @@ function buildCopilotTour2Steps(handlers) {
 
 /** @param {import('driver.js').DriveStep[]} blueprint */
 function mapPopoverBlueprint(blueprint) {
+  const narrow = isNarrowViewport();
   return blueprint.map((row) => {
     const { popover: rowPopover, ...rest } = row;
+    const desktopButtons = rowPopover?.showButtons ?? [
+      "next",
+      "previous",
+      "close",
+    ];
     return {
       ...rest,
       popover: {
-        showButtons: ["next", "previous", "close"],
         ...rowPopover,
+        showButtons: narrow ? [] : desktopButtons,
         onPopoverRender: (popover, opts) => {
+          if (narrow) {
+            popover.wrapper?.style?.setProperty("display", "none", "important");
+            return;
+          }
           mountTourSkipLabel(popover.closeButton);
           popover.nextButton?.classList?.add("ds-terminal-gradient-cta");
           removeHyprearnTourPopoverExtras(popover);
@@ -694,16 +1035,24 @@ function mapPopoverBlueprint(blueprint) {
 }
 
 /**
+ * @typedef {object} StartCopilotProductTourOptions
+ * @property {number} [startStep] driver step index to open on (for resume after dismiss).
+ */
+
+/**
  * @param {CopilotProductTourHandlers} [handlers]
  * @param {CopilotProductTourVariant} [variant]
+ * @param {StartCopilotProductTourOptions} [options]
  * @returns {(() => void) | null} cleanup to destroy the active driver, or null if nothing started
  */
 export function startCopilotProductTour(
   handlers = {},
   variant = COPILOT_TOUR_VARIANT_2,
+  options = {},
 ) {
   destroyActiveTourDriverSilently();
   tourDexBaselinePlatformId = null;
+  pendingTutorialEndReason = null;
   activeTourHandlers = handlers;
   activeTourVariant = variant;
 
@@ -734,21 +1083,26 @@ export function startCopilotProductTour(
     /** Clicks on the dimmed overlay must not end the tour — only Close / footer actions. */
     overlayClickBehavior: () => {},
     disableActiveInteraction: false,
-    overlayOpacity: 0.66,
+    overlayOpacity: isNarrowViewport() ? 0.38 : 0.66,
     overlayColor: "#000",
-    showProgress: true,
-    progressText: "Step {{current}} of {{total}}",
-    showButtons: ["next", "previous", "close"],
+    showProgress: !isNarrowViewport(),
+    progressText: "Tutorial {{current}} of {{total}}",
+    showButtons: isNarrowViewport()
+      ? []
+      : ["next", "previous", "close"],
     popoverClass: "hyprearn-copilot-driver-popover",
-    popoverOffset: 14,
+    popoverOffset: isNarrowViewport() ? 0 : 14,
     onCloseClick: (_el, _step, { driver: drv }) => {
+      pendingTutorialEndReason = "dismissed";
       drv.destroy();
     },
     onHighlighted: (_el, _step, { driver: drv }) => {
       const i = drv.getActiveIndex();
       emitContext(typeof i === "number" ? i : -1);
+      syncCopilotTourContextFromDriver();
     },
     onDestroyed: () => {
+      document.body.classList.remove("copilot-mobile-tour-active");
       const v = activeTourVariant;
       activeTourHandlers?.onStepIndexChange?.(-1);
       activeTourHandlers?.onTourContextChange?.({ stepIndex: -1, variant: null });
@@ -756,15 +1110,22 @@ export function startCopilotProductTour(
       activeTourHandlers = null;
       activeTourVariant = null;
       if (!suppressTourCompletionMark && v) {
-        markTourVariantCompleted(v);
+        applyTutorialEndState(v);
       }
     },
     steps,
   });
 
   activeTourDriver = d;
-  d.drive(0);
+  if (isNarrowViewport()) {
+    document.body.classList.add("copilot-mobile-tour-active");
+  }
+  const rawStart = options.startStep ?? 0;
+  const startStep = Math.max(0, Math.min(rawStart, steps.length - 1));
+  d.drive(startStep);
+  syncCopilotTourContextFromDriver();
   return () => {
+    document.body.classList.remove("copilot-mobile-tour-active");
     destroyActiveTourDriverSilently();
   };
 }

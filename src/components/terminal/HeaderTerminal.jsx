@@ -46,31 +46,28 @@ const nav = [
 ];
 
 export default function HeaderTerminal({
-  onProductTour,
-  onProductTour1,
-  onProductTour2,
+  onCopilotTutorial,
+  onVaultTutorial,
   activeNavItem = "AI Copilot",
   onNavItemClick,
-  showProductTour = true,
+  showCopilotTutorial = true,
+  highlightMoreForTutorial = false,
+  showMoreTutorialHint = false,
+  onDismissMoreTutorialHint,
   walletConnected,
   onWalletConnected,
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const moreMenuRef = useRef(null);
+  const mobileNavRef = useRef(null);
 
-  const showDualProductTour =
-    showProductTour &&
-    typeof onProductTour1 === "function" &&
-    typeof onProductTour2 === "function";
-
-  const showSingleProductTour =
-    showProductTour &&
-    typeof onProductTour === "function" &&
-    !showDualProductTour;
-
-  const moreMenuHasTour = showDualProductTour || showSingleProductTour;
+  const showCopilotTutorialItem =
+    showCopilotTutorial && typeof onCopilotTutorial === "function";
+  const showVaultTutorialItem = typeof onVaultTutorial === "function";
+  const moreMenuHasTutorial = showCopilotTutorialItem || showVaultTutorialItem;
 
   useEffect(() => {
     if (!moreMenuOpen) return;
@@ -89,10 +86,33 @@ export default function HeaderTerminal({
     };
   }, [moreMenuOpen]);
 
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const close = (e) => {
+      const el = mobileNavRef.current;
+      if (el && !el.contains(e.target)) setMobileNavOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
+    if (!showMoreTutorialHint) return;
+    const t = window.setTimeout(() => onDismissMoreTutorialHint?.(), 8000);
+    return () => window.clearTimeout(t);
+  }, [showMoreTutorialHint, onDismissMoreTutorialHint]);
+
   return (
-    <header className="flex min-h-16 shrink-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-[#242424] bg-black px-3 py-2.5 sm:gap-x-3 sm:px-5 sm:py-3 lg:h-16 lg:flex-nowrap lg:gap-4 lg:py-3">
+    <header className="hidden min-h-16 shrink-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-[#242424] bg-black px-3 py-2.5 sm:gap-x-3 sm:px-5 sm:py-3 tablet:flex tablet:h-16 tablet:flex-nowrap tablet:gap-4 tablet:py-3">
       <div
-        className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5"
+        className="flex min-w-0 flex-1 items-center gap-2 sm:gap-5"
         data-tour="copilot-overview"
       >
         <div className="flex h-[29px] shrink-0 items-center gap-2 overflow-hidden">
@@ -106,7 +126,86 @@ export default function HeaderTerminal({
             </span>
           </p>
         </div>
-        <nav className="minimal-scrollbar flex min-w-0 flex-1 items-end gap-1.5 overflow-x-auto sm:gap-2 lg:flex-initial lg:overflow-visible">
+        <div className="relative shrink-0 max-tablet:block tablet:hidden" ref={mobileNavRef}>
+          <button
+            type="button"
+            aria-expanded={mobileNavOpen}
+            aria-controls="terminal-mobile-nav"
+            aria-label="Open navigation menu"
+            className="flex size-11 items-center justify-center rounded-md border border-[#242424] text-white hover:bg-white/5"
+            onClick={() => setMobileNavOpen((o) => !o)}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              {mobileNavOpen ? (
+                <path d="M18 6 6 18M6 6l12 12" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
+          </button>
+          {mobileNavOpen ? (
+            <nav
+              id="terminal-mobile-nav"
+              className="absolute left-0 top-full z-[120] mt-1 max-h-[min(70dvh,20rem)] min-w-[12rem] overflow-y-auto rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
+            >
+              {nav.map((label) => {
+                const active = label === activeNavItem;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      onNavItemClick?.(label);
+                      setMobileNavOpen(false);
+                    }}
+                    className={`block w-full px-3 py-2.5 text-left text-sm ${
+                      active
+                        ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                        : "text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+              {showCopilotTutorialItem ? (
+                <button
+                  type="button"
+                  className="block w-full border-t border-[#242424] px-3 py-2.5 text-left text-sm text-white hover:bg-white/10"
+                  onClick={() => {
+                    onCopilotTutorial?.();
+                    setMobileNavOpen(false);
+                    onDismissMoreTutorialHint?.();
+                  }}
+                >
+                  AI Copilot tutorial
+                </button>
+              ) : null}
+              {showVaultTutorialItem ? (
+                <button
+                  type="button"
+                  className="block w-full border-t border-[#242424] px-3 py-2.5 text-left text-sm text-white hover:bg-white/10"
+                  onClick={() => {
+                    onVaultTutorial?.();
+                    setMobileNavOpen(false);
+                    onDismissMoreTutorialHint?.();
+                  }}
+                >
+                  Vault tutorial
+                </button>
+              ) : null}
+            </nav>
+          ) : null}
+        </div>
+        <nav className="minimal-scrollbar hidden min-w-0 flex-1 items-end gap-1.5 overflow-x-auto sm:gap-2 tablet:flex tablet:flex-initial tablet:overflow-visible">
           {nav.map((label) => {
             const active = label === activeNavItem;
             return (
@@ -127,62 +226,67 @@ export default function HeaderTerminal({
           <div className="relative shrink-0" ref={moreMenuRef}>
             <button
               type="button"
-              aria-expanded={moreMenuHasTour ? moreMenuOpen : undefined}
-              aria-haspopup={moreMenuHasTour ? "menu" : undefined}
+              data-tutorial-more-trigger
+              aria-expanded={moreMenuHasTutorial ? moreMenuOpen : undefined}
+              aria-haspopup={moreMenuHasTutorial ? "menu" : undefined}
               onClick={() => {
-                if (!moreMenuHasTour) return;
+                if (!moreMenuHasTutorial) return;
+                onDismissMoreTutorialHint?.();
                 setMoreMenuOpen((o) => !o);
               }}
-              className="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/5 sm:px-3 sm:text-sm"
+              className={`flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/5 sm:px-3 sm:text-sm ${
+                highlightMoreForTutorial ? "hyprearn-more-tutorial-pulse" : ""
+              }`}
             >
               More
               <NavChevron className="size-4 shrink-0 text-[#bfbfbf]" />
             </button>
-            {moreMenuOpen && moreMenuHasTour ? (
+            {showMoreTutorialHint && !moreMenuOpen ? (
               <div
-                className="absolute right-0 top-full z-[120] mt-1 min-w-[11rem] rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
+                className="absolute right-0 top-full z-[121] mt-1.5 max-w-[14rem] rounded-md border border-[#3e2e00] bg-[#171200] px-3 py-2 shadow-lg"
+                role="tooltip"
+              >
+                <p className="text-xs leading-snug text-[#f2b500]">
+                  Tutorial lives here — open <span className="text-white">More</span>{" "}
+                  anytime.
+                </p>
+              </div>
+            ) : null}
+            {moreMenuOpen && moreMenuHasTutorial ? (
+              <div
+                className="absolute right-0 top-full z-[120] mt-1 min-w-[12.5rem] rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
                 role="menu"
               >
-                {showDualProductTour ? (
-                  <>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
-                      onClick={() => {
-                        onProductTour1?.();
-                        setMoreMenuOpen(false);
-                      }}
-                    >
-                      Get started 1
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
-                      onClick={() => {
-                        onProductTour2?.();
-                        setMoreMenuOpen(false);
-                      }}
-                    >
-                      Get started 2
-                    </button>
-                  </>
-                ) : (
+                {showCopilotTutorialItem ? (
                   <button
                     type="button"
                     role="menuitem"
                     className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
                     onClick={() => {
-                      onProductTour?.();
+                      onCopilotTutorial?.();
                       setMoreMenuOpen(false);
+                      onDismissMoreTutorialHint?.();
                     }}
                   >
-                    Get started
+                    AI Copilot tutorial
                   </button>
-                )}
+                ) : null}
+                {showVaultTutorialItem ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    onClick={() => {
+                      onVaultTutorial?.();
+                      setMoreMenuOpen(false);
+                      onDismissMoreTutorialHint?.();
+                    }}
+                  >
+                    Vault tutorial
+                  </button>
+                ) : null}
                 <p className="border-t border-[#242424] px-3 pb-2 pt-1.5 text-[10px] leading-snug text-[#757575]">
-                  For our reference
+                  Product walkthroughs
                 </p>
               </div>
             ) : null}

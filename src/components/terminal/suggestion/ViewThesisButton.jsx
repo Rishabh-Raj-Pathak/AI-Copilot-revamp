@@ -1,11 +1,11 @@
 import { ScanSearch } from 'lucide-react'
 import { terminalViewThesisButton } from '../../../design-system/tokens/terminalViewThesis'
 
-export default function ViewThesisButton({ onClick, dataTour }) {
+export default function ViewThesisButton({ onClick, dataTour, className = '' }) {
   return (
     <button
       type="button"
-      className={terminalViewThesisButton.componentClassName}
+      className={`${terminalViewThesisButton.componentClassName} ${className}`.trim()}
       onClick={onClick}
       {...(dataTour ? { "data-tour": dataTour } : {})}
     >

@@ -103,6 +103,7 @@ export default function TerminalPlatformSelect({
   onChange,
   onPlatformChange,
   defaultValue = "hyperliquid",
+  compact = false,
 }) {
   const isControlled = value !== undefined;
   const [uncontrolled, setUncontrolled] = useState(defaultValue);
@@ -145,17 +146,26 @@ export default function TerminalPlatformSelect({
     <div ref={rootRef} className={s.root} data-tour="dex-selector">
       <button
         type="button"
-        className={s.trigger}
+        className={
+          compact
+            ? "flex size-9 shrink-0 items-center justify-center rounded-full border border-[#242424] bg-black p-1.5 outline-none transition-colors hover:bg-[#0d0d0d] focus-visible:ring-2 focus-visible:ring-[#f2b500]/40"
+            : s.trigger
+        }
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
+        aria-label={compact ? `Platform: ${current.label}` : undefined}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className={s.iconFrame}>
+        <span className={compact ? "flex size-full items-center justify-center" : s.iconFrame}>
           <PlatformMark id={selected} />
         </span>
-        <span className="max-w-38 truncate">{current.label}</span>
-        <NavChevron className={s.chevron} open={open} />
+        {compact ? null : (
+          <>
+            <span className="max-w-38 truncate">{current.label}</span>
+            <NavChevron className={s.chevron} open={open} />
+          </>
+        )}
       </button>
 
       {open ? (
