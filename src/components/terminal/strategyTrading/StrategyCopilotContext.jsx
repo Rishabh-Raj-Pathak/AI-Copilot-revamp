@@ -5,15 +5,15 @@ import {
   useMemo,
   useState,
 } from "react";
-import { INITIAL_AGENTS } from "./strategyTradingMockData.js";
 import { INITIAL_WORKSTATION_STRATEGIES } from "./strategyWorkstationMockData.js";
 
 const StrategyCopilotContext = createContext(null);
 
+const DEFAULT_STRATEGY_ID = "strat-btc-sniper";
+
 export function StrategyCopilotProvider({ children }) {
   const [strategies, setStrategies] = useState(INITIAL_WORKSTATION_STRATEGIES);
-  const [selectedStrategyId, setSelectedStrategyId] = useState(null);
-  const [agents, setAgents] = useState(INITIAL_AGENTS);
+  const [selectedStrategyId, setSelectedStrategyId] = useState(DEFAULT_STRATEGY_ID);
   const [activityLog, setActivityLog] = useState([]);
   const [lastSetup, setLastSetup] = useState(null);
 
@@ -37,8 +37,6 @@ export function StrategyCopilotProvider({ children }) {
       setStrategies,
       selectedStrategyId,
       setSelectedStrategyId,
-      agents,
-      setAgents,
       activityLog,
       lastSetup,
       setLastSetup,
@@ -47,7 +45,6 @@ export function StrategyCopilotProvider({ children }) {
     [
       strategies,
       selectedStrategyId,
-      agents,
       activityLog,
       lastSetup,
       appendLog,

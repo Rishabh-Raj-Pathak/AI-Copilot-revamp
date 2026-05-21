@@ -1,36 +1,49 @@
-/** Mock price chart with entry / SL / TP levels. */
+/** Mock candlestick chart with entry / SL / TP / signal markers. */
 export default function StrategyChartPanel({ strategy }) {
   const setup = strategy?.setup;
-  const symbol = strategy?.market?.split("-")[0] ?? "BTC";
+  const symbol = strategy?.market?.split("·")[0]?.trim()?.replace("USDT", "") ?? "BTC";
+  const currentPrice = setup?.currentPrice ?? "$77,247";
 
-  const pricePoints = [42, 38, 35, 40, 48, 52, 49, 55, 58, 54];
+  const candles = [
+    { o: 48, h: 52, l: 45, c: 50 },
+    { o: 50, h: 51, l: 42, c: 44 },
+    { o: 44, h: 46, l: 38, c: 40 },
+    { o: 40, h: 43, l: 36, c: 42 },
+    { o: 42, h: 48, l: 41, c: 47 },
+    { o: 47, h: 52, l: 46, c: 51 },
+    { o: 51, h: 54, l: 49, c: 53 },
+    { o: 53, h: 56, l: 50, c: 52 },
+    { o: 52, h: 55, l: 48, c: 54 },
+    { o: 54, h: 58, l: 53, c: 56 },
+  ];
+
+  const volumes = [3, 5, 8, 6, 4, 5, 3, 4, 6, 4];
   const w = 100;
-  const h = 56;
+  const h = 48;
+  const volH = 10;
   const pad = 4;
-  const min = Math.min(...pricePoints);
-  const max = Math.max(...pricePoints);
+  const min = 34;
+  const max = 60;
   const range = max - min || 1;
+  const barW = (w - pad * 2) / candles.length;
 
-  const coords = pricePoints.map((v, i) => {
-    const x = pad + (i / (pricePoints.length - 1)) * (w - pad * 2);
-    const y = pad + ((max - v) / range) * (h - pad * 2);
-    return `${x},${y}`;
-  });
-  const linePath = `M ${coords.join(" L ")}`;
-
-  const entryY = 28;
-  const slY = 42;
-  const tpY = 14;
+  const y = (v) => pad + ((max - v) / range) * (h - pad * 2);
+  const entryY = y(42);
+  const slY = y(36);
+  const tpY = y(54);
 
   return (
     <div className="relative overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
       <div className="flex items-center justify-between border-b border-[#242424] px-3 py-2">
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-semibold text-white">{symbol}-PERP</span>
+          <span className="font-semibold text-white">{symbol}/USDT</span>
           <span className="text-[#757575]">{strategy?.timeframe ?? "15m"}</span>
+          <span className="rounded bg-[#121212] px-1.5 py-0.5 text-[10px] text-[#00f3b6]">
+            {currentPrice}
+          </span>
         </div>
         <div className="flex gap-1">
-          {["Market", "Timeframe", "Indicators", "Range"].map((c) => (
+          {["Indicators", "Signals"].map((c) => (
             <button
               key={c}
               type="button"
@@ -41,19 +54,13 @@ export default function StrategyChartPanel({ strategy }) {
           ))}
         </div>
       </div>
-      <div className="relative aspect-[2.4/1] min-h-[12rem] w-full p-3 sm:min-h-[14rem]">
+      <div className="relative aspect-[2.2/1] min-h-[11rem] w-full p-3 sm:min-h-[13rem]">
         <svg
-          viewBox={`0 0 ${w} ${h}`}
+          viewBox={`0 0 ${w} ${h + volH}`}
           className="h-full w-full"
           preserveAspectRatio="none"
-          aria-hidden
+          aria-label="Strategy price chart mock"
         >
-          <defs>
-            <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f2b500" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#f2b500" stopOpacity="0" />
-            </linearGradient>
-          </defs>
           {[0.25, 0.5, 0.75].map((pct) => (
             <line
               key={pct}
@@ -62,25 +69,63 @@ export default function StrategyChartPanel({ strategy }) {
               y1={pad + pct * (h - pad * 2)}
               y2={pad + pct * (h - pad * 2)}
               stroke="#242424"
-              strokeWidth="0.3"
+              strokeWidth="0.25"
             />
           ))}
-          <path d={`${linePath} L ${w - pad},${h - pad} L ${pad},${h - pad} Z`} fill="url(#chartFill)" />
-          <path d={linePath} fill="none" stroke="#f2b500" strokeWidth="0.8" />
-          <line x1={pad} x2={w - pad} y1={entryY} y2={entryY} stroke="#00f3b6" strokeWidth="0.4" strokeDasharray="2 1" />
-          <line x1={pad} x2={w - pad} y1={slY} y2={slY} stroke="#d53d3d" strokeWidth="0.4" strokeDasharray="2 1" />
-          <line x1={pad} x2={w - pad} y1={tpY} y2={tpY} stroke="#269755" strokeWidth="0.4" strokeDasharray="2 1" />
+          {candles.map((c, i) => {
+            const x = pad + i * barW + barW * 0.15;
+            const bw = barW * 0.7;
+            const openY = y(c.o);
+            const closeY = y(c.c);
+            const highY = y(c.h);
+            const lowY = y(c.l);
+            const bullish = c.c >= c.o;
+            const color = bullish ? "#00f3b6" : "#d53d3d";
+            const bodyTop = Math.min(openY, closeY);
+            const bodyH = Math.max(Math.abs(closeY - openY), 0.4);
+            return (
+              <g key={i}>
+                <line x1={x + bw / 2} x2={x + bw / 2} y1={highY} y2={lowY} stroke={color} strokeWidth="0.35" />
+                <rect x={x} y={bodyTop} width={bw} height={bodyH} fill={color} opacity="0.85" />
+              </g>
+            );
+          })}
+          <line x1={pad} x2={w - pad} y1={entryY} y2={entryY} stroke="#00f3b6" strokeWidth="0.35" strokeDasharray="2 1" />
+          <line x1={pad} x2={w - pad} y1={slY} y2={slY} stroke="#d53d3d" strokeWidth="0.35" strokeDasharray="2 1" />
+          <line x1={pad} x2={w - pad} y1={tpY} y2={tpY} stroke="#269755" strokeWidth="0.35" strokeDasharray="2 1" />
+          <circle cx={pad + barW * 3.5} cy={y(38)} r="1.2" fill="#00f3b6" />
+          <text x={pad + barW * 3.5 + 2} y={y(38) + 0.5} fill="#00f3b6" fontSize="2.5">
+            Long
+          </text>
+          <circle cx={pad + barW * 7.5} cy={y(56)} r="1.2" fill="#d53d3d" />
+          <text x={pad + barW * 7.5 + 2} y={y(56) + 0.5} fill="#d53d3d" fontSize="2.5">
+            Exit
+          </text>
+          {volumes.map((v, i) => {
+            const x = pad + i * barW + barW * 0.2;
+            const bw = barW * 0.6;
+            const vh = (v / 8) * (volH - 1);
+            return (
+              <rect
+                key={`v-${i}`}
+                x={x}
+                y={h + volH - vh}
+                width={bw}
+                height={vh}
+                fill="#313131"
+                opacity="0.8"
+              />
+            );
+          })}
         </svg>
-        <div className="absolute bottom-3 left-3 flex flex-wrap gap-3 text-[10px]">
-          {setup?.entryZone ? (
-            <span className="text-[#00f3b6]">Entry {setup.entryZone}</span>
-          ) : null}
-          {setup?.stopLoss ? (
-            <span className="text-[#d53d3d]">SL {setup.stopLoss}</span>
-          ) : null}
-          {setup?.takeProfit ? (
-            <span className="text-[#269755]">TP {setup.takeProfit}</span>
-          ) : null}
+        <div className="absolute left-3 top-3 flex flex-col gap-0.5 text-[9px]">
+          <span className="text-[#269755]">TP</span>
+          <span className="text-[#00f3b6]">Entry Zone</span>
+          <span className="text-[#d53d3d]">SL</span>
+        </div>
+        <div className="absolute bottom-10 right-3 rounded border border-[#242424] bg-black/80 px-2 py-1 text-[10px]">
+          <span className="text-[#757575]">Current </span>
+          <span className="font-medium text-white">{currentPrice}</span>
         </div>
       </div>
     </div>

@@ -17,7 +17,6 @@ import {
   StrategyCopilotProvider,
   useStrategyCopilot,
 } from "./strategyTrading/StrategyCopilotContext.jsx";
-import StrategyAgentsHub from "./strategyTrading/StrategyAgentsHub.jsx";
 import StrategyTradingPage from "./strategyTrading/StrategyTradingPage.jsx";
 import {
   hasSeenCopilotWelcome,
@@ -49,23 +48,9 @@ import {
 
 const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
 
-function StrategyCopilotViews({
-  copilotView,
-  terminalPlatform,
-  onSwitchToStrategy,
-}) {
-  const { lastSetup } = useStrategyCopilot();
-
+function StrategyCopilotViews({ copilotView, terminalPlatform }) {
   if (copilotView === "strategy-trading") {
     return <StrategyTradingPage terminalPlatform={terminalPlatform} />;
-  }
-  if (copilotView === "agents") {
-    return (
-      <StrategyAgentsHub
-        onOpenStrategyCopilot={onSwitchToStrategy}
-        lastSetup={lastSetup}
-      />
-    );
   }
   return null;
 }
@@ -550,9 +535,8 @@ export default function TerminalCopilotPage({
           <StrategyCopilotViews
             copilotView={copilotView}
             terminalPlatform={terminalPlatform}
-            onSwitchToStrategy={() => setCopilotView("strategy-trading")}
           />
-          {copilotView !== "strategy-trading" && copilotView !== "agents" ? (
+          {copilotView !== "strategy-trading" ? (
       <div
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:flex-row"
         data-tour="copilot-suggestion-and-setup"

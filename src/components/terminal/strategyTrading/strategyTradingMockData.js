@@ -162,7 +162,7 @@ export const DEX_OPTIONS = [
 export const DEFAULT_PREFERENCES = {
   riskPreference: "balanced",
   preferredMarkets: ["btc"],
-  preferredDexes: ["Hyperliquid"],
+  preferredDexes: ["Hyperliquid", "Avantis", "Paradex"],
   maxLeverage: "3x",
   tradeStyle: "intraday",
   executionPreference: "manual-approval",

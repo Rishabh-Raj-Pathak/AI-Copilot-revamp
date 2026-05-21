@@ -124,11 +124,11 @@ export function generateStrategySetup({
       detail: `TP at ${SAMPLE_SETUP.takeProfit.replace("BTC", symbol)} or SL at ${SAMPLE_SETUP.stopLoss.replace("67", symbol === "ETH" ? "34" : "67")}.`,
     },
     {
-      step: "Agent action",
+      step: "Execution",
       detail:
         preferences.executionPreference === "manual-approval"
-          ? "Notify before trade · manual approval"
-          : "Notify when conditions align",
+          ? "Manual approval required before any trade"
+          : "Decision support only",
     },
   ];
 

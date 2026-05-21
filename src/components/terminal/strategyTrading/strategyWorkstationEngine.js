@@ -1,5 +1,9 @@
-import { generateStrategySetup, buildAgentFromSetup } from "./strategyTradingEngine.js";
-import { MOCK_BACKTEST } from "./strategyWorkstationMockData.js";
+import { generateStrategySetup } from "./strategyTradingEngine.js";
+import {
+  MOCK_BACKTEST,
+  PAPER_POSITION_BTC,
+  STRATEGY_CONFIG_DEFAULT,
+} from "./strategyWorkstationMockData.js";
 import { STRATEGY_MODELS, STRATEGY_TYPES } from "./strategyTradingMockData.js";
 
 export function createDraftStrategy({
@@ -33,38 +37,52 @@ export function createDraftStrategy({
     timeframe: setup.timeframe,
     model: setup.model,
     strategy: setup.strategy,
+    strategyType: setup.strategy,
     lastUpdated: "Just now",
+    performancePreview: null,
     setup,
-    metrics: {
-      totalReturn: "—",
-      maxDrawdown: "—",
-      winRate: "—",
-      profitFactor: "—",
-      sharpeRatio: "—",
-      trades: 0,
-      paperPnl: "$0.00",
-    },
+    config: { ...STRATEGY_CONFIG_DEFAULT },
+    metrics: { ...DEFAULT_METRICS },
     backtest: { status: "idle", results: null },
     paperTrading: {
       status: "idle",
       balance: "$10,000",
       pnl: "$0.00",
-      mode: "Paper",
+      mode: "Paper simulation",
       position: null,
       events: [],
     },
     trades: [],
-    logs: [{ id: `l-${Date.now()}`, message: "Strategy draft created from prompt", at: new Date().toISOString() }],
+    logs: [
+      {
+        id: `l-${Date.now()}`,
+        message: "Strategy draft created from prompt",
+        at: new Date().toISOString(),
+      },
+    ],
     chatMessages: [],
-    isAgent: false,
+    saved: false,
   };
 }
 
+const DEFAULT_METRICS = {
+  totalReturn: "—",
+  maxDrawdown: "—",
+  winRate: "—",
+  profitFactor: "—",
+  sharpeRatio: "—",
+  trades: 0,
+  paperPnl: "$0.00",
+};
+
 export function applyBacktest(strategy) {
+  const canBeReady =
+    strategy.paperTrading?.status === "active" || strategy.status === "Paper Trading";
   return {
     ...strategy,
-    status: strategy.status === "Watching" ? "Watching" : "Backtested",
+    status: canBeReady ? "Ready" : "Backtested",
     lastUpdated: "Just now",
+    performancePreview: MOCK_BACKTEST.totalReturn,
     metrics: {
       totalReturn: MOCK_BACKTEST.totalReturn,
       maxDrawdown: MOCK_BACKTEST.maxDrawdown,
@@ -75,6 +93,20 @@ export function applyBacktest(strategy) {
       paperPnl: strategy.paperTrading?.pnl ?? "$0.00",
     },
     backtest: { status: "complete", results: MOCK_BACKTEST },
+    trades: strategy.trades?.length
+      ? strategy.trades
+      : [
+          {
+            id: "t1",
+            at: "May 18, 14:32",
+            market: strategy.market?.split("·")[0]?.trim() ?? "BTCUSDT",
+            direction: "Long",
+            entry: "$76,920",
+            exit: "$78,072",
+            pnl: "+$1,152",
+            reason: "TP zone · RSI recovery",
+          },
+        ],
     logs: [
       {
         id: `l-${Date.now()}`,
@@ -83,22 +115,47 @@ export function applyBacktest(strategy) {
       },
       ...strategy.logs,
     ],
+    saved: true,
   };
 }
 
 export function applyPaperTrading(strategy) {
-  const setup = strategy.setup;
+  const position =
+    strategy.market?.includes("BTC") || strategy.name?.includes("BTC")
+      ? PAPER_POSITION_BTC
+      : {
+          market: strategy.market?.split("·")[0]?.trim() ?? "—",
+          side: "Long",
+          entry: strategy.setup?.entryZone ?? "—",
+          current: "—",
+          pnl: "+0.00%",
+          stopLoss: strategy.setup?.stopLoss ?? "—",
+          takeProfit: strategy.setup?.takeProfit ?? "—",
+          timeInTrade: "—",
+          size: "—",
+          status: "Monitoring",
+        };
+
   return {
     ...strategy,
-    status: "Paper Trading",
+    status: strategy.backtest?.status === "complete" ? "Ready" : "Paper Trading",
     lastUpdated: "Just now",
+    performancePreview: position.pnl,
     paperTrading: {
       status: "active",
       balance: "$10,000",
-      pnl: "+$0.00",
-      mode: "Paper",
-      position: null,
-      events: ["Watching entry conditions"],
+      pnl: position.pnl,
+      mode: "Paper simulation",
+      position,
+      events: [
+        "Paper trading simulation started",
+        `Monitoring ${position.market} ${position.side}`,
+        "Manual approval required before live deployment",
+      ],
+    },
+    metrics: {
+      ...strategy.metrics,
+      paperPnl: position.pnl,
     },
     logs: [
       {
@@ -108,79 +165,162 @@ export function applyPaperTrading(strategy) {
       },
       ...strategy.logs,
     ],
+    saved: true,
   };
 }
 
 export function applySaferRules(strategy) {
+  const config = {
+    ...(strategy.config ?? STRATEGY_CONFIG_DEFAULT),
+    rsiThreshold: 22,
+    stopLoss: "2.0%",
+    takeProfit: "6%",
+    leverage: "2x",
+    execution: "Manual approval",
+  };
   const setup = {
     ...strategy.setup,
-    strategyLogic: [
-      ...(strategy.setup.strategyLogic ?? []),
-      "Skip trades when volatility expands or funding is unfavorable.",
+    leverage: "2x",
+    config,
+    riskRules: [
+      ...(strategy.setup?.riskRules ?? []),
+      "Tighter max drawdown guard — skip marginal setups.",
+      "Wider confirmation required before entry.",
     ],
     warnings: [
-      ...(strategy.setup.warnings ?? []),
-      "Tighter filters may reduce trade frequency.",
+      ...(strategy.setup?.warnings ?? []),
+      "Safer preset may reduce trade frequency.",
     ],
+    personalizationNote:
+      "Adjusted for safer execution: 2x leverage cap, tighter RSI, and stricter confirmation. Manual approval remains required.",
   };
   return {
     ...strategy,
     setup,
+    config,
     lastUpdated: "Just now",
     logs: [
-      { id: `l-${Date.now()}`, message: "Risk filters tightened", at: new Date().toISOString() },
+      {
+        id: `l-${Date.now()}`,
+        message: "Risk settings updated (safer preset)",
+        at: new Date().toISOString(),
+      },
+      ...strategy.logs,
+    ],
+  };
+}
+
+export function applyConfigPreset(strategy, preset) {
+  const presets = {
+    recommended: { ...STRATEGY_CONFIG_DEFAULT },
+    safer: {
+      bbLength: 34,
+      rsiThreshold: 22,
+      stopLoss: "2.0%",
+      takeProfit: "6%",
+      leverage: "2x",
+      execution: "Manual approval",
+    },
+    aggressive: {
+      bbLength: 20,
+      rsiThreshold: 28,
+      stopLoss: "3.0%",
+      takeProfit: "10%",
+      leverage: "5x",
+      execution: "Manual approval",
+    },
+  };
+  const config = presets[preset] ?? strategy.config;
+  return {
+    ...strategy,
+    config,
+    lastUpdated: "Just now",
+    logs: [
+      {
+        id: `l-${Date.now()}`,
+        message: `Configuration updated (${preset})`,
+        at: new Date().toISOString(),
+      },
       ...strategy.logs,
     ],
   };
 }
 
 export function buildChatResponse(action, strategy) {
+  const bt = MOCK_BACKTEST;
   const map = {
     "Run backtest": {
-      text: `Backtest complete. The strategy returned ${MOCK_BACKTEST.totalReturn} with ${MOCK_BACKTEST.maxDrawdown} max drawdown across ${MOCK_BACKTEST.trades} trades.`,
-      cards: ["Backtest complete", "Review metrics in workspace"],
+      text: `Backtest complete. The strategy returned ${bt.totalReturn} with ${bt.maxDrawdown} max drawdown, ${bt.winRate} win rate, and ${bt.profitFactor} profit factor across ${bt.trades} trades.`,
+      richCards: [{ type: "backtest", data: bt }],
     },
-    "Start paper trade": {
-      text: "Paper trading started. I will monitor entry conditions and log simulated trades.",
-      cards: ["Paper trading active", "Watching entry zone"],
+    "Start paper trading": {
+      text: "Paper trading simulation started. I'll track this strategy using market-like data. Manual approval is still required before any real deployment.",
+      richCards: [
+        {
+          type: "paper",
+          data: {
+            status: "Active",
+            market: strategy?.market?.split("·")[0]?.trim() ?? "BTCUSDT",
+            timeframe: strategy?.timeframe ?? "15m",
+            mode: "Paper Trading",
+            risk: "Balanced",
+            execution: "Manual approval",
+          },
+        },
+      ],
+    },
+    "Make this safer": {
+      text: "I tightened risk settings: lower leverage (2x), stricter RSI threshold, and wider confirmation. Manual approval remains on — this is decision support, not auto-execution.",
+      richCards: [
+        {
+          type: "config",
+          data: {
+            bbLength: 34,
+            rsiThreshold: 22,
+            stopLoss: "2.0%",
+            takeProfit: "6%",
+            leverage: "2x",
+            execution: "Manual approval",
+          },
+        },
+      ],
     },
     "Make it safer": {
-      text: "I updated the strategy. It will now skip setups when funding is too high or volatility expands aggressively.",
-      cards: ["Risk filters updated"],
+      text: "I tightened risk settings: lower leverage (2x), stricter RSI threshold, and wider confirmation. Manual approval remains on.",
+      richCards: [
+        {
+          type: "config",
+          data: {
+            bbLength: 34,
+            rsiThreshold: 22,
+            stopLoss: "2.0%",
+            takeProfit: "6%",
+            leverage: "2x",
+            execution: "Manual approval",
+          },
+        },
+      ],
     },
-    "Create watcher": {
-      text: `Watcher ready for ${strategy?.market ?? "market"}. Configure monitoring in the agent modal.`,
-      cards: ["Create watcher"],
+    "Explain strategy": {
+      text: strategy?.setup?.description
+        ? strategy.setup.description
+        : `This ${strategy?.strategy ?? "strategy"} uses ${strategy?.model ?? "Quant"} rules on ${strategy?.market ?? "your market"}. Review entry, exit, and risk tabs in the workspace.`,
+      richCards: [],
     },
-    "Deploy with manual approval": {
-      text: "Open the deployment review to confirm execution mode and risk settings before going live.",
-      cards: ["Review deployment"],
+    "Review risk": {
+      text: "Open Review Deployment to confirm risk rules, backtest estimates, and paper status. Auto-execution is disabled in this prototype.",
+      richCards: [],
+    },
+    "Review deployment": {
+      text: "Use Review Deployment to walk through strategy summary, backtest estimates, and required confirmations before any manual action.",
+      richCards: [],
     },
     default: {
       text: `Updated ${strategy?.name ?? "strategy"} based on your request.`,
-      cards: [],
+      richCards: [],
     },
   };
   return map[action] ?? map.default;
 }
 
-export function strategyFromAgent(agent, preferences) {
-  return {
-    id: agent.id,
-    name: agent.name,
-    status: agent.status === "Watching" ? "Watching" : agent.status,
-    market: agent.market,
-    timeframe: "15m",
-    model: agent.model,
-    strategy: agent.strategy,
-    modelId: "conservative",
-    strategyId: "mean-reversion",
-    marketId: "btc",
-    lastUpdated: agent.lastChecked ?? "Just now",
-    setup: null,
-    isAgent: true,
-    agent,
-  };
-}
-
-export { buildAgentFromSetup, generateStrategySetup, STRATEGY_MODELS, STRATEGY_TYPES };
+export { generateStrategySetup, STRATEGY_MODELS, STRATEGY_TYPES };

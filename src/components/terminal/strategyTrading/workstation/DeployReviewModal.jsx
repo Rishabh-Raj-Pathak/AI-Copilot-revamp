@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "../../../ui/button.jsx";
 import {
   Dialog,
@@ -6,12 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../../ui/dialog.jsx";
-import { Select } from "../../../ui/select.jsx";
 
-const EXEC_MODES = [
-  { id: "notify", label: "Notify only" },
-  { id: "manual", label: "Manual approval" },
-  { id: "paper", label: "Paper trading only" },
+const CHECKLIST = [
+  "I understand this is AI-generated analysis",
+  "I reviewed risk rules and max leverage",
+  "I understand manual approval is required",
+  "I understand there is no guaranteed profit",
 ];
 
 export default function DeployReviewModal({
@@ -19,76 +20,131 @@ export default function DeployReviewModal({
   onOpenChange,
   strategy,
   preferences,
-  onConfirm,
+  onConfirmReview,
+  onKeepPaper,
 }) {
+  const [checked, setChecked] = useState(() => CHECKLIST.map(() => false));
+
   if (!strategy) return null;
+
+  const allChecked = checked.every(Boolean);
+  const bt = strategy.backtest?.results;
+
+  const toggle = (i) => {
+    setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
+  };
+
+  const handleClose = (openState) => {
+    if (!openState) setChecked(CHECKLIST.map(() => false));
+    onOpenChange(openState);
+  };
 
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
-      className="w-[min(32rem,calc(100%-1.5rem))]"
+      onOpenChange={handleClose}
+      className="w-[min(34rem,calc(100%-1.5rem))]"
     >
       <DialogHeader>
-        <DialogTitle>Review before deployment</DialogTitle>
-        <p className="mt-1 text-xs text-[#929292]">
-          Confirm risk settings and execution mode. Auto-execute is disabled.
+        <DialogTitle>Review deployment</DialogTitle>
+        <p className="mt-1 text-xs leading-relaxed text-[#929292]">
+          AI-generated setups are for analysis and decision support only. Review risk
+          before taking any trade. Auto-execution is disabled.
         </p>
       </DialogHeader>
       <DialogBody className="space-y-3 text-xs">
-        <Row label="Strategy" value={strategy.name} />
-        <Row label="Market" value={strategy.market} />
-        <Row label="Timeframe" value={strategy.timeframe} />
-        <Row label="Model" value={strategy.model} />
-        <Row label="Type" value={strategy.strategy} />
-        <Row label="Risk profile" value={preferences.riskPreference} />
-        <Row label="Max leverage" value={preferences.maxLeverage} />
-        <Row
-          label="Backtest"
-          value={
-            strategy.backtest?.status === "complete"
-              ? strategy.backtest.results?.totalReturn
-              : "Not run"
-          }
-        />
-        <Row
-          label="Paper trading"
-          value={
-            strategy.paperTrading?.status === "active" ? "Active" : "Not started"
-          }
-        />
-        <label className="flex flex-col gap-1">
-          <span className="text-[#929292]">Execution mode</span>
-          <Select defaultValue="manual" disabled>
-            {EXEC_MODES.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <p className="rounded-md border border-[#3e2e00]/40 bg-[#171200]/40 px-3 py-2 text-[#f2b500]">
-          Deployment integration is not enabled yet. You can continue using paper
-          trading or manual approval mode.
-        </p>
+        <Section title="Strategy summary">
+          <Row label="Name" value={strategy.name} />
+          <Row label="Market" value={strategy.market} />
+          <Row label="Timeframe" value={strategy.timeframe} />
+          <Row label="Type" value={strategy.strategy} />
+          <Row label="Model" value={strategy.model} />
+        </Section>
+
+        <Section title="Risk settings">
+          <Row label="Risk profile" value={preferences.riskPreference} />
+          <Row label="Max leverage" value={preferences.maxLeverage} />
+          <Row label="Execution" value="Manual approval" />
+        </Section>
+
+        <Section title="Backtest estimate">
+          <Row
+            label="Total return"
+            value={bt?.totalReturn ?? "Not run"}
+            highlight={bt?.totalReturn?.startsWith("+")}
+          />
+          <Row label="Max drawdown" value={bt?.maxDrawdown ?? "—"} />
+          <Row label="Sharpe" value={bt?.sharpeRatio ?? "—"} />
+        </Section>
+
+        <Section title="Paper trading">
+          <Row
+            label="Status"
+            value={
+              strategy.paperTrading?.status === "active" ? "Active" : "Not started"
+            }
+          />
+        </Section>
+
+        <div className="space-y-2 rounded-lg border border-[#242424] bg-[#0a0a0a] p-3">
+          <p className="font-medium text-[#bfbfbf]">Required confirmations</p>
+          {CHECKLIST.map((label, i) => (
+            <label key={label} className="flex cursor-pointer items-start gap-2">
+              <input
+                type="checkbox"
+                checked={checked[i]}
+                onChange={() => toggle(i)}
+                className="mt-0.5 accent-[#f2b500]"
+              />
+              <span className="text-[#929292]">{label}</span>
+            </label>
+          ))}
+        </div>
       </DialogBody>
-      <DialogFooter>
-        <Button variant="ghost" onClick={() => onOpenChange(false)}>
+      <DialogFooter className="flex-wrap gap-2">
+        <Button variant="ghost" onClick={() => handleClose(false)}>
           Cancel
         </Button>
-        <Button variant="default" onClick={onConfirm} disabled>
-          Confirm deployment
+        <Button variant="outline" onClick={onKeepPaper}>
+          Keep Paper Trading
+        </Button>
+        <Button
+          variant="default"
+          disabled={!allChecked}
+          onClick={() => {
+            onConfirmReview?.();
+            handleClose(false);
+          }}
+        >
+          Confirm Manual Review
         </Button>
       </DialogFooter>
     </Dialog>
   );
 }
 
-function Row({ label, value }) {
+function Section({ title, children }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-[#757575]">
+        {title}
+      </p>
+      <div className="space-y-1 rounded-lg border border-[#242424] bg-[#121212] p-2.5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value, highlight }) {
   return (
     <div className="flex justify-between gap-4">
       <span className="text-[#757575]">{label}</span>
-      <span className="font-medium text-white">{value}</span>
+      <span
+        className={`font-medium ${highlight ? "text-[#00f3b6]" : "text-white"}`}
+      >
+        {value}
+      </span>
     </div>
   );
 }

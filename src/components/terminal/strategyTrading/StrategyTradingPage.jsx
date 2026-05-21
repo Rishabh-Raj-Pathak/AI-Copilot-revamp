@@ -1,21 +1,20 @@
 import { useCallback, useMemo, useState } from "react";
 import { Toast, ToastViewport } from "../../ui/toast.jsx";
-import CreateAgentDialog from "./CreateAgentDialog.jsx";
-import EditAgentPromptDialog from "./EditAgentPromptDialog.jsx";
 import { useStrategyCopilot } from "./StrategyCopilotContext.jsx";
 import { DEFAULT_PREFERENCES } from "./strategyTradingMockData.js";
-import { buildAgentFromSetup } from "./strategyTradingEngine.js";
 import DeployReviewModal from "./workstation/DeployReviewModal.jsx";
 import StrategyCenterWorkspace from "./workstation/StrategyCenterWorkspace.jsx";
 import StrategyChatPanel from "./workstation/StrategyChatPanel.jsx";
 import StrategySidebar from "./workstation/StrategySidebar.jsx";
 import {
   applyBacktest,
+  applyConfigPreset,
   applyPaperTrading,
   applySaferRules,
   buildChatResponse,
   createDraftStrategy,
 } from "./strategyWorkstationEngine.js";
+import { DEMO_CHAT_BTC_SNIPER } from "./strategyWorkstationMockData.js";
 
 const MOBILE_PANELS = [
   { id: "strategies", label: "Strategies" },
@@ -29,12 +28,11 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     setStrategies,
     selectedStrategyId,
     setSelectedStrategyId,
-    setAgents,
     appendLog,
     setLastSetup,
   } = useStrategyCopilot();
 
-  const [modelId, setModelId] = useState("conservative");
+  const [modelId, setModelId] = useState("quant");
   const [strategyTypeId, setStrategyTypeId] = useState("mean-reversion");
   const [marketId, setMarketId] = useState("btc");
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
@@ -45,8 +43,6 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
   const [mobilePanel, setMobilePanel] = useState("workspace");
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
-  const [createAgentOpen, setCreateAgentOpen] = useState(false);
-  const [editAgent, setEditAgent] = useState(null);
   const [toast, setToast] = useState(null);
 
   const selectedStrategy = useMemo(
@@ -82,6 +78,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             role: "assistant",
             text: aiPayload.text,
             cards: aiPayload.cards,
+            richCards: aiPayload.richCards,
           },
         ],
       }));
@@ -99,11 +96,8 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
 
       await new Promise((r) => window.setTimeout(r, 600));
 
-      let targetId = selectedStrategyId;
-      let draft;
-
       if (selectedStrategy && selectedStrategy.status === "Draft") {
-        draft = createDraftStrategy({
+        const draft = createDraftStrategy({
           prompt: trimmed,
           modelId,
           strategyId: strategyTypeId,
@@ -113,23 +107,22 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
           name: selectedStrategy.name,
         });
         draft.id = selectedStrategy.id;
-        draft.chatMessages = selectedStrategy.chatMessages;
-        updateStrategy(selectedStrategy.id, () => ({
+        updateStrategy(selectedStrategy.id, (s) => ({
           ...draft,
           chatMessages: [
-            ...selectedStrategy.chatMessages,
+            ...s.chatMessages,
             { id: `u-${Date.now()}`, role: "user", text: trimmed },
             {
               id: `a-${Date.now() + 1}`,
               role: "assistant",
-              text: `I updated ${draft.name}. It waits for price to reclaim the entry zone, confirms RSI recovery, and skips trades during high volatility.`,
-              cards: ["Strategy updated", "Backtest available"],
+              text: `I updated ${draft.name}. Review configuration in the workspace, then run a backtest estimate.`,
+              richCards: [{ type: "config", data: draft.config }],
             },
           ],
         }));
-        targetId = selectedStrategy.id;
+        setLastSetup(draft.setup);
       } else {
-        draft = createDraftStrategy({
+        const draft = createDraftStrategy({
           prompt: trimmed,
           modelId,
           strategyId: strategyTypeId,
@@ -137,22 +130,28 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
           preferences,
           terminalPlatform,
         });
-        draft.chatMessages = [
-          { id: `u-${Date.now()}`, role: "user", text: trimmed },
-          {
-            id: `a-${Date.now() + 1}`,
-            role: "assistant",
-            text: `I created a ${draft.model.toLowerCase()} ${draft.name} draft. It waits for price to reclaim the entry zone, confirms RSI recovery, and skips trades during high volatility.`,
-            cards: ["Strategy created", "Backtest available", "Paper trading available"],
-          },
-        ];
+        const isBtcSniper = /lower band|bb lower|sniper/i.test(trimmed);
+        draft.chatMessages = isBtcSniper
+          ? [...DEMO_CHAT_BTC_SNIPER]
+          : [
+              { id: `u-${Date.now()}`, role: "user", text: trimmed },
+              {
+                id: `a-${Date.now() + 1}`,
+                role: "assistant",
+                text: `Draft created: ${draft.name}. Configure parameters, then run a backtest estimate before paper trading.`,
+                richCards: [{ type: "config", data: draft.config }],
+              },
+            ];
+        if (isBtcSniper) {
+          draft.name = "BTC Lower Band Sniper";
+          draft.market = "BTCUSDT · 15m";
+        }
         setStrategies((prev) => [draft, ...prev]);
-        targetId = draft.id;
         setSelectedStrategyId(draft.id);
+        setLastSetup(draft.setup);
+        appendLog("Strategy draft created from prompt");
       }
 
-      setLastSetup(draft.setup);
-      appendLog("Strategy draft created from prompt");
       setLoading(false);
       setMobilePanel("workspace");
       setWorkspaceTab("overview");
@@ -160,7 +159,6 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     [
       prompt,
       selectedStrategy,
-      selectedStrategyId,
       modelId,
       strategyTypeId,
       marketId,
@@ -183,7 +181,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     const updated = applyBacktest(selectedStrategy);
     updateStrategy(selectedStrategy.id, () => updated);
     const resp = buildChatResponse("Run backtest", updated);
-    pushChat(selectedStrategy.id, "Run backtest", resp);
+    pushChat(selectedStrategy.id, "Run backtest on this.", resp);
     setBacktestLoading(false);
     showToast("Backtest complete");
   }, [selectedStrategy, updateStrategy, pushChat, appendLog, showToast]);
@@ -192,16 +190,16 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     if (!selectedStrategy) return;
     const updated = applyPaperTrading(selectedStrategy);
     updateStrategy(selectedStrategy.id, () => updated);
-    const resp = buildChatResponse("Start paper trade", updated);
-    pushChat(selectedStrategy.id, "Start paper trade", resp);
+    const resp = buildChatResponse("Start paper trading", updated);
+    pushChat(selectedStrategy.id, "Start paper trading.", resp);
     setWorkspaceTab("paper");
     appendLog("Paper trading started");
-    showToast("Paper trading active");
+    showToast("Paper trading simulation active");
   }, [selectedStrategy, updateStrategy, pushChat, appendLog, showToast]);
 
   const handleQuickAction = useCallback(
     async (action) => {
-      if (!selectedStrategy && action !== "Create watcher") {
+      if (!selectedStrategy && action !== "Build BTC mean reversion") {
         showToast("Select or create a strategy first.", "default");
         return;
       }
@@ -210,23 +208,29 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         await handleRunBacktest();
         return;
       }
-      if (action === "Start paper trade") {
+      if (action === "Start paper trading") {
         handleStartPaper();
         return;
       }
-      if (action === "Deploy with manual approval") {
+      if (action === "Review risk") {
         setDeployOpen(true);
         return;
       }
-      if (action === "Create watcher") {
-        setCreateAgentOpen(true);
+      if (action === "Build BTC mean reversion") {
+        if (!selectedStrategy) {
+          setSelectedStrategyId("strat-btc-sniper");
+          setMobilePanel("workspace");
+        }
+        runPrompt(
+          "I want to create a BTCUSDT 15m quantitative strategy based on the Lower Band Sniper strategy.",
+        );
         return;
       }
 
       const userText = action;
       let updated = selectedStrategy;
 
-      if (action === "Make it safer") {
+      if (action === "Make this safer" || action === "Make it safer") {
         updated = applySaferRules(selectedStrategy);
         updateStrategy(selectedStrategy.id, () => updated);
       }
@@ -242,14 +246,32 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       updateStrategy,
       pushChat,
       showToast,
+      runPrompt,
+      setSelectedStrategyId,
     ],
+  );
+
+  const handleConfigPreset = useCallback(
+    (preset) => {
+      if (!selectedStrategy) return;
+      const updated = applyConfigPreset(selectedStrategy, preset);
+      updateStrategy(selectedStrategy.id, () => updated);
+      pushChat(selectedStrategy.id, `Apply ${preset} preset`, {
+        text: `Configuration updated (${preset}). Manual approval remains required.`,
+        richCards: [{ type: "config", data: updated.config }],
+      });
+    },
+    [selectedStrategy, updateStrategy, pushChat],
   );
 
   const handleNewStrategy = useCallback(() => {
     setSelectedStrategyId(null);
     setPrompt("");
+    setWorkspaceTab("overview");
     setMobilePanel("chat");
-    document.querySelector("[data-strategy-chat-input] textarea")?.focus();
+    window.setTimeout(() => {
+      document.querySelector("[data-strategy-chat-input] textarea")?.focus();
+    }, 50);
   }, [setSelectedStrategyId]);
 
   const handleTemplate = useCallback(
@@ -257,74 +279,49 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       setModelId(template.modelId);
       setStrategyTypeId(template.strategyId);
       setMarketId(template.marketId);
-      setPrompt(template.prompt);
-      setMobilePanel("chat");
+      const mapId = {
+        "btc-mean-reversion": "strat-btc-sniper",
+        "eth-funding": "strat-eth-funding",
+        "sol-breakout": "strat-sol-breakout",
+        "hype-trend": "strat-hype-trend",
+      };
+      const sid = mapId[template.id];
+      if (sid && strategies.some((s) => s.id === sid)) {
+        setSelectedStrategyId(sid);
+        setMobilePanel("workspace");
+        return;
+      }
       runPrompt(template.prompt);
     },
-    [runPrompt],
+    [runPrompt, strategies, setSelectedStrategyId],
   );
 
-  const handleCreateAgent = useCallback(
-    (overrides) => {
-      if (!selectedStrategy?.setup) return;
-      const agent = buildAgentFromSetup(selectedStrategy.setup, preferences, overrides);
-      setAgents((prev) => [agent, ...prev]);
-      updateStrategy(selectedStrategy.id, (s) => ({
-        ...s,
-        status: "Watching",
-        isAgent: true,
-      }));
-      pushChat(
-        selectedStrategy.id,
-        "Create watcher",
-        buildChatResponse("Create watcher", selectedStrategy),
-      );
-      appendLog(`Agent created: ${agent.name}`);
-      showToast(`Agent created: ${agent.name}`);
-    },
-    [
-      selectedStrategy,
-      preferences,
-      setAgents,
-      updateStrategy,
-      pushChat,
-      appendLog,
-      showToast,
-    ],
-  );
+  const handleSave = useCallback(() => {
+    if (!selectedStrategy) return;
+    updateStrategy(selectedStrategy.id, (s) => ({ ...s, saved: true }));
+    appendLog(`Strategy saved: ${selectedStrategy.name}`);
+    showToast("Strategy saved locally (prototype)");
+  }, [selectedStrategy, updateStrategy, appendLog, showToast]);
 
-  const handleSaveAgentEdit = useCallback(
-    (agentId, updates) => {
-      setAgents((prev) =>
-        prev.map((a) =>
-          a.id === agentId
-            ? {
-                ...a,
-                ...updates,
-                recentlyUpdated: true,
-                updateLog: [...(a.updateLog ?? []), "Agent instructions updated."],
-              }
-            : a,
-        ),
-      );
-      if (selectedStrategy) {
-        pushChat(
-          selectedStrategy.id,
-          "Edit agent",
-          {
-            text: "I updated the watcher. It will now skip setups when funding is too high or volatility expands.",
-            cards: ["Agent updated"],
-          },
-        );
-      }
-      showToast("Agent instructions updated.");
-    },
-    [setAgents, selectedStrategy, pushChat, showToast],
-  );
+  const handleConfirmReview = useCallback(() => {
+    if (!selectedStrategy) return;
+    updateStrategy(selectedStrategy.id, (s) => ({
+      ...s,
+      status: "Ready",
+      logs: [
+        {
+          id: `l-${Date.now()}`,
+          message: "Manual deployment review confirmed",
+          at: new Date().toISOString(),
+        },
+        ...s.logs,
+      ],
+    }));
+    showToast("Manual review recorded — live deployment not enabled in prototype");
+  }, [selectedStrategy, updateStrategy, showToast]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-black text-white">
-      {/* Mobile panel switcher */}
       <div className="flex shrink-0 border-b border-[#242424] tablet:hidden">
         {MOBILE_PANELS.map((p) => (
           <button
@@ -373,7 +370,8 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onTabChange={setWorkspaceTab}
             onRunBacktest={handleRunBacktest}
             onStartPaper={handleStartPaper}
-            onDeploy={() => setDeployOpen(true)}
+            onReviewDeployment={() => setDeployOpen(true)}
+            onSave={handleSave}
             backtestLoading={backtestLoading}
             onTemplateClick={handleTemplate}
           />
@@ -392,12 +390,15 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onSubmit={() => runPrompt(prompt)}
             loading={loading}
             modelId={modelId}
-            strategyId={strategyTypeId}
             onModelChange={setModelId}
-            onStrategyChange={setStrategyTypeId}
             preferences={preferences}
             onPreferencesChange={setPreferences}
             onQuickAction={handleQuickAction}
+            onConfigPreset={handleConfigPreset}
+            onViewBacktest={() => setWorkspaceTab("backtest")}
+            onStartPaper={handleStartPaper}
+            onReviewDeployment={() => setDeployOpen(true)}
+            onViewPaper={() => setWorkspaceTab("paper")}
           />
         </div>
       </div>
@@ -407,24 +408,11 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         onOpenChange={setDeployOpen}
         strategy={selectedStrategy}
         preferences={preferences}
-        onConfirm={() => {
+        onConfirmReview={handleConfirmReview}
+        onKeepPaper={() => {
           setDeployOpen(false);
-          showToast("Deployment is disabled in this prototype.", "default");
+          handleStartPaper();
         }}
-      />
-
-      <CreateAgentDialog
-        open={createAgentOpen}
-        onOpenChange={setCreateAgentOpen}
-        setup={selectedStrategy?.setup}
-        onCreate={handleCreateAgent}
-      />
-
-      <EditAgentPromptDialog
-        open={!!editAgent}
-        onOpenChange={(open) => !open && setEditAgent(null)}
-        agent={editAgent}
-        onSave={handleSaveAgentEdit}
       />
 
       {toast ? (
