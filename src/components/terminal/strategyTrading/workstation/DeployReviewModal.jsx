@@ -10,7 +10,8 @@ import {
 
 const CHECKLIST = [
   "I understand this is AI-generated analysis",
-  "I reviewed risk rules and max leverage",
+  "I reviewed the strategy rules",
+  "I reviewed risk and drawdown",
   "I understand manual approval is required",
   "I understand there is no guaranteed profit",
 ];
@@ -46,7 +47,7 @@ export default function DeployReviewModal({
       className="w-[min(34rem,calc(100%-1.5rem))]"
     >
       <DialogHeader>
-        <DialogTitle>Review deployment</DialogTitle>
+        <DialogTitle>Review Strategy Deployment</DialogTitle>
         <p className="mt-1 text-xs leading-relaxed text-[#929292]">
           AI-generated setups are for analysis and decision support only. Review risk
           before taking any trade. Auto-execution is disabled.

@@ -31,7 +31,7 @@ export default function StrategySidebar({
   const dexList = preferences.preferredDexes?.join(", ") ?? "Hyperliquid";
 
   return (
-    <aside className="flex h-full w-full flex-col border-r border-[#242424] bg-[#0a0a0a] tablet:w-[17rem] tablet:min-w-[17rem] tablet:max-w-[20rem] xl:w-[19rem]">
+    <aside className="flex h-full w-full min-h-0 flex-col border-r border-[#242424] bg-[#0a0a0a]">
       <div className="shrink-0 border-b border-[#242424] p-3">
         <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
           Strategy Copilot

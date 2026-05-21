@@ -302,7 +302,8 @@ export default function StrategyWorkspaceTabs({
           <ul className="space-y-1.5 rounded-lg border border-[#242424] bg-[#0a0a0a] p-3">
             {strategy?.logs?.map((l) => (
               <li key={l.id} className="text-xs text-[#929292]">
-                · {l.message}
+                <span className="text-[#585858]">{l.at ?? l.ago} · </span>
+                {l.message}
               </li>
             ))}
           </ul>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "../../../ui/button.jsx";
 import { Select } from "../../../ui/select.jsx";
 import { Textarea } from "../../../ui/textarea.jsx";
-import { CHAT_QUICK_ACTIONS } from "../strategyWorkstationMockData.js";
+import { CHAT_EMPTY_EXAMPLES, CHAT_QUICK_ACTIONS } from "../strategyWorkstationMockData.js";
 import { STRATEGY_MODELS } from "../strategyTradingMockData.js";
 import TradingPreferencesPanel from "../TradingPreferencesPanel.jsx";
 import ChatRichCards from "./ChatRichCards.jsx";
@@ -67,6 +67,7 @@ export default function StrategyChatPanel({
   onStartPaper,
   onReviewDeployment,
   onViewPaper,
+  onExamplePrompt,
 }) {
   const [showPrefs, setShowPrefs] = useState(false);
 
@@ -76,10 +77,11 @@ export default function StrategyChatPanel({
     onStartPaper,
     onReview: onReviewDeployment,
     onViewPaper,
+    onOptimize: onViewBacktest,
   };
 
   return (
-    <aside className="flex h-full w-full flex-col border-l border-[#242424] bg-black tablet:w-[22rem] tablet:min-w-[22rem] tablet:max-w-[27rem] xl:w-[26rem]">
+    <aside className="flex h-full min-h-0 w-full flex-col border-l border-[#242424] bg-black">
       <header className="shrink-0 border-b border-[#242424] px-3 py-3">
         <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
           AI Strategy Chat
@@ -130,11 +132,23 @@ export default function StrategyChatPanel({
 
       <div className="minimal-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
         {messages.length === 0 ? (
-          <p className="text-xs leading-relaxed text-[#757575]">
-            Ask AI to build, test, optimize, or paper trade a strategy. Responses
-            include configuration cards, backtest summaries, and deployment review
-            steps — manual approval is always required.
-          </p>
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-[#929292]">
+              Tell Strategy Copilot what you want to build.
+            </p>
+            <div className="space-y-1.5">
+              {CHAT_EMPTY_EXAMPLES.map((ex) => (
+                <button
+                  key={ex}
+                  type="button"
+                  onClick={() => onExamplePrompt?.(ex)}
+                  className="block w-full rounded-md border border-[#242424] bg-[#0a0a0a] px-2.5 py-2 text-left text-[11px] text-[#bfbfbf] hover:border-[#454545] hover:text-white"
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           messages.map((m) => (
             <ChatBubble

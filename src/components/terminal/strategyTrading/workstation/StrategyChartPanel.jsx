@@ -123,9 +123,19 @@ export default function StrategyChartPanel({ strategy }) {
           <span className="text-[#00f3b6]">Entry Zone</span>
           <span className="text-[#d53d3d]">SL</span>
         </div>
-        <div className="absolute bottom-10 right-3 rounded border border-[#242424] bg-black/80 px-2 py-1 text-[10px]">
-          <span className="text-[#757575]">Current </span>
-          <span className="font-medium text-white">{currentPrice}</span>
+        <div className="absolute bottom-3 left-3 flex flex-col gap-0.5 text-[10px]">
+          <span className="text-white">
+            Current Price: <span className="font-medium text-[#00f3b6]">{currentPrice}</span>
+          </span>
+          {setup?.entryZone ? (
+            <span className="text-[#00f3b6]">Entry Zone: {setup.entryZone}</span>
+          ) : null}
+          {setup?.stopLoss ? (
+            <span className="text-[#d53d3d]">Stop Loss: {setup.stopLoss}</span>
+          ) : null}
+          {setup?.takeProfit ? (
+            <span className="text-[#269755]">Take Profit: {setup.takeProfit}</span>
+          ) : null}
         </div>
       </div>
     </div>

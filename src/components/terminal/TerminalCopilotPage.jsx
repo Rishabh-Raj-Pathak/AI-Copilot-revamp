@@ -50,7 +50,11 @@ const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
 
 function StrategyCopilotViews({ copilotView, terminalPlatform }) {
   if (copilotView === "strategy-trading") {
-    return <StrategyTradingPage terminalPlatform={terminalPlatform} />;
+    return (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <StrategyTradingPage terminalPlatform={terminalPlatform} />
+      </div>
+    );
   }
   return null;
 }

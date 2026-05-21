@@ -20,7 +20,7 @@ export default function StrategyCenterWorkspace({
 }) {
   if (!strategy) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto bg-black p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-white">Build or select a strategy</h2>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-[#929292]">
           Start from a prompt, use a predefined strategy, or ask Strategy Copilot to
@@ -49,7 +49,7 @@ export default function StrategyCenterWorkspace({
     strategy.status === "Ready";
 
   return (
-    <div className="minimal-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <div className="minimal-scrollbar flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto bg-black">
       <header className="shrink-0 border-b border-[#242424] px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">

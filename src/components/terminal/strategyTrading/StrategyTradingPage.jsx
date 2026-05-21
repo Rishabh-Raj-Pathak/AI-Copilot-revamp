@@ -22,6 +22,16 @@ const MOBILE_PANELS = [
   { id: "chat", label: "Chat" },
 ];
 
+/** Desktop: all three columns visible. Mobile: one panel at a time. */
+function panelVisibility(panelId, mobilePanel) {
+  const active = mobilePanel === panelId;
+  return [
+    "min-h-0 h-full overflow-hidden flex-col",
+    active ? "flex" : "hidden",
+    "tablet:flex",
+  ].join(" ");
+}
+
 export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }) {
   const {
     strategies,
@@ -86,6 +96,15 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     [updateStrategy],
   );
 
+  const handleSelectStrategy = useCallback(
+    (id) => {
+      setSelectedStrategyId(id);
+      setMobilePanel("workspace");
+      setWorkspaceTab("overview");
+    },
+    [setSelectedStrategyId],
+  );
+
   const runPrompt = useCallback(
     async (text) => {
       const trimmed = (text ?? prompt).trim();
@@ -145,9 +164,15 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         if (isBtcSniper) {
           draft.name = "BTC Lower Band Sniper";
           draft.market = "BTCUSDT · 15m";
+          draft.id = "strat-btc-sniper";
         }
-        setStrategies((prev) => [draft, ...prev]);
-        setSelectedStrategyId(draft.id);
+        setStrategies((prev) => {
+          const without = isBtcSniper
+            ? prev.filter((s) => s.id !== "strat-btc-sniper")
+            : prev;
+          return [draft, ...without];
+        });
+        setSelectedStrategyId(isBtcSniper ? "strat-btc-sniper" : draft.id);
         setLastSetup(draft.setup);
         appendLog("Strategy draft created from prompt");
       }
@@ -217,22 +242,23 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         return;
       }
       if (action === "Build BTC mean reversion") {
-        if (!selectedStrategy) {
-          setSelectedStrategyId("strat-btc-sniper");
-          setMobilePanel("workspace");
-        }
-        runPrompt(
-          "I want to create a BTCUSDT 15m quantitative strategy based on the Lower Band Sniper strategy.",
-        );
+        handleSelectStrategy("strat-btc-sniper");
         return;
       }
 
-      const userText = action;
+      const userText =
+        action === "Make this safer" ? "Make this safer." : action;
       let updated = selectedStrategy;
 
       if (action === "Make this safer" || action === "Make it safer") {
         updated = applySaferRules(selectedStrategy);
         updateStrategy(selectedStrategy.id, () => updated);
+        const resp = {
+          text: "I reduced the risk profile by keeping leverage capped at 3x, requiring stronger RSI confirmation, and keeping manual approval enabled before any real trade.",
+          richCards: [{ type: "config", data: updated.config }],
+        };
+        pushChat(selectedStrategy.id, userText, resp);
+        return;
       }
 
       const resp = buildChatResponse(action, updated);
@@ -246,8 +272,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       updateStrategy,
       pushChat,
       showToast,
-      runPrompt,
-      setSelectedStrategyId,
+      handleSelectStrategy,
     ],
   );
 
@@ -287,13 +312,12 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       };
       const sid = mapId[template.id];
       if (sid && strategies.some((s) => s.id === sid)) {
-        setSelectedStrategyId(sid);
-        setMobilePanel("workspace");
+        handleSelectStrategy(sid);
         return;
       }
       runPrompt(template.prompt);
     },
-    [runPrompt, strategies, setSelectedStrategyId],
+    [runPrompt, strategies, handleSelectStrategy],
   );
 
   const handleSave = useCallback(() => {
@@ -321,7 +345,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
   }, [selectedStrategy, updateStrategy, showToast]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-black text-white">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-black text-white">
       <div className="flex shrink-0 border-b border-[#242424] tablet:hidden">
         {MOBILE_PANELS.map((p) => (
           <button
@@ -339,31 +363,23 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         ))}
       </div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <div
-          className={`${
-            mobilePanel === "strategies" ? "flex" : "hidden"
-          } h-full min-h-0 w-full shrink-0 tablet:flex`}
-        >
+      <div
+        className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden tablet:grid-cols-[17.5rem_minmax(0,1fr)_26rem]"
+        data-strategy-copilot-layout
+      >
+        <div className={panelVisibility("strategies", mobilePanel)}>
           <StrategySidebar
             strategies={strategies}
             selectedId={selectedStrategyId}
             filter={sidebarFilter}
             onFilterChange={setSidebarFilter}
-            onSelect={(id) => {
-              setSelectedStrategyId(id);
-              setMobilePanel("workspace");
-            }}
+            onSelect={handleSelectStrategy}
             onNewStrategy={handleNewStrategy}
             preferences={preferences}
           />
         </div>
 
-        <div
-          className={`min-h-0 min-w-0 flex-1 ${
-            mobilePanel === "workspace" ? "flex" : "hidden"
-          } flex-col tablet:flex`}
-        >
+        <div className={panelVisibility("workspace", mobilePanel)}>
           <StrategyCenterWorkspace
             strategy={selectedStrategy}
             activeTab={workspaceTab}
@@ -377,11 +393,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
           />
         </div>
 
-        <div
-          className={`${
-            mobilePanel === "chat" ? "flex" : "hidden"
-          } h-full min-h-0 w-full shrink-0 tablet:flex`}
-        >
+        <div className={panelVisibility("chat", mobilePanel)}>
           <StrategyChatPanel
             strategy={selectedStrategy}
             messages={chatMessages}
@@ -395,10 +407,17 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onPreferencesChange={setPreferences}
             onQuickAction={handleQuickAction}
             onConfigPreset={handleConfigPreset}
-            onViewBacktest={() => setWorkspaceTab("backtest")}
+            onViewBacktest={() => {
+              setMobilePanel("workspace");
+              setWorkspaceTab("backtest");
+            }}
             onStartPaper={handleStartPaper}
             onReviewDeployment={() => setDeployOpen(true)}
-            onViewPaper={() => setWorkspaceTab("paper")}
+            onViewPaper={() => {
+              setMobilePanel("workspace");
+              setWorkspaceTab("paper");
+            }}
+            onExamplePrompt={runPrompt}
           />
         </div>
       </div>

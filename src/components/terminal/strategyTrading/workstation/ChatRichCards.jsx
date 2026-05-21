@@ -4,7 +4,7 @@ import { Button } from "../../../ui/button.jsx";
 function ConfigCard({ data, onPreset }) {
   const rows = [
     ["BB Length", data.bbLength],
-    ["RSI Oversold", data.rsiThreshold],
+    ["RSI Oversold Threshold", data.rsiThreshold],
     ["Stop Loss", data.stopLoss],
     ["Take Profit", data.takeProfit],
     ["Leverage", data.leverage],
@@ -27,11 +27,12 @@ function ConfigCard({ data, onPreset }) {
             ["recommended", "Use Recommended"],
             ["safer", "Make Safer"],
             ["aggressive", "More Aggressive"],
+            ["custom", "Custom"],
           ].map(([id, label]) => (
             <button
               key={id}
               type="button"
-              onClick={() => onPreset(id)}
+              onClick={() => id !== "custom" && onPreset(id)}
               className="rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white"
             >
               {label}
@@ -43,7 +44,7 @@ function ConfigCard({ data, onPreset }) {
   );
 }
 
-function BacktestCard({ data, onViewBacktest, onStartPaper, onReview }) {
+function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
   const cells = [
     ["Total Return", data.totalReturn, "text-[#00f3b6]"],
     ["Max Drawdown", data.maxDrawdown, "text-[#d53d3d]"],
@@ -68,17 +69,75 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onReview }) {
       </div>
       <div className="mt-2.5 flex flex-wrap gap-1">
         {onViewBacktest ? (
-          <Button type="button" size="sm" variant="outline" className="!h-7 !text-[10px]" onClick={onViewBacktest}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="!h-7 !text-[10px]"
+            onClick={onViewBacktest}
+          >
             View Backtest
           </Button>
         ) : null}
+        {onOptimize ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="!h-7 !text-[10px]"
+            onClick={onOptimize}
+          >
+            Optimize
+          </Button>
+        ) : null}
         {onStartPaper ? (
-          <Button type="button" size="sm" variant="outline" className="!h-7 !text-[10px]" onClick={onStartPaper}>
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            className="!h-7 !text-[10px]"
+            onClick={onStartPaper}
+          >
             Start Paper Trading
           </Button>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function PaperSetupCard({ data, onStartPaper, onReview }) {
+  return (
+    <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
+      <p className="text-[11px] font-semibold text-white">Paper Trading Setup</p>
+      <dl className="mt-2 space-y-1">
+        {Object.entries(data).map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-2 text-[10px]">
+            <dt className="text-[#757575]">{k}</dt>
+            <dd className="text-[#bfbfbf]">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-2.5 flex flex-wrap gap-1">
+        {onStartPaper ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            className="!h-7 !text-[10px]"
+            onClick={onStartPaper}
+          >
+            Start Simulation
+          </Button>
+        ) : null}
         {onReview ? (
-          <Button type="button" size="sm" variant="default" className="!h-7 !text-[10px]" onClick={onReview}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="!h-7 !text-[10px]"
+            onClick={onReview}
+          >
             Review Deployment
           </Button>
         ) : null}
@@ -88,12 +147,11 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onReview }) {
 }
 
 function PaperCard({ data, onViewPosition, onReview }) {
-  const rows = Object.entries(data);
   return (
     <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
       <p className="text-[11px] font-semibold text-[#00f3b6]">Paper trading active</p>
       <dl className="mt-2 space-y-1">
-        {rows.map(([k, v]) => (
+        {Object.entries(data).map(([k, v]) => (
           <div key={k} className="flex justify-between gap-2 text-[10px]">
             <dt className="capitalize text-[#757575]">{k}</dt>
             <dd className="text-[#bfbfbf]">{v}</dd>
@@ -102,12 +160,24 @@ function PaperCard({ data, onViewPosition, onReview }) {
       </dl>
       <div className="mt-2.5 flex flex-wrap gap-1">
         {onViewPosition ? (
-          <Button type="button" size="sm" variant="outline" className="!h-7 !text-[10px]" onClick={onViewPosition}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="!h-7 !text-[10px]"
+            onClick={onViewPosition}
+          >
             View Paper Position
           </Button>
         ) : null}
         {onReview ? (
-          <Button type="button" size="sm" variant="default" className="!h-7 !text-[10px]" onClick={onReview}>
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            className="!h-7 !text-[10px]"
+            onClick={onReview}
+          >
             Review Deployment
           </Button>
         ) : null}
@@ -116,36 +186,14 @@ function PaperCard({ data, onViewPosition, onReview }) {
   );
 }
 
-function GeneratedCard({ strategyName }) {
-  return (
-    <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1 text-[10px] text-[#00f3b6]">
-          <Check className="size-3" aria-hidden />
-          Strategy generated
-        </span>
-        <button
-          type="button"
-          className="flex items-center gap-1 text-[10px] text-[#757575] hover:text-white"
-          aria-label="Copy strategy ID"
-        >
-          ID: demo
-          <Copy className="size-3" aria-hidden />
-        </button>
-      </div>
-      <p className="mt-1.5 text-xs font-semibold text-white">{strategyName}</p>
-    </div>
-  );
-}
-
 export default function ChatRichCards({
   cards,
-  strategyName,
   onPreset,
   onViewBacktest,
   onStartPaper,
   onReview,
   onViewPaper,
+  onOptimize,
 }) {
   if (!cards?.length) return null;
   return (
@@ -161,6 +209,16 @@ export default function ChatRichCards({
               data={card.data}
               onViewBacktest={onViewBacktest}
               onStartPaper={onStartPaper}
+              onOptimize={onOptimize}
+            />
+          );
+        }
+        if (card.type === "paper-setup") {
+          return (
+            <PaperSetupCard
+              key={i}
+              data={card.data}
+              onStartPaper={onStartPaper}
               onReview={onReview}
             />
           );
@@ -174,9 +232,6 @@ export default function ChatRichCards({
               onReview={onReview}
             />
           );
-        }
-        if (card.type === "generated") {
-          return <GeneratedCard key={i} strategyName={strategyName} />;
         }
         return null;
       })}

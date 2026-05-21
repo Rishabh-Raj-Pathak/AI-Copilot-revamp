@@ -160,6 +160,13 @@ function buildBtcSniperSetup(preferences) {
   };
 }
 
+export const CHAT_EMPTY_EXAMPLES = [
+  "Build a BTC 15m mean reversion strategy.",
+  "Create an ETH funding capture setup.",
+  "Make a safer SOL breakout strategy.",
+  "Run a backtest on BTC Lower Band Sniper.",
+];
+
 export const DEMO_CHAT_BTC_SNIPER = [
   {
     id: "demo-u1",
@@ -169,8 +176,82 @@ export const DEMO_CHAT_BTC_SNIPER = [
   {
     id: "demo-a1",
     role: "assistant",
-    text: "Got it. I'll create a draft strategy for BTCUSDT on the 15m timeframe using a lower Bollinger Band + RSI mean reversion setup. Before backtesting, review the configuration.",
+    text: "Got it. I created a draft strategy for BTCUSDT on the 15m timeframe using a lower Bollinger Band + RSI mean reversion setup. Before backtesting, here are the recommended configuration settings.",
     richCards: [{ type: "config", data: STRATEGY_CONFIG_DEFAULT }],
+  },
+  {
+    id: "demo-u2",
+    role: "user",
+    text: "Run backtest on this.",
+  },
+  {
+    id: "demo-a2",
+    role: "assistant",
+    text: "Backtest complete. The strategy returned +6.97% with -5.09% max drawdown, 42.86% win rate, 2.35 profit factor, and 2.42 Sharpe ratio.",
+    richCards: [{ type: "backtest", data: MOCK_BACKTEST }],
+  },
+  {
+    id: "demo-u3",
+    role: "user",
+    text: "Start paper trading.",
+  },
+  {
+    id: "demo-a3",
+    role: "assistant",
+    text: "Paper trading simulation is ready. This will simulate the strategy using market-like data without risking real capital. Manual approval will still be required before any real deployment.",
+    richCards: [
+      {
+        type: "paper-setup",
+        data: {
+          Market: "BTCUSDT",
+          Timeframe: "15m",
+          Mode: "Simulation",
+          Risk: "Balanced",
+          Execution: "Manual approval",
+        },
+      },
+    ],
+  },
+];
+
+const BTC_SNIPER_LOGS = [
+  { id: "log-1", ago: "12m ago", message: "Strategy draft created" },
+  { id: "log-2", ago: "10m ago", message: "RSI threshold set to 25" },
+  { id: "log-3", ago: "8m ago", message: "Risk profile applied: Balanced" },
+  { id: "log-4", ago: "6m ago", message: "Backtest completed" },
+  { id: "log-5", ago: "4m ago", message: "Paper trading simulation available" },
+];
+
+const BTC_SNIPER_TRADES = [
+  {
+    id: "t-paper-1",
+    at: "May 21",
+    market: "BTCUSDT",
+    direction: "Long",
+    entry: "$76,928",
+    exit: "$77,247",
+    pnl: "+0.41%",
+    reason: "Lower band reclaim",
+  },
+  {
+    id: "t-bt-1",
+    at: "May 18",
+    market: "BTCUSDT",
+    direction: "Long",
+    entry: "$77,120",
+    exit: "$75,005",
+    pnl: "-2.50%",
+    reason: "Stop loss hit",
+  },
+  {
+    id: "t-bt-2",
+    at: "May 15",
+    market: "BTCUSDT",
+    direction: "Long",
+    entry: "$76,240",
+    exit: "$82,339",
+    pnl: "+8.00%",
+    reason: "Take profit hit",
   },
 ];
 
@@ -258,49 +339,35 @@ function buildStrategyRecord({
           ]
         : [],
     },
-    trades: backtestComplete
-      ? [
-          {
-            id: "t1",
-            at: "May 18, 14:32",
-            market: "BTCUSDT",
-            direction: "Long",
-            entry: "$76,920",
-            exit: "$78,072",
-            pnl: "+$1,152",
-            reason: "TP zone · RSI recovery",
-          },
-          {
-            id: "t2",
-            at: "May 17, 09:15",
-            market: "BTCUSDT",
-            direction: "Long",
-            entry: "$75,840",
-            exit: "$75,005",
-            pnl: "-$835",
-            reason: "Stop loss hit",
-          },
-          {
-            id: "t3",
-            at: "May 14, 22:08",
-            market: "BTCUSDT",
-            direction: "Long",
-            entry: "$74,210",
-            exit: "$75,890",
-            pnl: "+$1,680",
-            reason: "BB reclaim + volume confirm",
-          },
-        ]
-      : [],
-    logs: [
-      { id: `${id}-l1`, message: "Strategy draft created", at: new Date().toISOString() },
-      ...(backtestComplete
-        ? [{ id: `${id}-l2`, message: "Backtest completed", at: new Date().toISOString() }]
-        : []),
-      ...(paperActive
-        ? [{ id: `${id}-l3`, message: "Paper trading started", at: new Date().toISOString() }]
-        : []),
-    ],
+    logs:
+      id === "strat-btc-sniper"
+        ? BTC_SNIPER_LOGS.map((l) => ({ ...l, at: l.ago }))
+        : [
+            { id: `${id}-l1`, message: "Strategy draft created", at: "Just now" },
+            ...(backtestComplete
+              ? [{ id: `${id}-l2`, message: "Backtest completed", at: "Recently" }]
+              : []),
+            ...(paperActive
+              ? [{ id: `${id}-l3`, message: "Paper trading started", at: "Recently" }]
+              : []),
+          ],
+    trades:
+      id === "strat-btc-sniper"
+        ? BTC_SNIPER_TRADES
+        : backtestComplete
+          ? [
+              {
+                id: "t1",
+                at: "May 18, 14:32",
+                market: marketLabel?.split("·")[0]?.trim() ?? "—",
+                direction: "Long",
+                entry: "$76,920",
+                exit: "$78,072",
+                pnl: "+$1,152",
+                reason: "TP zone · RSI recovery",
+              },
+            ]
+          : [],
     chatMessages,
     saved: backtestComplete || paperActive,
   };

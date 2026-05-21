@@ -93,20 +93,54 @@ export function applyBacktest(strategy) {
       paperPnl: strategy.paperTrading?.pnl ?? "$0.00",
     },
     backtest: { status: "complete", results: MOCK_BACKTEST },
-    trades: strategy.trades?.length
-      ? strategy.trades
-      : [
-          {
-            id: "t1",
-            at: "May 18, 14:32",
-            market: strategy.market?.split("·")[0]?.trim() ?? "BTCUSDT",
-            direction: "Long",
-            entry: "$76,920",
-            exit: "$78,072",
-            pnl: "+$1,152",
-            reason: "TP zone · RSI recovery",
-          },
-        ],
+    trades:
+      strategy.id === "strat-btc-sniper" || strategy.name?.includes("BTC Lower")
+        ? [
+            {
+              id: "t-paper-1",
+              at: "May 21",
+              market: "BTCUSDT",
+              direction: "Long",
+              entry: "$76,928",
+              exit: "$77,247",
+              pnl: "+0.41%",
+              reason: "Lower band reclaim",
+            },
+            {
+              id: "t-bt-1",
+              at: "May 18",
+              market: "BTCUSDT",
+              direction: "Long",
+              entry: "$77,120",
+              exit: "$75,005",
+              pnl: "-2.50%",
+              reason: "Stop loss hit",
+            },
+            {
+              id: "t-bt-2",
+              at: "May 15",
+              market: "BTCUSDT",
+              direction: "Long",
+              entry: "$76,240",
+              exit: "$82,339",
+              pnl: "+8.00%",
+              reason: "Take profit hit",
+            },
+          ]
+        : strategy.trades?.length
+          ? strategy.trades
+          : [
+              {
+                id: "t1",
+                at: "May 18, 14:32",
+                market: strategy.market?.split("·")[0]?.trim() ?? "—",
+                direction: "Long",
+                entry: "$76,920",
+                exit: "$78,072",
+                pnl: "+$1,152",
+                reason: "TP zone · RSI recovery",
+              },
+            ],
     logs: [
       {
         id: `l-${Date.now()}`,
@@ -259,12 +293,12 @@ export function buildChatResponse(action, strategy) {
         {
           type: "paper",
           data: {
-            status: "Active",
-            market: strategy?.market?.split("·")[0]?.trim() ?? "BTCUSDT",
-            timeframe: strategy?.timeframe ?? "15m",
-            mode: "Paper Trading",
-            risk: "Balanced",
-            execution: "Manual approval",
+            Status: "Active",
+            Market: strategy?.market?.split("·")[0]?.trim() ?? "BTCUSDT",
+            Timeframe: strategy?.timeframe ?? "15m",
+            Mode: "Paper simulation",
+            Risk: "Balanced",
+            Execution: "Manual approval",
           },
         },
       ],
