@@ -94,7 +94,7 @@ export function applyBacktest(strategy) {
     },
     backtest: { status: "complete", results: MOCK_BACKTEST },
     trades:
-      strategy.id === "strat-btc-sniper" || strategy.name?.includes("BTC Lower")
+      strategy.id === "strat-btc-sniper" || strategy.name?.includes("BTC Mean Reversion")
         ? [
             {
               id: "t-paper-1",

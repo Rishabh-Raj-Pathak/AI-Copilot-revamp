@@ -164,7 +164,7 @@ const BTC_SNIPER_LOGIC = {
 
 function buildBtcSniperSetup(preferences) {
   const base = generateStrategySetup({
-    prompt: "BTCUSDT 15m Lower Band Sniper mean reversion",
+    prompt: "BTCUSDT 15m Bollinger mean reversion",
     modelId: "quant",
     strategyId: "mean-reversion",
     marketId: "btc",
@@ -173,7 +173,7 @@ function buildBtcSniperSetup(preferences) {
   });
   return {
     ...base,
-    title: "BTC Lower Band Sniper",
+    title: "BTC Mean Reversion",
     market: "BTCUSDT",
     timeframe: "15m",
     model: "Quant",
@@ -212,14 +212,55 @@ export const CHAT_EMPTY_EXAMPLES = [
   "Build a BTC 15m mean reversion strategy.",
   "Create an ETH funding capture setup.",
   "Make a safer SOL breakout strategy.",
-  "Run a backtest on BTC Lower Band Sniper.",
+  "Run a backtest on BTC Mean Reversion.",
 ];
+
+/** Static phrase bank for client-side prompt autocomplete (prototype). */
+export const PROMPT_SUGGESTIONS = [
+  ...CHAT_EMPTY_EXAMPLES,
+  "BTCUSDT 15m mean reversion with RSI oversold",
+  "BTC Bollinger lower-band mean reversion entry",
+  "ETH funding capture on 1h across preferred DEXes",
+  "SOL momentum breakout with volume confirmation",
+  "HYPE trend-following with rule-based entries on 1h",
+  "RSI below 25 with BB lower wick reclaim",
+  "Max leverage 3x with manual approval",
+  "Paper trade before deployment review",
+  "Run backtest estimate on this setup",
+  "Make this strategy safer with tighter stops",
+  "Bollinger Bands mean reversion",
+  "Funding rate arbitrage",
+  "Volume and open interest confirmation",
+  "15m timeframe quantitative strategy",
+  "Clear invalidation below support",
+];
+
+/**
+ * @param {string} query
+ * @param {number} [limit]
+ * @returns {string[]}
+ */
+export function getPromptSuggestions(query, limit = 6) {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+  const seen = new Set();
+  const out = [];
+  for (const phrase of PROMPT_SUGGESTIONS) {
+    if (!phrase.toLowerCase().includes(q)) continue;
+    const key = phrase.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(phrase);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 export const DEMO_CHAT_BTC_SNIPER = [
   {
     id: "demo-u1",
     role: "user",
-    text: "I want to create a BTCUSDT 15m quantitative strategy based on the Lower Band Sniper strategy.",
+    text: "I want to create a BTCUSDT 15m quantitative mean reversion strategy using Bollinger lower-band and RSI filters.",
   },
   {
     id: "demo-a1",
@@ -424,13 +465,13 @@ function buildStrategyRecord({
 export const INITIAL_WORKSTATION_STRATEGIES = [
   buildStrategyRecord({
     id: "strat-btc-sniper",
-    name: "BTC Lower Band Sniper",
+    name: "BTC Mean Reversion",
     status: "Draft",
     modelId: "quant",
     strategyId: "mean-reversion",
     marketId: "btc",
     marketLabel: "BTCUSDT · 15m",
-    prompt: "BTCUSDT 15m Lower Band Sniper",
+    prompt: "BTCUSDT 15m mean reversion",
     customSetup: buildBtcSniperSetup(DEFAULT_PREFERENCES),
     chatMessages: DEMO_CHAT_BTC_SNIPER,
   }),
@@ -478,8 +519,16 @@ export const CENTER_TEMPLATES = [
   {
     id: "btc-mean-reversion",
     title: "BTC 15m mean reversion",
+    cardTitle: "BTC Mean Reversion",
+    strategyKind: "Mean Reversion",
+    asset: "BTC",
+    timeframe: "15m",
+    risk: "Medium Risk",
+    illustration: "candles",
+    description: "Find bounce setups near support with clear invalidation.",
+    tags: ["Quant", "BTC", "15m", "Medium Risk"],
     prompt:
-      "I want to create a BTCUSDT 15m quantitative strategy based on the Lower Band Sniper strategy.",
+      "I want to create a BTCUSDT 15m quantitative mean reversion strategy using Bollinger lower-band and RSI filters.",
     modelId: "quant",
     strategyId: "mean-reversion",
     marketId: "btc",
@@ -487,6 +536,14 @@ export const CENTER_TEMPLATES = [
   {
     id: "eth-funding",
     title: "ETH funding capture",
+    cardTitle: "ETH Funding Capture",
+    strategyKind: "Funding",
+    asset: "ETH",
+    timeframe: "1h",
+    risk: "Medium Risk",
+    illustration: "flow",
+    description: "Monitor funding differences and identify carry opportunities.",
+    tags: ["Funding", "ETH", "1h", "Medium Risk"],
     prompt: "Build an ETH funding capture strategy on 1h across preferred DEXes.",
     modelId: "funding",
     strategyId: "funding-capture",
@@ -495,6 +552,14 @@ export const CENTER_TEMPLATES = [
   {
     id: "sol-breakout",
     title: "SOL breakout",
+    cardTitle: "SOL Breakout Continuation",
+    strategyKind: "Momentum",
+    asset: "SOL",
+    timeframe: "15m",
+    risk: "High Risk",
+    illustration: "line",
+    description: "Watch for breakout confirmation with volume and open interest.",
+    tags: ["Aggressive", "SOL", "15m", "High Risk"],
     prompt: "Build a SOL breakout continuation strategy with volume confirmation on 15m.",
     modelId: "aggressive",
     strategyId: "momentum-breakout",
@@ -503,6 +568,14 @@ export const CENTER_TEMPLATES = [
   {
     id: "hype-trend",
     title: "HYPE trend follow",
+    cardTitle: "HYPE Trend Follow",
+    strategyKind: "Trend Following",
+    asset: "HYPE",
+    timeframe: "1h",
+    risk: "Medium Risk",
+    illustration: "anchor",
+    description: "Follow higher-timeframe trend with rule-based entries.",
+    tags: ["Quant", "HYPE", "1h", "Medium Risk"],
     prompt: "Build a HYPE trend-following strategy on 1h with rule-based entries.",
     modelId: "quant",
     strategyId: "trend-following",

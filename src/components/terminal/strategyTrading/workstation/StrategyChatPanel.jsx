@@ -1,15 +1,12 @@
-import { ChevronDown, Paperclip, Send, Settings2 } from "lucide-react";
+import { ChevronDown, Settings2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "../../../ui/button.jsx";
-import { Textarea } from "../../../ui/textarea.jsx";
 import {
   CHAT_EMPTY_EXAMPLES,
-  CHAT_LLM_MODELS,
   CHAT_QUICK_ACTIONS,
 } from "../strategyWorkstationMockData.js";
 import TradingPreferencesPanel from "../TradingPreferencesPanel.jsx";
-import ChatModelPicker from "./ChatModelPicker.jsx";
 import ChatRichCards from "./ChatRichCards.jsx";
+import StrategyPromptBox from "./StrategyPromptBox.jsx";
 import { StatusBadge } from "./statusBadge.jsx";
 
 function ChatBubble({ msg, strategyName, cardHandlers }) {
@@ -29,6 +26,18 @@ function ChatBubble({ msg, strategyName, cardHandlers }) {
           </span>
         ) : null}
         <p className={`text-xs leading-relaxed ${!isUser ? "mt-0.5" : ""}`}>{msg.text}</p>
+        {msg.attachments?.length ? (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {msg.attachments.map((a) => (
+              <span
+                key={`${a.type}-${a.label}`}
+                className="rounded border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292]"
+              >
+                {a.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
         {msg.richCards?.length ? (
           <ChatRichCards
             cards={msg.richCards}
@@ -62,6 +71,8 @@ export default function StrategyChatPanel({
   loading,
   chatModelId,
   onChatModelChange,
+  attachments,
+  onAttachmentsChange,
   preferences,
   onPreferencesChange,
   onQuickAction,
@@ -73,8 +84,6 @@ export default function StrategyChatPanel({
   onExamplePrompt,
 }) {
   const [showPrefs, setShowPrefs] = useState(false);
-  const activeLlm =
-    CHAT_LLM_MODELS.find((m) => m.id === chatModelId) ?? CHAT_LLM_MODELS[1];
 
   const cardHandlers = {
     onPreset: onConfigPreset,
@@ -157,7 +166,7 @@ export default function StrategyChatPanel({
         ) : null}
       </div>
 
-      <footer className="shrink-0 border-t border-[#242424] p-3" data-strategy-chat-input>
+      <footer className="shrink-0 border-t border-[#242424] p-3">
         <div className="minimal-scrollbar mb-2 flex gap-1 overflow-x-auto pb-0.5">
           {CHAT_QUICK_ACTIONS.map((chip) => (
             <button
@@ -170,53 +179,18 @@ export default function StrategyChatPanel({
             </button>
           ))}
         </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSubmit();
-          }}
-          className="rounded-xl border border-[#242424] bg-[#0a0a0a] p-2"
-        >
-          <Textarea
-            value={prompt}
-            onChange={(e) => onPromptChange(e.target.value)}
-            placeholder="Ask AI to build, test, optimize, or paper trade a strategy…"
-            rows={3}
-            className="!min-h-[3.5rem] !border-0 !bg-transparent !p-0 text-sm shadow-none focus-visible:!ring-0"
-          />
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <ChatModelPicker
-                value={chatModelId}
-                onChange={onChatModelChange}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="shrink-0 rounded-md p-1.5 text-[#585858] hover:text-white"
-                aria-label="Attach context"
-              >
-                <Paperclip className="size-4" aria-hidden />
-              </button>
-            </div>
-            <Button
-              type="submit"
-              size="sm"
-              variant="default"
-              className="!size-8 !rounded-full !p-0"
-              loading={loading}
-              disabled={!prompt.trim()}
-              aria-label="Send message"
-            >
-              <Send className="size-4" aria-hidden />
-            </Button>
-          </div>
-          <p className="mt-1.5 truncate text-[10px] text-[#585858]">
-            Using <span className="text-[#757575]">{activeLlm.name}</span>
-            <span className="text-[#454545]"> · </span>
-            <span className="text-[#585858]">prototype — no live API</span>
-          </p>
-        </form>
+        <StrategyPromptBox
+          value={prompt}
+          onChange={onPromptChange}
+          onSubmit={onSubmit}
+          loading={loading}
+          chatModelId={chatModelId}
+          onChatModelChange={onChatModelChange}
+          attachments={attachments}
+          onAttachmentsChange={onAttachmentsChange}
+          enableSuggestions
+          placeholder="Ask AI to build, test, optimize, or paper trade a strategy…"
+        />
       </footer>
     </aside>
   );

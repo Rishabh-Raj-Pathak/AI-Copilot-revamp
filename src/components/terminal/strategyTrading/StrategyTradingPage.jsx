@@ -15,6 +15,7 @@ import {
   createDraftStrategy,
 } from "./strategyWorkstationEngine.js";
 import {
+  CENTER_TEMPLATES,
   DEFAULT_CHAT_LLM_MODEL_ID,
   DEMO_CHAT_BTC_SNIPER,
 } from "./strategyWorkstationMockData.js";
@@ -58,6 +59,12 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const [composerMode, setComposerMode] = useState(false);
+  const [activeTemplateId, setActiveTemplateId] = useState(
+    CENTER_TEMPLATES[0]?.id ?? "btc-mean-reversion",
+  );
+  const [attachments, setAttachments] = useState([]);
+  const [chatAttachments, setChatAttachments] = useState([]);
 
   const selectedStrategy = useMemo(
     () => strategies.find((s) => s.id === selectedStrategyId) ?? null,
@@ -102,6 +109,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
 
   const handleSelectStrategy = useCallback(
     (id) => {
+      setComposerMode(false);
       setSelectedStrategyId(id);
       setMobilePanel("workspace");
       setWorkspaceTab("overview");
@@ -109,15 +117,37 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     [setSelectedStrategyId],
   );
 
+  const buildUserMessage = useCallback((text, msgAttachments) => {
+    const base = { id: `u-${Date.now()}`, role: "user", text };
+    if (msgAttachments?.length) {
+      return {
+        ...base,
+        attachments: msgAttachments.map((a) => ({
+          type: a.type,
+          label: a.label,
+        })),
+      };
+    }
+    return base;
+  }, []);
+
   const runPrompt = useCallback(
-    async (text) => {
+    async (text, options = {}) => {
       const trimmed = (text ?? prompt).trim();
       if (!trimmed) return;
 
+      const msgAttachments = options.attachments ?? attachments;
+      const fromComposer = options.fromComposer ?? composerMode;
+
       setLoading(true);
       setPrompt("");
+      setAttachments([]);
+      setChatAttachments([]);
+      if (fromComposer) setComposerMode(false);
 
       await new Promise((r) => window.setTimeout(r, 600));
+
+      const userMsg = buildUserMessage(trimmed, msgAttachments);
 
       if (selectedStrategy && selectedStrategy.status === "Draft") {
         const draft = createDraftStrategy({
@@ -134,7 +164,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
           ...draft,
           chatMessages: [
             ...s.chatMessages,
-            { id: `u-${Date.now()}`, role: "user", text: trimmed },
+            userMsg,
             {
               id: `a-${Date.now() + 1}`,
               role: "assistant",
@@ -153,11 +183,14 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
           preferences,
           terminalPlatform,
         });
-        const isBtcSniper = /lower band|bb lower|sniper/i.test(trimmed);
+        const isBtcSniper =
+          /lower band|bb lower|bollinger.*mean reversion|btc.*mean reversion/i.test(
+            trimmed,
+          );
         draft.chatMessages = isBtcSniper
           ? [...DEMO_CHAT_BTC_SNIPER]
           : [
-              { id: `u-${Date.now()}`, role: "user", text: trimmed },
+              userMsg,
               {
                 id: `a-${Date.now() + 1}`,
                 role: "assistant",
@@ -166,7 +199,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
               },
             ];
         if (isBtcSniper) {
-          draft.name = "BTC Lower Band Sniper";
+          draft.name = "BTC Mean Reversion";
           draft.market = "BTCUSDT · 15m";
           draft.id = "strat-btc-sniper";
         }
@@ -187,6 +220,8 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     },
     [
       prompt,
+      attachments,
+      composerMode,
       selectedStrategy,
       modelId,
       strategyTypeId,
@@ -198,6 +233,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       setSelectedStrategyId,
       setLastSetup,
       appendLog,
+      buildUserMessage,
     ],
   );
 
@@ -293,21 +329,46 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     [selectedStrategy, updateStrategy, pushChat],
   );
 
+  const applyTemplatePrefs = useCallback((template) => {
+    setModelId(template.modelId);
+    setStrategyTypeId(template.strategyId);
+    setMarketId(template.marketId);
+  }, []);
+
   const handleNewStrategy = useCallback(() => {
+    const first = CENTER_TEMPLATES[0];
+    setComposerMode(true);
     setSelectedStrategyId(null);
-    setPrompt("");
+    setActiveTemplateId(first?.id ?? "btc-mean-reversion");
+    if (first) {
+      applyTemplatePrefs(first);
+      setPrompt(first.prompt);
+    } else {
+      setPrompt("");
+    }
+    setAttachments([]);
     setWorkspaceTab("overview");
-    setMobilePanel("chat");
+    setMobilePanel("workspace");
     window.setTimeout(() => {
       document.querySelector("[data-strategy-chat-input] textarea")?.focus();
     }, 50);
-  }, [setSelectedStrategyId]);
+  }, [setSelectedStrategyId, applyTemplatePrefs]);
+
+  const handleTemplateApply = useCallback(
+    (template) => {
+      applyTemplatePrefs(template);
+      setPrompt(template.prompt);
+    },
+    [applyTemplatePrefs],
+  );
+
+  const handleComposerSubmit = useCallback(() => {
+    runPrompt(prompt, { attachments, fromComposer: true });
+  }, [runPrompt, prompt, attachments]);
 
   const handleTemplate = useCallback(
     (template) => {
-      setModelId(template.modelId);
-      setStrategyTypeId(template.strategyId);
-      setMarketId(template.marketId);
+      applyTemplatePrefs(template);
       const mapId = {
         "btc-mean-reversion": "strat-btc-sniper",
         "eth-funding": "strat-eth-funding",
@@ -321,7 +382,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       }
       runPrompt(template.prompt);
     },
-    [runPrompt, strategies, handleSelectStrategy],
+    [runPrompt, strategies, handleSelectStrategy, applyTemplatePrefs],
   );
 
   const handleSave = useCallback(() => {
@@ -368,7 +429,11 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
       </div>
 
       <div
-        className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden tablet:grid-cols-[17.5rem_minmax(0,1fr)_26rem]"
+        className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${
+          composerMode
+            ? "tablet:grid-cols-[17.5rem_minmax(0,1fr)]"
+            : "tablet:grid-cols-[17.5rem_minmax(0,1fr)_26rem]"
+        }`}
         data-strategy-copilot-layout
       >
         <div className={panelVisibility("strategies", mobilePanel)}>
@@ -386,6 +451,23 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         <div className={panelVisibility("workspace", mobilePanel)}>
           <StrategyCenterWorkspace
             strategy={selectedStrategy}
+            composerMode={composerMode}
+            activeTemplateId={activeTemplateId}
+            onTemplateChange={setActiveTemplateId}
+            onTemplateApply={handleTemplateApply}
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onComposerSubmit={handleComposerSubmit}
+            composerLoading={loading}
+            chatModelId={chatModelId}
+            onChatModelChange={setChatModelId}
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+            onExamplePrompt={(text) => {
+              setPrompt(text);
+              setComposerMode(true);
+            }}
+            onNewStrategy={handleNewStrategy}
             activeTab={workspaceTab}
             onTabChange={setWorkspaceTab}
             onRunBacktest={handleRunBacktest}
@@ -393,37 +475,42 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onReviewDeployment={() => setDeployOpen(true)}
             onSave={handleSave}
             backtestLoading={backtestLoading}
-            onTemplateClick={handleTemplate}
           />
         </div>
 
-        <div className={panelVisibility("chat", mobilePanel)}>
-          <StrategyChatPanel
-            strategy={selectedStrategy}
-            messages={chatMessages}
-            prompt={prompt}
-            onPromptChange={setPrompt}
-            onSubmit={() => runPrompt(prompt)}
-            loading={loading}
-            chatModelId={chatModelId}
-            onChatModelChange={setChatModelId}
-            preferences={preferences}
-            onPreferencesChange={setPreferences}
-            onQuickAction={handleQuickAction}
-            onConfigPreset={handleConfigPreset}
-            onViewBacktest={() => {
-              setMobilePanel("workspace");
-              setWorkspaceTab("backtest");
-            }}
-            onStartPaper={handleStartPaper}
-            onReviewDeployment={() => setDeployOpen(true)}
-            onViewPaper={() => {
-              setMobilePanel("workspace");
-              setWorkspaceTab("paper");
-            }}
-            onExamplePrompt={runPrompt}
-          />
-        </div>
+        {!composerMode ? (
+          <div className={panelVisibility("chat", mobilePanel)}>
+            <StrategyChatPanel
+              strategy={selectedStrategy}
+              messages={chatMessages}
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              onSubmit={() =>
+                runPrompt(prompt, { attachments: chatAttachments })
+              }
+              loading={loading}
+              chatModelId={chatModelId}
+              onChatModelChange={setChatModelId}
+              attachments={chatAttachments}
+              onAttachmentsChange={setChatAttachments}
+              preferences={preferences}
+              onPreferencesChange={setPreferences}
+              onQuickAction={handleQuickAction}
+              onConfigPreset={handleConfigPreset}
+              onViewBacktest={() => {
+                setMobilePanel("workspace");
+                setWorkspaceTab("backtest");
+              }}
+              onStartPaper={handleStartPaper}
+              onReviewDeployment={() => setDeployOpen(true)}
+              onViewPaper={() => {
+                setMobilePanel("workspace");
+                setWorkspaceTab("paper");
+              }}
+              onExamplePrompt={(text) => runPrompt(text)}
+            />
+          </div>
+        ) : null}
       </div>
 
       <DeployReviewModal

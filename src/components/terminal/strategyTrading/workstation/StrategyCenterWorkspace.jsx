@@ -1,14 +1,28 @@
-import { Save, Shield } from "lucide-react";
+import { Plus, Save, Shield } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
-import { CENTER_TEMPLATES } from "../strategyWorkstationMockData.js";
 import { StatusBadge } from "./statusBadge.jsx";
 import StrategyChartPanel from "./StrategyChartPanel.jsx";
 import StrategyLogicCard from "./StrategyLogicCard.jsx";
+import StrategyNewStrategyView from "./StrategyNewStrategyView.jsx";
 import StrategyWorkspaceControls from "./StrategyWorkspaceControls.jsx";
 import StrategyWorkspaceTabs from "./StrategyWorkspaceTabs.jsx";
 
 export default function StrategyCenterWorkspace({
   strategy,
+  composerMode,
+  activeTemplateId,
+  onTemplateChange,
+  onTemplateApply,
+  prompt,
+  onPromptChange,
+  onComposerSubmit,
+  composerLoading,
+  chatModelId,
+  onChatModelChange,
+  attachments,
+  onAttachmentsChange,
+  onExamplePrompt,
+  onNewStrategy,
   activeTab,
   onTabChange,
   onRunBacktest,
@@ -16,29 +30,43 @@ export default function StrategyCenterWorkspace({
   onReviewDeployment,
   onSave,
   backtestLoading,
-  onTemplateClick,
 }) {
+  if (composerMode) {
+    return (
+      <StrategyNewStrategyView
+        activeTemplateId={activeTemplateId}
+        onTemplateChange={onTemplateChange}
+        onTemplateApply={onTemplateApply}
+        prompt={prompt}
+        onPromptChange={onPromptChange}
+        onSubmit={onComposerSubmit}
+        loading={composerLoading}
+        chatModelId={chatModelId}
+        onChatModelChange={onChatModelChange}
+        attachments={attachments}
+        onAttachmentsChange={onAttachmentsChange}
+      />
+    );
+  }
+
   if (!strategy) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto bg-black p-4 sm:p-6">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center overflow-y-auto bg-black p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-white">Build or select a strategy</h2>
-        <p className="mt-2 max-w-lg text-sm leading-relaxed text-[#929292]">
-          Start from a prompt, use a predefined strategy, or ask Strategy Copilot to
-          generate a setup based on your market, timeframe, and risk profile.
+        <p className="mt-2 max-w-md text-center text-sm leading-relaxed text-[#929292]">
+          Create a new strategy from templates and a prompt, or pick an existing one from
+          the sidebar.
         </p>
-        <div className="mt-6 grid gap-2 sm:grid-cols-2">
-          {CENTER_TEMPLATES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => onTemplateClick(t)}
-              className="rounded-lg border border-[#242424] bg-[#0a0a0a] p-3 text-left transition-colors hover:border-[#454545] hover:bg-[#121212]"
-            >
-              <p className="text-sm font-semibold text-white">{t.title}</p>
-              <p className="mt-1 text-xs text-[#757575]">Opens in workspace + chat →</p>
-            </button>
-          ))}
-        </div>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          className="mt-6 gap-1.5"
+          onClick={onNewStrategy}
+        >
+          <Plus className="size-4" aria-hidden />
+          New Strategy
+        </Button>
       </div>
     );
   }
