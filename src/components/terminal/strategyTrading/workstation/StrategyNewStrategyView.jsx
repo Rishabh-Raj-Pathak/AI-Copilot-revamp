@@ -74,7 +74,7 @@ export default function StrategyNewStrategyView({
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-8 sm:px-6 sm:py-10">
         <header className="mb-8 text-center sm:mb-10">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
-            Turn Ideas Into Quant Strategies
+            Turn Ideas Into Strategies
           </h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#757575]">
             Start from a template or describe your setup in the prompt below.
