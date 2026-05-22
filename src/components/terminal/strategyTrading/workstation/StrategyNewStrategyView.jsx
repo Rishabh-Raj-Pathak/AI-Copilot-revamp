@@ -31,8 +31,8 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
           : "border-[#2a2a2a]"
       }`}
     >
-      <div className="flex h-[5.5rem] items-center justify-center bg-[#141414] px-3 pt-3 sm:h-[6.5rem]">
-        <div className="h-14 w-full max-w-[7.5rem] opacity-90 transition-opacity group-hover:opacity-100 sm:h-16">
+      <div className="flex h-[4.75rem] items-center justify-center border-b border-[#1f1f1f] bg-[#111] px-2.5 pt-2.5 sm:h-[5.5rem]">
+        <div className="h-[3.25rem] w-full max-w-[9.5rem] transition-transform duration-200 group-hover:scale-[1.02] sm:h-[3.75rem]">
           <StrategyTemplateIllustration type={template.illustration ?? "candles"} />
         </div>
       </div>
