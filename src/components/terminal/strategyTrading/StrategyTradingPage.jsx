@@ -14,7 +14,10 @@ import {
   buildChatResponse,
   createDraftStrategy,
 } from "./strategyWorkstationEngine.js";
-import { DEMO_CHAT_BTC_SNIPER } from "./strategyWorkstationMockData.js";
+import {
+  DEFAULT_CHAT_LLM_MODEL_ID,
+  DEMO_CHAT_BTC_SNIPER,
+} from "./strategyWorkstationMockData.js";
 
 const MOBILE_PANELS = [
   { id: "strategies", label: "Strategies" },
@@ -43,6 +46,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
   } = useStrategyCopilot();
 
   const [modelId, setModelId] = useState("quant");
+  const [chatModelId, setChatModelId] = useState(DEFAULT_CHAT_LLM_MODEL_ID);
   const [strategyTypeId, setStrategyTypeId] = useState("mean-reversion");
   const [marketId, setMarketId] = useState("btc");
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
@@ -401,8 +405,8 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onPromptChange={setPrompt}
             onSubmit={() => runPrompt(prompt)}
             loading={loading}
-            modelId={modelId}
-            onModelChange={setModelId}
+            chatModelId={chatModelId}
+            onChatModelChange={setChatModelId}
             preferences={preferences}
             onPreferencesChange={setPreferences}
             onQuickAction={handleQuickAction}

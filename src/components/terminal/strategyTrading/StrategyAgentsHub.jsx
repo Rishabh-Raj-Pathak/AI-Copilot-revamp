@@ -50,7 +50,7 @@ export default function StrategyAgentsHub({
       <header className="shrink-0 border-b border-[#242424] px-4 py-4 sm:px-5">
         <h1 className="text-lg font-semibold">Agents</h1>
         <p className="mt-1 text-sm text-[#929292]">
-          On-demand watchers from Strategy Copilot — monitor conditions and get
+          On-demand watchers from Strategy Builder — monitor conditions and get
           notified when setups become valid.
         </p>
         <Button
@@ -59,7 +59,7 @@ export default function StrategyAgentsHub({
           className="mt-3"
           onClick={onOpenStrategyCopilot}
         >
-          Open Strategy Copilot
+          Open Strategy Builder
         </Button>
       </header>
 

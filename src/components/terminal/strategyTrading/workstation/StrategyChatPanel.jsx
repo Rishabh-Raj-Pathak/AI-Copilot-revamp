@@ -1,11 +1,14 @@
 import { ChevronDown, Paperclip, Send, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../ui/button.jsx";
-import { Select } from "../../../ui/select.jsx";
 import { Textarea } from "../../../ui/textarea.jsx";
-import { CHAT_EMPTY_EXAMPLES, CHAT_QUICK_ACTIONS } from "../strategyWorkstationMockData.js";
-import { STRATEGY_MODELS } from "../strategyTradingMockData.js";
+import {
+  CHAT_EMPTY_EXAMPLES,
+  CHAT_LLM_MODELS,
+  CHAT_QUICK_ACTIONS,
+} from "../strategyWorkstationMockData.js";
 import TradingPreferencesPanel from "../TradingPreferencesPanel.jsx";
+import ChatModelPicker from "./ChatModelPicker.jsx";
 import ChatRichCards from "./ChatRichCards.jsx";
 import { StatusBadge } from "./statusBadge.jsx";
 
@@ -57,8 +60,8 @@ export default function StrategyChatPanel({
   onPromptChange,
   onSubmit,
   loading,
-  modelId,
-  onModelChange,
+  chatModelId,
+  onChatModelChange,
   preferences,
   onPreferencesChange,
   onQuickAction,
@@ -70,6 +73,8 @@ export default function StrategyChatPanel({
   onExamplePrompt,
 }) {
   const [showPrefs, setShowPrefs] = useState(false);
+  const activeLlm =
+    CHAT_LLM_MODELS.find((m) => m.id === chatModelId) ?? CHAT_LLM_MODELS[1];
 
   const cardHandlers = {
     onPreset: onConfigPreset,
@@ -108,18 +113,6 @@ export default function StrategyChatPanel({
             <Settings2 className="size-4" />
           </button>
         </div>
-        <Select
-          value={modelId}
-          onChange={(e) => onModelChange(e.target.value)}
-          className="mt-2 !min-h-8 !text-xs"
-          aria-label="AI model"
-        >
-          {STRATEGY_MODELS.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </Select>
         {showPrefs ? (
           <div className="mt-3 rounded-lg border border-[#242424] bg-[#0a0a0a] p-3">
             <TradingPreferencesPanel
@@ -184,14 +177,6 @@ export default function StrategyChatPanel({
           }}
           className="rounded-xl border border-[#242424] bg-[#0a0a0a] p-2"
         >
-          {strategy ? (
-            <div className="mb-2 flex items-center gap-1">
-              <span className="truncate text-[10px] font-medium text-white">
-                {strategy.name}
-              </span>
-              <StatusBadge status={strategy.status} />
-            </div>
-          ) : null}
           <Textarea
             value={prompt}
             onChange={(e) => onPromptChange(e.target.value)}
@@ -199,14 +184,21 @@ export default function StrategyChatPanel({
             rows={3}
             className="!min-h-[3.5rem] !border-0 !bg-transparent !p-0 text-sm shadow-none focus-visible:!ring-0"
           />
-          <div className="mt-1 flex items-center justify-between">
-            <button
-              type="button"
-              className="rounded-md p-1.5 text-[#585858] hover:text-white"
-              aria-label="Attach context"
-            >
-              <Paperclip className="size-4" aria-hidden />
-            </button>
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <ChatModelPicker
+                value={chatModelId}
+                onChange={onChatModelChange}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="shrink-0 rounded-md p-1.5 text-[#585858] hover:text-white"
+                aria-label="Attach context"
+              >
+                <Paperclip className="size-4" aria-hidden />
+              </button>
+            </div>
             <Button
               type="submit"
               size="sm"
@@ -219,6 +211,11 @@ export default function StrategyChatPanel({
               <Send className="size-4" aria-hidden />
             </Button>
           </div>
+          <p className="mt-1.5 truncate text-[10px] text-[#585858]">
+            Using <span className="text-[#757575]">{activeLlm.name}</span>
+            <span className="text-[#454545]"> · </span>
+            <span className="text-[#585858]">prototype — no live API</span>
+          </p>
         </form>
       </footer>
     </aside>

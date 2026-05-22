@@ -17,7 +17,11 @@ export default function StrategySidebar({
 
   const filtered = strategies.filter((s) => {
     const q = search.trim().toLowerCase();
-    if (q && !s.name.toLowerCase().includes(q) && !s.market?.toLowerCase().includes(q)) {
+    if (
+      q &&
+      !s.name.toLowerCase().includes(q) &&
+      !s.market?.toLowerCase().includes(q)
+    ) {
       return false;
     }
     if (filter === "all") return true;
@@ -47,7 +51,10 @@ export default function StrategySidebar({
           New Strategy
         </Button>
         <label className="relative mt-2 flex items-center">
-          <Search className="pointer-events-none absolute left-2.5 size-3.5 text-[#585858]" aria-hidden />
+          <Search
+            className="pointer-events-none absolute left-2.5 size-3.5 text-[#585858]"
+            aria-hidden
+          />
           <input
             type="search"
             value={search}
@@ -77,7 +84,9 @@ export default function StrategySidebar({
 
       <div className="minimal-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2">
         {filtered.length === 0 ? (
-          <p className="px-1 py-4 text-center text-[10px] text-[#757575]">No strategies match.</p>
+          <p className="px-1 py-4 text-center text-[10px] text-[#757575]">
+            No strategies match.
+          </p>
         ) : (
           filtered.map((s) => {
             const active = s.id === selectedId;
@@ -94,7 +103,9 @@ export default function StrategySidebar({
                 }`}
               >
                 <div className="flex items-start justify-between gap-1">
-                  <p className="truncate text-xs font-semibold text-white">{s.name}</p>
+                  <p className="truncate text-xs font-semibold text-white">
+                    {s.name}
+                  </p>
                   <StatusBadge status={s.status} />
                 </div>
                 <p className="mt-1 text-[10px] text-[#757575]">{s.market}</p>
@@ -125,14 +136,16 @@ export default function StrategySidebar({
         <div className="mt-1.5 space-y-0.5 text-[10px] text-[#757575]">
           <p>
             Risk:{" "}
-            <span className="capitalize text-[#929292]">{preferences.riskPreference}</span>
+            <span className="capitalize text-[#929292]">
+              {preferences.riskPreference}
+            </span>
           </p>
           <p>
-            Max leverage: <span className="text-[#929292]">{preferences.maxLeverage}</span>
+            Max leverage:{" "}
+            <span className="text-[#929292]">{preferences.maxLeverage}</span>
           </p>
           <p>
-            Execution:{" "}
-            <span className="text-[#929292]">Manual approval</span>
+            Execution: <span className="text-[#929292]">Manual approval</span>
           </p>
           <p className="truncate" title={dexList}>
             DEXes: <span className="text-[#929292]">{dexList}</span>
