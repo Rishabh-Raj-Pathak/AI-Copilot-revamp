@@ -36,37 +36,23 @@ describe("getVaultsTourAdvanceTargetAfterFeaturedActivate", () => {
     expect(getVaultsTourAdvanceTargetAfterFeaturedActivate(NaN)).toBeNull();
   });
 
-  it("jumps to activated from overview, DEX, and explore (skips tune/activate)", () => {
+  it("completes the tour from overview, DEX, explore, and tune/activate", () => {
     expect(
       getVaultsTourAdvanceTargetAfterFeaturedActivate(VAULTS_TOUR_STEP.OVERVIEW),
-    ).toEqual({
-      type: "jump",
-      stepIndex: VAULTS_TOUR_STEP.ACTIVATED,
-    });
+    ).toEqual({ type: "complete" });
     expect(
       getVaultsTourAdvanceTargetAfterFeaturedActivate(VAULTS_TOUR_STEP.DEX),
-    ).toEqual({
-      type: "jump",
-      stepIndex: VAULTS_TOUR_STEP.ACTIVATED,
-    });
+    ).toEqual({ type: "complete" });
     expect(
       getVaultsTourAdvanceTargetAfterFeaturedActivate(VAULTS_TOUR_STEP.EXPLORE),
-    ).toEqual({
-      type: "jump",
-      stepIndex: VAULTS_TOUR_STEP.ACTIVATED,
-    });
-  });
-
-  it("advances one step from tune/activate", () => {
+    ).toEqual({ type: "complete" });
     expect(
       getVaultsTourAdvanceTargetAfterFeaturedActivate(VAULTS_TOUR_STEP.ACTIVATE),
-    ).toEqual({ type: "next" });
+    ).toEqual({ type: "complete" });
   });
 
-  it("does not advance when already on activated step", () => {
-    expect(
-      getVaultsTourAdvanceTargetAfterFeaturedActivate(VAULTS_TOUR_STEP.ACTIVATED),
-    ).toBeNull();
+  it("does not advance when step index is past the last tour step", () => {
+    expect(getVaultsTourAdvanceTargetAfterFeaturedActivate(4)).toBeNull();
   });
 });
 
@@ -152,7 +138,6 @@ describe("vaults tour driver integration", () => {
       <div data-tour="vaults-dex-tabs"></div>
       <div data-tour="vaults-opportunities"></div>
       <div data-tour="vaults-featured-tour-controls"></div>
-      <div data-tour="vaults-activated-section"></div>
     `;
   });
 
@@ -162,26 +147,31 @@ describe("vaults tour driver integration", () => {
     expect(driverFactory).not.toHaveBeenCalled();
   });
 
-  it("advanceVaultsTourAfterFeaturedActivateClick jumps from explore to activated", () => {
+  it("advanceVaultsTourAfterFeaturedActivateClick completes tour from explore", () => {
     mockDriver.getActiveIndex.mockReturnValue(VAULTS_TOUR_STEP.EXPLORE);
     startVaultsProductTour({ getVaultsDexId: () => "all" });
+    mockDriver.drive.mockClear();
+    mockDriver.refresh.mockClear();
 
     const advanced = advanceVaultsTourAfterFeaturedActivateClick();
 
     expect(advanced).toBe(true);
-    expect(mockDriver.drive).toHaveBeenCalledWith(VAULTS_TOUR_STEP.ACTIVATED);
+    expect(mockDriver.destroy).toHaveBeenCalled();
     expect(mockDriver.moveNext).not.toHaveBeenCalled();
+    expect(mockDriver.drive).not.toHaveBeenCalled();
     expect(mockDriver.refresh).toHaveBeenCalled();
   });
 
-  it("advanceVaultsTourAfterFeaturedActivateClick uses moveNext on activate step", () => {
+  it("advanceVaultsTourAfterFeaturedActivateClick completes tour on activate step", () => {
     mockDriver.getActiveIndex.mockReturnValue(VAULTS_TOUR_STEP.ACTIVATE);
     startVaultsProductTour({ getVaultsDexId: () => "all" });
+    mockDriver.drive.mockClear();
 
     advanceVaultsTourAfterFeaturedActivateClick();
 
-    expect(mockDriver.moveNext).toHaveBeenCalled();
-    expect(mockDriver.drive).not.toHaveBeenCalledWith(VAULTS_TOUR_STEP.ACTIVATED);
+    expect(mockDriver.destroy).toHaveBeenCalled();
+    expect(mockDriver.moveNext).not.toHaveBeenCalled();
+    expect(mockDriver.drive).not.toHaveBeenCalled();
   });
 
   it("advanceVaultsTourAfterFeaturedActivateClick returns false when tour inactive", () => {

@@ -8,7 +8,6 @@ export const VAULTS_TOUR_STEP = Object.freeze({
   DEX: 1,
   EXPLORE: 2,
   ACTIVATE: 3,
-  ACTIVATED: 4,
 });
 
 /** Step index where the user must click Activate on the highlighted featured vault (no Next). */
@@ -16,9 +15,6 @@ const VAULTS_ACTIVATE_STEP_INDEX = VAULTS_TOUR_STEP.ACTIVATE;
 
 /** Step index for multi-DEX filter — auto-advance after the user picks a different venue tab. */
 const VAULTS_DEX_STEP_INDEX = VAULTS_TOUR_STEP.DEX;
-
-/** Final step — activated vaults list. */
-const VAULTS_ACTIVATED_STEP_INDEX = VAULTS_TOUR_STEP.ACTIVATED;
 
 export function isVaultsTourCompleted() {
   try {
@@ -77,19 +73,14 @@ export function notifyVaultsTourDexChanged(dexId) {
 
 /**
  * Resolves how the tour should advance after the first featured vault is activated.
- * - On the tune/activate step: advance one step (activated section).
- * - On overview, DEX, or explore: skip tune/activate and jump to activated vaults.
- * - On activated or later: no advance.
+ * Completes the tour from any step (overview through tune/activate).
  *
  * @param {number} activeIndex driver step index
- * @returns {{ type: 'next' } | { type: 'jump'; stepIndex: number } | null}
+ * @returns {{ type: 'complete' } | null}
  */
 export function getVaultsTourAdvanceTargetAfterFeaturedActivate(activeIndex) {
   if (typeof activeIndex !== "number" || activeIndex < 0) return null;
-  if (activeIndex === VAULTS_ACTIVATE_STEP_INDEX) return { type: "next" };
-  if (activeIndex < VAULTS_ACTIVATE_STEP_INDEX) {
-    return { type: "jump", stepIndex: VAULTS_ACTIVATED_STEP_INDEX };
-  }
+  if (activeIndex <= VAULTS_ACTIVATE_STEP_INDEX) return { type: "complete" };
   return null;
 }
 
@@ -116,20 +107,12 @@ function runVaultsTourAdvance(target) {
         if (!activeVaultsTourDriver?.isActive?.()) return;
         const cur = activeVaultsTourDriver.getActiveIndex();
         const expected = getVaultsTourAdvanceTargetAfterFeaturedActivate(cur);
-        if (
-          !expected ||
-          expected.type !== target.type ||
-          (expected.type === "jump" &&
-            target.type === "jump" &&
-            expected.stepIndex !== target.stepIndex)
-        ) {
+        if (!expected || expected.type !== target.type) {
           return;
         }
         activeVaultsTourDriver.refresh?.();
-        if (target.type === "next") {
-          activeVaultsTourDriver.moveNext?.();
-        } else {
-          activeVaultsTourDriver.drive?.(target.stepIndex);
+        if (target.type === "complete") {
+          activeVaultsTourDriver.destroy?.();
         }
       } catch {
         /* noop */
@@ -139,10 +122,8 @@ function runVaultsTourAdvance(target) {
 }
 
 /**
- * After the user activates the first featured vault row, advance the tour:
- * - From explore (or earlier): jump to activated vaults (skip tune/activate).
- * - From tune/activate: move to activated vaults.
- * @returns {boolean} true if the tour scheduled an advance
+ * After the user activates the first featured vault row, complete the tour.
+ * @returns {boolean} true if the tour scheduled completion
  */
 export function advanceVaultsTourAfterFeaturedActivateClick() {
   if (!activeVaultsTourDriver?.isActive?.()) return false;
@@ -324,23 +305,6 @@ function buildVaultsTourSteps(handlers) {
         side: isNarrowViewport ? "top" : "left",
         align: "center",
         showButtons: ["previous", "close"],
-      },
-    },
-    {
-      element: () =>
-        document.querySelector('[data-tour="vaults-activated-section"]'),
-      disableActiveInteraction: false,
-      onHighlighted: (el) => {
-        el?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-      },
-      popover: {
-        title: "Activated vaults",
-        description:
-          "Your active vaults appear here. Review your PnL, status or deactivate a vault anytime.",
-        side: "bottom",
-        align: "start",
-        showButtons: ["next", "previous", "close"],
-        nextBtnText: "Done",
       },
     },
   ];
