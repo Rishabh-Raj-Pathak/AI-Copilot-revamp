@@ -1,3 +1,5 @@
+import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
+
 /** Mock candlestick chart — minimal trading-terminal style. */
 
 function parsePair(market, fallback = "BTC") {
@@ -27,7 +29,8 @@ function buildVolumes(candles) {
   return candles.map((c, i) => 2 + Math.abs(c.c - c.o) * 3 + (i % 3));
 }
 
-export default function StrategyChartPanel({ strategy }) {
+export default function StrategyChartPanel({ strategy, embedded = false }) {
+  const theme = useCopilotTheme();
   const setup = strategy?.setup;
   const pair = parsePair(strategy?.market, "BTC");
   const timeframe = strategy?.timeframe ?? "15m";
@@ -77,20 +80,38 @@ export default function StrategyChartPanel({ strategy }) {
   const stopLoss = setup?.stopLoss ?? "$75,005";
   const takeProfit = setup?.takeProfit ?? "$83,082";
 
+  const shellClass = embedded ? "" : `overflow-hidden ${theme.card}`;
+
   return (
-    <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
-      <div className="flex items-center justify-between border-b border-[#242424] px-3 py-1.5">
+    <div className={shellClass}>
+      <div
+        className={`flex items-center justify-between px-3 py-2.5 ${theme.isV2 || embedded ? "border-b border-[#1c1c1c]" : "border-b border-[#242424] py-1.5"}`}
+      >
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-semibold text-white">{pair}</span>
+          <span
+            className={
+              theme.isV2 ? "text-sm font-bold text-white" : "font-semibold text-white"
+            }
+          >
+            {pair}
+          </span>
           <span className="text-[#585858]">{timeframe}</span>
         </div>
-        <span className="rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium tabular-nums text-[#00f3b6]">
+        <span
+          className={`tabular-nums text-[#00f3b6] ${
+            theme.isV2
+              ? "rounded-lg bg-[#00f3b6]/10 px-2.5 py-1 text-xs font-semibold"
+              : "rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium"
+          }`}
+        >
           {currentPrice}
         </span>
       </div>
 
-      <div className="bg-[#050505] px-2 pt-2">
-        <div className="relative min-h-[10rem] w-full sm:min-h-[11rem]">
+      <div className="bg-[#050505] px-2 pt-2 pb-1">
+        <div
+          className={`relative w-full ${theme.isV2 ? "min-h-[12rem] sm:min-h-[13rem]" : "min-h-[10rem] sm:min-h-[11rem]"}`}
+        >
           <svg
             viewBox={`0 0 ${w} ${h}`}
             className="h-full w-full"
@@ -244,17 +265,23 @@ export default function StrategyChartPanel({ strategy }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[#242424] px-3 py-2 text-[10px]">
+      <div
+        className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2.5 text-[10px] ${theme.isV2 || embedded ? "border-t border-[#262626] bg-[#121212]" : "border-t border-[#242424]"}`}
+      >
         <span>
           <span className="text-[#585858]">Entry </span>
           <span className="text-[#00f3b6]">{entryZone}</span>
         </span>
-        <span className="text-[#313131]">·</span>
+        <span className="text-[#3a3a3a]" aria-hidden>
+          |
+        </span>
         <span>
           <span className="text-[#585858]">SL </span>
           <span className="text-[#d53d3d]">{stopLoss}</span>
         </span>
-        <span className="text-[#313131]">·</span>
+        <span className="text-[#3a3a3a]" aria-hidden>
+          |
+        </span>
         <span>
           <span className="text-[#585858]">TP </span>
           <span className="text-[#269755]">{takeProfit}</span>

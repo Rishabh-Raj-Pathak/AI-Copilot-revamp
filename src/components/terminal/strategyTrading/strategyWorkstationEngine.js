@@ -75,6 +75,46 @@ const DEFAULT_METRICS = {
   paperPnl: "$0.00",
 };
 
+export function applyOptimization(strategy) {
+  const config = {
+    ...(strategy.config ?? STRATEGY_CONFIG_DEFAULT),
+    bbLength: 28,
+    rsiThreshold: 24,
+    stopLoss: "2.5%",
+    takeProfit: "7%",
+    leverage: strategy.config?.leverage ?? "3x",
+    execution: "Manual approval",
+  };
+  const withConfig = {
+    ...strategy,
+    config,
+    setup: strategy.setup
+      ? {
+          ...strategy.setup,
+          config,
+          personalizationNote:
+            "Optimized via grid search — tuned Bollinger length, RSI threshold, and risk exits.",
+        }
+      : strategy.setup,
+    logs: [
+      {
+        id: `l-${Date.now()}`,
+        message: "Strategy optimization completed",
+        at: new Date().toISOString(),
+      },
+      ...strategy.logs,
+    ],
+  };
+  return applyBacktest(withConfig);
+}
+
+export const OPTIMIZE_CHAT_PROGRESS = [
+  "Starting optimization across your current market, timeframe, and date range…",
+  "Testing parameter combinations: Bollinger length, RSI threshold, stop/take levels…",
+  "Evaluating candidates against historical data (24 combinations)…",
+  "Best candidate found — applying tuned configuration and running backtest estimate…",
+];
+
 export function applyBacktest(strategy) {
   const canBeReady =
     strategy.paperTrading?.status === "active" || strategy.status === "Paper Trading";
@@ -84,12 +124,7 @@ export function applyBacktest(strategy) {
     lastUpdated: "Just now",
     performancePreview: MOCK_BACKTEST.totalReturn,
     metrics: {
-      totalReturn: MOCK_BACKTEST.totalReturn,
-      maxDrawdown: MOCK_BACKTEST.maxDrawdown,
-      winRate: MOCK_BACKTEST.winRate,
-      profitFactor: MOCK_BACKTEST.profitFactor,
-      sharpeRatio: MOCK_BACKTEST.sharpeRatio,
-      trades: MOCK_BACKTEST.trades,
+      ...MOCK_BACKTEST,
       paperPnl: strategy.paperTrading?.pnl ?? "$0.00",
     },
     backtest: { status: "complete", results: MOCK_BACKTEST },
@@ -286,6 +321,13 @@ export function buildChatResponse(action, strategy) {
     "Run backtest": {
       text: `Backtest complete. The strategy returned ${bt.totalReturn} with ${bt.maxDrawdown} max drawdown, ${bt.winRate} win rate, and ${bt.profitFactor} profit factor across ${bt.trades} trades.`,
       richCards: [{ type: "backtest", data: bt }],
+    },
+    "Optimize strategy": {
+      text: `Optimization complete. I tuned Bollinger length, RSI threshold, and risk exits — the backtest estimate now shows ${bt.totalReturn} return with ${bt.maxDrawdown} max drawdown, ${bt.winRate} win rate, and ${bt.sharpeRatio} Sharpe.`,
+      richCards: [
+        { type: "config", data: strategy?.config ?? STRATEGY_CONFIG_DEFAULT },
+        { type: "backtest", data: bt },
+      ],
     },
     "Start paper trading": {
       text: "Paper trading simulation started. I'll track this strategy using market-like data. Manual approval is still required before any real deployment.",

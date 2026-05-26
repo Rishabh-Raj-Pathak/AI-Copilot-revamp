@@ -2,20 +2,30 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import { getUiVersionFromCopilotView } from "./CopilotNavDropdown.jsx";
+import { getCopilotTheme } from "./strategyCopilotUi.js";
 import { INITIAL_WORKSTATION_STRATEGIES } from "./strategyWorkstationMockData.js";
 
 const StrategyCopilotContext = createContext(null);
 
 const DEFAULT_STRATEGY_ID = "strat-btc-sniper";
 
-export function StrategyCopilotProvider({ children }) {
+export function StrategyCopilotProvider({ children, copilotView }) {
   const [strategies, setStrategies] = useState(INITIAL_WORKSTATION_STRATEGIES);
   const [selectedStrategyId, setSelectedStrategyId] = useState(DEFAULT_STRATEGY_ID);
   const [activityLog, setActivityLog] = useState([]);
   const [lastSetup, setLastSetup] = useState(null);
+  const [uiVersion, setUiVersion] = useState(() =>
+    getUiVersionFromCopilotView(copilotView),
+  );
+
+  useEffect(() => {
+    setUiVersion(getUiVersionFromCopilotView(copilotView));
+  }, [copilotView]);
 
   const appendLog = useCallback((message, meta = {}) => {
     setActivityLog((prev) =>
@@ -41,6 +51,9 @@ export function StrategyCopilotProvider({ children }) {
       lastSetup,
       setLastSetup,
       appendLog,
+      uiVersion,
+      setUiVersion,
+      theme: getCopilotTheme(uiVersion),
     }),
     [
       strategies,
@@ -48,6 +61,7 @@ export function StrategyCopilotProvider({ children }) {
       activityLog,
       lastSetup,
       appendLog,
+      uiVersion,
     ],
   );
 
@@ -64,4 +78,10 @@ export function useStrategyCopilot() {
     throw new Error("useStrategyCopilot must be used within StrategyCopilotProvider");
   }
   return ctx;
+}
+
+/** @returns {ReturnType<typeof getCopilotTheme>} */
+export function useCopilotTheme() {
+  const { theme } = useStrategyCopilot();
+  return theme;
 }

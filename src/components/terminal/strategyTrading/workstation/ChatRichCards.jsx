@@ -1,7 +1,9 @@
 import { Check, Copy } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
+import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 
 function ConfigCard({ data, onPreset }) {
+  const theme = useCopilotTheme();
   const rows = [
     ["BB Length", data.bbLength],
     ["RSI Oversold Threshold", data.rsiThreshold],
@@ -10,19 +12,31 @@ function ConfigCard({ data, onPreset }) {
     ["Leverage", data.leverage],
     ["Execution", data.execution],
   ];
+  const presetBtn = theme.isV2
+    ? "rounded-lg border border-[#333] bg-transparent px-2.5 py-1.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white"
+    : "rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white";
+
   return (
-    <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
-      <p className="text-[11px] font-semibold text-white">Strategy Configuration</p>
-      <dl className="mt-2 space-y-1">
+    <div className={`mt-3 p-3.5 ${theme.cardInner}`}>
+      <p
+        className={
+          theme.isV2
+            ? "text-xs font-semibold text-white"
+            : "text-[11px] font-semibold text-white"
+        }
+      >
+        Strategy Configuration
+      </p>
+      <dl className="mt-2.5 space-y-1.5">
         {rows.map(([q, a]) => (
-          <div key={q} className="flex justify-between gap-2 text-[10px]">
+          <div key={q} className="flex justify-between gap-3 text-[11px]">
             <dt className="text-[#757575]">{q}</dt>
-            <dd className="font-medium text-[#bfbfbf]">{a}</dd>
+            <dd className="font-medium text-[#d4d4d4]">{a}</dd>
           </div>
         ))}
       </dl>
       {onPreset ? (
-        <div className="mt-2.5 flex flex-wrap gap-1">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {[
             ["recommended", "Use Recommended"],
             ["safer", "Make Safer"],
@@ -33,7 +47,7 @@ function ConfigCard({ data, onPreset }) {
               key={id}
               type="button"
               onClick={() => id !== "custom" && onPreset(id)}
-              className="rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white"
+              className={presetBtn}
             >
               {label}
             </button>

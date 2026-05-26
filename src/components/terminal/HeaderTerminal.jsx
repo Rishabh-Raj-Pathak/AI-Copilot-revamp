@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { Check } from "lucide-react";
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
 import TerminalPlatformSelect from "./TerminalPlatformSelect.jsx";
+import CopilotNavDropdown, {
+  COPILOT_VIEWS,
+} from "./strategyTrading/CopilotNavDropdown.jsx";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
 
 /** Same chevron path as DetailsPanel `CollapseChevron` — simple stroke dropdown. */
@@ -50,6 +54,8 @@ export default function HeaderTerminal({
   onVaultTutorial,
   activeNavItem = "AI Copilot",
   onNavItemClick,
+  copilotView,
+  onCopilotViewChange,
   showCopilotTutorial = true,
   highlightMoreForTutorial = false,
   showMoreTutorialHint = false,
@@ -158,6 +164,52 @@ export default function HeaderTerminal({
             >
               {nav.map((label) => {
                 const active = label === activeNavItem;
+
+                if (
+                  label === "AI Copilot" &&
+                  typeof onCopilotViewChange === "function"
+                ) {
+                  return (
+                    <div
+                      key={label}
+                      className="border-b border-[#242424] px-1 py-1"
+                      role="group"
+                      aria-label="AI Copilot"
+                    >
+                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                        AI Copilot
+                      </p>
+                      {COPILOT_VIEWS.map((v) => {
+                        const viewActive = copilotView === v.id;
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => {
+                              onCopilotViewChange(v.id);
+                              onNavItemClick?.(label);
+                              setMobileNavOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                              viewActive
+                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                : "text-white hover:bg-white/10"
+                            }`}
+                          >
+                            <span>{v.label}</span>
+                            {viewActive ? (
+                              <Check
+                                className="size-3.5 shrink-0 text-[#f2b500]"
+                                aria-hidden
+                              />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={label}
@@ -208,6 +260,23 @@ export default function HeaderTerminal({
         <nav className="minimal-scrollbar hidden min-w-0 flex-1 items-end gap-1.5 overflow-x-auto sm:gap-2 tablet:flex tablet:flex-initial tablet:overflow-visible">
           {nav.map((label) => {
             const active = label === activeNavItem;
+
+            if (
+              label === "AI Copilot" &&
+              typeof onCopilotViewChange === "function"
+            ) {
+              return (
+                <CopilotNavDropdown
+                  key={label}
+                  activeView={copilotView ?? "suggestions"}
+                  onViewChange={(id) => {
+                    onCopilotViewChange(id);
+                    onNavItemClick?.(label);
+                  }}
+                />
+              );
+            }
+
             return (
               <button
                 key={label}

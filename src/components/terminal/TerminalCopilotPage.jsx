@@ -12,7 +12,7 @@ import { AiCopilotThesisModal } from "./AiCopilotThesisModal.tsx";
 import CopilotTutorialToast from "./CopilotTutorialToast.jsx";
 import CopilotMobileTourBar from "./CopilotMobileTourBar.jsx";
 import OnboardingOverlay from "./OnboardingOverlay.jsx";
-import CopilotViewTabs from "./strategyTrading/CopilotViewTabs.jsx";
+import { isStrategyCopilotView } from "./strategyTrading/CopilotNavDropdown.jsx";
 import {
   StrategyCopilotProvider,
   useStrategyCopilot,
@@ -49,7 +49,7 @@ import {
 const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
 
 function StrategyCopilotViews({ copilotView, terminalPlatform }) {
-  if (copilotView === "strategy-trading") {
+  if (isStrategyCopilotView(copilotView)) {
     return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <StrategyTradingPage terminalPlatform={terminalPlatform} />
@@ -516,11 +516,15 @@ export default function TerminalCopilotPage({
         onWalletConnected={handleWalletConnected}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
+        copilotView={copilotView}
+        onCopilotViewChange={setCopilotView}
       />
       <HeaderTerminal
         onCopilotTutorial={runCopilotTutorial}
         onVaultTutorial={onOpenVaultTutorial}
         activeNavItem="AI Copilot"
+        copilotView={copilotView}
+        onCopilotViewChange={setCopilotView}
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
         }}
@@ -533,14 +537,13 @@ export default function TerminalCopilotPage({
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
-      <StrategyCopilotProvider>
+      <StrategyCopilotProvider copilotView={copilotView}>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <CopilotViewTabs activeView={copilotView} onViewChange={setCopilotView} />
           <StrategyCopilotViews
             copilotView={copilotView}
             terminalPlatform={terminalPlatform}
           />
-          {copilotView !== "strategy-trading" ? (
+          {!isStrategyCopilotView(copilotView) ? (
       <div
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:flex-row"
         data-tour="copilot-suggestion-and-setup"

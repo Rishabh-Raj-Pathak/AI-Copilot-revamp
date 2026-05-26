@@ -9,11 +9,14 @@ import StrategySidebar from "./workstation/StrategySidebar.jsx";
 import {
   applyBacktest,
   applyConfigPreset,
+  applyOptimization,
   applyPaperTrading,
   applySaferRules,
   buildChatResponse,
   createDraftStrategy,
+  OPTIMIZE_CHAT_PROGRESS,
 } from "./strategyWorkstationEngine.js";
+import { applyWorkstationSetupChange } from "./strategyWorkstationSetup.js";
 import {
   CENTER_TEMPLATES,
   DEFAULT_CHAT_LLM_MODEL_ID,
@@ -36,7 +39,9 @@ function panelVisibility(panelId, mobilePanel) {
   ].join(" ");
 }
 
-export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }) {
+export default function StrategyTradingPage({
+  terminalPlatform = "hyperliquid",
+}) {
   const {
     strategies,
     setStrategies,
@@ -44,6 +49,8 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     setSelectedStrategyId,
     appendLog,
     setLastSetup,
+    theme,
+    uiVersion,
   } = useStrategyCopilot();
 
   const [modelId, setModelId] = useState("quant");
@@ -57,6 +64,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
   const [workspaceTab, setWorkspaceTab] = useState("overview");
   const [mobilePanel, setMobilePanel] = useState("workspace");
   const [backtestLoading, setBacktestLoading] = useState(false);
+  const [optimizeLoading, setOptimizeLoading] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [composerMode, setComposerMode] = useState(false);
@@ -80,9 +88,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
 
   const updateStrategy = useCallback(
     (id, updater) => {
-      setStrategies((prev) =>
-        prev.map((s) => (s.id === id ? updater(s) : s)),
-      );
+      setStrategies((prev) => prev.map((s) => (s.id === id ? updater(s) : s)));
     },
     [setStrategies],
   );
@@ -102,6 +108,16 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             richCards: aiPayload.richCards,
           },
         ],
+      }));
+    },
+    [updateStrategy],
+  );
+
+  const appendChatMessage = useCallback(
+    (strategyId, message) => {
+      updateStrategy(strategyId, (s) => ({
+        ...s,
+        chatMessages: [...s.chatMessages, message],
       }));
     },
     [updateStrategy],
@@ -241,15 +257,80 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     if (!selectedStrategy) return;
     setBacktestLoading(true);
     setWorkspaceTab("backtest");
+    if (uiVersion === "v2") setMobilePanel("chat");
     appendLog("Backtest started");
+    pushChat(selectedStrategy.id, "Run backtest on this.", {
+      text: "Running backtest estimate on your current market, timeframe, and date range…",
+    });
     await new Promise((r) => window.setTimeout(r, 800));
     const updated = applyBacktest(selectedStrategy);
     updateStrategy(selectedStrategy.id, () => updated);
     const resp = buildChatResponse("Run backtest", updated);
-    pushChat(selectedStrategy.id, "Run backtest on this.", resp);
+    appendChatMessage(selectedStrategy.id, {
+      id: `a-${Date.now()}`,
+      role: "assistant",
+      text: resp.text,
+      richCards: resp.richCards,
+    });
     setBacktestLoading(false);
     showToast("Backtest complete");
-  }, [selectedStrategy, updateStrategy, pushChat, appendLog, showToast]);
+  }, [
+    selectedStrategy,
+    updateStrategy,
+    pushChat,
+    appendChatMessage,
+    appendLog,
+    showToast,
+    uiVersion,
+  ]);
+
+  const handleOptimizeStrategy = useCallback(async () => {
+    if (!selectedStrategy || optimizeLoading) return;
+    setOptimizeLoading(true);
+    setMobilePanel("chat");
+    const strategyId = selectedStrategy.id;
+    const userText =
+      "Optimize strategy parameters for better risk-adjusted returns.";
+
+    appendChatMessage(strategyId, {
+      id: `u-${Date.now()}`,
+      role: "user",
+      text: userText,
+    });
+
+    for (const text of OPTIMIZE_CHAT_PROGRESS) {
+      await new Promise((r) => window.setTimeout(r, 750));
+      appendChatMessage(strategyId, {
+        id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        role: "assistant",
+        text,
+      });
+    }
+
+    await new Promise((r) => window.setTimeout(r, 500));
+    const updated = applyOptimization(selectedStrategy);
+    updateStrategy(strategyId, () => updated);
+    setWorkspaceTab("backtest");
+    appendLog("Strategy optimization completed");
+
+    const resp = buildChatResponse("Optimize strategy", updated);
+    appendChatMessage(strategyId, {
+      id: `a-${Date.now()}-done`,
+      role: "assistant",
+      text: resp.text,
+      richCards: resp.richCards,
+    });
+
+    setOptimizeLoading(false);
+    showToast("Optimization complete");
+  }, [
+    selectedStrategy,
+    optimizeLoading,
+    updateStrategy,
+    appendChatMessage,
+    appendLog,
+    showToast,
+  ]);
 
   const handleStartPaper = useCallback(() => {
     if (!selectedStrategy) return;
@@ -392,6 +473,17 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
     showToast("Strategy saved locally (prototype)");
   }, [selectedStrategy, updateStrategy, appendLog, showToast]);
 
+  const handleSetupChange = useCallback(
+    (patch) => {
+      if (!selectedStrategy) return;
+      updateStrategy(selectedStrategy.id, (s) =>
+        applyWorkstationSetupChange(s, patch),
+      );
+      appendLog("Strategy setup updated");
+    },
+    [selectedStrategy, updateStrategy, appendLog],
+  );
+
   const handleConfirmReview = useCallback(() => {
     if (!selectedStrategy) return;
     updateStrategy(selectedStrategy.id, (s) => ({
@@ -406,11 +498,15 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         ...s.logs,
       ],
     }));
-    showToast("Manual review recorded — live deployment not enabled in prototype");
+    showToast(
+      "Manual review recorded — live deployment not enabled in prototype",
+    );
   }, [selectedStrategy, updateStrategy, showToast]);
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-black text-white">
+    <div
+      className={`relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-white ${theme.shell}`}
+    >
       <div className="flex shrink-0 border-b border-[#242424] tablet:hidden">
         {MOBILE_PANELS.map((p) => (
           <button
@@ -419,7 +515,7 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onClick={() => setMobilePanel(p.id)}
             className={`flex-1 py-2.5 text-xs font-medium ${
               mobilePanel === p.id
-                ? "border-b-2 border-[#f2b500] text-[#f2b500]"
+                ? `border-b-2 ${theme.isV2 ? "border-[#f2b500] text-[#f2b500]" : "border-[#f2b500] text-[#f2b500]"}`
                 : "text-[#929292]"
             }`}
           >
@@ -432,9 +528,12 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
         className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${
           composerMode
             ? "tablet:grid-cols-[17.5rem_minmax(0,1fr)]"
-            : "tablet:grid-cols-[17.5rem_minmax(0,1fr)_26rem]"
+            : theme.isV2
+              ? "tablet:grid-cols-[17.5rem_minmax(0,1fr)_28rem]"
+              : "tablet:grid-cols-[17.5rem_minmax(0,1fr)_26rem]"
         }`}
         data-strategy-copilot-layout
+        data-ui-version={uiVersion}
       >
         <div className={panelVisibility("strategies", mobilePanel)}>
           <StrategySidebar
@@ -444,7 +543,6 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             onFilterChange={setSidebarFilter}
             onSelect={handleSelectStrategy}
             onNewStrategy={handleNewStrategy}
-            preferences={preferences}
           />
         </div>
 
@@ -471,10 +569,13 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
             activeTab={workspaceTab}
             onTabChange={setWorkspaceTab}
             onRunBacktest={handleRunBacktest}
+            onOptimize={handleOptimizeStrategy}
             onStartPaper={handleStartPaper}
             onReviewDeployment={() => setDeployOpen(true)}
             onSave={handleSave}
+            onSetupChange={handleSetupChange}
             backtestLoading={backtestLoading}
+            optimizeLoading={optimizeLoading}
           />
         </div>
 
@@ -501,6 +602,8 @@ export default function StrategyTradingPage({ terminalPlatform = "hyperliquid" }
                 setMobilePanel("workspace");
                 setWorkspaceTab("backtest");
               }}
+              onOptimize={handleOptimizeStrategy}
+              optimizeLoading={optimizeLoading}
               onStartPaper={handleStartPaper}
               onReviewDeployment={() => setDeployOpen(true)}
               onViewPaper={() => {

@@ -1,4 +1,7 @@
-export default function StrategyLogicCard({ setup }) {
+import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
+
+export default function StrategyLogicCard({ setup, className = "" }) {
+  const theme = useCopilotTheme();
   if (!setup) return null;
 
   const entry = setup.entryRules ?? [];
@@ -6,43 +9,98 @@ export default function StrategyLogicCard({ setup }) {
   const risk = setup.riskRules ?? [];
 
   return (
-    <div className="mt-3 rounded-lg border border-[#242424] bg-[#0a0a0a] p-3">
-      <h4 className="text-xs font-semibold text-white">Strategy Logic</h4>
+    <div
+      className={`${theme.isV2 ? "" : "mt-3"} p-4 sm:p-5 ${theme.card} ${className}`}
+    >
+      <h4
+        className={
+          theme.isV2
+            ? "text-sm font-bold text-white"
+            : "text-xs font-semibold text-white"
+        }
+      >
+        Strategy Logic
+      </h4>
       {setup.description ? (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-[#929292]">{setup.description}</p>
+        <p className="mt-2 text-[11px] leading-relaxed text-[#929292]">
+          {setup.description}
+        </p>
       ) : null}
 
-      {entry.length > 0 ? (
-        <div className="mt-3">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
-            Entry condition
-          </p>
-          <ul className="mt-1 space-y-0.5">
-            {entry.map((r) => (
-              <li key={r} className="text-[11px] text-[#bfbfbf]">
-                · {r}
-              </li>
-            ))}
-          </ul>
+      {theme.isV2 && (entry.length > 0 || exit.length > 0) ? (
+        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:gap-0">
+          {entry.length > 0 ? (
+            <div className="sm:pr-5">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                Entry condition
+              </p>
+              <ul className="mt-1.5 space-y-1">
+                {entry.map((r) => (
+                  <li key={r} className="text-[11px] leading-relaxed text-[#bfbfbf]">
+                    · {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <span className="hidden sm:block" />
+          )}
+          {entry.length > 0 && exit.length > 0 ? (
+            <div
+              className="hidden w-px self-stretch bg-[#2a2a2a] sm:block"
+              aria-hidden
+            />
+          ) : null}
+          {exit.length > 0 ? (
+            <div className="sm:pl-5">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                Exit condition
+              </p>
+              <ul className="mt-1.5 space-y-1">
+                {exit.map((r) => (
+                  <li key={r} className="text-[11px] leading-relaxed text-[#bfbfbf]">
+                    · {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      ) : (
+        <>
+          {entry.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
+                Entry condition
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {entry.map((r) => (
+                  <li key={r} className="text-[11px] text-[#bfbfbf]">
+                    · {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
-      {exit.length > 0 ? (
-        <div className="mt-2.5">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
-            Exit condition
-          </p>
-          <ul className="mt-1 space-y-0.5">
-            {exit.map((r) => (
-              <li key={r} className="text-[11px] text-[#bfbfbf]">
-                · {r}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+          {exit.length > 0 ? (
+            <div className="mt-2.5">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
+                Exit condition
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {exit.map((r) => (
+                  <li key={r} className="text-[11px] text-[#bfbfbf]">
+                    · {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </>
+      )}
 
-      {risk.length > 0 ? (
+      {!theme.isV2 && risk.length > 0 ? (
         <div className="mt-2.5">
           <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
             Risk rules
@@ -58,7 +116,13 @@ export default function StrategyLogicCard({ setup }) {
       ) : null}
 
       {setup.personalizationNote ? (
-        <p className="mt-3 rounded-md border border-[#3e2e00]/30 bg-[#171200]/30 px-2.5 py-2 text-[10px] leading-relaxed text-[#f2b500]">
+        <p
+          className={`mt-4 px-3 py-2.5 text-[10px] leading-relaxed text-[#f2b500] ${
+            theme.isV2
+              ? "rounded-xl border border-[#f2b500]/25 bg-[#f2b500]/8"
+              : "rounded-md border border-[#3e2e00]/30 bg-[#171200]/30"
+          }`}
+        >
           {setup.personalizationNote}
         </p>
       ) : null}

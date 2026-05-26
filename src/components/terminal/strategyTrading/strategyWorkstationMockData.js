@@ -83,12 +83,39 @@ export const CHAT_LLM_MODELS = [
 
 export const DEFAULT_CHAT_LLM_MODEL_ID = "claude-sonnet-4-6";
 
+export const MOCK_EQUITY_CURVE = {
+  strategy: [
+    { date: "2026-03-26", value: 10000 },
+    { date: "2026-04-02", value: 10080 },
+    { date: "2026-04-09", value: 9980 },
+    { date: "2026-04-16", value: 10120 },
+    { date: "2026-04-23", value: 10040 },
+    { date: "2026-04-30", value: 10280 },
+    { date: "2026-05-07", value: 10420 },
+    { date: "2026-05-14", value: 10360 },
+    { date: "2026-05-21", value: 10697 },
+  ],
+  buyAndHold: [
+    { date: "2026-03-26", value: 10000 },
+    { date: "2026-04-02", value: 9850 },
+    { date: "2026-04-09", value: 9720 },
+    { date: "2026-04-16", value: 10100 },
+    { date: "2026-04-23", value: 10850 },
+    { date: "2026-04-30", value: 11200 },
+    { date: "2026-05-07", value: 11580 },
+    { date: "2026-05-14", value: 11320 },
+    { date: "2026-05-21", value: 11218 },
+  ],
+};
+
 export const MOCK_BACKTEST = {
   totalReturn: "+6.97%",
   totalReturnRaw: 6.97,
   maxDrawdown: "-5.09%",
   winRate: "42.86%",
   winLoss: "3W / 4L",
+  wins: 3,
+  losses: 4,
   profitFactor: "2.35",
   sharpeRatio: "2.42",
   sortinoRatio: "2.30",
@@ -99,8 +126,13 @@ export const MOCK_BACKTEST = {
   largestLoss: "-2.50%",
   avgProfit: "+8.00%",
   avgLoss: "-2.50%",
+  avgBars: "25.67",
   expectedPayoff: "$99.52",
   outperformance: "-5.21%",
+  commission: "$23.99",
+  maxConsecutiveWins: 1,
+  maxConsecutiveLosses: 3,
+  equityCurve: MOCK_EQUITY_CURVE,
   insights: [
     "Strict RSI + BB filters reduced trade frequency to 7 round trips.",
     "Losses stayed controlled relative to max drawdown.",
@@ -192,8 +224,9 @@ function buildBtcSniperSetup(preferences) {
     takeProfit: "$83,082",
     currentPrice: "$77,247",
     dateRange: "Mar 22 – May 21, 2026",
+    rangeStart: "2026-03-22",
+    rangeEnd: "2026-05-21",
     leverage: "3x",
-    fees: "Custom",
     config: { ...STRATEGY_CONFIG_DEFAULT },
     flowSteps: [
       { step: "Market", detail: "BTCUSDT 15m — mean reversion dip-buy" },
@@ -205,6 +238,8 @@ function buildBtcSniperSetup(preferences) {
       "Backtest estimate only — not a guarantee of future performance.",
       "Paper trading uses market-like simulation without real capital.",
     ],
+    personalizationNote:
+      "Adjusted for your balanced profile, max 3x leverage, and manual approval preference.",
   };
 }
 
@@ -256,7 +291,8 @@ export function getPromptSuggestions(query, limit = 6) {
   return out;
 }
 
-export const DEMO_CHAT_BTC_SNIPER = [
+/** Draft-state chat shown in v2 mockup (user prompt + AI config only). */
+export const DEMO_CHAT_BTC_SNIPER_DRAFT = [
   {
     id: "demo-u1",
     role: "user",
@@ -268,6 +304,10 @@ export const DEMO_CHAT_BTC_SNIPER = [
     text: "Got it. I created a draft strategy for BTCUSDT on the 15m timeframe using a lower Bollinger Band + RSI mean reversion setup. Before backtesting, here are the recommended configuration settings.",
     richCards: [{ type: "config", data: STRATEGY_CONFIG_DEFAULT }],
   },
+];
+
+export const DEMO_CHAT_BTC_SNIPER = [
+  ...DEMO_CHAT_BTC_SNIPER_DRAFT,
   {
     id: "demo-u2",
     role: "user",
@@ -473,7 +513,7 @@ export const INITIAL_WORKSTATION_STRATEGIES = [
     marketLabel: "BTCUSDT · 15m",
     prompt: "BTCUSDT 15m mean reversion",
     customSetup: buildBtcSniperSetup(DEFAULT_PREFERENCES),
-    chatMessages: DEMO_CHAT_BTC_SNIPER,
+    chatMessages: DEMO_CHAT_BTC_SNIPER_DRAFT,
   }),
   buildStrategyRecord({
     id: "strat-eth-funding",

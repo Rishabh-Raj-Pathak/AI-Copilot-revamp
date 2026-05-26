@@ -1,5 +1,6 @@
 import { Check, ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import { CHAT_LLM_MODELS } from "../strategyWorkstationMockData.js";
 
 const PROVIDER_COLORS = {
@@ -12,6 +13,7 @@ const PROVIDER_COLORS = {
 };
 
 export default function ChatModelPicker({ value, onChange, disabled }) {
+  const theme = useCopilotTheme();
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const selected = CHAT_LLM_MODELS.find((m) => m.id === value) ?? CHAT_LLM_MODELS[1];
@@ -41,7 +43,11 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
         aria-expanded={open}
         aria-label={`AI model: ${selected.name}`}
         onClick={() => setOpen((v) => !v)}
-        className="flex max-w-[11rem] items-center gap-1 rounded-md border border-[#242424] bg-[#121212] px-2 py-1 text-left transition-colors hover:border-[#454545] disabled:opacity-50 sm:max-w-[13rem]"
+        className={`flex max-w-[11rem] items-center gap-1.5 rounded-lg border px-2 py-1 text-left transition-colors disabled:opacity-50 sm:max-w-[13rem] ${
+          theme.isV2
+            ? "border-[#333] bg-transparent hover:border-[#454545]"
+            : "border-[#242424] bg-[#121212] hover:border-[#454545]"
+        }`}
       >
         <Sparkles className="size-3 shrink-0 text-[#f2b500]" aria-hidden />
         <span className="min-w-0 truncate text-[11px] font-medium text-white">

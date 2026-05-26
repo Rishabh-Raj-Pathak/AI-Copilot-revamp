@@ -1,5 +1,6 @@
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
 import TerminalPlatformSelect from "./TerminalPlatformSelect.jsx";
+import CopilotNavDropdown from "./strategyTrading/CopilotNavDropdown.jsx";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
 
 function Logo() {
@@ -38,12 +39,21 @@ export default function CopilotMobileHeader({
   onWalletConnected,
   terminalPlatform,
   onTerminalPlatformChange,
+  copilotView,
+  onCopilotViewChange,
 }) {
   return (
     <header className="flex shrink-0 flex-col gap-3 border-b border-[#242424] bg-black px-3 py-3 max-tablet:flex tablet:hidden">
       <div className="flex items-center justify-between gap-2">
-        <div data-tour="copilot-overview">
+        <div className="flex min-w-0 items-center gap-2" data-tour="copilot-overview">
           <Logo />
+          {typeof onCopilotViewChange === "function" ? (
+            <CopilotNavDropdown
+              activeView={copilotView ?? "suggestions"}
+              onViewChange={onCopilotViewChange}
+              variant="mobile"
+            />
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <TerminalPlatformSelect

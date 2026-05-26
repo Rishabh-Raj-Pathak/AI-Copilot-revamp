@@ -17,6 +17,7 @@ import {
   CHAT_LLM_MODELS,
   getPromptSuggestions,
 } from "../strategyWorkstationMockData.js";
+import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import ChatModelPicker from "./ChatModelPicker.jsx";
 
 /** @typedef {'document'|'link'|'image'|'code'|'video'} AttachmentType */
@@ -81,11 +82,11 @@ export default function StrategyPromptBox({
   onAttachmentsChange,
   enableSuggestions = true,
   placeholder = "Describe the strategy you want to build…",
-  showFooterNote = true,
   variant = "chat",
   className = "",
 }) {
   const isComposer = variant === "composer";
+  const theme = useCopilotTheme();
 
   const [attachOpen, setAttachOpen] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
@@ -220,13 +221,21 @@ export default function StrategyPromptBox({
 
   const showSuggestions = enableSuggestions && suggestions.length > 0;
 
+  const formFocusReset =
+    "focus-within:outline-none focus-within:ring-0 focus-within:ring-offset-0";
+
   const formShell = isComposer
-    ? "relative rounded-2xl border border-[#2e2e2e] bg-[#0f0f0f] p-4 shadow-[0_8px_40px_rgba(0,0,0,0.45)]"
-    : "relative rounded-xl border border-[#242424] bg-[#0a0a0a] p-2";
+    ? `relative rounded-2xl border border-[#2e2e2e] bg-[#0f0f0f] p-4 shadow-[0_8px_40px_rgba(0,0,0,0.45)] ${formFocusReset}`
+    : `${theme.chatPromptShell} ${formFocusReset}`;
+
+  const textareaFocusReset =
+    "focus:outline-none focus-visible:outline-none focus-visible:!border-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!shadow-none";
 
   const textareaClass = isComposer
-    ? "!min-h-[7rem] !max-h-[12rem] !resize-none !border-0 !bg-transparent !p-0 text-[15px] leading-relaxed text-white shadow-none placeholder:text-[#585858] focus-visible:!ring-0 sm:!min-h-[8rem]"
-    : "!min-h-[3.5rem] !max-h-[9rem] !resize-none !border-0 !bg-transparent !p-0 text-sm shadow-none focus-visible:!ring-0";
+    ? `!min-h-[7rem] !max-h-[12rem] !resize-none !border-0 !bg-transparent !p-0 text-[15px] leading-relaxed text-white shadow-none placeholder:text-[#585858] ${textareaFocusReset} sm:!min-h-[8rem]`
+    : theme.isV2
+      ? `!min-h-[4.5rem] !max-h-[10rem] !resize-none !border-0 !bg-transparent !p-0 text-sm leading-relaxed text-white shadow-none placeholder:text-[#6b7280] ${textareaFocusReset}`
+      : `!min-h-[3.5rem] !max-h-[9rem] !resize-none !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
 
   return (
     <div ref={rootRef} className={className} data-strategy-chat-input>
@@ -346,13 +355,21 @@ export default function StrategyPromptBox({
             </button>
           </div>
         ) : (
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-1">
+          <div
+            className={`mt-2 flex items-center justify-between gap-2 ${theme.isV2 ? "border-t border-[#262626] pt-2.5" : ""}`}
+          >
+            <div className="flex min-w-0 items-center gap-0.5">
               <ChatModelPicker
                 value={chatModelId}
                 onChange={onChatModelChange}
                 disabled={loading}
               />
+              {theme.isV2 ? (
+                <span
+                  className="mx-0.5 h-4 w-px shrink-0 bg-[#2a2a2a]"
+                  aria-hidden
+                />
+              ) : null}
               <div ref={attachRef} className="relative">
                 <button
                   type="button"
@@ -410,7 +427,7 @@ export default function StrategyPromptBox({
               type="submit"
               size="sm"
               variant="default"
-              className="size-8! rounded-full! p-0!"
+              className={theme.chatSendBtn}
               loading={loading}
               disabled={!value.trim()}
               aria-label="Send message"
@@ -453,22 +470,6 @@ export default function StrategyPromptBox({
               </button>
             </div>
           </div>
-        ) : null}
-
-        {showFooterNote && !isComposer ? (
-          <p className="mt-1.5 truncate text-[10px] text-[#585858]">
-            Using <span className="text-[#757575]">{activeLlm.name}</span>
-            <span className="text-[#454545]"> · </span>
-            <span className="text-[#585858]">prototype — no live API</span>
-            {attachments.length > 0 ? (
-              <>
-                <span className="text-[#454545]"> · </span>
-                <span className="text-[#757575]">
-                  {attachments.length} attachment{attachments.length === 1 ? "" : "s"} (local only)
-                </span>
-              </>
-            ) : null}
-          </p>
         ) : null}
 
         {isComposer ? (
