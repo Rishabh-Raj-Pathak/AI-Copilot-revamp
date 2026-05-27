@@ -38,50 +38,20 @@ export const CHAT_QUICK_ACTIONS = [
 /** Frontend-only LLM picker (Strategy Copilot chat). */
 export const CHAT_LLM_MODELS = [
   {
-    id: "claude-opus-4-6",
-    name: "Claude Opus 4.6",
-    provider: "Anthropic",
-    tag: "Most capable",
-  },
-  {
-    id: "claude-sonnet-4-6",
-    name: "Claude Sonnet 4.6",
-    provider: "Anthropic",
-    tag: "Balanced",
-  },
-  {
-    id: "gpt-5-4",
-    name: "GPT-5.4",
-    provider: "OpenAI",
-    tag: "Flagship",
-  },
-  {
-    id: "gemini-3-1-pro",
-    name: "Gemini 3.1 Pro",
-    provider: "Google",
-    tag: "Multimodal",
-  },
-  {
-    id: "grok-4",
-    name: "Grok 4",
-    provider: "xAI",
-    tag: "Real-time",
-  },
-  {
-    id: "deepseek-v3-2",
-    name: "DeepSeek V3.2",
+    id: "deepseek",
+    name: "DeepSeek",
     provider: "DeepSeek",
     tag: "Reasoning",
   },
   {
-    id: "llama-4-maverick",
-    name: "Llama 4 Maverick",
-    provider: "Meta",
-    tag: "Open weights",
+    id: "qwen",
+    name: "Qwen",
+    provider: "Alibaba",
+    tag: "Fast",
   },
 ];
 
-export const DEFAULT_CHAT_LLM_MODEL_ID = "claude-sonnet-4-6";
+export const DEFAULT_CHAT_LLM_MODEL_ID = "deepseek";
 
 export const MOCK_EQUITY_CURVE = {
   strategy: [

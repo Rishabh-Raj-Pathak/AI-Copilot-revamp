@@ -1,4 +1,4 @@
-import { Play, Plus, Save, Shield } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
 import { terminalGradientCta } from "../../../../design-system/tokens/terminalConnectWallet";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
@@ -113,33 +113,19 @@ export default function StrategyCenterWorkspace({
               <Save className="size-3.5" aria-hidden />
               Save
             </Button>
-            <Button
+            <button
               type="button"
-              size="sm"
-              variant="outline"
-              className={`gap-1.5 ${theme.outlineBtn}`}
-              onClick={onRunBacktest}
-              loading={backtestLoading}
-              disabled={strategy?.backtest?.status === "complete"}
-            >
-              <Play className="size-3.5" aria-hidden />
-              Run Backtest
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className={`gap-1.5 ${theme.outlineBtn} ${!canReview ? "opacity-50" : ""}`}
+              className={`${terminalGradientCta.componentClassName} gap-1.5 px-4 text-xs sm:text-sm ${!canReview ? "pointer-events-none opacity-50" : ""}`}
               onClick={onReviewDeployment}
               disabled={!canReview}
               title={
                 !canReview
-                  ? "Run backtest or paper trading before deployment review"
+                  ? "Run backtest or paper trading before deployment"
                   : undefined
               }
             >
-              <Shield className="size-3.5" aria-hidden />
-              Review Deployment
-            </Button>
+              Deploy
+            </button>
           </div>
         </div>
       </header>

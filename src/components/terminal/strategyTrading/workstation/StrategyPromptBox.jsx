@@ -36,19 +36,25 @@ const COMPOSER_ATTACH = [
   { type: "code", label: "Code", icon: Code2 },
 ];
 
-function AttachmentChip({ attachment, onRemove }) {
+function AttachmentChip({ attachment, onRemove, isV2 }) {
   const menu = [...ATTACH_MENU, { type: "video", label: "Video", icon: Video }];
   const Icon = menu.find((m) => m.type === attachment.type)?.icon ?? Paperclip;
   return (
-    <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-[#333] bg-[#161616] py-0.5 pl-2 pr-0.5 text-[10px] text-[#bfbfbf]">
-      <Icon className="size-3 shrink-0 text-[#757575]" aria-hidden />
+    <span
+      className={
+        isV2
+          ? "inline-flex max-w-full items-center gap-1 rounded-full border border-white/[0.1] bg-[#141414] py-0.5 pl-2.5 pr-0.5 text-[10px] text-[#a0a0a0]"
+          : "inline-flex max-w-full items-center gap-1 rounded-full border border-[#333] bg-[#161616] py-0.5 pl-2 pr-0.5 text-[10px] text-[#bfbfbf]"
+      }
+    >
+      <Icon className="size-3 shrink-0 text-[#8a8a8a]" aria-hidden />
       <span className="truncate" title={attachment.meta ?? attachment.label}>
         {attachment.label}
       </span>
       <button
         type="button"
         aria-label={`Remove ${attachment.label}`}
-        className="rounded-full p-0.5 text-[#585858] hover:bg-white/5 hover:text-white"
+        className="rounded-full p-0.5 text-[#585858] transition-colors hover:bg-white/5 hover:text-white"
         onClick={() => onRemove(attachment.id)}
       >
         <X className="size-3" aria-hidden />
@@ -102,7 +108,7 @@ export default function StrategyPromptBox({
   const codeId = useId();
 
   const activeLlm =
-    CHAT_LLM_MODELS.find((m) => m.id === chatModelId) ?? CHAT_LLM_MODELS[1];
+    CHAT_LLM_MODELS.find((m) => m.id === chatModelId) ?? CHAT_LLM_MODELS[0];
 
   const setAttachments = useCallback(
     (updater) => {
@@ -234,8 +240,12 @@ export default function StrategyPromptBox({
   const textareaClass = isComposer
     ? `!min-h-[7rem] !max-h-[12rem] !resize-none !border-0 !bg-transparent !p-0 text-[15px] leading-relaxed text-white shadow-none placeholder:text-[#585858] ${textareaFocusReset} sm:!min-h-[8rem]`
     : theme.isV2
-      ? `!min-h-[4.5rem] !max-h-[10rem] !resize-none !border-0 !bg-transparent !p-0 text-sm leading-relaxed text-white shadow-none placeholder:text-[#6b7280] ${textareaFocusReset}`
+      ? `!min-h-[2.75rem] !max-h-[9rem] !resize-none !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaFocusReset}`
       : `!min-h-[3.5rem] !max-h-[9rem] !resize-none !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
+
+  const iconBtnClass = theme.isV2
+    ? "shrink-0 rounded-lg p-2 text-[#8a8a8a] transition-colors hover:bg-white/[0.06] hover:text-[#f4f4f4] disabled:opacity-40"
+    : "shrink-0 rounded-md p-1.5 text-[#585858] hover:text-white disabled:opacity-50";
 
   return (
     <div ref={rootRef} className={className} data-strategy-chat-input>
@@ -250,9 +260,17 @@ export default function StrategyPromptBox({
           <div
             role="listbox"
             aria-label="Prompt suggestions"
-            className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border border-[#2a2a2a] bg-[#0f0f0f] py-1 shadow-[0_8px_32px_rgba(0,0,0,0.55)]"
+            className={`absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
+              theme.isV2
+                ? "border-white/[0.1] bg-[#141414]"
+                : "border-[#2a2a2a] bg-[#0f0f0f]"
+            }`}
           >
-            <p className="border-b border-[#242424] px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-[#585858]">
+            <p
+              className={`border-b px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-[#8a8a8a] ${
+                theme.isV2 ? "border-white/[0.06]" : "border-[#242424]"
+              }`}
+            >
               Suggestions (prototype)
             </p>
             <ul className="minimal-scrollbar max-h-40 overflow-y-auto py-0.5">
@@ -279,7 +297,12 @@ export default function StrategyPromptBox({
         {attachments.length > 0 ? (
           <div className={`flex flex-wrap gap-1.5 ${isComposer ? "mb-3" : "mb-2"}`}>
             {attachments.map((a) => (
-              <AttachmentChip key={a.id} attachment={a} onRemove={removeAttachment} />
+              <AttachmentChip
+                key={a.id}
+                attachment={a}
+                onRemove={removeAttachment}
+                isV2={theme.isV2}
+              />
             ))}
           </div>
         ) : null}
@@ -289,7 +312,7 @@ export default function StrategyPromptBox({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleTextareaKeyDown}
           placeholder={placeholder}
-          rows={isComposer ? 4 : 3}
+          rows={isComposer ? 4 : theme.isV2 ? 2 : 3}
           disabled={loading}
           className={textareaClass}
         />
@@ -356,7 +379,9 @@ export default function StrategyPromptBox({
           </div>
         ) : (
           <div
-            className={`mt-2 flex items-center justify-between gap-2 ${theme.isV2 ? "border-t border-[#262626] pt-2.5" : ""}`}
+            className={`mt-2.5 flex items-center justify-between gap-2 ${
+              theme.isV2 ? "border-t border-white/[0.06] pt-2" : ""
+            }`}
           >
             <div className="flex min-w-0 items-center gap-0.5">
               <ChatModelPicker
@@ -364,12 +389,6 @@ export default function StrategyPromptBox({
                 onChange={onChatModelChange}
                 disabled={loading}
               />
-              {theme.isV2 ? (
-                <span
-                  className="mx-0.5 h-4 w-px shrink-0 bg-[#2a2a2a]"
-                  aria-hidden
-                />
-              ) : null}
               <div ref={attachRef} className="relative">
                 <button
                   type="button"
@@ -377,7 +396,7 @@ export default function StrategyPromptBox({
                   aria-label="Add attachment"
                   aria-expanded={attachOpen}
                   aria-haspopup="menu"
-                  className="shrink-0 rounded-md p-1.5 text-[#585858] hover:text-white disabled:opacity-50"
+                  className={iconBtnClass}
                   onClick={() => {
                     setAttachOpen((v) => !v);
                     setCodeOpen(false);
@@ -388,14 +407,18 @@ export default function StrategyPromptBox({
                 {attachOpen ? (
                   <div
                     role="menu"
-                    className="absolute bottom-full left-0 z-50 mb-1 min-w-38 overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a] py-1 shadow-[0_8px_32px_rgba(0,0,0,0.55)]"
+                    className={`absolute bottom-full left-0 z-50 mb-1.5 min-w-38 overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
+                      theme.isV2
+                        ? "border-white/[0.1] bg-[#141414]"
+                        : "border-[#242424] bg-[#0a0a0a]"
+                    }`}
                   >
                     {ATTACH_MENU.map(({ type, label, icon: Icon }) => (
                       <button
                         key={type}
                         type="button"
                         role="menuitem"
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[#bfbfbf] hover:bg-white/5 hover:text-white"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[#a0a0a0] transition-colors hover:bg-white/[0.05] hover:text-[#f4f4f4]"
                         onClick={() => {
                           if (type === "document") docInputRef.current?.click();
                           else if (type === "image") imageInputRef.current?.click();
@@ -406,7 +429,7 @@ export default function StrategyPromptBox({
                           if (type !== "code") setAttachOpen(false);
                         }}
                       >
-                        <Icon className="size-3.5 text-[#757575]" aria-hidden />
+                        <Icon className="size-3.5 text-[#8a8a8a]" aria-hidden />
                         {label}
                       </button>
                     ))}
@@ -417,30 +440,50 @@ export default function StrategyPromptBox({
                 type="button"
                 disabled={loading}
                 aria-label="More options"
-                className="shrink-0 rounded-md p-1.5 text-[#585858] hover:text-white disabled:opacity-50"
+                className={iconBtnClass}
                 onClick={() => setAttachOpen((v) => !v)}
               >
                 <Plus className="size-4" aria-hidden />
               </button>
             </div>
-            <Button
-              type="submit"
-              size="sm"
-              variant="default"
-              className={theme.chatSendBtn}
-              loading={loading}
-              disabled={!value.trim()}
-              aria-label="Send message"
-            >
-              <Send className="size-4" aria-hidden />
-            </Button>
+            {theme.isV2 ? (
+              <button
+                type="submit"
+                disabled={!value.trim() || loading}
+                aria-busy={loading}
+                aria-label="Send message"
+                className={theme.chatSendBtn}
+              >
+                {loading ? (
+                  <span className="size-4 animate-spin rounded-full border-2 border-[#0a0a0a]/30 border-t-[#0a0a0a]" />
+                ) : (
+                  <ArrowUp className="size-4" aria-hidden />
+                )}
+              </button>
+            ) : (
+              <Button
+                type="submit"
+                size="sm"
+                variant="default"
+                className={theme.chatSendBtn}
+                loading={loading}
+                disabled={!value.trim()}
+                aria-label="Send message"
+              >
+                <Send className="size-4" aria-hidden />
+              </Button>
+            )}
           </div>
         )}
 
         {codeOpen ? (
           <div
             id={codeId}
-            className={`rounded-xl border border-[#2a2a2a] bg-[#121212] p-3 ${isComposer ? "mt-3" : "mt-2"}`}
+            className={`rounded-xl border p-3 ${isComposer ? "mt-3" : "mt-2"} ${
+              theme.isV2
+                ? "border-white/[0.08] bg-[#141414]"
+                : "border-[#2a2a2a] bg-[#121212]"
+            }`}
           >
             <label className="text-[10px] text-[#757575]">Paste code or rules</label>
             <textarea

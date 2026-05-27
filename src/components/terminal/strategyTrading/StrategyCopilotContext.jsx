@@ -43,6 +43,7 @@ export function StrategyCopilotProvider({ children, copilotView }) {
 
   const value = useMemo(
     () => ({
+      copilotView,
       strategies,
       setStrategies,
       selectedStrategyId,
@@ -56,6 +57,7 @@ export function StrategyCopilotProvider({ children, copilotView }) {
       theme: getCopilotTheme(uiVersion),
     }),
     [
+      copilotView,
       strategies,
       selectedStrategyId,
       activityLog,

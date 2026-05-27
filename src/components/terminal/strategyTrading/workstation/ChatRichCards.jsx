@@ -1,6 +1,16 @@
-import { Check, Copy } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
+
+const PRESET_OPTIONS = [
+  ["recommended", "Use Recommended"],
+  ["safer", "Make Safer"],
+  ["aggressive", "More Aggressive"],
+  ["custom", "Custom"],
+];
+
+const CONFIG_PRESET_BTN =
+  "inline-flex h-8 items-center justify-center rounded-lg border border-white/12 bg-[#1a1a1c] px-3.5 text-[12px] font-medium leading-none text-[#b8b8b8] transition-colors duration-150 hover:border-white hover:bg-white hover:text-[#0c0c0e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] active:scale-[0.98]";
 
 function ConfigCard({ data, onPreset }) {
   const theme = useCopilotTheme();
@@ -12,42 +22,62 @@ function ConfigCard({ data, onPreset }) {
     ["Leverage", data.leverage],
     ["Execution", data.execution],
   ];
-  const presetBtn = theme.isV2
-    ? "rounded-lg border border-[#333] bg-transparent px-2.5 py-1.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white"
-    : "rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white";
+
+  const shell = theme.isV2
+    ? "mt-4 overflow-hidden rounded-xl border border-white/[0.08] bg-[#111111]/90"
+    : `mt-3 p-3.5 ${theme.cardInner}`;
 
   return (
-    <div className={`mt-3 p-3.5 ${theme.cardInner}`}>
-      <p
-        className={
-          theme.isV2
-            ? "text-xs font-semibold text-white"
-            : "text-[11px] font-semibold text-white"
-        }
-      >
-        Strategy Configuration
-      </p>
-      <dl className="mt-2.5 space-y-1.5">
-        {rows.map(([q, a]) => (
-          <div key={q} className="flex justify-between gap-3 text-[11px]">
-            <dt className="text-[#757575]">{q}</dt>
-            <dd className="font-medium text-[#d4d4d4]">{a}</dd>
+    <div className={shell}>
+      {theme.isV2 ? (
+        <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3">
+          <p className="text-[12px] font-semibold text-[#f4f4f4]">
+            Strategy Configuration
+          </p>
+          <span className="text-[10px] font-medium tracking-wide text-[#6b6b6b] uppercase">
+            Suggested
+          </span>
+        </div>
+      ) : (
+        <p className="text-[11px] font-semibold text-white">
+          Strategy Configuration
+        </p>
+      )}
+      <dl className={theme.isV2 ? "space-y-0 px-4 py-1" : "mt-2.5 space-y-1.5"}>
+        {rows.map(([label, value], idx) => (
+          <div
+            key={label}
+            className={`flex items-baseline justify-between gap-4 py-2.5 text-[12px] ${
+              theme.isV2 && idx < rows.length - 1
+                ? "border-b border-white/[0.05]"
+                : ""
+            }`}
+          >
+            <dt className="text-[#8a8a8a]">{label}</dt>
+            <dd className="text-right font-medium tabular-nums text-[#f4f4f4]">
+              {value}
+            </dd>
           </div>
         ))}
       </dl>
       {onPreset ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {[
-            ["recommended", "Use Recommended"],
-            ["safer", "Make Safer"],
-            ["aggressive", "More Aggressive"],
-            ["custom", "Custom"],
-          ].map(([id, label]) => (
+        <div
+          className={
+            theme.isV2
+              ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3.5"
+              : "mt-3 flex flex-wrap gap-1.5"
+          }
+        >
+          {PRESET_OPTIONS.map(([id, label]) => (
             <button
               key={id}
               type="button"
               onClick={() => id !== "custom" && onPreset(id)}
-              className={presetBtn}
+              className={
+                theme.isV2
+                  ? CONFIG_PRESET_BTN
+                  : "rounded-md border border-[#242424] px-2.5 py-1 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white"
+              }
             >
               {label}
             </button>
@@ -58,36 +88,82 @@ function ConfigCard({ data, onPreset }) {
   );
 }
 
+function richCardShell(theme, className = "") {
+  return theme.isV2
+    ? `mt-4 overflow-hidden rounded-xl border border-white/[0.08] bg-[#111111]/90 ${className}`
+    : `mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3 ${className}`;
+}
+
 function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
+  const theme = useCopilotTheme();
   const cells = [
     ["Total Return", data.totalReturn, "text-[#00f3b6]"],
     ["Max Drawdown", data.maxDrawdown, "text-[#d53d3d]"],
-    ["Win Rate", data.winRate, "text-white"],
-    ["Sharpe", data.sharpeRatio, "text-white"],
-    ["Trades", String(data.trades), "text-white"],
-    ["Profit Factor", data.profitFactor, "text-white"],
+    ["Win Rate", data.winRate, "text-[#f4f4f4]"],
+    ["Sharpe", data.sharpeRatio, "text-[#f4f4f4]"],
+    ["Trades", String(data.trades), "text-[#f4f4f4]"],
+    ["Profit Factor", data.profitFactor, "text-[#f4f4f4]"],
   ];
+
+  const btnOutline = theme.isV2
+    ? "!h-8 !rounded-full !border-white/10 !bg-[#1a1a1a] !text-[11px] hover:!bg-[#222]"
+    : "!h-7 !text-[10px]";
+  const btnPrimary = theme.isV2
+    ? "!h-8 !rounded-full !text-[11px]"
+    : "!h-7 !text-[10px]";
+
   return (
-    <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#00f3b6]">
-        <Check className="size-3.5" aria-hidden />
-        Backtest complete
+    <div className={richCardShell(theme)}>
+      <div
+        className={
+          theme.isV2
+            ? "flex items-center gap-2 border-b border-white/[0.06] px-4 py-3"
+            : ""
+        }
+      >
+        <Check
+          className={`size-3.5 ${theme.isV2 ? "text-[#00f3b6]" : "text-[#00f3b6]"}`}
+          aria-hidden
+        />
+        <p
+          className={
+            theme.isV2
+              ? "text-[12px] font-semibold text-[#00f3b6]"
+              : "text-[11px] font-semibold text-[#00f3b6]"
+          }
+        >
+          Backtest complete
+        </p>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <div
+        className={
+          theme.isV2
+            ? "grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3"
+            : "mt-2 grid grid-cols-2 gap-2"
+        }
+      >
         {cells.map(([label, value, color]) => (
           <div key={label}>
-            <p className="text-[10px] text-[#757575]">{label}</p>
-            <p className={`text-xs font-semibold tabular-nums ${color}`}>{value}</p>
+            <p className="text-[10px] text-[#8a8a8a]">{label}</p>
+            <p className={`mt-0.5 text-xs font-semibold tabular-nums ${color}`}>
+              {value}
+            </p>
           </div>
         ))}
       </div>
-      <div className="mt-2.5 flex flex-wrap gap-1">
+      <div
+        className={
+          theme.isV2
+            ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3"
+            : "mt-2.5 flex flex-wrap gap-1"
+        }
+      >
         {onViewBacktest ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="!h-7 !text-[10px]"
+            className={btnOutline}
             onClick={onViewBacktest}
           >
             View Backtest
@@ -98,7 +174,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
             type="button"
             size="sm"
             variant="outline"
-            className="!h-7 !text-[10px]"
+            className={btnOutline}
             onClick={onOptimize}
           >
             Optimize
@@ -109,7 +185,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
             type="button"
             size="sm"
             variant="default"
-            className="!h-7 !text-[10px]"
+            className={btnPrimary}
             onClick={onStartPaper}
           >
             Start Paper Trading
@@ -121,24 +197,50 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
 }
 
 function PaperSetupCard({ data, onStartPaper, onReview }) {
+  const theme = useCopilotTheme();
   return (
-    <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
-      <p className="text-[11px] font-semibold text-white">Paper Trading Setup</p>
-      <dl className="mt-2 space-y-1">
-        {Object.entries(data).map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-2 text-[10px]">
-            <dt className="text-[#757575]">{k}</dt>
-            <dd className="text-[#bfbfbf]">{v}</dd>
+    <div className={richCardShell(theme)}>
+      <p
+        className={
+          theme.isV2
+            ? "border-b border-white/[0.06] px-4 py-3 text-[12px] font-semibold text-[#f4f4f4]"
+            : "text-[11px] font-semibold text-white"
+        }
+      >
+        Paper Trading Setup
+      </p>
+      <dl className={theme.isV2 ? "space-y-0 px-4 py-1" : "mt-2 space-y-1"}>
+        {Object.entries(data).map(([k, v], idx, arr) => (
+          <div
+            key={k}
+            className={`flex justify-between gap-2 py-2.5 ${
+              theme.isV2 && idx < arr.length - 1
+                ? "border-b border-white/[0.05] text-[12px]"
+                : "text-[10px]"
+            }`}
+          >
+            <dt className="text-[#8a8a8a]">{k}</dt>
+            <dd className="font-medium text-[#f4f4f4]">{v}</dd>
           </div>
         ))}
       </dl>
-      <div className="mt-2.5 flex flex-wrap gap-1">
+      <div
+        className={
+          theme.isV2
+            ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3"
+            : "mt-2.5 flex flex-wrap gap-1"
+        }
+      >
         {onStartPaper ? (
           <Button
             type="button"
             size="sm"
             variant="default"
-            className="!h-7 !text-[10px]"
+            className={
+              theme.isV2
+                ? "!h-8 !rounded-full !text-[11px]"
+                : "!h-7 !text-[10px]"
+            }
             onClick={onStartPaper}
           >
             Start Simulation
@@ -149,7 +251,11 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
             type="button"
             size="sm"
             variant="outline"
-            className="!h-7 !text-[10px]"
+            className={
+              theme.isV2
+                ? "!h-8 !rounded-full !border-white/10 !text-[11px]"
+                : "!h-7 !text-[10px]"
+            }
             onClick={onReview}
           >
             Review Deployment
@@ -161,24 +267,50 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
 }
 
 function PaperCard({ data, onViewPosition, onReview }) {
+  const theme = useCopilotTheme();
   return (
-    <div className="mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3">
-      <p className="text-[11px] font-semibold text-[#00f3b6]">Paper trading active</p>
-      <dl className="mt-2 space-y-1">
-        {Object.entries(data).map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-2 text-[10px]">
-            <dt className="capitalize text-[#757575]">{k}</dt>
-            <dd className="text-[#bfbfbf]">{v}</dd>
+    <div className={richCardShell(theme)}>
+      <p
+        className={
+          theme.isV2
+            ? "border-b border-white/[0.06] px-4 py-3 text-[12px] font-semibold text-[#00f3b6]"
+            : "text-[11px] font-semibold text-[#00f3b6]"
+        }
+      >
+        Paper trading active
+      </p>
+      <dl className={theme.isV2 ? "space-y-0 px-4 py-1" : "mt-2 space-y-1"}>
+        {Object.entries(data).map(([k, v], idx, arr) => (
+          <div
+            key={k}
+            className={`flex justify-between gap-2 py-2.5 ${
+              theme.isV2 && idx < arr.length - 1
+                ? "border-b border-white/[0.05] text-[12px]"
+                : "text-[10px]"
+            }`}
+          >
+            <dt className="capitalize text-[#8a8a8a]">{k}</dt>
+            <dd className="font-medium text-[#f4f4f4]">{v}</dd>
           </div>
         ))}
       </dl>
-      <div className="mt-2.5 flex flex-wrap gap-1">
+      <div
+        className={
+          theme.isV2
+            ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3"
+            : "mt-2.5 flex flex-wrap gap-1"
+        }
+      >
         {onViewPosition ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="!h-7 !text-[10px]"
+            className={
+              theme.isV2
+                ? "!h-8 !rounded-full !border-white/10 !text-[11px]"
+                : "!h-7 !text-[10px]"
+            }
             onClick={onViewPosition}
           >
             View Paper Position
@@ -189,7 +321,11 @@ function PaperCard({ data, onViewPosition, onReview }) {
             type="button"
             size="sm"
             variant="default"
-            className="!h-7 !text-[10px]"
+            className={
+              theme.isV2
+                ? "!h-8 !rounded-full !text-[11px]"
+                : "!h-7 !text-[10px]"
+            }
             onClick={onReview}
           >
             Review Deployment

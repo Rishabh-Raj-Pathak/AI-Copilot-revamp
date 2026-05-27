@@ -73,26 +73,30 @@ export function getCopilotTheme(version) {
       ? "mt-0 rounded-xl border border-[#262626] bg-[#141414]"
       : "",
     chatPanel: isV2
-      ? "border-[#1a1a1a] bg-black"
+      ? "border-white/[0.08] bg-[#070707] shadow-[inset_1px_0_0_rgba(255,255,255,0.04)]"
       : "border-[#242424] bg-black",
+    chatScrollArea: isV2 ? "bg-[#090909]" : "",
     chatUserBubble: isV2
-      ? "w-full rounded-xl border border-[#f2b500]/45 bg-[#141414] px-4 py-3 text-xs leading-relaxed text-white shadow-[0_0_16px_rgba(242,181,0,0.06)]"
+      ? "rounded-2xl rounded-br-md border border-white/[0.06] bg-[#23262e] px-3.5 py-2.5 text-[13px] leading-[1.6] text-[#f4f4f4] shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
       : "rounded-lg bg-[#171200] px-3 py-2 text-white",
     chatAiBubble: isV2
-      ? "w-full rounded-xl border border-[#262626] bg-[#141414] px-4 py-3.5"
+      ? "rounded-2xl rounded-bl-md border border-white/[0.08] bg-[#141414] px-3.5 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a] px-3 py-2 text-[#bfbfbf]",
     chatExampleBtn: isV2
-      ? "rounded-xl border border-[#262626] bg-[#141414] px-3 py-2.5 text-left text-[11px] text-[#bfbfbf] hover:border-[#f2b500]/30 hover:text-white"
+      ? "rounded-xl border border-white/[0.08] bg-[#141414] px-3.5 py-2.5 text-left text-[12px] leading-snug text-[#a0a0a0] transition-all duration-200 hover:border-white/[0.14] hover:bg-[#171717] hover:text-[#f4f4f4] hover:translate-y-[-1px]"
       : "rounded-md border border-[#242424] bg-[#0a0a0a] px-2.5 py-2 text-left text-[11px] text-[#bfbfbf] hover:border-[#454545] hover:text-white",
     chatQuickChip: isV2
-      ? "shrink-0 rounded-lg border border-[#2a2a2a] bg-[#141414] px-2.5 py-1.5 text-[10px] text-[#929292] hover:border-[#3a3a3a] hover:text-white"
+      ? "shrink-0 rounded-full border border-white/[0.08] bg-[#141414] px-3 py-1.5 text-[11px] text-[#8a8a8a] transition-colors hover:border-white/[0.14] hover:bg-[#1a1a1a] hover:text-[#f4f4f4]"
       : "shrink-0 rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white",
     chatPromptShell: isV2
-      ? "relative z-10 rounded-2xl border border-[#333] bg-[#141414] p-3.5 shadow-[0_-12px_48px_rgba(0,0,0,0.65),0_8px_32px_rgba(0,0,0,0.45)] focus-within:border-[#333]"
+      ? "group/composer relative z-10 rounded-2xl border border-white/[0.1] bg-[#1b1b1b] p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.5),0_4px_24px_rgba(0,0,0,0.35)] transition-[border-color,box-shadow] duration-200 focus-within:border-[#f5c400]/25 focus-within:shadow-[0_-8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,196,0,0.12),0_0_24px_rgba(245,196,0,0.06)]"
       : "relative rounded-xl border border-[#242424] bg-[#0a0a0a] p-2",
     chatSendBtn: isV2
-      ? "!size-9 !rounded-full !bg-[#f2b500] !p-0 !text-black hover:!bg-[#ffd633]"
+      ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-[#f5c400] text-[#0a0a0a] shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-all duration-150 hover:bg-[#ffd21a] hover:scale-[1.03] active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-[#2a2a2a] disabled:text-[#585858] disabled:shadow-none disabled:hover:scale-100"
       : "size-8! rounded-full! p-0!",
+    chatComposerFooter: isV2
+      ? "relative z-20 shrink-0 bg-gradient-to-t from-[#070707] via-[#070707]/98 to-transparent px-3.5 pb-3.5 pt-1"
+      : "relative z-20 shrink-0 border-t p-3",
     badge: isV2 ? "rounded-md px-2 py-0.5 text-[10px]" : "rounded px-1.5 py-0.5",
     flowCard: isV2
       ? "rounded-xl border border-[#1c1c1c] bg-[#0a0a0a] p-4"

@@ -16,7 +16,7 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
   const theme = useCopilotTheme();
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
-  const selected = CHAT_LLM_MODELS.find((m) => m.id === value) ?? CHAT_LLM_MODELS[1];
+  const selected = CHAT_LLM_MODELS.find((m) => m.id === value) ?? CHAT_LLM_MODELS[0];
 
   useEffect(() => {
     if (!open) return undefined;
@@ -43,18 +43,25 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
         aria-expanded={open}
         aria-label={`AI model: ${selected.name}`}
         onClick={() => setOpen((v) => !v)}
-        className={`flex max-w-[11rem] items-center gap-1.5 rounded-lg border px-2 py-1 text-left transition-colors disabled:opacity-50 sm:max-w-[13rem] ${
+        className={`flex max-w-[10.5rem] items-center gap-1.5 text-left transition-all duration-150 disabled:opacity-50 sm:max-w-[12rem] ${
           theme.isV2
-            ? "border-[#333] bg-transparent hover:border-[#454545]"
-            : "border-[#242424] bg-[#121212] hover:border-[#454545]"
+            ? "rounded-full border border-white/[0.1] bg-[#141414] px-2.5 py-1.5 hover:border-white/[0.16] hover:bg-[#1f1f1f]"
+            : "rounded-lg border border-[#242424] bg-[#121212] px-2 py-1 hover:border-[#454545]"
         }`}
       >
-        <Sparkles className="size-3 shrink-0 text-[#f2b500]" aria-hidden />
-        <span className="min-w-0 truncate text-[11px] font-medium text-white">
+        <Sparkles
+          className={`size-3 shrink-0 ${theme.isV2 ? "text-[#f5c400]/85" : "text-[#f2b500]"}`}
+          aria-hidden
+        />
+        <span
+          className={`min-w-0 truncate font-medium ${
+            theme.isV2 ? "text-[11px] text-[#d4d4d4]" : "text-[11px] text-white"
+          }`}
+        >
           {selected.name}
         </span>
         <ChevronDown
-          className={`size-3 shrink-0 text-[#585858] transition-transform ${open ? "rotate-180" : ""}`}
+          className={`size-3 shrink-0 text-[#8a8a8a] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </button>
@@ -63,9 +70,17 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
         <div
           role="listbox"
           aria-label="Select AI model"
-          className="absolute bottom-full left-0 z-50 mb-1.5 w-[min(16.5rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a] py-1 shadow-[0_8px_32px_rgba(0,0,0,0.55)]"
+          className={`absolute bottom-full left-0 z-50 mb-1.5 w-[min(16.5rem,calc(100vw-2rem))] overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
+            theme.isV2
+              ? "border-white/[0.1] bg-[#141414]"
+              : "border-[#242424] bg-[#0a0a0a]"
+          }`}
         >
-          <p className="border-b border-[#242424] px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-[#585858]">
+          <p
+            className={`border-b px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-[#8a8a8a] ${
+              theme.isV2 ? "border-white/[0.06]" : "border-[#242424]"
+            }`}
+          >
             Model
           </p>
           <ul className="minimal-scrollbar max-h-[14rem] overflow-y-auto py-0.5">
@@ -83,13 +98,20 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
                       onChange(model.id);
                       setOpen(false);
                     }}
-                    className={`flex w-full items-start gap-2 px-3 py-2 text-left transition-colors hover:bg-white/5 ${
-                      active ? "bg-[#171200]/60" : ""
+                    className={`flex w-full items-start gap-2 px-3 py-2 text-left transition-colors hover:bg-white/[0.05] ${
+                      active
+                        ? theme.isV2
+                          ? "bg-[#f5c400]/8"
+                          : "bg-[#171200]/60"
+                        : ""
                     }`}
                   >
                     <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
                       {active ? (
-                        <Check className="size-3.5 text-[#f2b500]" aria-hidden />
+                        <Check
+                          className={`size-3.5 ${theme.isV2 ? "text-[#f5c400]" : "text-[#f2b500]"}`}
+                          aria-hidden
+                        />
                       ) : (
                         <span className="size-3.5" aria-hidden />
                       )}

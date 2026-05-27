@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Toast, ToastViewport } from "../../ui/toast.jsx";
 import { useStrategyCopilot } from "./StrategyCopilotContext.jsx";
 import { DEFAULT_PREFERENCES } from "./strategyTradingMockData.js";
@@ -43,6 +43,7 @@ export default function StrategyTradingPage({
   terminalPlatform = "hyperliquid",
 }) {
   const {
+    copilotView,
     strategies,
     setStrategies,
     selectedStrategyId,
@@ -53,12 +54,23 @@ export default function StrategyTradingPage({
     uiVersion,
   } = useStrategyCopilot();
 
-  const [modelId, setModelId] = useState("quant");
+  const isV2StrategyView = copilotView === "strategy-trading-v2";
+  const defaultTemplate = CENTER_TEMPLATES[0];
+
+  const [modelId, setModelId] = useState(
+    () => defaultTemplate?.modelId ?? "quant",
+  );
   const [chatModelId, setChatModelId] = useState(DEFAULT_CHAT_LLM_MODEL_ID);
-  const [strategyTypeId, setStrategyTypeId] = useState("mean-reversion");
-  const [marketId, setMarketId] = useState("btc");
+  const [strategyTypeId, setStrategyTypeId] = useState(
+    () => defaultTemplate?.strategyId ?? "mean-reversion",
+  );
+  const [marketId, setMarketId] = useState(
+    () => defaultTemplate?.marketId ?? "btc",
+  );
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(
+    () => (isV2StrategyView ? (defaultTemplate?.prompt ?? "") : ""),
+  );
   const [loading, setLoading] = useState(false);
   const [sidebarFilter, setSidebarFilter] = useState("all");
   const [workspaceTab, setWorkspaceTab] = useState("overview");
@@ -67,7 +79,7 @@ export default function StrategyTradingPage({
   const [optimizeLoading, setOptimizeLoading] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const [composerMode, setComposerMode] = useState(false);
+  const [composerMode, setComposerMode] = useState(() => isV2StrategyView);
   const [activeTemplateId, setActiveTemplateId] = useState(
     CENTER_TEMPLATES[0]?.id ?? "btc-mean-reversion",
   );
@@ -416,7 +428,7 @@ export default function StrategyTradingPage({
     setMarketId(template.marketId);
   }, []);
 
-  const handleNewStrategy = useCallback(() => {
+  const enterComposerLanding = useCallback(() => {
     const first = CENTER_TEMPLATES[0];
     setComposerMode(true);
     setSelectedStrategyId(null);
@@ -430,10 +442,25 @@ export default function StrategyTradingPage({
     setAttachments([]);
     setWorkspaceTab("overview");
     setMobilePanel("workspace");
+  }, [setSelectedStrategyId, applyTemplatePrefs]);
+
+  useEffect(() => {
+    if (copilotView === "strategy-trading-v2") {
+      enterComposerLanding();
+      return;
+    }
+    if (copilotView === "strategy-trading-v1") {
+      setComposerMode(false);
+      setSelectedStrategyId((id) => id ?? "strat-btc-sniper");
+    }
+  }, [copilotView, enterComposerLanding, setSelectedStrategyId]);
+
+  const handleNewStrategy = useCallback(() => {
+    enterComposerLanding();
     window.setTimeout(() => {
       document.querySelector("[data-strategy-chat-input] textarea")?.focus();
     }, 50);
-  }, [setSelectedStrategyId, applyTemplatePrefs]);
+  }, [enterComposerLanding]);
 
   const handleTemplateApply = useCallback(
     (template) => {

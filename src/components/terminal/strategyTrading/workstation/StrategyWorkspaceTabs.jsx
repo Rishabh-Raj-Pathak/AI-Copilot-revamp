@@ -7,6 +7,36 @@ import BacktestTabV2 from "./overview/BacktestTabV2.jsx";
 import OverviewTabV2 from "./overview/OverviewTabV2.jsx";
 import { WORKSPACE_TABS } from "../strategyWorkstationMockData.js";
 
+const WORKSPACE_TABS_V2 = [
+  { id: "overview", label: "Overview" },
+  { id: "backtest", label: "Backtest" },
+  { id: "paper", label: "Paper Trading" },
+  { id: "positions", label: "Positions" },
+  { id: "open-orders", label: "Open Orders" },
+  { id: "order-history", label: "Order History" },
+  { id: "trade-history", label: "Trade History" },
+  { id: "balance", label: "Balance" },
+];
+
+function EmptySectionTable({ columns, message }) {
+  return (
+    <div className="overflow-x-auto rounded-lg border border-[#242424]">
+      <table className="w-full min-w-max text-left text-xs">
+        <thead className="border-b border-[#242424] text-[#a1a1a1]">
+          <tr>
+            {columns.map((col) => (
+              <th key={col} className="whitespace-nowrap px-3 py-2 font-medium">
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      </table>
+      <div className="px-3 py-10 text-center text-sm text-[#757575]">{message}</div>
+    </div>
+  );
+}
+
 function Metric({ label, value, tone, theme }) {
   const color =
     tone === "positive"
@@ -232,6 +262,9 @@ export default function StrategyWorkspaceTabs({
   const bt = strategy?.backtest?.results;
   const pos = strategy?.paperTrading?.position;
   const innerCard = theme.card;
+  const tabs = theme.isV2 ? WORKSPACE_TABS_V2 : WORKSPACE_TABS;
+  const isV2TabValid = tabs.some((t) => t.id === activeTab);
+  const resolvedTab = theme.isV2 && !isV2TabValid ? "overview" : activeTab;
 
   const tabContentClass = theme.isV2 ? "mt-0 p-4 sm:p-5" : "mt-3 space-y-3";
 
@@ -241,9 +274,9 @@ export default function StrategyWorkspaceTabs({
         <MetricsGrid strategy={strategy} theme={theme} />
       ) : null}
 
-      <Tabs value={activeTab} onValueChange={onTabChange} className={theme.isV2 ? "" : "mt-4"}>
+      <Tabs value={resolvedTab} onValueChange={onTabChange} className={theme.isV2 ? "" : "mt-4"}>
         <TabsList className={theme.tabsList}>
-          {WORKSPACE_TABS.map((t) => (
+          {tabs.map((t) => (
             <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
               {t.label}
               {t.id === "paper" && strategy?.paperTrading?.status === "active" ? (
@@ -413,7 +446,25 @@ export default function StrategyWorkspaceTabs({
           </TabsContent>
 
           <TabsContent value="positions" className={tabContentClass}>
-            {pos ? (
+            {theme.isV2 ? (
+              <EmptySectionTable
+                columns={[
+                  "Coin",
+                  "Size",
+                  "Position Value",
+                  "Entry Price",
+                  "Current Price",
+                  "PNL (ROE%)",
+                  "Liq. Price",
+                  "Margin",
+                  "Funding",
+                  "TP/SL",
+                  "Exp. Profit(%) / Exp. Loss(%)",
+                  "Action",
+                ]}
+                message="No open positions yet."
+              />
+            ) : pos ? (
               <div className="overflow-x-auto rounded-lg border border-[#242424]">
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-[#242424] text-[#757575]">
@@ -445,8 +496,68 @@ export default function StrategyWorkspaceTabs({
             )}
           </TabsContent>
 
+          <TabsContent value="open-orders" className={tabContentClass}>
+            <EmptySectionTable
+              columns={[
+                "Time",
+                "Type",
+                "Coin",
+                "Direction",
+                "Original Size",
+                "Filled Size",
+                "Order Value",
+                "Price",
+                "Trigger Conditions",
+                "Action",
+              ]}
+              message="No open orders."
+            />
+          </TabsContent>
+
+          <TabsContent value="order-history" className={tabContentClass}>
+            <EmptySectionTable
+              columns={[
+                "Time",
+                "Type",
+                "Coin",
+                "Direction",
+                "Original Size",
+                "Filled Size",
+                "Order Value",
+                "Price",
+                "Trigger Conditions",
+              ]}
+              message="No order history."
+            />
+          </TabsContent>
+
+          <TabsContent value="trade-history" className={tabContentClass}>
+            <EmptySectionTable
+              columns={[
+                "Time",
+                "Coin",
+                "Direction",
+                "Price",
+                "Size",
+                "Trade Value",
+                "Fee",
+                "Closed PNL",
+              ]}
+              message="No trade history."
+            />
+          </TabsContent>
+
+          <TabsContent value="balance" className={tabContentClass}>
+            <EmptySectionTable
+              columns={["Coin", "Total balance", "Available balance", "USDC Value"]}
+              message="No balance data."
+            />
+          </TabsContent>
+
           <TabsContent value="trades" className={tabContentClass}>
-            {strategy?.trades?.length ? (
+            {theme.isV2 ? (
+              <p className="text-xs text-[#757575]">Use Trade History tab in Strategy Copilot v2.</p>
+            ) : strategy?.trades?.length ? (
               <div className="overflow-x-auto rounded-lg border border-[#242424]">
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-[#242424] text-[#757575]">
@@ -485,14 +596,18 @@ export default function StrategyWorkspaceTabs({
           </TabsContent>
 
           <TabsContent value="logs" className={tabContentClass}>
-            <ul className={`space-y-1.5 p-3 ${innerCard}`}>
-              {strategy?.logs?.map((l) => (
-                <li key={l.id} className="text-xs text-[#929292]">
-                  <span className="text-[#585858]">{l.at ?? l.ago} · </span>
-                  {l.message}
-                </li>
-              ))}
-            </ul>
+            {theme.isV2 ? (
+              <p className="text-xs text-[#757575]">Use Order History/Trade History in Strategy Copilot v2.</p>
+            ) : (
+              <ul className={`space-y-1.5 p-3 ${innerCard}`}>
+                {strategy?.logs?.map((l) => (
+                  <li key={l.id} className="text-xs text-[#929292]">
+                    <span className="text-[#585858]">{l.at ?? l.ago} · </span>
+                    {l.message}
+                  </li>
+                ))}
+              </ul>
+            )}
           </TabsContent>
         </div>
       </Tabs>
