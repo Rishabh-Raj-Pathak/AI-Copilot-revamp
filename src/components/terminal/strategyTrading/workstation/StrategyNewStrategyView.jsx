@@ -7,8 +7,13 @@ import StrategyTemplateIllustration from "./StrategyTemplateIllustration.jsx";
 
 function StrategyTemplateCard({ template, selected, onSelect }) {
   const primaryBorderBase = "rgb(152 170 156 / 0.24)";
-  const primaryBorderHover = "rgb(152 170 156 / 0.34)";
-  const primaryBorderSelected = "rgb(152 170 156 / 0.44)";
+  const cardSurfaceGradient =
+    "linear-gradient(180deg, rgba(20,25,23,0.72) 0%, rgba(12,16,15,0.84) 100%)";
+  const cardSurfaceHighlight = "inset 0 1px 0 rgba(255,255,255,0.045)";
+  const cardInnerShadowBase = `${cardSurfaceHighlight}, inset 0 -22px 42px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(152,170,156,0.14)`;
+  const cardInnerShadowHover = `${cardSurfaceHighlight}, inset 0 -24px 44px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(152,170,156,0.2)`;
+  const cardInnerShadowSelected =
+    "inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -26px 48px rgba(0,0,0,0.26), inset 0 0 0 1px rgba(152,170,156,0.3)";
   const details = [
     { label: "Asset", value: template.cardAsset ?? template.asset },
     { label: "Timeframe", value: template.cardTimeframe ?? template.timeframe },
@@ -18,47 +23,24 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
     },
     { label: "Risk Profile", value: template.cardRiskProfile ?? template.risk },
   ];
-  const [pointerState, setPointerState] = useState({
-    x: 80,
-    y: 48,
-    active: false,
-  });
-  const handlePatternMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    setPointerState({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-      active: true,
-    });
-  };
-
   return (
     <button
       type="button"
       onClick={() => onSelect(template)}
-      className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-[24px] border text-left transition-all duration-150 hover:brightness-[1.03]"
+      className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-[24px] text-left transition-all duration-150 hover:brightness-[1.03]"
       style={{
-        borderColor: selected ? primaryBorderSelected : primaryBorderBase,
-        background:
-          "linear-gradient(180deg, #0b0e0d 0%, #070909 55%, #060807 100%)",
-        boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -24px 48px rgba(0,0,0,0.18)",
+        background: cardSurfaceGradient,
+        boxShadow: selected ? cardInnerShadowSelected : cardInnerShadowBase,
       }}
       onMouseEnter={(event) => {
-        if (!selected) event.currentTarget.style.borderColor = primaryBorderHover;
+        if (!selected)
+          event.currentTarget.style.boxShadow = cardInnerShadowHover;
       }}
       onMouseLeave={(event) => {
-        if (!selected) event.currentTarget.style.borderColor = primaryBorderBase;
+        if (!selected)
+          event.currentTarget.style.boxShadow = cardInnerShadowBase;
       }}
     >
-      <div
-        className="pointer-events-none absolute inset-0 rounded-[24px]"
-        style={{
-          background:
-            "radial-gradient(130% 85% at 52% 92%, rgba(132,191,77,0.055) 0%, rgba(132,191,77,0) 58%)",
-        }}
-      />
-
       <div className="relative z-10 flex items-center justify-between px-5 pb-2.5 pt-4">
         <div className="flex items-center">
           <h3 className="text-[19px] font-medium leading-[1.15] tracking-[-0.012em] text-[#f2f5f3]">
@@ -67,21 +49,9 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
         </div>
       </div>
 
-      <div
-        className="relative z-10 mx-5 mt-0.5 h-[138px] overflow-hidden"
-        onMouseEnter={() =>
-          setPointerState((prev) => ({ ...prev, active: true }))
-        }
-        onMouseMove={handlePatternMove}
-        onMouseLeave={() =>
-          setPointerState((prev) => ({ ...prev, active: false }))
-        }
-      >
+      <div className="relative z-10 mx-5 mt-0.5 h-[138px] overflow-hidden">
         <StrategyTemplateIllustration
           type={template.illustration ?? "candles"}
-          pointerX={pointerState.x}
-          pointerY={pointerState.y}
-          hoverActive={pointerState.active}
         />
       </div>
 
@@ -90,9 +60,8 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
           className="w-full rounded-[15px] border px-4 py-2.5 backdrop-blur-[14px]"
           style={{
             borderColor: primaryBorderBase,
-            background:
-              "linear-gradient(180deg, rgba(20,25,23,0.72) 0%, rgba(12,16,15,0.84) 100%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045)",
+            background: cardSurfaceGradient,
+            boxShadow: cardSurfaceHighlight,
           }}
         >
           <div className="space-y-0.5">
@@ -255,7 +224,7 @@ export default function StrategyNewStrategyView({
               className="ds-strategy-composer-stage relative z-0"
               style={{ "--ds-strategy-composer-shell-width": "100%" }}
             >
-              <div className="ds-strategy-composer-glow" aria-hidden />
+              {/* <div className="ds-strategy-composer-glow" aria-hidden /> */}
               <StrategyPromptBox
                 className="w-full"
                 variant="composer"
