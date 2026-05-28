@@ -6,9 +6,9 @@ import StrategyPromptBox from "./StrategyPromptBox.jsx";
 import StrategyTemplateIllustration from "./StrategyTemplateIllustration.jsx";
 
 function StrategyTemplateCard({ template, selected, onSelect }) {
-  const primaryBorderBase = "rgb(242 181 0 / 0.28)";
-  const primaryBorderHover = "rgb(242 181 0 / 0.4)";
-  const primaryBorderSelected = "rgb(242 181 0 / 0.56)";
+  const primaryBorderBase = "rgb(152 170 156 / 0.24)";
+  const primaryBorderHover = "rgb(152 170 156 / 0.34)";
+  const primaryBorderSelected = "rgb(152 170 156 / 0.44)";
   const details = [
     { label: "Asset", value: template.cardAsset ?? template.asset },
     { label: "Timeframe", value: template.cardTimeframe ?? template.timeframe },
