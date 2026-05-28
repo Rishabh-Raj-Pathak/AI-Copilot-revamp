@@ -32,7 +32,6 @@ const ATTACH_MENU = [
 
 const COMPOSER_ATTACH = [
   { type: "document", label: "Form", icon: FileText },
-  { type: "video", label: "Video", icon: Video },
   { type: "code", label: "Code", icon: Code2 },
 ];
 
@@ -43,7 +42,7 @@ function AttachmentChip({ attachment, onRemove, isV2 }) {
     <span
       className={
         isV2
-          ? "inline-flex max-w-full items-center gap-1 rounded-full border border-white/[0.1] bg-[#141414] py-0.5 pl-2.5 pr-0.5 text-[10px] text-[#a0a0a0]"
+          ? "inline-flex max-w-full items-center gap-1 rounded-full border border-white/10 bg-[#141414] py-0.5 pl-2.5 pr-0.5 text-[10px] text-[#a0a0a0]"
           : "inline-flex max-w-full items-center gap-1 rounded-full border border-[#333] bg-[#161616] py-0.5 pl-2 pr-0.5 text-[10px] text-[#bfbfbf]"
       }
     >
@@ -63,13 +62,17 @@ function AttachmentChip({ attachment, onRemove, isV2 }) {
   );
 }
 
-function AttachPill({ icon: Icon, label, onClick, disabled }) {
+function AttachPill({ icon: Icon, label, onClick, disabled, isComposer = false }) {
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-full border border-[#333] bg-[#141414] px-3 py-1.5 text-xs text-[#929292] transition-colors hover:border-[#454545] hover:text-white disabled:opacity-50"
+      className={
+        isComposer
+          ? "ds-strategy-composer-chip"
+          : "inline-flex items-center gap-1.5 rounded-full border border-[#333] bg-[#141414] px-3 py-1.5 text-xs text-[#929292] transition-colors hover:border-[#454545] hover:text-white disabled:opacity-50"
+      }
     >
       <Icon className="size-3.5" aria-hidden />
       {label}
@@ -104,7 +107,6 @@ export default function StrategyPromptBox({
   const attachRef = useRef(null);
   const docInputRef = useRef(null);
   const imageInputRef = useRef(null);
-  const videoInputRef = useRef(null);
   const codeId = useId();
 
   const activeLlm =
@@ -227,21 +229,35 @@ export default function StrategyPromptBox({
 
   const showSuggestions = enableSuggestions && suggestions.length > 0;
 
+  const resizeTextarea = useCallback(() => {
+    const el = rootRef.current?.querySelector("textarea");
+    if (!el) return;
+    const maxHeight = isComposer ? 176 : 144;
+    el.style.height = "auto";
+    const nextHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [isComposer]);
+
+  useEffect(() => {
+    resizeTextarea();
+  }, [value, isComposer, resizeTextarea]);
+
   const formFocusReset =
     "focus-within:outline-none focus-within:ring-0 focus-within:ring-offset-0";
 
   const formShell = isComposer
-    ? `relative rounded-2xl border border-[#2e2e2e] bg-[#0f0f0f] p-4 shadow-[0_8px_40px_rgba(0,0,0,0.45)] ${formFocusReset}`
+    ? `ds-strategy-composer-shell ${formFocusReset} px-5 py-4 sm:px-6 sm:py-5`
     : `${theme.chatPromptShell} ${formFocusReset}`;
 
   const textareaFocusReset =
     "focus:outline-none focus-visible:outline-none focus-visible:!border-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!shadow-none";
 
   const textareaClass = isComposer
-    ? `!min-h-[7rem] !max-h-[12rem] !resize-none !border-0 !bg-transparent !p-0 text-[15px] leading-relaxed text-white shadow-none placeholder:text-[#585858] ${textareaFocusReset} sm:!min-h-[8rem]`
+    ? `!min-h-[3rem] !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal text-[rgba(255,255,255,0.88)] shadow-none placeholder:text-[#7d8689] ${textareaFocusReset}`
     : theme.isV2
-      ? `!min-h-[2.75rem] !max-h-[9rem] !resize-none !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaFocusReset}`
-      : `!min-h-[3.5rem] !max-h-[9rem] !resize-none !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
+      ? `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaFocusReset}`
+      : `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
 
   const iconBtnClass = theme.isV2
     ? "shrink-0 rounded-lg p-2 text-[#8a8a8a] transition-colors hover:bg-white/[0.06] hover:text-[#f4f4f4] disabled:opacity-40"
@@ -262,13 +278,13 @@ export default function StrategyPromptBox({
             aria-label="Prompt suggestions"
             className={`absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
               theme.isV2
-                ? "border-white/[0.1] bg-[#141414]"
+                ? "border-white/10 bg-[#141414]"
                 : "border-[#2a2a2a] bg-[#0f0f0f]"
             }`}
           >
             <p
               className={`border-b px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-[#8a8a8a] ${
-                theme.isV2 ? "border-white/[0.06]" : "border-[#242424]"
+                theme.isV2 ? "border-white/6" : "border-[#242424]"
               }`}
             >
               Suggestions (prototype)
@@ -307,15 +323,35 @@ export default function StrategyPromptBox({
           </div>
         ) : null}
 
-        <Textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleTextareaKeyDown}
-          placeholder={placeholder}
-          rows={isComposer ? 4 : theme.isV2 ? 2 : 3}
-          disabled={loading}
-          className={textareaClass}
-        />
+        {isComposer ? (
+          <div className="relative pl-4">
+            <Textarea
+              value={value}
+              onChange={(e) => {
+                onChange(e.target.value);
+                resizeTextarea();
+              }}
+              onKeyDown={handleTextareaKeyDown}
+              placeholder={placeholder}
+              rows={1}
+              disabled={loading}
+              className={textareaClass}
+            />
+          </div>
+        ) : (
+          <Textarea
+            value={value}
+            onChange={(e) => {
+              onChange(e.target.value);
+              resizeTextarea();
+            }}
+            onKeyDown={handleTextareaKeyDown}
+            placeholder={placeholder}
+            rows={1}
+            disabled={loading}
+            className={textareaClass}
+          />
+        )}
 
         <input
           ref={docInputRef}
@@ -340,29 +376,18 @@ export default function StrategyPromptBox({
             e.target.value = "";
           }}
         />
-        <input
-          ref={videoInputRef}
-          type="file"
-          className="hidden"
-          accept="video/*"
-          onChange={(e) => {
-            handleFile("video", e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-
         {isComposer ? (
-          <div className="mt-3 flex items-end justify-between gap-3 border-t border-[#1f1f1f] pt-3">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-5 flex items-end justify-between gap-4 border-t border-white/10 pt-4">
+            <div className="flex flex-wrap items-center gap-3">
               {COMPOSER_ATTACH.map(({ type, label, icon }) => (
                 <AttachPill
                   key={type}
                   icon={icon}
                   label={label}
+                  isComposer
                   disabled={loading}
                   onClick={() => {
                     if (type === "document") docInputRef.current?.click();
-                    else if (type === "video") videoInputRef.current?.click();
                     else if (type === "code") setCodeOpen((v) => !v);
                   }}
                 />
@@ -372,7 +397,7 @@ export default function StrategyPromptBox({
               type="submit"
               disabled={!value.trim() || loading}
               aria-label="Send message"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#3a3a3a] text-white transition-colors hover:bg-[#4a4a4a] disabled:cursor-not-allowed disabled:opacity-40"
+              className="ds-strategy-composer-send"
             >
               <ArrowUp className="size-4" aria-hidden />
             </button>
@@ -380,7 +405,7 @@ export default function StrategyPromptBox({
         ) : (
           <div
             className={`mt-2.5 flex items-center justify-between gap-2 ${
-              theme.isV2 ? "border-t border-white/[0.06] pt-2" : ""
+              theme.isV2 ? "border-t border-white/6 pt-2" : ""
             }`}
           >
             <div className="flex min-w-0 items-center gap-0.5">
@@ -409,7 +434,7 @@ export default function StrategyPromptBox({
                     role="menu"
                     className={`absolute bottom-full left-0 z-50 mb-1.5 min-w-38 overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
                       theme.isV2
-                        ? "border-white/[0.1] bg-[#141414]"
+                        ? "border-white/10 bg-[#141414]"
                         : "border-[#242424] bg-[#0a0a0a]"
                     }`}
                   >
@@ -418,7 +443,7 @@ export default function StrategyPromptBox({
                         key={type}
                         type="button"
                         role="menuitem"
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[#a0a0a0] transition-colors hover:bg-white/[0.05] hover:text-[#f4f4f4]"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[#a0a0a0] transition-colors hover:bg-white/5 hover:text-[#f4f4f4]"
                         onClick={() => {
                           if (type === "document") docInputRef.current?.click();
                           else if (type === "image") imageInputRef.current?.click();
@@ -481,7 +506,7 @@ export default function StrategyPromptBox({
             id={codeId}
             className={`rounded-xl border p-3 ${isComposer ? "mt-3" : "mt-2"} ${
               theme.isV2
-                ? "border-white/[0.08] bg-[#141414]"
+                ? "border-white/8 bg-[#141414]"
                 : "border-[#2a2a2a] bg-[#121212]"
             }`}
           >
@@ -515,11 +540,6 @@ export default function StrategyPromptBox({
           </div>
         ) : null}
 
-        {isComposer ? (
-          <p className="mt-2 text-center text-[10px] text-[#454545]">
-            Prototype — attachments stored locally · {activeLlm.name}
-          </p>
-        ) : null}
       </form>
     </div>
   );

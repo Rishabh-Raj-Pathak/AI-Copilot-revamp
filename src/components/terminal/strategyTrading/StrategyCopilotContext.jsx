@@ -15,8 +15,16 @@ const StrategyCopilotContext = createContext(null);
 const DEFAULT_STRATEGY_ID = "strat-btc-sniper";
 
 export function StrategyCopilotProvider({ children, copilotView }) {
-  const [strategies, setStrategies] = useState(INITIAL_WORKSTATION_STRATEGIES);
-  const [selectedStrategyId, setSelectedStrategyId] = useState(DEFAULT_STRATEGY_ID);
+  const [strategies, setStrategies] = useState(() =>
+    getUiVersionFromCopilotView(copilotView) === "v2"
+      ? []
+      : INITIAL_WORKSTATION_STRATEGIES,
+  );
+  const [selectedStrategyId, setSelectedStrategyId] = useState(() =>
+    getUiVersionFromCopilotView(copilotView) === "v2"
+      ? null
+      : DEFAULT_STRATEGY_ID,
+  );
   const [activityLog, setActivityLog] = useState([]);
   const [lastSetup, setLastSetup] = useState(null);
   const [uiVersion, setUiVersion] = useState(() =>

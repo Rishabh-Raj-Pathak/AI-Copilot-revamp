@@ -168,7 +168,9 @@
   --ds-terminal-view-thesis-bg: var(--palette-neutral-0);
   --ds-terminal-view-thesis-fg: var(--palette-neutral-100);
   --ds-terminal-view-thesis-border: var(--palette-neutral-12);
-  --ds-terminal-view-thesis-radius: var(--ds-radius-xs); /* 6px — subtle corners (Figma ref ~4–6px) */
+  --ds-terminal-view-thesis-radius: var(
+    --ds-radius-xs
+  ); /* 6px — subtle corners (Figma ref ~4–6px) */
   --ds-terminal-view-thesis-padding-y: 0.5rem; /* 8px */
   --ds-terminal-view-thesis-padding-x: 1rem; /* 16px */
   --ds-terminal-view-thesis-gap: 0.5rem; /* 8px */
@@ -301,6 +303,63 @@ dialog::backdrop {
 }
 
 @layer components {
+  @keyframes ds-running-brand-border {
+    0% {
+      background-position:
+        0 0,
+        0% 50%;
+    }
+    100% {
+      background-position:
+        0 0,
+        200% 50%;
+    }
+  }
+
+  @keyframes ds-prompt-glow-breathe {
+    0% {
+      opacity: 0.06;
+      transform: scale(0.985);
+      filter: blur(14px);
+    }
+    50% {
+      opacity: 0.2;
+      transform: scale(1.015);
+      filter: blur(19px);
+    }
+    100% {
+      opacity: 0.06;
+      transform: scale(0.985);
+      filter: blur(14px);
+    }
+  }
+
+  .ds-strategy-prompt-animated-border {
+    position: relative;
+    isolation: isolate;
+    overflow: visible;
+    background: #0f0f0f;
+  }
+
+  .ds-strategy-prompt-animated-border::before {
+    content: none;
+  }
+
+  .ds-strategy-prompt-animated-border::after {
+    content: "";
+    position: absolute;
+    inset: -16px;
+    z-index: -1;
+    border-radius: inherit;
+    background-image: var(--ds-brand-gradient-horizontal);
+    background-size: 180% 100%;
+    background-position: 0% 50%;
+    opacity: 0.1;
+    filter: blur(14px);
+    animation: ds-prompt-glow-breathe 3.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
   .ds-text-display {
     font-family: var(--ds-font-sans);
     font-size: var(--ds-text-display-size);
@@ -382,12 +441,16 @@ dialog::backdrop {
     flex-shrink: 0;
     gap: var(--ds-terminal-view-thesis-gap);
     box-sizing: border-box;
-    padding: var(--ds-terminal-view-thesis-padding-y) var(--ds-terminal-view-thesis-padding-x);
+    padding: var(--ds-terminal-view-thesis-padding-y)
+      var(--ds-terminal-view-thesis-padding-x);
     border-radius: var(--ds-terminal-view-thesis-radius);
     border: var(--ds-stroke-width) solid transparent;
     background-color: transparent;
     background-image:
-      linear-gradient(var(--ds-terminal-view-thesis-bg), var(--ds-terminal-view-thesis-bg)),
+      linear-gradient(
+        var(--ds-terminal-view-thesis-bg),
+        var(--ds-terminal-view-thesis-bg)
+      ),
       var(--ds-brand-gradient-horizontal);
     background-origin: padding-box, border-box;
     background-clip: padding-box, border-box;
@@ -401,7 +464,9 @@ dialog::backdrop {
 
   .ds-terminal-view-thesis-button:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--ds-ring), 0 0 0 4px var(--ds-background);
+    box-shadow:
+      0 0 0 2px var(--ds-ring),
+      0 0 0 4px var(--ds-background);
   }
 
   .ds-terminal-kpi-label {
@@ -486,7 +551,9 @@ dialog::backdrop {
     transform: translateY(-50%);
     border-radius: var(--ds-radius-full);
     pointer-events: none;
-    background-image: var(--ds-terminal-slider-rail-overlay), var(--ds-brand-gradient-horizontal);
+    background-image:
+      var(--ds-terminal-slider-rail-overlay),
+      var(--ds-brand-gradient-horizontal);
   }
 
   .ds-terminal-slider__track-fill {
@@ -532,7 +599,8 @@ dialog::backdrop {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    padding: var(--ds-terminal-connect-wallet-padding-y) var(--ds-terminal-connect-wallet-padding-x);
+    padding: var(--ds-terminal-connect-wallet-padding-y)
+      var(--ds-terminal-connect-wallet-padding-x);
     border-radius: var(--ds-terminal-connect-wallet-radius);
     border: none;
     background-image: var(--ds-terminal-connect-wallet-gradient);
@@ -558,6 +626,154 @@ dialog::backdrop {
 
   .ds-terminal-gradient-cta:active {
     filter: brightness(0.92);
+  }
+
+  .ds-strategy-composer-stage {
+    --prompt-glow-yellow: #c8b400;
+    --prompt-glow-lime: #75c96a;
+    --prompt-glow-teal: #00d5bf;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    isolation: isolate;
+  }
+
+  .ds-strategy-composer-glow {
+    position: absolute;
+    left: 50%;
+    bottom: -88px;
+    width: min(1180px, 98%);
+    height: clamp(170px, 20vw, 210px);
+    transform: translateX(-50%);
+    border-radius: 9999px;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        circle at 18% 55%,
+        rgb(210 190 0 / 0.58) 0%,
+        rgb(190 165 0 / 0.46) 28%,
+        rgb(210 190 0 / 0) 62%
+      ),
+      radial-gradient(
+        circle at 48% 50%,
+        rgb(110 210 95 / 0.44) 0%,
+        rgb(100 200 105 / 0.4) 30%,
+        rgb(110 210 95 / 0) 62%
+      ),
+      radial-gradient(
+        circle at 78% 50%,
+        rgb(0 215 180 / 0.57) 0%,
+        rgb(20 225 185 / 0.46) 33%,
+        rgb(0 215 180 / 0) 66%
+      );
+    opacity: 0.97;
+    filter: blur(72px);
+  }
+
+  .ds-strategy-composer-shell {
+    position: relative;
+    z-index: 1;
+    width: var(--ds-strategy-composer-shell-width, min(74vw, 1080px));
+    min-height: clamp(142px, 13vw, 178px);
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(12 17 18 / 0.96) 0%,
+        rgb(6 10 11 / 0.98) 100%
+      ),
+      linear-gradient(90deg, rgb(242 181 0 / 0.5) 0%, rgb(0 243 182 / 0.5) 100%);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      inset -0.5px 0 0 rgb(45 255 190 / 0.05),
+      inset 0.5px 0 0 rgb(230 210 30 / 0.05),
+      0 20px 50px rgb(0 0 0 / 0.46);
+  }
+
+  .ds-strategy-composer-cursor {
+    position: absolute;
+    left: 0;
+    top: 0.25rem;
+    width: 2px;
+    height: 1.15rem;
+    border-radius: 9999px;
+    background: #28e6be;
+    box-shadow: 0 0 8px rgb(40 230 190 / 0.25);
+    pointer-events: none;
+  }
+
+  .ds-strategy-composer-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background: rgb(20 24 26 / 0.8);
+    padding: 0 0.95rem;
+    font-size: 0.95rem;
+    line-height: 1;
+    color: rgb(255 255 255 / 0.72);
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .ds-strategy-composer-chip:hover {
+    border-color: rgb(255 255 255 / 0.18);
+    background: rgb(24 28 31 / 0.92);
+    color: rgb(255 255 255 / 0.82);
+  }
+
+  .ds-strategy-composer-chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .ds-strategy-composer-send {
+    display: flex;
+    height: 3.25rem;
+    width: 3.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    background: linear-gradient(
+      180deg,
+      rgb(16 21 24 / 0.9),
+      rgb(9 13 15 / 0.95)
+    );
+    color: #1de4be;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 0 0 1px rgb(0 0 0 / 0.35);
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .ds-strategy-composer-send:hover {
+    border-color: rgb(38 232 195 / 0.48);
+    color: #24efc9;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      0 0 18px rgb(20 220 184 / 0.16);
+  }
+
+  .ds-strategy-composer-send:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      0 0 0 1px rgb(0 0 0 / 0.22);
   }
 }
 
