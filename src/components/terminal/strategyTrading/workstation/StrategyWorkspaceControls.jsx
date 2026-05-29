@@ -225,21 +225,30 @@ export default function StrategyWorkspaceControls({
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5 self-center">
-        <Button
-          type="button"
-          size="sm"
-          variant={theme.isV2 ? "outline" : "default"}
-          className={theme.optimizeBtn}
-          onClick={onOptimize}
-          loading={optimizeLoading}
-          disabled={optimizeLoading}
-        >
-          <Sparkles
-            className={`size-3.5 shrink-0 ${theme.isV2 ? "text-[#19E6A3]" : "text-black"}`}
-            aria-hidden
-          />
-          Optimize
-        </Button>
+        {theme.isV2 ? (
+          <button
+            type="button"
+            className={`${theme.optimizeBtn} disabled:cursor-not-allowed disabled:opacity-50`}
+            onClick={onOptimize}
+            disabled={optimizeLoading}
+          >
+            <Sparkles className="size-3.5 shrink-0" aria-hidden />
+            {optimizeLoading ? "Optimizing…" : "Optimize"}
+          </button>
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            className={theme.optimizeBtn}
+            onClick={onOptimize}
+            loading={optimizeLoading}
+            disabled={optimizeLoading}
+          >
+            <Sparkles className="size-3.5 shrink-0 text-black" aria-hidden />
+            Optimize
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -8,8 +8,8 @@ import StrategyTemplateIllustration from "./StrategyTemplateIllustration.jsx";
 
 function StrategyTemplateCard({ template, selected, onSelect }) {
   const cardBorder = selected
-    ? "rgba(180,255,120,0.22)"
-    : "rgba(180,255,120,0.12)";
+    ? "rgba(255,255,255,0.12)"
+    : "rgba(255,255,255,0.06)";
   const cardSurfaceGradient =
     "linear-gradient(180deg, rgba(13,18,15,0.98) 0%, rgba(5,8,7,0.99) 100%)";
   const panelSurface =
@@ -17,7 +17,7 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
   const cardSurfaceHighlight = "inset 0 1px 0 rgba(255,255,255,0.05)";
   const cardInnerShadowBase = `${cardSurfaceHighlight}, inset 0 -18px 36px rgba(0,0,0,0.28)`;
   const cardInnerShadowHover = `${cardSurfaceHighlight}, inset 0 -20px 40px rgba(0,0,0,0.32)`;
-  const cardInnerShadowSelected = `${cardSurfaceHighlight}, inset 0 -22px 44px rgba(0,0,0,0.34), 0 0 0 1px rgba(180,255,120,0.08)`;
+  const cardInnerShadowSelected = `${cardSurfaceHighlight}, inset 0 -22px 44px rgba(0,0,0,0.34)`;
   const details = [
     { label: "Asset", value: template.cardAsset ?? template.asset },
     { label: "Timeframe", value: template.cardTimeframe ?? template.timeframe },
@@ -87,7 +87,7 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
                       <Icon
                         size={15}
                         strokeWidth={1.6}
-                        className="text-[#A7E84F]/70"
+                        className="text-[#19E6A3]/70"
                       />
                       <span className="text-[12px] text-[rgba(244,247,242,0.55)]">
                         {item.label}
@@ -210,7 +210,7 @@ export default function StrategyNewStrategyView({
             <span
               className="bg-clip-text text-transparent"
               style={{
-                backgroundImage: "var(--ds-terminal-connect-wallet-gradient)",
+                backgroundImage: "var(--ds-copilot-v2-gradient)",
                 WebkitTextFillColor: "transparent",
               }}
             >

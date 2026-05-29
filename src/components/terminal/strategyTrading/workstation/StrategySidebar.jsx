@@ -38,7 +38,9 @@ export default function StrategySidebar({
     <aside
       className={`flex h-full w-full min-h-0 flex-col border-r ${theme.panel}`}
     >
-      <div className={`shrink-0 border-b ${theme.panel} p-3`}>
+      <div
+        className={`shrink-0 border-b p-3 ${theme.panel} ${theme.isV2 ? "border-white/[0.04]" : ""}`}
+      >
         <button
           type="button"
           className={`${theme.isV2 ? theme.gradientCta : terminalGradientCta.componentClassName} ${theme.newStrategyBtn}`}
@@ -49,7 +51,7 @@ export default function StrategySidebar({
         </button>
         <label className="relative mt-2.5 flex items-center">
           <Search
-            className="pointer-events-none absolute left-2.5 size-3.5 text-[#585858]"
+            className={`pointer-events-none absolute left-2.5 size-3.5 ${theme.isV2 ? theme.textMuted : "text-[#585858]"}`}
             aria-hidden
           />
           <input
@@ -65,7 +67,7 @@ export default function StrategySidebar({
       <ScrollFade
         axis="x"
         fadeColor="#0D100F"
-        className={`shrink-0 border-b ${theme.panel}`}
+        className={`shrink-0 border-b ${theme.panel} ${theme.isV2 ? "border-white/[0.04]" : ""}`}
         viewportClassName="flex gap-1.5 px-2 py-2.5"
       >
         {SIDEBAR_FILTERS.map((f) => (
@@ -89,7 +91,9 @@ export default function StrategySidebar({
         viewportClassName="space-y-2 p-2.5"
       >
         {filtered.length === 0 ? (
-          <p className="px-1 py-4 text-center text-[10px] text-[#757575]">
+          <p
+            className={`px-1 py-4 text-center text-[10px] ${theme.isV2 ? theme.textMuted : "text-[#757575]"}`}
+          >
             No strategies match.
           </p>
         ) : (
@@ -111,17 +115,25 @@ export default function StrategySidebar({
                   </p>
                   <StatusBadge status={s.status} />
                 </div>
-                <p className="mt-1 text-[10px] text-[#757575]">
+                <p
+                  className={`mt-1 text-[10px] ${theme.isV2 ? theme.textSecondary : "text-[#757575]"}`}
+                >
                   {s.market?.replace(" · ", " · ") ?? s.market}
                 </p>
                 <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
-                  <span className="text-[#585858]">{s.lastUpdated}</span>
+                  <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
+                    {s.lastUpdated}
+                  </span>
                   {perf ? (
                     <span
                       className={
                         perf.startsWith("+") || perf.startsWith("Sharpe")
-                          ? "font-semibold text-[#00f3b6]"
-                          : "text-[#929292]"
+                          ? `font-semibold ${theme.isV2 ? theme.textPositive : "text-[#269755]"}`
+                          : perf.startsWith("-")
+                            ? `font-semibold ${theme.isV2 ? theme.textNegative : "text-[#d53d3d]"}`
+                            : theme.isV2
+                              ? theme.textMuted
+                              : "text-[#929292]"
                       }
                     >
                       {perf}

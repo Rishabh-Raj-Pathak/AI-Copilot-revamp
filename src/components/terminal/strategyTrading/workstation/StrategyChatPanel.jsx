@@ -11,10 +11,15 @@ import ScrollFade from "./ScrollFade.jsx";
 import StrategyPromptBox from "./StrategyPromptBox.jsx";
 
 function ChatTypingIndicator() {
+  const theme = useCopilotTheme();
   return (
     <div className="copilot-chat-message-in flex justify-start">
       <div
-        className="inline-flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/[0.08] bg-[#141414] px-4 py-3"
+        className={
+          theme.isV2
+            ? "inline-flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/6 bg-[var(--ds-copilot-v2-elevated)] px-4 py-3"
+            : "inline-flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/[0.08] bg-[#141414] px-4 py-3"
+        }
         role="status"
         aria-live="polite"
         aria-label="Hyprearn is analyzing"

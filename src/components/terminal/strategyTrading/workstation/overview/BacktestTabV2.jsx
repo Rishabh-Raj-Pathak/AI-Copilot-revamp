@@ -83,7 +83,7 @@ export default function BacktestTabV2({
                   <td className="px-3 py-2">{t.entry}</td>
                   <td className="px-3 py-2">{t.exit}</td>
                   <td
-                    className={`px-3 py-2 ${String(t.pnl).startsWith("+") ? "text-[#00f3b6]" : "text-[#d53d3d]"}`}
+                    className={`px-3 py-2 ${String(t.pnl).startsWith("+") ? "text-[var(--ds-copilot-v2-positive)]" : "text-[var(--ds-copilot-v2-negative)]"}`}
                   >
                     {t.pnl}
                   </td>

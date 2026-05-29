@@ -108,8 +108,10 @@ export default function CopilotNavDropdown({
           id={menuId}
           role="menu"
           aria-label="Copilot mode"
-          className={`absolute z-[120] min-w-[12.75rem] overflow-hidden rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg ${
-            isMobile ? "left-0 top-full mt-1" : "left-0 top-full mt-1"
+          className={`absolute z-[120] min-w-[12.75rem] overflow-hidden rounded-md border py-1 shadow-lg ${
+            isV2Nav
+              ? "left-0 top-full mt-1 border-white/6 bg-[#141716]"
+              : "left-0 top-full mt-1 border-[#242424] bg-[#121212]"
           }`}
         >
           {COPILOT_VIEWS.map((v) => (

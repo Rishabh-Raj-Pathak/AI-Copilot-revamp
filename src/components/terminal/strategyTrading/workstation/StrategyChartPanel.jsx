@@ -1,4 +1,9 @@
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
+import {
+  COPILOT_V2_MINT,
+  COPILOT_V2_NEGATIVE,
+  COPILOT_V2_POSITIVE,
+} from "../strategyCopilotUi.js";
 
 /** Mock candlestick chart — minimal trading-terminal style. */
 
@@ -81,21 +86,32 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
   const takeProfit = setup?.takeProfit ?? "$83,082";
 
   const shellClass = embedded ? "" : `overflow-hidden ${theme.card}`;
+  const isV2Chart = theme.isV2 || embedded;
 
   return (
     <div className={shellClass}>
       <div
-        className={`flex items-center justify-between px-3 py-2.5 ${theme.isV2 || embedded ? "border-b border-white/4.5" : "border-b border-[#242424] py-1.5"}`}
+        className={`flex items-center justify-between px-3 py-2.5 ${isV2Chart ? "border-b border-white/[0.04]" : "border-b border-[#242424] py-1.5"}`}
       >
         <div className="flex items-center gap-2 text-xs">
           <span
             className={
-              theme.isV2 ? "text-sm font-bold text-white" : "font-semibold text-white"
+              theme.isV2
+                ? "text-sm font-semibold text-[rgba(255,255,255,0.92)]"
+                : "font-semibold text-white"
             }
           >
             {pair}
           </span>
-          <span className="text-[#585858]">{timeframe}</span>
+          <span
+            className={
+              theme.isV2
+                ? "text-[11px] text-[rgba(255,255,255,0.36)]"
+                : "text-[#585858]"
+            }
+          >
+            {timeframe}
+          </span>
         </div>
         <span
           className={`tabular-nums ${
@@ -108,9 +124,15 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
         </span>
       </div>
 
-      <div className="bg-[#070707] px-2 pt-2 pb-1">
+      <div
+        className={
+          isV2Chart
+            ? "bg-[#101312] px-2 pt-2 pb-1"
+            : "bg-[#070707] px-2 pt-2 pb-1"
+        }
+      >
         <div
-          className={`relative w-full ${theme.isV2 ? "min-h-[12rem] sm:min-h-[13rem]" : "min-h-[10rem] sm:min-h-[11rem]"}`}
+          className={`relative w-full ${theme.isV2 ? "min-h-[12rem] sm:min-h-[14rem]" : "min-h-[10rem] sm:min-h-[11rem]"}`}
         >
           <svg
             viewBox={`0 0 ${w} ${h}`}
@@ -141,7 +163,13 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               const highY = y(c.h);
               const lowY = y(c.l);
               const bullish = c.c >= c.o;
-              const color = bullish ? "#00f3b6" : "#d53d3d";
+              const color = bullish
+                ? theme.isV2
+                  ? "#19D98B"
+                  : "#00f3b6"
+                : theme.isV2
+                  ? "#EF4444"
+                  : "#d53d3d";
               const bodyTop = Math.min(openY, closeY);
               const bodyHeight = Math.max(Math.abs(closeY - openY), 0.6);
               return (
@@ -171,7 +199,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               x2={padL + plotW}
               y1={entryY}
               y2={entryY}
-              stroke="#00f3b6"
+              stroke={theme.isV2 ? COPILOT_V2_MINT : "#00f3b6"}
               strokeWidth="0.5"
               strokeDasharray="3 2"
               opacity="0.7"
@@ -197,13 +225,37 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               opacity="0.7"
             />
 
-            <circle cx={padL + barW * 8} cy={y(candles[8]?.l ?? entryVal)} r="1.5" fill="#00f3b6" opacity="0.9" />
-            <circle cx={padL + barW * 22} cy={y(candles[22]?.h ?? tpVal)} r="1.5" fill="#d53d3d" opacity="0.9" />
+            <circle
+              cx={padL + barW * 8}
+              cy={y(candles[8]?.l ?? entryVal)}
+              r="1.5"
+              fill={theme.isV2 ? COPILOT_V2_MINT : "#00f3b6"}
+              opacity="0.9"
+            />
+            <circle
+              cx={padL + barW * 22}
+              cy={y(candles[22]?.h ?? tpVal)}
+              r="1.5"
+              fill={theme.isV2 ? COPILOT_V2_NEGATIVE : "#d53d3d"}
+              opacity="0.9"
+            />
 
             {[
-              { y: entryY, label: "Entry", fill: "#00f3b6" },
-              { y: slY, label: "SL", fill: "#d53d3d" },
-              { y: tpY, label: "TP", fill: "#269755" },
+              {
+                y: entryY,
+                label: "Entry",
+                fill: theme.isV2 ? COPILOT_V2_MINT : "#00f3b6",
+              },
+              {
+                y: slY,
+                label: "SL",
+                fill: theme.isV2 ? COPILOT_V2_NEGATIVE : "#d53d3d",
+              },
+              {
+                y: tpY,
+                label: "TP",
+                fill: theme.isV2 ? COPILOT_V2_POSITIVE : "#269755",
+              },
             ].map(({ y: ly, label, fill }) => (
               <g key={label}>
                 <rect
@@ -256,7 +308,15 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
                   y={h - vh}
                   width={bw}
                   height={vh}
-                  fill={bullish ? "#00f3b6" : "#d53d3d"}
+                  fill={
+                    bullish
+                      ? theme.isV2
+                        ? COPILOT_V2_POSITIVE
+                        : "#00f3b6"
+                      : theme.isV2
+                        ? COPILOT_V2_NEGATIVE
+                        : "#d53d3d"
+                  }
                   opacity="0.12"
                 />
               );
@@ -266,25 +326,49 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
       </div>
 
       <div
-        className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2.5 text-[10px] ${theme.isV2 || embedded ? "bg-[#111111]" : "border-t border-[#242424]"}`}
+        className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-[10px] ${
+          theme.isV2 || embedded
+            ? "border-t border-white/[0.04] bg-transparent"
+            : "border-t border-[#242424]"
+        }`}
       >
         <span>
-          <span className="text-[#585858]">Entry </span>
-          <span className="text-[#00f3b6]">{entryZone}</span>
+          <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
+            Entry{" "}
+          </span>
+          <span className={theme.isV2 ? theme.textMint : "text-[#00f3b6]"}>
+            {entryZone}
+          </span>
         </span>
-        <span className="text-[#3a3a3a]" aria-hidden>
+        <span
+          className={theme.isV2 ? "text-white/10" : "text-[#3a3a3a]"}
+          aria-hidden
+        >
           |
         </span>
         <span>
-          <span className="text-[#585858]">SL </span>
-          <span className="text-[#d53d3d]">{stopLoss}</span>
+          <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
+            SL{" "}
+          </span>
+          <span className={theme.isV2 ? theme.textNegative : "text-[#d53d3d]"}>
+            {stopLoss}
+          </span>
         </span>
-        <span className="text-[#3a3a3a]" aria-hidden>
+        <span
+          className={theme.isV2 ? "text-white/10" : "text-[#3a3a3a]"}
+          aria-hidden
+        >
           |
         </span>
         <span>
-          <span className="text-[#585858]">TP </span>
-          <span className="text-[#269755]">{takeProfit}</span>
+          <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
+            TP{" "}
+          </span>
+          <span
+            className={theme.isV2 ? theme.textPositive : "text-[#269755]"}
+          >
+            {takeProfit}
+          </span>
         </span>
       </div>
     </div>

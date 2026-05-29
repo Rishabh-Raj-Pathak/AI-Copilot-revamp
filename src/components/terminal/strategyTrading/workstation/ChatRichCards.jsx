@@ -32,7 +32,7 @@ function ConfigCard({ data, onPreset }) {
   ];
 
   const shell = theme.isV2
-    ? "mt-4 overflow-hidden rounded-xl border border-white/[0.06] bg-[#111111]/90"
+    ? theme.richCardShell
     : `mt-3 p-3.5 ${theme.cardInner}`;
 
   return (
@@ -98,14 +98,14 @@ function ConfigCard({ data, onPreset }) {
 
 function richCardShell(theme, className = "") {
   return theme.isV2
-    ? `mt-4 overflow-hidden rounded-xl border border-white/[0.06] bg-[#111111]/90 ${className}`
+    ? `${theme.richCardShell} ${className}`
     : `mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3 ${className}`;
 }
 
 function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
   const theme = useCopilotTheme();
   const cells = [
-    ["Total Return", data.totalReturn, "text-[#00f3b6]"],
+    ["Total Return", data.totalReturn, "text-[var(--ds-copilot-v2-positive)]"],
     ["Max Drawdown", data.maxDrawdown, "text-[#d53d3d]"],
     ["Win Rate", data.winRate, "text-[#f4f4f4]"],
     ["Sharpe", data.sharpeRatio, "text-[#f4f4f4]"],
@@ -127,7 +127,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
         }
       >
         <Check
-          className={`size-3.5 ${theme.isV2 ? "text-[#00f3b6]" : "text-[#00f3b6]"}`}
+          className={`size-3.5 ${theme.isV2 ? theme.textMint : "text-[#00f3b6]"}`}
           aria-hidden
         />
         <p
@@ -290,8 +290,16 @@ function PaperCard({ data, onViewPosition, onReview }) {
                 : "text-[10px]"
             }`}
           >
-            <dt className="capitalize text-[#8a8a8a]">{k}</dt>
-            <dd className="font-medium text-[#f4f4f4]">{v}</dd>
+            <dt
+              className={`capitalize ${theme.isV2 ? theme.textMuted : "text-[#8a8a8a]"}`}
+            >
+              {k}
+            </dt>
+            <dd
+              className={`font-medium ${theme.isV2 ? theme.textPrimary : "text-[#f4f4f4]"}`}
+            >
+              {v}
+            </dd>
           </div>
         ))}
       </dl>

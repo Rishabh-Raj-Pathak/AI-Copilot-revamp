@@ -81,10 +81,16 @@ function EmptySectionTable({ columns, message, subtitle, theme }) {
 function Metric({ label, value, tone, theme }) {
   const color =
     tone === "positive"
-      ? "text-[#00f3b6]"
+      ? theme.isV2
+        ? theme.textPositive
+        : "text-[#00f3b6]"
       : tone === "negative"
-        ? "text-[#d53d3d]"
-        : "text-white";
+        ? theme.isV2
+          ? theme.textNegative
+          : "text-[#d53d3d]"
+        : theme.isV2
+          ? theme.textPrimary
+          : "text-white";
   return (
     <div className={theme.metricCard}>
       <p className={theme.metricLabel}>{label}</p>
@@ -121,10 +127,10 @@ function MetricsGrid({ strategy, theme, compact }) {
             const row = Math.floor(i / 3);
             const color =
               cell.tone === "positive"
-                ? "text-[#00f3b6]"
+                ? theme.textPositive
                 : cell.tone === "negative"
-                  ? "text-[#d53d3d]"
-                  : "text-white";
+                  ? theme.textNegative
+                  : theme.textPrimary;
             return (
               <div
                 key={cell.label}
@@ -438,15 +444,15 @@ function ExecutionNestedTabs({ strategy, pos, theme, tabContentClass }) {
   );
 }
 
-function PaperTradingSummary({ strategy, pos, innerCard }) {
+function PaperTradingSummary({ strategy, pos, innerCard, theme }) {
   return (
     <div className="space-y-3">
       <p className="text-xs">
         Status:{" "}
-        <span className="font-medium text-[#00f3b6]">Paper Trading Active</span>
+        <span className={`font-medium ${theme.textMint}`}>Paper Trading Active</span>
       </p>
       {pos ? (
-        <div className={`p-3 ${innerCard}`}>
+        <div className={`p-3 ${theme.isV2 ? "rounded-lg border border-white/[0.05] bg-[#101312]" : innerCard}`}>
           <p className="text-xs font-semibold text-white">
             {pos.market} {pos.side}
           </p>
@@ -464,9 +470,11 @@ function PaperTradingSummary({ strategy, pos, innerCard }) {
                 <dt className="text-[#757575]">{k}</dt>
                 <dd
                   className={
-                    k === "PnL" && String(v).startsWith("+")
-                      ? "font-medium text-[#00f3b6]"
-                      : "text-[#bfbfbf]"
+                            k === "PnL" && String(v).startsWith("+")
+                              ? `font-medium ${theme.textPositive}`
+                              : theme.isV2
+                                ? theme.textSecondary
+                                : "text-[#bfbfbf]"
                   }
                 >
                   {v}
@@ -520,7 +528,7 @@ export default function StrategyWorkspaceTabs({
                 <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
                   {t.label}
                   {t.id === "paper" && isPaperActive ? (
-                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
+                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[var(--ds-copilot-v2-mint)]" />
                   ) : null}
                   {t.id === "deployed" && isDeployed ? (
                     <span className="ml-1 inline-block size-1.5 rounded-full bg-[#19E6A3]" />
@@ -668,6 +676,7 @@ export default function StrategyWorkspaceTabs({
                   strategy={strategy}
                   pos={pos}
                   innerCard={innerCard}
+                  theme={theme}
                 />
                 {theme.isV2 ? (
                   <ExecutionNestedTabs strategy={strategy} pos={pos} theme={theme} />

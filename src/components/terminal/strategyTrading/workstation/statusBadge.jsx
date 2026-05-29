@@ -10,24 +10,23 @@ const STATUS_STYLES_V1 = {
 };
 
 const STATUS_STYLES_V2 = {
-  Draft: "border border-white/[0.05] bg-white/[0.02] text-[rgba(255,255,255,0.36)]",
-  Backtested:
-    "border border-[#19E6A3]/18 bg-[#19E6A3]/10 text-[#19E6A3]",
-  "Paper Trading": "border border-[#19E6A3]/18 bg-[#19E6A3]/10 text-[#19E6A3]",
-  Ready: "border border-[#19E6A3]/18 bg-[#19E6A3]/10 text-[#19E6A3]",
-  Paused: "border border-white/[0.05] bg-white/[0.02] text-[rgba(255,255,255,0.36)]",
-  Completed: "border border-white/[0.05] bg-white/[0.02] text-[rgba(255,255,255,0.36)]",
+  Draft: "text-[var(--ds-copilot-v2-text-muted)]",
+  Backtested: "text-[var(--ds-copilot-v2-mint)]",
+  "Paper Trading": "text-[var(--ds-copilot-v2-mint)]",
+  Ready: "text-[var(--ds-copilot-v2-positive)]",
+  Paused: "text-[rgba(255,255,255,0.36)]",
+  Completed: "text-[rgba(255,255,255,0.36)]",
 };
 
 export function StatusBadge({ status, className = "", uiVersion }) {
   const theme = useCopilotTheme();
   const isV2 = uiVersion ? uiVersion === "v2" : theme.isV2;
   const styles = isV2 ? STATUS_STYLES_V2 : STATUS_STYLES_V1;
-  const badgeClass = isV2 ? theme.badge : "rounded px-1.5 py-0.5";
+  const badgeClass = isV2
+    ? "shrink-0 text-[10px] font-medium"
+    : `inline-flex shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium`;
   return (
-    <span
-      className={`inline-flex shrink-0 text-[10px] font-medium ${badgeClass} ${styles[status] ?? styles.Draft} ${className}`}
-    >
+    <span className={`${badgeClass} ${styles[status] ?? styles.Draft} ${className}`}>
       {status}
     </span>
   );

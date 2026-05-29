@@ -1,6 +1,7 @@
 import { Plus, Save } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
+import { formatStrategyHeaderMeta } from "../strategyCopilotUi.js";
 import { StatusBadge } from "./statusBadge.jsx";
 import StrategyChartPanel from "./StrategyChartPanel.jsx";
 import StrategyNewStrategyView from "./StrategyNewStrategyView.jsx";
@@ -91,7 +92,7 @@ export default function StrategyCenterWorkspace({
   return (
     <div className={scrollShellClass}>
       <header
-        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.isV2 ? "border-white/5 bg-black" : "border-[#242424]"}`}
+        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.isV2 ? "border-white/[0.06] bg-[#0D100F]" : "border-[#242424]"}`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -100,20 +101,30 @@ export default function StrategyCenterWorkspace({
               <StatusBadge status={strategy.status} />
             </div>
             <p className={`mt-1.5 ${theme.headerMeta}`}>
-              {strategy.market} · {strategy.timeframe} · {strategy.strategy} ·{" "}
-              {strategy.model} Model
+              {formatStrategyHeaderMeta(strategy)}
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className={`gap-1.5 ${theme.outlineBtn}`}
-              onClick={onSave}
-            >
-              <Save className="size-3.5" aria-hidden />
-              Save
-            </Button>
+            {theme.isV2 ? (
+              <button
+                type="button"
+                className={`${theme.secondaryActionBtn} gap-1.5`}
+                onClick={onSave}
+              >
+                <Save className="size-3.5" aria-hidden />
+                Save
+              </button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className={`gap-1.5 ${theme.outlineBtn}`}
+                onClick={onSave}
+              >
+                <Save className="size-3.5" aria-hidden />
+                Save
+              </Button>
+            )}
             <button
               type="button"
               className={`${theme.gradientCta} gap-1.5 px-4 text-xs sm:text-sm ${!canReview ? "pointer-events-none opacity-50" : ""}`}
