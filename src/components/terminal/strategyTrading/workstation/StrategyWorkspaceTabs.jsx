@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "../../../ui/button.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs.jsx";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
@@ -5,12 +6,17 @@ import StrategyFlowStepper from "../StrategyFlowStepper.jsx";
 import StrategyLogicCard from "./StrategyLogicCard.jsx";
 import BacktestTabV2 from "./overview/BacktestTabV2.jsx";
 import OverviewTabV2 from "./overview/OverviewTabV2.jsx";
+import ScrollFade from "./ScrollFade.jsx";
 import { WORKSPACE_TABS } from "../strategyWorkstationMockData.js";
 
 const WORKSPACE_TABS_V2 = [
   { id: "overview", label: "Overview" },
   { id: "backtest", label: "Backtest" },
   { id: "paper", label: "Paper Trading" },
+  { id: "deployed", label: "Deployed" },
+];
+
+const EXECUTION_SUBTABS = [
   { id: "positions", label: "Positions" },
   { id: "open-orders", label: "Open Orders" },
   { id: "order-history", label: "Order History" },
@@ -18,7 +24,42 @@ const WORKSPACE_TABS_V2 = [
   { id: "balance", label: "Balance" },
 ];
 
-function EmptySectionTable({ columns, message }) {
+function EmptySectionTable({ columns, message, subtitle, theme }) {
+  if (theme?.isV2) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-white/6 bg-[#141716]">
+        <ScrollFade
+          axis="x"
+          fadeColor="var(--ds-copilot-v2-elevated)"
+          className="border-b border-white/[0.04]"
+        >
+          <table className="w-full min-w-max text-left text-xs">
+            <thead className="text-[rgba(255,255,255,0.36)]">
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col}
+                    className="whitespace-nowrap px-3 py-2 font-medium"
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          </table>
+        </ScrollFade>
+        <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+          <p className="text-sm text-[rgba(255,255,255,0.58)]">{message}</p>
+          {subtitle ? (
+            <p className="mt-2 max-w-md text-xs leading-relaxed text-[rgba(255,255,255,0.36)]">
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto rounded-lg border border-[#242424]">
       <table className="w-full min-w-max text-left text-xs">
@@ -134,15 +175,15 @@ function EquityCurveMock({ theme, compact }) {
       <svg viewBox="0 0 240 56" className={`mt-3 w-full ${chartH}`} aria-hidden>
         <defs>
           <linearGradient id="eq-fill-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#f2b500" stopOpacity="0.26" />
-            <stop offset="100%" stopColor="#f2b500" stopOpacity="0" />
+            <stop offset="0%" stopColor="#19E6A3" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#19E6A3" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="eq-line-gradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#f4c31f" />
-            <stop offset="100%" stopColor="#f2b500" />
+            <stop offset="0%" stopColor="#D7F70B" />
+            <stop offset="100%" stopColor="#16E6A3" />
           </linearGradient>
           <filter id="eq-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#f2b500" floodOpacity="0.45" />
+            <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#19E6A3" floodOpacity="0.35" />
           </filter>
         </defs>
 
@@ -174,12 +215,12 @@ function EquityCurveMock({ theme, compact }) {
           strokeDasharray="4 3"
           strokeLinecap="round"
         />
-        <circle cx="232" cy="11" r="2.4" fill="#f2b500" />
+        <circle cx="232" cy="11" r="2.4" fill="#19E6A3" />
         <circle cx="232" cy="15" r="2" fill="#7b7b7b" />
       </svg>
       <div className="mt-2.5 flex gap-4 text-[10px]">
-        <span className="flex items-center gap-1.5 text-[#f2b500]">
-          <span className="inline-block h-px w-3 bg-[#f2b500]" aria-hidden />
+        <span className="flex items-center gap-1.5 text-[#19E6A3]">
+          <span className="inline-block h-px w-3 bg-[#19E6A3]" aria-hidden />
           Strategy
         </span>
         <span className="flex items-center gap-1.5 text-[#585858]">
@@ -249,6 +290,201 @@ function AiNotesPanel({ setup, theme }) {
   );
 }
 
+function ExecutionNestedTabs({ strategy, pos, theme, tabContentClass }) {
+  const [executionTab, setExecutionTab] = useState("positions");
+  const nestedContentClass = theme.isV2 ? "mt-3" : "mt-3 space-y-3";
+
+  return (
+    <Tabs value={executionTab} onValueChange={setExecutionTab} className="mt-4">
+      {theme.isV2 ? (
+        <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-elevated)">
+          <TabsList className={`${theme.tabsList} flex-wrap`}>
+            {EXECUTION_SUBTABS.map((t) => (
+              <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </ScrollFade>
+      ) : (
+        <TabsList className={`${theme.tabsList} flex-wrap`}>
+          {EXECUTION_SUBTABS.map((t) => (
+            <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+              {t.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      )}
+
+      <TabsContent value="positions" className={nestedContentClass}>
+        {theme.isV2 ? (
+          <EmptySectionTable
+            columns={[
+              "Coin",
+              "Size",
+              "Position Value",
+              "Entry Price",
+              "Current Price",
+              "PNL (ROE%)",
+              "Liq. Price",
+              "Margin",
+              "Funding",
+              "TP/SL",
+              "Exp. Profit(%) / Exp. Loss(%)",
+              "Action",
+            ]}
+            message="No open positions yet."
+            subtitle={
+              strategy?.paperTrading?.status === "active"
+                ? "Paper trading is active. Simulated positions will appear here once the strategy enters a trade."
+                : undefined
+            }
+            theme={theme}
+          />
+        ) : pos ? (
+          <div className="overflow-x-auto rounded-lg border border-[#242424]">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-[#242424] text-[#757575]">
+                <tr>
+                  <th className="px-3 py-2">Market</th>
+                  <th className="px-3 py-2">Side</th>
+                  <th className="px-3 py-2">Size</th>
+                  <th className="px-3 py-2">Entry</th>
+                  <th className="px-3 py-2">Current</th>
+                  <th className="px-3 py-2">PnL</th>
+                  <th className="px-3 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="px-3 py-2">{pos.market}</td>
+                  <td className="px-3 py-2">{pos.side}</td>
+                  <td className="px-3 py-2">{pos.size ?? "—"}</td>
+                  <td className="px-3 py-2">{pos.entry}</td>
+                  <td className="px-3 py-2">{pos.current}</td>
+                  <td className="px-3 py-2 text-[#00f3b6]">{pos.pnl}</td>
+                  <td className="px-3 py-2">{pos.status}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-xs text-[#757575]">No open paper or live positions.</p>
+        )}
+      </TabsContent>
+
+      <TabsContent value="open-orders" className={nestedContentClass}>
+        <EmptySectionTable
+          columns={[
+            "Time",
+            "Type",
+            "Coin",
+            "Direction",
+            "Original Size",
+            "Filled Size",
+            "Order Value",
+            "Price",
+            "Trigger Conditions",
+            "Action",
+          ]}
+          message="No open orders."
+          theme={theme}
+        />
+      </TabsContent>
+
+      <TabsContent value="order-history" className={nestedContentClass}>
+        <EmptySectionTable
+          columns={[
+            "Time",
+            "Type",
+            "Coin",
+            "Direction",
+            "Original Size",
+            "Filled Size",
+            "Order Value",
+            "Price",
+            "Trigger Conditions",
+          ]}
+          message="No order history."
+          theme={theme}
+        />
+      </TabsContent>
+
+      <TabsContent value="trade-history" className={nestedContentClass}>
+        <EmptySectionTable
+          columns={[
+            "Time",
+            "Coin",
+            "Direction",
+            "Price",
+            "Size",
+            "Trade Value",
+            "Fee",
+            "Closed PNL",
+          ]}
+          message="No trade history."
+          theme={theme}
+        />
+      </TabsContent>
+
+      <TabsContent value="balance" className={nestedContentClass}>
+        <EmptySectionTable
+          columns={["Coin", "Total balance", "Available balance", "USDC Value"]}
+          message="No balance data."
+          theme={theme}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function PaperTradingSummary({ strategy, pos, innerCard }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs">
+        Status:{" "}
+        <span className="font-medium text-[#00f3b6]">Paper Trading Active</span>
+      </p>
+      {pos ? (
+        <div className={`p-3 ${innerCard}`}>
+          <p className="text-xs font-semibold text-white">
+            {pos.market} {pos.side}
+          </p>
+          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+            {[
+              ["Entry", pos.entry],
+              ["Current", pos.current],
+              ["PnL", pos.pnl],
+              ["Stop loss", pos.stopLoss],
+              ["Take profit", pos.takeProfit],
+              ["Time in trade", pos.timeInTrade],
+              ["Status", pos.status],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-2">
+                <dt className="text-[#757575]">{k}</dt>
+                <dd
+                  className={
+                    k === "PnL" && String(v).startsWith("+")
+                      ? "font-medium text-[#00f3b6]"
+                      : "text-[#bfbfbf]"
+                  }
+                >
+                  {v}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ) : null}
+      <ul className="space-y-0.5 text-[11px] text-[#757575]">
+        {strategy.paperTrading.events?.map((e) => (
+          <li key={e}>· {e}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function StrategyWorkspaceTabs({
   strategy,
   activeTab,
@@ -265,6 +501,8 @@ export default function StrategyWorkspaceTabs({
   const tabs = theme.isV2 ? WORKSPACE_TABS_V2 : WORKSPACE_TABS;
   const isV2TabValid = tabs.some((t) => t.id === activeTab);
   const resolvedTab = theme.isV2 && !isV2TabValid ? "overview" : activeTab;
+  const isPaperActive = strategy?.paperTrading?.status === "active";
+  const isDeployed = strategy?.deployment?.status === "active";
 
   const tabContentClass = theme.isV2 ? "mt-0 p-4 sm:p-5" : "mt-3 space-y-3";
 
@@ -275,16 +513,37 @@ export default function StrategyWorkspaceTabs({
       ) : null}
 
       <Tabs value={resolvedTab} onValueChange={onTabChange} className={theme.isV2 ? "" : "mt-4"}>
-        <TabsList className={theme.tabsList}>
-          {tabs.map((t) => (
-            <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
-              {t.label}
-              {t.id === "paper" && strategy?.paperTrading?.status === "active" ? (
-                <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
-              ) : null}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {theme.isV2 ? (
+          <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-bg)">
+            <TabsList className={theme.tabsList}>
+              {tabs.map((t) => (
+                <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+                  {t.label}
+                  {t.id === "paper" && isPaperActive ? (
+                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
+                  ) : null}
+                  {t.id === "deployed" && isDeployed ? (
+                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[#19E6A3]" />
+                  ) : null}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </ScrollFade>
+        ) : (
+          <TabsList className={theme.tabsList}>
+            {tabs.map((t) => (
+              <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+                {t.label}
+                {t.id === "paper" && isPaperActive ? (
+                  <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
+                ) : null}
+                {t.id === "deployed" && isDeployed ? (
+                  <span className="ml-1 inline-block size-1.5 rounded-full bg-[#19E6A3]" />
+                ) : null}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         <div className={theme.isV2 ? theme.tabsContentWrap : undefined}>
           <TabsContent value="overview" className={tabContentClass}>
@@ -389,62 +648,66 @@ export default function StrategyWorkspaceTabs({
           </TabsContent>
 
           <TabsContent value="paper" className={tabContentClass}>
-            {strategy?.paperTrading?.status !== "active" ? (
+            {!isPaperActive ? (
               <>
                 <p className="text-xs leading-relaxed text-[#929292]">
                   Simulate this strategy using market-like data without risking real
                   capital. Manual approval is required before any live deployment.
                 </p>
-                <Button size="sm" variant="default" onClick={onStartPaper}>
+                <button
+                  type="button"
+                  className={theme.primaryActionBtn}
+                  onClick={onStartPaper}
+                >
                   Start Paper Trading
-                </Button>
+                </button>
               </>
             ) : (
-              <div className="space-y-3">
-                <p className="text-xs">
-                  Status:{" "}
-                  <span className="font-medium text-[#00f3b6]">Paper Trading Active</span>
-                </p>
-                {pos ? (
-                  <div className={`p-3 ${innerCard}`}>
-                    <p className="text-xs font-semibold text-white">
-                      {pos.market} {pos.side}
-                    </p>
-                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                      {[
-                        ["Entry", pos.entry],
-                        ["Current", pos.current],
-                        ["PnL", pos.pnl],
-                        ["Stop loss", pos.stopLoss],
-                        ["Take profit", pos.takeProfit],
-                        ["Time in trade", pos.timeInTrade],
-                        ["Status", pos.status],
-                      ].map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-2">
-                          <dt className="text-[#757575]">{k}</dt>
-                          <dd
-                            className={
-                              k === "PnL" && String(v).startsWith("+")
-                                ? "font-medium text-[#00f3b6]"
-                                : "text-[#bfbfbf]"
-                            }
-                          >
-                            {v}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
+              <div className="space-y-1">
+                <PaperTradingSummary
+                  strategy={strategy}
+                  pos={pos}
+                  innerCard={innerCard}
+                />
+                {theme.isV2 ? (
+                  <ExecutionNestedTabs strategy={strategy} pos={pos} theme={theme} />
                 ) : null}
-                <ul className="space-y-0.5 text-[11px] text-[#757575]">
-                  {strategy.paperTrading.events?.map((e) => (
-                    <li key={e}>· {e}</li>
-                  ))}
-                </ul>
               </div>
             )}
           </TabsContent>
 
+          {theme.isV2 ? (
+            <TabsContent value="deployed" className={tabContentClass}>
+              {!isDeployed ? (
+                <>
+                  <p className="text-xs leading-relaxed text-[#929292]">
+                    Deploy this strategy after completing the manual review. Execution
+                    tables (positions, orders, history, balance) appear here once
+                    deployed.
+                  </p>
+                  <p className="mt-2 text-[11px] text-[#757575]">
+                    Use the Deploy button in the header and confirm manual review to
+                    activate live monitoring.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-xs">
+                    Status:{" "}
+                    <span className="font-medium text-[#19E6A3]">Deployed</span>
+                  </p>
+                  <p className="text-[11px] text-[#757575]">
+                    Live execution monitoring — manual approval remains required for
+                    each trade.
+                  </p>
+                  <ExecutionNestedTabs strategy={strategy} pos={pos} theme={theme} />
+                </div>
+              )}
+            </TabsContent>
+          ) : null}
+
+          {!theme.isV2 ? (
+          <>
           <TabsContent value="positions" className={tabContentClass}>
             {theme.isV2 ? (
               <EmptySectionTable
@@ -553,6 +816,8 @@ export default function StrategyWorkspaceTabs({
               message="No balance data."
             />
           </TabsContent>
+          </>
+          ) : null}
 
           <TabsContent value="trades" className={tabContentClass}>
             {theme.isV2 ? (

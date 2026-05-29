@@ -19,6 +19,7 @@ import {
 } from "../strategyWorkstationMockData.js";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import ChatModelPicker from "./ChatModelPicker.jsx";
+import ScrollFade from "./ScrollFade.jsx";
 
 /** @typedef {'document'|'link'|'image'|'code'|'video'} AttachmentType */
 /** @typedef {{ id: string, type: AttachmentType, label: string, meta?: string }} PromptAttachment */
@@ -68,14 +69,15 @@ function AttachPill({ icon: Icon, label, onClick, disabled, isComposer = false }
       type="button"
       disabled={disabled}
       onClick={onClick}
+      aria-label={isComposer ? label : undefined}
       className={
         isComposer
-          ? "ds-strategy-composer-chip"
+          ? "ds-strategy-composer-chip ds-strategy-composer-chip--icon"
           : "inline-flex items-center gap-1.5 rounded-full border border-[#333] bg-[#141414] px-3 py-1.5 text-xs text-[#929292] transition-colors hover:border-[#454545] hover:text-white disabled:opacity-50"
       }
     >
-      <Icon className="size-3.5" aria-hidden />
-      {label}
+      <Icon className={isComposer ? "size-4" : "size-3.5"} aria-hidden />
+      {isComposer ? null : label}
     </button>
   );
 }
@@ -253,10 +255,11 @@ export default function StrategyPromptBox({
   const textareaFocusReset =
     "focus:outline-none focus-visible:outline-none focus-visible:!border-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!shadow-none";
 
+  const textareaScrollClass = theme.isV2 ? "ds-scrollbar-hidden" : "";
   const textareaClass = isComposer
-    ? `!min-h-[3rem] !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal text-[rgba(255,255,255,0.88)] shadow-none placeholder:text-[#7d8689] ${textareaFocusReset}`
+    ? `!min-h-[3rem] !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal text-[rgba(255,255,255,0.88)] shadow-none placeholder:text-[#7d8689] ${textareaScrollClass} ${textareaFocusReset}`
     : theme.isV2
-      ? `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaFocusReset}`
+      ? `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaScrollClass} ${textareaFocusReset}`
       : `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
 
   const iconBtnClass = theme.isV2
@@ -289,24 +292,34 @@ export default function StrategyPromptBox({
             >
               Suggestions (prototype)
             </p>
-            <ul className="minimal-scrollbar max-h-40 overflow-y-auto py-0.5">
-              {suggestions.map((s, idx) => (
-                <li key={s}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={idx === highlightIdx}
-                    className={`w-full px-3 py-2 text-left text-[11px] transition-colors hover:bg-white/5 ${
-                      idx === highlightIdx ? "bg-[#171200]/60 text-white" : "text-[#bfbfbf]"
-                    }`}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => insertSuggestion(s)}
-                  >
-                    {s}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <ScrollFade
+              axis="y"
+              fadeColor={theme.isV2 ? "var(--ds-copilot-v2-elevated)" : "#141414"}
+              viewportClassName="max-h-40 py-0.5"
+            >
+              <ul>
+                {suggestions.map((s, idx) => (
+                  <li key={s}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={idx === highlightIdx}
+                      className={`w-full px-3 py-2 text-left text-[11px] transition-colors hover:bg-white/5 ${
+                        idx === highlightIdx
+                          ? theme.isV2
+                            ? "bg-[#19E6A3]/10 text-white"
+                            : "bg-[#171200]/60 text-white"
+                          : "text-[#bfbfbf]"
+                      }`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => insertSuggestion(s)}
+                    >
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </ScrollFade>
           </div>
         ) : null}
 
@@ -531,7 +544,11 @@ export default function StrategyPromptBox({
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#3e2e00] px-2.5 py-1 text-[10px] font-medium text-[#f2b500]"
+                className={
+                  theme.isV2
+                    ? "rounded-md border border-[#19E6A3]/20 bg-[#19E6A3]/10 px-2.5 py-1 text-[10px] font-medium text-[#19E6A3]"
+                    : "rounded-md bg-[#3e2e00] px-2.5 py-1 text-[10px] font-medium text-[#f2b500]"
+                }
                 onClick={handleAddCode}
               >
                 Add code

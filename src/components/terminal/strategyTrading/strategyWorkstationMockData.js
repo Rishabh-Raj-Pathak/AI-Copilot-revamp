@@ -438,6 +438,9 @@ function buildStrategyRecord({
           ]
         : [],
     },
+    deployment: {
+      status: "idle",
+    },
     logs:
       id === "strat-btc-sniper"
         ? BTC_SNIPER_LOGS.map((l) => ({ ...l, at: l.ago }))

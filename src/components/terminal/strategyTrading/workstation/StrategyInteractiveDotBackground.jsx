@@ -1,30 +1,33 @@
 import { useEffect, useMemo, useRef } from "react";
 
-const DOT_STEP_X = 20;
-const DOT_STEP_Y = 20;
-const HOVER_RADIUS = 230;
+const DOT_STEP_X = 14;
+const DOT_STEP_Y = 14;
+const HOVER_HALF_SIZE = 230;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
 function getDotFill(dot, pointer, active) {
   const baseAlpha = dot.baseAlpha;
-  if (!active) return `rgba(156,164,160,${baseAlpha})`;
+  if (!active) return `rgba(168,176,172,${baseAlpha})`;
 
   const dx = dot.x - pointer.x;
   const dy = dot.y - pointer.y;
-  const d = Math.hypot(dx, dy);
-  if (d >= HOVER_RADIUS) return `rgba(156,164,160,${baseAlpha})`;
+  const d = Math.max(Math.abs(dx), Math.abs(dy));
+  if (d >= HOVER_HALF_SIZE) return `rgba(168,176,172,${baseAlpha})`;
 
-  const t = 1 - d / HOVER_RADIUS;
-  if (t > 0.66) {
-    const alpha = clamp(0.58 + t * 0.5, 0, 1);
-    return `rgba(181,240,100,${alpha})`;
-  }
-
-  const alpha = clamp(0.44 + t * 0.5, 0, 0.95);
-  return `rgba(157,218,92,${alpha})`;
+  const t = 1 - d / HOVER_HALF_SIZE;
+  const intensity = clamp(t * 1.25, 0, 1);
+  const r = Math.round(lerp(168, 235, intensity));
+  const g = Math.round(lerp(176, 255, intensity));
+  const b = Math.round(lerp(172, 142, intensity));
+  const alpha = clamp(lerp(baseAlpha, 1, intensity), 0, 1);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 export default function StrategyInteractiveDotBackground({
@@ -40,10 +43,10 @@ export default function StrategyInteractiveDotBackground({
     const rows = Math.ceil(height / DOT_STEP_Y) + 2;
     return Array.from({ length: rows }).flatMap((_, row) =>
       Array.from({ length: cols }, (_, col) => ({
-        x: col * DOT_STEP_X + 8,
-        y: row * DOT_STEP_Y + 8,
+        x: col * DOT_STEP_X + 7,
+        y: row * DOT_STEP_Y + 7,
         // Constant base alpha keeps the field visually uniform at idle.
-        baseAlpha: 0.36,
+        baseAlpha: 0.44,
       })),
     );
   }, [width, height]);

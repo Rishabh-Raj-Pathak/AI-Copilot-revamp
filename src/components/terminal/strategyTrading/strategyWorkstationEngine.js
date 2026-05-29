@@ -52,6 +52,9 @@ export function createDraftStrategy({
       position: null,
       events: [],
     },
+    deployment: {
+      status: "idle",
+    },
     trades: [],
     logs: [
       {

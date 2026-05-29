@@ -233,6 +233,23 @@
     var(--palette-aquamarine-80) 0%,
     var(--palette-amber-70) 100%
   );
+
+  /* Strategy Copilot V2 — lime-to-mint brand (no yellow accent system) */
+  --ds-copilot-v2-bg: #050706;
+  --ds-copilot-v2-surface: #101312;
+  --ds-copilot-v2-elevated: #141716;
+  --ds-copilot-v2-border: rgb(255 255 255 / 0.06);
+  --ds-copilot-v2-divider: rgb(255 255 255 / 0.04);
+  --ds-copilot-v2-mint: #19e6a3;
+  --ds-copilot-v2-positive: #19d98b;
+  --ds-copilot-v2-negative: #ef4444;
+  --ds-copilot-v2-text-primary: rgb(255 255 255 / 0.92);
+  --ds-copilot-v2-text-secondary: rgb(255 255 255 / 0.58);
+  --ds-copilot-v2-text-muted: rgb(255 255 255 / 0.36);
+  --ds-copilot-v2-gradient: linear-gradient(90deg, #d7f70b 0%, #16e6a3 100%);
+  --ds-copilot-v2-gradient-fg: #030504;
+  --ds-copilot-v2-scroll-fade-size-y: 1rem;
+  --ds-copilot-v2-scroll-fade-size-x: 1.25rem;
 }
 
 dialog::backdrop {
@@ -677,7 +694,7 @@ dialog::backdrop {
     z-index: 1;
     width: var(--ds-strategy-composer-shell-width, min(74vw, 1080px));
     min-height: clamp(142px, 13vw, 178px);
-    border-radius: 20px;
+    border-radius: var(--ds-radius-lg);
     border: 1px solid transparent;
     background-image:
       linear-gradient(
@@ -736,6 +753,13 @@ dialog::backdrop {
     cursor: not-allowed;
   }
 
+  .ds-strategy-composer-chip--icon {
+    width: 2.25rem;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
   .ds-strategy-composer-send {
     display: flex;
     height: 3.25rem;
@@ -775,11 +799,61 @@ dialog::backdrop {
       inset 0 1px 0 rgb(255 255 255 / 0.05),
       0 0 0 1px rgb(0 0 0 / 0.22);
   }
+
+  .ds-copilot-v2-gradient-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: var(--ds-terminal-connect-wallet-padding-y)
+      var(--ds-terminal-connect-wallet-padding-x);
+    border-radius: var(--ds-terminal-connect-wallet-radius);
+    border: none;
+    background-image: var(--ds-copilot-v2-gradient);
+    color: var(--ds-copilot-v2-gradient-fg);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-terminal-connect-wallet-font-size);
+    line-height: 1.25;
+    font-weight: var(--ds-terminal-connect-wallet-font-weight);
+    cursor: pointer;
+    transition:
+      filter 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .ds-copilot-v2-gradient-cta:hover {
+    filter: brightness(1.04);
+  }
+
+  .ds-copilot-v2-gradient-cta:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(25 230 163 / 0.35);
+  }
+
+  .ds-copilot-v2-gradient-cta:active {
+    filter: brightness(0.96);
+  }
+
+  .ds-copilot-v2-gradient-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: none;
+  }
 }
 
 @layer utilities {
   /** Figma corner «3xl» (24px) — largest step; use when `rounded-4xl` (20px) is too tight. */
   .rounded-ds-3xl {
     border-radius: var(--ds-radius-3xl);
+  }
+
+  /** Strategy Copilot v2 — hide scrollbars; pair with ScrollFade edge gradients. */
+  .ds-scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ds-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
   }
 }

@@ -1,6 +1,5 @@
 import { Plus, Save } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
-import { terminalGradientCta } from "../../../../design-system/tokens/terminalConnectWallet";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import { StatusBadge } from "./statusBadge.jsx";
 import StrategyChartPanel from "./StrategyChartPanel.jsx";
@@ -70,7 +69,7 @@ export default function StrategyCenterWorkspace({
         </p>
         <button
           type="button"
-          className={`${terminalGradientCta.componentClassName} mt-6 gap-1.5 px-4`}
+          className={`${theme.gradientCta} mt-6 gap-1.5 px-4`}
           onClick={onNewStrategy}
         >
           <Plus className="size-4 shrink-0" aria-hidden />
@@ -85,12 +84,14 @@ export default function StrategyCenterWorkspace({
     strategy.paperTrading?.status === "active" ||
     strategy.status === "Ready";
 
+  const scrollShellClass = theme.isV2
+    ? `ds-scrollbar-hidden flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto ${theme.shell}`
+    : `minimal-scrollbar flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto ${theme.shell}`;
+
   return (
-    <div
-      className={`minimal-scrollbar flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto ${theme.shell}`}
-    >
+    <div className={scrollShellClass}>
       <header
-        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.isV2 ? "border-[#1a1a1a] bg-black" : "border-[#242424]"}`}
+        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.isV2 ? "border-white/5 bg-black" : "border-[#242424]"}`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -99,8 +100,8 @@ export default function StrategyCenterWorkspace({
               <StatusBadge status={strategy.status} />
             </div>
             <p className={`mt-1.5 ${theme.headerMeta}`}>
-              {strategy.market} · {strategy.timeframe} · {strategy.timeframe} ·{" "}
-              {strategy.strategy} · {strategy.model} Model
+              {strategy.market} · {strategy.timeframe} · {strategy.strategy} ·{" "}
+              {strategy.model} Model
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -115,7 +116,7 @@ export default function StrategyCenterWorkspace({
             </Button>
             <button
               type="button"
-              className={`${terminalGradientCta.componentClassName} gap-1.5 px-4 text-xs sm:text-sm ${!canReview ? "pointer-events-none opacity-50" : ""}`}
+              className={`${theme.gradientCta} gap-1.5 px-4 text-xs sm:text-sm ${!canReview ? "pointer-events-none opacity-50" : ""}`}
               onClick={onReviewDeployment}
               disabled={!canReview}
               title={
@@ -130,7 +131,7 @@ export default function StrategyCenterWorkspace({
         </div>
       </header>
 
-      <div className={theme.isV2 ? "space-y-4 p-4 sm:p-5" : "p-4 sm:p-5"}>
+      <div className={theme.isV2 ? "space-y-6 p-4 sm:space-y-7 sm:p-5" : "p-4 sm:p-5"}>
         {theme.isV2 ? (
           <div className={theme.chartSection}>
             <StrategyChartPanel strategy={strategy} embedded />

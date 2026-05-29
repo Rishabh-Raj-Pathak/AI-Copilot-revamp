@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
+import { COPILOT_V2_GRADIENT_CTA } from "../strategyCopilotUi.js";
 
 const PRESET_OPTIONS = [
   ["recommended", "Use Recommended"],
@@ -9,8 +10,15 @@ const PRESET_OPTIONS = [
   ["custom", "Custom"],
 ];
 
+const RICH_CARD_V2_BTN_BASE =
+  "!h-8 !rounded-[var(--ds-terminal-connect-wallet-radius)] !text-[11px]";
+const RICH_CARD_V2_BTN_LEGACY = "!h-7 !rounded-md !text-[10px]";
+const RICH_CARD_V2_BTN_OUTLINE = `${RICH_CARD_V2_BTN_BASE} !border-white/10 !bg-[#181818] !text-[#cfcfcf] hover:!border-white/18 hover:!bg-[#212121]`;
+const RICH_CARD_V2_BTN_OPTIMIZE = `${RICH_CARD_V2_BTN_BASE} !border-[#19E6A3]/16 !bg-[rgba(255,255,255,0.04)] !text-[rgba(255,255,255,0.88)] hover:!border-[#19E6A3]/28`;
+const RICH_CARD_V2_BTN_GRADIENT = `${RICH_CARD_V2_BTN_BASE} !border-0 !font-medium !shadow-none !text-[var(--ds-copilot-v2-gradient-fg)] hover:!text-[var(--ds-copilot-v2-gradient-fg)] ${COPILOT_V2_GRADIENT_CTA}`;
+
 const CONFIG_PRESET_BTN =
-  "inline-flex h-8 items-center justify-center rounded-lg border border-white/12 bg-[#1a1a1c] px-3.5 text-[12px] font-medium leading-none text-[#b8b8b8] transition-colors duration-150 hover:border-white hover:bg-white hover:text-[#0c0c0e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] active:scale-[0.98]";
+  "inline-flex h-8 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1c] px-3.5 text-[12px] font-medium leading-none text-[#b8b8b8] transition-colors duration-150 hover:border-white/20 hover:bg-[#242424] hover:text-[#ececec] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] active:scale-[0.98]";
 
 function ConfigCard({ data, onPreset }) {
   const theme = useCopilotTheme();
@@ -24,13 +32,13 @@ function ConfigCard({ data, onPreset }) {
   ];
 
   const shell = theme.isV2
-    ? "mt-4 overflow-hidden rounded-xl border border-white/[0.08] bg-[#111111]/90"
+    ? "mt-4 overflow-hidden rounded-xl border border-white/[0.06] bg-[#111111]/90"
     : `mt-3 p-3.5 ${theme.cardInner}`;
 
   return (
     <div className={shell}>
       {theme.isV2 ? (
-        <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-white/5 px-4 py-3">
           <p className="text-[12px] font-semibold text-[#f4f4f4]">
             Strategy Configuration
           </p>
@@ -49,7 +57,7 @@ function ConfigCard({ data, onPreset }) {
             key={label}
             className={`flex items-baseline justify-between gap-4 py-2.5 text-[12px] ${
               theme.isV2 && idx < rows.length - 1
-                ? "border-b border-white/[0.05]"
+                ? "border-b border-white/4.5"
                 : ""
             }`}
           >
@@ -64,7 +72,7 @@ function ConfigCard({ data, onPreset }) {
         <div
           className={
             theme.isV2
-              ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3.5"
+              ? "flex flex-wrap gap-2 border-t border-white/5 px-4 py-3.5"
               : "mt-3 flex flex-wrap gap-1.5"
           }
         >
@@ -90,7 +98,7 @@ function ConfigCard({ data, onPreset }) {
 
 function richCardShell(theme, className = "") {
   return theme.isV2
-    ? `mt-4 overflow-hidden rounded-xl border border-white/[0.08] bg-[#111111]/90 ${className}`
+    ? `mt-4 overflow-hidden rounded-xl border border-white/[0.06] bg-[#111111]/90 ${className}`
     : `mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3 ${className}`;
 }
 
@@ -105,19 +113,16 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
     ["Profit Factor", data.profitFactor, "text-[#f4f4f4]"],
   ];
 
-  const btnOutline = theme.isV2
-    ? "!h-8 !rounded-full !border-white/10 !bg-[#1a1a1a] !text-[11px] hover:!bg-[#222]"
-    : "!h-7 !text-[10px]";
-  const btnPrimary = theme.isV2
-    ? "!h-8 !rounded-full !text-[11px]"
-    : "!h-7 !text-[10px]";
+  const btnOutline = theme.isV2 ? RICH_CARD_V2_BTN_OUTLINE : RICH_CARD_V2_BTN_LEGACY;
+  const btnOptimize = theme.isV2 ? RICH_CARD_V2_BTN_OPTIMIZE : RICH_CARD_V2_BTN_LEGACY;
+  const btnPrimary = theme.isV2 ? RICH_CARD_V2_BTN_GRADIENT : RICH_CARD_V2_BTN_LEGACY;
 
   return (
     <div className={richCardShell(theme)}>
       <div
         className={
           theme.isV2
-            ? "flex items-center gap-2 border-b border-white/[0.06] px-4 py-3"
+            ? "flex items-center gap-2 border-b border-white/5 px-4 py-2.5"
             : ""
         }
       >
@@ -128,7 +133,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
         <p
           className={
             theme.isV2
-              ? "text-[12px] font-semibold text-[#00f3b6]"
+              ? "text-[12px] font-semibold text-[#d9fbe9]"
               : "text-[11px] font-semibold text-[#00f3b6]"
           }
         >
@@ -138,14 +143,14 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
       <div
         className={
           theme.isV2
-            ? "grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3"
+            ? "grid grid-cols-2 gap-x-4 gap-y-2.5 px-4 py-2.5"
             : "mt-2 grid grid-cols-2 gap-2"
         }
       >
         {cells.map(([label, value, color]) => (
           <div key={label}>
             <p className="text-[10px] text-[#8a8a8a]">{label}</p>
-            <p className={`mt-0.5 text-xs font-semibold tabular-nums ${color}`}>
+            <p className={`mt-0.5 text-[12px] font-semibold tabular-nums ${color}`}>
               {value}
             </p>
           </div>
@@ -154,7 +159,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
       <div
         className={
           theme.isV2
-            ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3"
+            ? "flex flex-wrap gap-2 border-t border-white/5 px-4 py-2.5"
             : "mt-2.5 flex flex-wrap gap-1"
         }
       >
@@ -174,7 +179,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
             type="button"
             size="sm"
             variant="outline"
-            className={btnOutline}
+            className={btnOptimize}
             onClick={onOptimize}
           >
             Optimize
@@ -184,7 +189,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
           <Button
             type="button"
             size="sm"
-            variant="default"
+            variant="outline"
             className={btnPrimary}
             onClick={onStartPaper}
           >
@@ -198,12 +203,14 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
 
 function PaperSetupCard({ data, onStartPaper, onReview }) {
   const theme = useCopilotTheme();
+  const btnOutline = theme.isV2 ? RICH_CARD_V2_BTN_OUTLINE : RICH_CARD_V2_BTN_LEGACY;
+  const btnGradient = theme.isV2 ? RICH_CARD_V2_BTN_GRADIENT : RICH_CARD_V2_BTN_LEGACY;
   return (
     <div className={richCardShell(theme)}>
       <p
         className={
           theme.isV2
-            ? "border-b border-white/[0.06] px-4 py-3 text-[12px] font-semibold text-[#f4f4f4]"
+            ? "border-b border-white/5 px-4 py-3 text-[12px] font-semibold text-[#f4f4f4]"
             : "text-[11px] font-semibold text-white"
         }
       >
@@ -215,7 +222,7 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
             key={k}
             className={`flex justify-between gap-2 py-2.5 ${
               theme.isV2 && idx < arr.length - 1
-                ? "border-b border-white/[0.05] text-[12px]"
+                ? "border-b border-white/4.5 text-[12px]"
                 : "text-[10px]"
             }`}
           >
@@ -227,7 +234,7 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
       <div
         className={
           theme.isV2
-            ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3"
+            ? "flex flex-wrap gap-2 border-t border-white/5 px-4 py-3"
             : "mt-2.5 flex flex-wrap gap-1"
         }
       >
@@ -235,12 +242,8 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
           <Button
             type="button"
             size="sm"
-            variant="default"
-            className={
-              theme.isV2
-                ? "!h-8 !rounded-full !text-[11px]"
-                : "!h-7 !text-[10px]"
-            }
+            variant="outline"
+            className={btnOutline}
             onClick={onStartPaper}
           >
             Start Simulation
@@ -251,11 +254,7 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
             type="button"
             size="sm"
             variant="outline"
-            className={
-              theme.isV2
-                ? "!h-8 !rounded-full !border-white/10 !text-[11px]"
-                : "!h-7 !text-[10px]"
-            }
+            className={btnGradient}
             onClick={onReview}
           >
             Review Deployment
@@ -268,12 +267,14 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
 
 function PaperCard({ data, onViewPosition, onReview }) {
   const theme = useCopilotTheme();
+  const btnOutline = theme.isV2 ? RICH_CARD_V2_BTN_OUTLINE : RICH_CARD_V2_BTN_LEGACY;
+  const btnGradient = theme.isV2 ? RICH_CARD_V2_BTN_GRADIENT : RICH_CARD_V2_BTN_LEGACY;
   return (
     <div className={richCardShell(theme)}>
       <p
         className={
           theme.isV2
-            ? "border-b border-white/[0.06] px-4 py-3 text-[12px] font-semibold text-[#00f3b6]"
+            ? "border-b border-white/5 px-4 py-3 text-[12px] font-semibold text-[#19E6A3]"
             : "text-[11px] font-semibold text-[#00f3b6]"
         }
       >
@@ -285,7 +286,7 @@ function PaperCard({ data, onViewPosition, onReview }) {
             key={k}
             className={`flex justify-between gap-2 py-2.5 ${
               theme.isV2 && idx < arr.length - 1
-                ? "border-b border-white/[0.05] text-[12px]"
+                ? "border-b border-white/4.5 text-[12px]"
                 : "text-[10px]"
             }`}
           >
@@ -297,7 +298,7 @@ function PaperCard({ data, onViewPosition, onReview }) {
       <div
         className={
           theme.isV2
-            ? "flex flex-wrap gap-2 border-t border-white/[0.06] px-4 py-3"
+            ? "flex flex-wrap gap-2 border-t border-white/5 px-4 py-3"
             : "mt-2.5 flex flex-wrap gap-1"
         }
       >
@@ -306,11 +307,7 @@ function PaperCard({ data, onViewPosition, onReview }) {
             type="button"
             size="sm"
             variant="outline"
-            className={
-              theme.isV2
-                ? "!h-8 !rounded-full !border-white/10 !text-[11px]"
-                : "!h-7 !text-[10px]"
-            }
+            className={btnOutline}
             onClick={onViewPosition}
           >
             View Paper Position
@@ -320,12 +317,8 @@ function PaperCard({ data, onViewPosition, onReview }) {
           <Button
             type="button"
             size="sm"
-            variant="default"
-            className={
-              theme.isV2
-                ? "!h-8 !rounded-full !text-[11px]"
-                : "!h-7 !text-[10px]"
-            }
+            variant="outline"
+            className={btnGradient}
             onClick={onReview}
           >
             Review Deployment

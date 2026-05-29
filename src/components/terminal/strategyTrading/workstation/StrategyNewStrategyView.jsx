@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { Activity, CircleDollarSign, Clock3, ShieldCheck } from "lucide-react";
+import { Activity, CircleDollarSign, Clock, ShieldCheck } from "lucide-react";
 import { CENTER_TEMPLATES } from "../strategyWorkstationMockData.js";
 import StrategyInteractiveDotBackground from "./StrategyInteractiveDotBackground.jsx";
 import StrategyPromptBox from "./StrategyPromptBox.jsx";
+import ScrollFade from "./ScrollFade.jsx";
 import StrategyTemplateIllustration from "./StrategyTemplateIllustration.jsx";
 
 function StrategyTemplateCard({ template, selected, onSelect }) {
-  const primaryBorderBase = "rgb(152 170 156 / 0.24)";
+  const cardBorder = selected
+    ? "rgba(180,255,120,0.22)"
+    : "rgba(180,255,120,0.12)";
   const cardSurfaceGradient =
-    "linear-gradient(180deg, rgba(20,25,23,0.72) 0%, rgba(12,16,15,0.84) 100%)";
-  const cardSurfaceHighlight = "inset 0 1px 0 rgba(255,255,255,0.045)";
-  const cardInnerShadowBase = `${cardSurfaceHighlight}, inset 0 -22px 42px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(152,170,156,0.14)`;
-  const cardInnerShadowHover = `${cardSurfaceHighlight}, inset 0 -24px 44px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(152,170,156,0.2)`;
-  const cardInnerShadowSelected =
-    "inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -26px 48px rgba(0,0,0,0.26), inset 0 0 0 1px rgba(152,170,156,0.3)";
+    "linear-gradient(180deg, rgba(13,18,15,0.98) 0%, rgba(5,8,7,0.99) 100%)";
+  const panelSurface =
+    "linear-gradient(180deg, rgba(8,12,10,0.92) 0%, rgba(4,7,6,0.96) 100%)";
+  const cardSurfaceHighlight = "inset 0 1px 0 rgba(255,255,255,0.05)";
+  const cardInnerShadowBase = `${cardSurfaceHighlight}, inset 0 -18px 36px rgba(0,0,0,0.28)`;
+  const cardInnerShadowHover = `${cardSurfaceHighlight}, inset 0 -20px 40px rgba(0,0,0,0.32)`;
+  const cardInnerShadowSelected = `${cardSurfaceHighlight}, inset 0 -22px 44px rgba(0,0,0,0.34), 0 0 0 1px rgba(180,255,120,0.08)`;
   const details = [
     { label: "Asset", value: template.cardAsset ?? template.asset },
     { label: "Timeframe", value: template.cardTimeframe ?? template.timeframe },
@@ -27,9 +31,10 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
     <button
       type="button"
       onClick={() => onSelect(template)}
-      className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-[24px] text-left transition-all duration-150 hover:brightness-[1.03]"
+      className="group relative flex min-h-[272px] flex-col overflow-hidden rounded-[var(--ds-radius-xl)] border text-left transition-all duration-150 hover:brightness-[1.02]"
       style={{
         background: cardSurfaceGradient,
+        borderColor: cardBorder,
         boxShadow: selected ? cardInnerShadowSelected : cardInnerShadowBase,
       }}
       onMouseEnter={(event) => {
@@ -41,53 +46,54 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
           event.currentTarget.style.boxShadow = cardInnerShadowBase;
       }}
     >
-      <div className="relative z-10 flex items-center justify-between px-5 pb-2.5 pt-4">
-        <div className="flex items-center">
-          <h3 className="text-[19px] font-medium leading-[1.15] tracking-[-0.012em] text-[#f2f5f3]">
-            {template.cardTitle ?? template.title}
-          </h3>
+      <div className="relative z-10 px-5 pb-1 pt-5">
+        <h3 className="text-[20px] font-semibold leading-tight tracking-[-0.02em] text-[#F4F7F2]">
+          {template.cardTitle ?? template.title}
+        </h3>
+      </div>
+
+      <div className="relative z-10 px-3 pb-1 pt-0.5">
+        <div className="h-[76px] w-full">
+          <StrategyTemplateIllustration
+            type={template.illustration ?? "candles"}
+          />
         </div>
       </div>
 
-      <div className="relative z-10 mx-5 mt-0.5 h-[138px] overflow-hidden">
-        <StrategyTemplateIllustration
-          type={template.illustration ?? "candles"}
-        />
-      </div>
-
-      <div className="relative z-10 mt-auto px-4 pb-3.5">
+      <div className="relative z-10 mt-auto px-4 pb-4">
         <div
-          className="w-full rounded-[15px] border px-4 py-2.5 backdrop-blur-[14px]"
+          className="w-full rounded-[var(--ds-radius-md)] border px-4 py-2.5 backdrop-blur-md"
           style={{
-            borderColor: primaryBorderBase,
-            background: cardSurfaceGradient,
-            boxShadow: cardSurfaceHighlight,
+            borderColor: "rgba(255,255,255,0.08)",
+            background: panelSurface,
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -12px 24px rgba(0,0,0,0.2)",
           }}
         >
-          <div className="space-y-0.5">
+          <div>
             {details.map((item, idx) => {
               const Icon =
                 item.label === "Asset"
                   ? CircleDollarSign
                   : item.label === "Timeframe"
-                    ? Clock3
+                    ? Clock
                     : item.label === "Setup Type"
                       ? Activity
                       : ShieldCheck;
               return (
                 <div key={item.label}>
-                  <div className="flex items-center justify-between gap-3 py-1.5">
+                  <div className="flex items-center justify-between gap-3 py-2">
                     <div className="flex items-center gap-2.5">
                       <Icon
                         size={15}
-                        strokeWidth={1.65}
-                        className="text-[#97ab95]/85"
+                        strokeWidth={1.6}
+                        className="text-[#A7E84F]/70"
                       />
-                      <span className="text-[12px] font-normal text-[#909995]">
+                      <span className="text-[12px] text-[rgba(244,247,242,0.55)]">
                         {item.label}
                       </span>
                     </div>
-                    <span className="text-[12px] font-medium text-[#eff3ef]">
+                    <span className="text-[12px] font-semibold text-[#F4F7F2]">
                       {item.value}
                     </span>
                   </div>
@@ -177,13 +183,19 @@ export default function StrategyNewStrategyView({
   );
 
   return (
-    <div
-      ref={containerRef}
-      className="minimal-scrollbar relative flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto"
-      onMouseMove={handleBgMove}
-      onMouseEnter={() => setBgPointer((prev) => ({ ...prev, active: true }))}
-      onMouseLeave={() => setBgPointer((prev) => ({ ...prev, active: false }))}
+    <ScrollFade
+      axis="y"
+      fadeColor="var(--ds-copilot-v2-bg)"
+      className="relative h-full min-h-0 w-full flex-1"
+      viewportClassName="flex flex-col"
     >
+      <div
+        ref={containerRef}
+        className="relative flex min-h-full flex-1 flex-col"
+        onMouseMove={handleBgMove}
+        onMouseEnter={() => setBgPointer((prev) => ({ ...prev, active: true }))}
+        onMouseLeave={() => setBgPointer((prev) => ({ ...prev, active: false }))}
+      >
       <StrategyInteractiveDotBackground
         width={bgSize.width}
         height={bgSize.height}
@@ -243,6 +255,7 @@ export default function StrategyNewStrategyView({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ScrollFade>
   );
 }

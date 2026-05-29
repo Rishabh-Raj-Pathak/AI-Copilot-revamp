@@ -10,12 +10,13 @@ const STATUS_STYLES_V1 = {
 };
 
 const STATUS_STYLES_V2 = {
-  Draft: "bg-[#2a2a2a] text-[#a3a3a3]",
-  Backtested: "bg-[#f2b500]/15 text-[#f2b500]",
-  "Paper Trading": "bg-[#00f3b6]/12 text-[#00f3b6]",
-  Ready: "bg-[#269755]/15 text-[#4ade80]",
-  Paused: "bg-[#2a2a2a] text-[#929292]",
-  Completed: "bg-[#2a2a2a] text-[#757575]",
+  Draft: "border border-white/[0.05] bg-white/[0.02] text-[rgba(255,255,255,0.36)]",
+  Backtested:
+    "border border-[#19E6A3]/18 bg-[#19E6A3]/10 text-[#19E6A3]",
+  "Paper Trading": "border border-[#19E6A3]/18 bg-[#19E6A3]/10 text-[#19E6A3]",
+  Ready: "border border-[#19E6A3]/18 bg-[#19E6A3]/10 text-[#19E6A3]",
+  Paused: "border border-white/[0.05] bg-white/[0.02] text-[rgba(255,255,255,0.36)]",
+  Completed: "border border-white/[0.05] bg-white/[0.02] text-[rgba(255,255,255,0.36)]",
 };
 
 export function StatusBadge({ status, className = "", uiVersion }) {

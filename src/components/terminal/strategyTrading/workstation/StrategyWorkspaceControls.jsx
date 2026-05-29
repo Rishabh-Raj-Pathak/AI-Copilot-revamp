@@ -228,13 +228,16 @@ export default function StrategyWorkspaceControls({
         <Button
           type="button"
           size="sm"
-          variant="default"
+          variant={theme.isV2 ? "outline" : "default"}
           className={theme.optimizeBtn}
           onClick={onOptimize}
           loading={optimizeLoading}
           disabled={optimizeLoading}
         >
-          <Sparkles className="size-3.5 shrink-0 text-black" aria-hidden />
+          <Sparkles
+            className={`size-3.5 shrink-0 ${theme.isV2 ? "text-[#19E6A3]" : "text-black"}`}
+            aria-hidden
+          />
           Optimize
         </Button>
       </div>

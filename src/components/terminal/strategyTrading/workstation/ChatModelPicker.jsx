@@ -2,6 +2,7 @@ import { Check, ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import { CHAT_LLM_MODELS } from "../strategyWorkstationMockData.js";
+import ScrollFade from "./ScrollFade.jsx";
 
 const PROVIDER_COLORS = {
   Anthropic: "text-[#d4a574]",
@@ -50,7 +51,7 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
         }`}
       >
         <Sparkles
-          className={`size-3 shrink-0 ${theme.isV2 ? "text-[#f5c400]/85" : "text-[#f2b500]"}`}
+          className={`size-3 shrink-0 ${theme.isV2 ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
           aria-hidden
         />
         <span
@@ -83,7 +84,12 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
           >
             Model
           </p>
-          <ul className="minimal-scrollbar max-h-[14rem] overflow-y-auto py-0.5">
+          <ScrollFade
+            axis="y"
+            fadeColor={theme.isV2 ? "var(--ds-copilot-v2-elevated)" : "#0a0a0a"}
+            viewportClassName="max-h-[14rem] py-0.5"
+          >
+            <ul>
             {CHAT_LLM_MODELS.map((model) => {
               const active = model.id === value;
               const providerColor =
@@ -101,7 +107,7 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
                     className={`flex w-full items-start gap-2 px-3 py-2 text-left transition-colors hover:bg-white/[0.05] ${
                       active
                         ? theme.isV2
-                          ? "bg-[#f5c400]/8"
+                          ? "bg-[#19E6A3]/10"
                           : "bg-[#171200]/60"
                         : ""
                     }`}
@@ -109,7 +115,7 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
                     <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
                       {active ? (
                         <Check
-                          className={`size-3.5 ${theme.isV2 ? "text-[#f5c400]" : "text-[#f2b500]"}`}
+                          className={`size-3.5 ${theme.isV2 ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
                           aria-hidden
                         />
                       ) : (
@@ -130,7 +136,8 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
                 </li>
               );
             })}
-          </ul>
+            </ul>
+          </ScrollFade>
         </div>
       ) : null}
     </div>

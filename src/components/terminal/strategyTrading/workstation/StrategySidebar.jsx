@@ -1,12 +1,10 @@
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { terminalGradientCta } from "../../../../design-system/tokens/terminalConnectWallet";
-import { getCopilotTheme } from "../strategyCopilotUi.js";
+import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import { SIDEBAR_FILTERS } from "../strategyWorkstationMockData.js";
+import ScrollFade from "./ScrollFade.jsx";
 import { StatusBadge } from "./statusBadge.jsx";
-
-/** Sidebar matches Version 1 layout and styling in both UI versions. */
-const sidebarTheme = getCopilotTheme("v1");
 
 export default function StrategySidebar({
   strategies,
@@ -17,7 +15,7 @@ export default function StrategySidebar({
   onNewStrategy,
 }) {
   const [search, setSearch] = useState("");
-  const theme = sidebarTheme;
+  const theme = useCopilotTheme();
 
   const filtered = strategies.filter((s) => {
     const q = search.trim().toLowerCase();
@@ -43,7 +41,7 @@ export default function StrategySidebar({
       <div className={`shrink-0 border-b ${theme.panel} p-3`}>
         <button
           type="button"
-          className={`${terminalGradientCta.componentClassName} ${theme.newStrategyBtn}`}
+          className={`${theme.isV2 ? theme.gradientCta : terminalGradientCta.componentClassName} ${theme.newStrategyBtn}`}
           onClick={onNewStrategy}
         >
           <Plus className="size-4 shrink-0" aria-hidden />
@@ -64,8 +62,11 @@ export default function StrategySidebar({
         </label>
       </div>
 
-      <div
-        className={`minimal-scrollbar flex shrink-0 gap-1.5 overflow-x-auto border-b px-2 py-2.5 ${theme.panel}`}
+      <ScrollFade
+        axis="x"
+        fadeColor="#0D100F"
+        className={`shrink-0 border-b ${theme.panel}`}
+        viewportClassName="flex gap-1.5 px-2 py-2.5"
       >
         {SIDEBAR_FILTERS.map((f) => (
           <button
@@ -79,9 +80,14 @@ export default function StrategySidebar({
             {f.label}
           </button>
         ))}
-      </div>
+      </ScrollFade>
 
-      <div className="minimal-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
+      <ScrollFade
+        axis="y"
+        fadeColor="#0D100F"
+        className="min-h-0 flex-1"
+        viewportClassName="space-y-2 p-2.5"
+      >
         {filtered.length === 0 ? (
           <p className="px-1 py-4 text-center text-[10px] text-[#757575]">
             No strategies match.
@@ -103,7 +109,7 @@ export default function StrategySidebar({
                   <p className="truncate text-xs font-semibold text-white">
                     {s.name}
                   </p>
-                  <StatusBadge status={s.status} uiVersion="v1" />
+                  <StatusBadge status={s.status} />
                 </div>
                 <p className="mt-1 text-[10px] text-[#757575]">
                   {s.market?.replace(" · ", " · ") ?? s.market}
@@ -126,7 +132,7 @@ export default function StrategySidebar({
             );
           })
         )}
-      </div>
+      </ScrollFade>
     </aside>
   );
 }

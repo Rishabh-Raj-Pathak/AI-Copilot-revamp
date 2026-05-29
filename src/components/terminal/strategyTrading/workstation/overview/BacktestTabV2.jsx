@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
-import { Button } from "../../../../ui/button.jsx";
 import { useCopilotTheme } from "../../StrategyCopilotContext.jsx";
+import ScrollFade from "../ScrollFade.jsx";
 
 export default function BacktestTabV2({
   strategy,
@@ -16,22 +16,28 @@ export default function BacktestTabV2({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          size="sm"
-          variant="default"
-          className={theme.optimizeBtn}
-          loading={backtestLoading}
+        <button
+          type="button"
+          className={theme.primaryActionBtn}
           onClick={onRunBacktest}
           disabled={backtestLoading}
+          aria-busy={backtestLoading}
         >
-          <Play className="size-3.5 shrink-0 text-black" aria-hidden />
+          {backtestLoading ? (
+            <span
+              className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-[#030504]/30 border-t-[#030504]"
+              aria-hidden
+            />
+          ) : (
+            <Play className="size-3.5 shrink-0" aria-hidden />
+          )}
           {complete ? "Re-run Backtest" : "Run Backtest"}
-        </Button>
+        </button>
         {complete && onGoOverview ? (
           <button
             type="button"
             onClick={onGoOverview}
-            className="text-xs font-medium text-[#f2b500] transition-colors hover:text-[#ffd633]"
+            className="text-xs font-medium text-[#19E6A3] transition-colors hover:text-[#4ef0c4]"
           >
             View full analytics in Overview →
           </button>
@@ -50,10 +56,14 @@ export default function BacktestTabV2({
       )}
 
       {complete && trades.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-[#262626]">
+        <div className="overflow-hidden rounded-xl border border-[#262626]">
           <p className="border-b border-[#262626] px-4 py-2.5 text-xs font-medium text-[#929292]">
             Backtest trades
           </p>
+          <ScrollFade
+            axis="x"
+            fadeColor="var(--ds-copilot-v2-elevated)"
+          >
           <table className="w-full text-left text-xs">
             <thead className="border-b border-[#262626] text-[#757575]">
               <tr>
@@ -82,6 +92,7 @@ export default function BacktestTabV2({
               ))}
             </tbody>
           </table>
+          </ScrollFade>
         </div>
       ) : null}
     </div>

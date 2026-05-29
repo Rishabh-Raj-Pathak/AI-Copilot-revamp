@@ -36,17 +36,22 @@ export default function OverviewKpiStrip({ bt }) {
   ];
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#262626] bg-[#262626] p-px">
-      <div className="grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-5">
-        {cells.map((cell) => {
+    <div className="overflow-hidden rounded-xl border border-white/6 bg-[#141716]">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        {cells.map((cell, idx) => {
           const color =
             cell.tone === "positive"
-              ? "text-[#00f3b6]"
+              ? "text-[#19D98B]"
               : cell.tone === "negative"
-                ? "text-[#d53d3d]"
-                : "text-white";
+                ? "text-[#EF4444]"
+                : "text-[rgba(255,255,255,0.92)]";
           return (
-            <div key={cell.label} className="bg-[#141414] px-4 py-3.5">
+            <div
+              key={cell.label}
+              className={`px-4 py-3.5 ${
+                idx % 2 === 0 ? "bg-[#121212]" : "bg-[#131313]"
+              } ${idx > 0 ? "border-l border-white/4.5" : ""}`}
+            >
               <p className={theme.metricLabel}>{cell.label}</p>
               <p className={`${theme.metricValue} ${color}`}>{cell.value}</p>
               {cell.sub ? (

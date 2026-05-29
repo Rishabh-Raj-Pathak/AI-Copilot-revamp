@@ -7,6 +7,7 @@ import {
 } from "../strategyWorkstationMockData.js";
 import TradingPreferencesPanel from "../TradingPreferencesPanel.jsx";
 import ChatRichCards from "./ChatRichCards.jsx";
+import ScrollFade from "./ScrollFade.jsx";
 import StrategyPromptBox from "./StrategyPromptBox.jsx";
 
 function ChatTypingIndicator() {
@@ -264,9 +265,12 @@ export default function StrategyChatPanel({
         </header>
       ) : null}
 
-      <div
+      <ScrollFade
         ref={scrollRef}
-        className={`minimal-scrollbar min-h-0 flex-1 overflow-y-auto ${theme.chatScrollArea ?? ""}`}
+        axis="y"
+        fadeColor="var(--ds-copilot-v2-bg)"
+        className="min-h-0 flex-1"
+        viewportClassName={`${theme.chatScrollArea ?? ""}`.trim()}
       >
         <div
           className={
@@ -294,23 +298,15 @@ export default function StrategyChatPanel({
             </p>
           ) : null}
         </div>
-      </div>
+      </ScrollFade>
 
       <footer
         className={
           theme.isV2
-            ? theme.chatComposerFooter
+            ? "relative z-20 shrink-0 px-3.5 pb-3.5 pt-2"
             : `relative shrink-0 z-20 border-t p-3 ${theme.panel}`
         }
       >
-        {theme.isV2 ? (
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-full z-10 h-8 overflow-hidden"
-            aria-hidden
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070707] via-[#070707]/80 to-transparent" />
-          </div>
-        ) : null}
         {quickActions.length > 0 ? (
           <div className="minimal-scrollbar mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
             {quickActions.map((chip) => (
@@ -325,7 +321,27 @@ export default function StrategyChatPanel({
             ))}
           </div>
         ) : null}
-        <div className={theme.isV2 ? "relative z-20" : undefined}>
+        {theme.isV2 ? (
+          <div
+            className="ds-strategy-composer-stage relative z-0 w-full"
+            style={{ "--ds-strategy-composer-shell-width": "100%" }}
+          >
+            <StrategyPromptBox
+              className="w-full"
+              variant="composer"
+              value={prompt}
+              onChange={onPromptChange}
+              onSubmit={onSubmit}
+              loading={loading}
+              chatModelId={chatModelId}
+              onChatModelChange={onChatModelChange}
+              attachments={attachments}
+              onAttachmentsChange={onAttachmentsChange}
+              enableSuggestions
+              placeholder="Ask AI to build, test, optimize, or paper trade…"
+            />
+          </div>
+        ) : (
           <StrategyPromptBox
             value={prompt}
             onChange={onPromptChange}
@@ -338,7 +354,7 @@ export default function StrategyChatPanel({
             enableSuggestions
             placeholder="Ask AI to build, test, optimize, or paper trade…"
           />
-        </div>
+        )}
       </footer>
     </aside>
   );

@@ -516,19 +516,23 @@ export default function StrategyTradingPage({
     updateStrategy(selectedStrategy.id, (s) => ({
       ...s,
       status: "Ready",
+      deployment: {
+        status: "active",
+        deployedAt: new Date().toISOString(),
+      },
       logs: [
         {
           id: `l-${Date.now()}`,
-          message: "Manual deployment review confirmed",
+          message: "Strategy deployed after manual review",
           at: new Date().toISOString(),
         },
         ...s.logs,
       ],
     }));
-    showToast(
-      "Manual review recorded — live deployment not enabled in prototype",
-    );
-  }, [selectedStrategy, updateStrategy, showToast]);
+    setWorkspaceTab("deployed");
+    appendLog("Strategy deployed");
+    showToast("Strategy deployed — live execution tables are now available");
+  }, [selectedStrategy, updateStrategy, appendLog, showToast]);
 
   return (
     <div
@@ -542,7 +546,7 @@ export default function StrategyTradingPage({
             onClick={() => setMobilePanel(p.id)}
             className={`flex-1 py-2.5 text-xs font-medium ${
               mobilePanel === p.id
-                ? `border-b-2 ${theme.isV2 ? "border-[#f2b500] text-[#f2b500]" : "border-[#f2b500] text-[#f2b500]"}`
+                ? `border-b-2 ${theme.isV2 ? "border-[#19E6A3] text-[rgba(255,255,255,0.92)]" : "border-[#f2b500] text-[#f2b500]"}`
                 : "text-[#929292]"
             }`}
           >

@@ -85,7 +85,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
   return (
     <div className={shellClass}>
       <div
-        className={`flex items-center justify-between px-3 py-2.5 ${theme.isV2 || embedded ? "border-b border-[#1c1c1c]" : "border-b border-[#242424] py-1.5"}`}
+        className={`flex items-center justify-between px-3 py-2.5 ${theme.isV2 || embedded ? "border-b border-white/4.5" : "border-b border-[#242424] py-1.5"}`}
       >
         <div className="flex items-center gap-2 text-xs">
           <span
@@ -98,17 +98,17 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
           <span className="text-[#585858]">{timeframe}</span>
         </div>
         <span
-          className={`tabular-nums text-[#00f3b6] ${
+          className={`tabular-nums ${
             theme.isV2
-              ? "rounded-lg bg-[#00f3b6]/10 px-2.5 py-1 text-xs font-semibold"
-              : "rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium"
+              ? "rounded-lg bg-[#19D98B]/10 px-2.5 py-1 text-xs font-semibold text-[#19D98B]"
+              : "rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium text-[#00f3b6]"
           }`}
         >
           {currentPrice}
         </span>
       </div>
 
-      <div className="bg-[#050505] px-2 pt-2 pb-1">
+      <div className="bg-[#070707] px-2 pt-2 pb-1">
         <div
           className={`relative w-full ${theme.isV2 ? "min-h-[12rem] sm:min-h-[13rem]" : "min-h-[10rem] sm:min-h-[11rem]"}`}
         >
@@ -266,7 +266,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
       </div>
 
       <div
-        className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2.5 text-[10px] ${theme.isV2 || embedded ? "border-t border-[#262626] bg-[#121212]" : "border-t border-[#242424]"}`}
+        className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2.5 text-[10px] ${theme.isV2 || embedded ? "bg-[#111111]" : "border-t border-[#242424]"}`}
       >
         <span>
           <span className="text-[#585858]">Entry </span>

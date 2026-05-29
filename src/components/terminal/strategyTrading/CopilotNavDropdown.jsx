@@ -75,6 +75,17 @@ export default function CopilotNavDropdown({
   };
 
   const isMobile = variant === "mobile";
+  const isV2Nav = activeView === "strategy-trading-v2";
+
+  const triggerClass = isV2Nav
+    ? "flex shrink-0 items-center gap-1 rounded-md border border-white/8 bg-[rgba(255,255,255,0.04)] px-2.5 py-1.5 text-xs font-medium text-[#19E6A3] backdrop-blur-sm transition-colors hover:border-white/12 hover:bg-[rgba(255,255,255,0.06)] sm:px-3 sm:text-sm"
+    : isMobile
+      ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] sm:text-sm"
+      : "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] transition-colors sm:px-3 sm:text-sm";
+
+  const chevronClass = isV2Nav
+    ? "text-[#19E6A3]"
+    : "text-[#f2b500]";
 
   return (
     <div ref={rootRef} className={`relative shrink-0 ${className}`}>
@@ -84,17 +95,11 @@ export default function CopilotNavDropdown({
         aria-haspopup="menu"
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((o) => !o)}
-        className={
-          isMobile
-            ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] sm:text-sm"
-            : "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] transition-colors sm:px-3 sm:text-sm"
-        }
+        className={triggerClass}
       >
         {currentLabel}
         <NavChevron
-          className={`size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""} ${
-            isMobile ? "text-[#f2b500]" : "text-[#f2b500]"
-          }`}
+          className={`size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""} ${chevronClass}`}
         />
       </button>
 
@@ -117,7 +122,10 @@ export default function CopilotNavDropdown({
             >
               <span>{v.label}</span>
               {v.id === activeView ? (
-                <Check className="size-3.5 shrink-0 text-[#f2b500]" aria-hidden />
+                <Check
+                  className={`size-3.5 shrink-0 ${isV2Nav ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
+                  aria-hidden
+                />
               ) : (
                 <span className="size-3.5 shrink-0" aria-hidden />
               )}
