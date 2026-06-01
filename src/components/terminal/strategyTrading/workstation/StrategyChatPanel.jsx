@@ -338,6 +338,7 @@ export default function StrategyChatPanel({
             <StrategyPromptBox
               className="w-full"
               variant="composer"
+              composerShell="chat"
               value={prompt}
               onChange={onPromptChange}
               onSubmit={onSubmit}

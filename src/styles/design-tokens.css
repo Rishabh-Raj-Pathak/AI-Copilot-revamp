@@ -717,6 +717,12 @@ dialog::backdrop {
     border-radius: 1.75rem;
   }
 
+  /** Chat sidebar prompt — tighter radius than new-strategy composer */
+  .ds-strategy-composer-shell--chat {
+    min-height: auto;
+    border-radius: 1rem;
+  }
+
   .ds-strategy-composer-cursor {
     position: absolute;
     left: 0;

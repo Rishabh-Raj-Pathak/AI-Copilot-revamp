@@ -99,9 +99,12 @@ export default function StrategyPromptBox({
   enableSuggestions = true,
   placeholder = "Describe the strategy you want to build…",
   variant = "chat",
+  /** @type {'create' | 'chat'} — only when variant is composer */
+  composerShell = "create",
   className = "",
 }) {
   const isComposer = variant === "composer";
+  const isChatComposer = isComposer && composerShell === "chat";
   const theme = useCopilotTheme();
 
   const [attachOpen, setAttachOpen] = useState(false);
@@ -303,10 +306,14 @@ export default function StrategyPromptBox({
   const formFocusReset =
     "focus-within:outline-none focus-within:ring-0 focus-within:ring-offset-0";
 
+  const composerShellClass = isChatComposer
+    ? "ds-strategy-composer-shell--chat"
+    : "ds-strategy-composer-shell--inline";
+
   const formShell = isComposer
-    ? `ds-strategy-composer-shell ds-strategy-composer-shell--inline ${formFocusReset} px-3 sm:px-4 ${
-        composerMultiline ? "py-3 sm:py-3.5" : "py-2.5 sm:py-3"
-      }`
+    ? `ds-strategy-composer-shell ${composerShellClass} ${formFocusReset} ${
+        isChatComposer ? "px-3" : "px-3 sm:px-4"
+      } ${composerMultiline ? "py-3 sm:py-3.5" : "py-2.5 sm:py-3"}`
     : `${theme.chatPromptShell} ${formFocusReset}`;
 
   const textareaFocusReset =
