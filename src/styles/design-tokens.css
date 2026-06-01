@@ -835,6 +835,7 @@ dialog::backdrop {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    min-height: 2rem;
     padding: var(--ds-terminal-connect-wallet-padding-y)
       var(--ds-terminal-connect-wallet-padding-x);
     border-radius: var(--ds-terminal-connect-wallet-radius);

@@ -223,7 +223,10 @@ export default function StrategyTradingPage({
               {
                 id: `a-${Date.now() + 1}`,
                 role: "assistant",
-                text: `Draft created: ${draft.name}. Configure parameters, then run a backtest estimate before paper trading.`,
+                text:
+                  uiVersion === "v2"
+                    ? `Draft created: ${draft.name}. Review configuration, then backtest or deploy when ready.`
+                    : `Draft created: ${draft.name}. Configure parameters, then run a backtest estimate before paper trading.`,
                 richCards: [{ type: "config", data: draft.config }],
               },
             ];

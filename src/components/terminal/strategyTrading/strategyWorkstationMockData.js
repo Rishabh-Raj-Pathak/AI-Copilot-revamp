@@ -273,7 +273,7 @@ export const DEMO_CHAT_BTC_SNIPER_DRAFT = [
   {
     id: "demo-a1",
     role: "assistant",
-    text: "Got it. I created a draft strategy for BTCUSDT on the 15m timeframe using a lower Bollinger Band + RSI mean reversion setup. Before backtesting, here are the recommended configuration settings.",
+    text: "Got it. I created a draft strategy for BTCUSDT on the 15m timeframe using a lower Bollinger Band + RSI mean reversion setup. Here are the recommended configuration settings — backtest or deploy when you're ready.",
     richCards: [{ type: "config", data: STRATEGY_CONFIG_DEFAULT }],
   },
 ];

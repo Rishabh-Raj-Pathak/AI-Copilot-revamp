@@ -1,4 +1,4 @@
-import { Plus, Save } from "lucide-react";
+import { Play, Plus, Save } from "lucide-react";
 import { Button } from "../../../ui/button.jsx";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import { formatStrategyHeaderMeta } from "../strategyCopilotUi.js";
@@ -80,10 +80,15 @@ export default function StrategyCenterWorkspace({
     );
   }
 
-  const canReview =
+  const isDeployed = strategy.deployment?.status === "active";
+  const hasBacktestOrPaper =
     strategy.backtest?.status === "complete" ||
     strategy.paperTrading?.status === "active" ||
     strategy.status === "Ready";
+  /** v2: deploy from draft without backtest; v1/v3: require backtest or paper first */
+  const canDeploy =
+    theme.isV2 && !theme.isV3 ? !isDeployed : hasBacktestOrPaper;
+  const backtestComplete = strategy.backtest?.status === "complete";
 
   const scrollShellClass = theme.isV2
     ? `ds-scrollbar-hidden flex h-full min-h-0 w-full flex-1 flex-col overflow-y-auto ${theme.shell}`
@@ -106,14 +111,35 @@ export default function StrategyCenterWorkspace({
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             {theme.isV2 ? (
-              <button
-                type="button"
-                className={`${theme.secondaryActionBtn} gap-1.5`}
-                onClick={onSave}
-              >
-                <Save className="size-3.5" aria-hidden />
-                Save
-              </button>
+              <>
+                <button
+                  type="button"
+                  className={`${theme.secondaryActionBtn} gap-1.5`}
+                  onClick={onSave}
+                >
+                  <Save className="size-3.5" aria-hidden />
+                  Save
+                </button>
+                {!theme.isV3 ? (
+                  <button
+                    type="button"
+                    className={`${theme.runBacktestBtn} inline-flex min-h-8 items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50`}
+                    onClick={onRunBacktest}
+                    disabled={backtestLoading}
+                    aria-busy={backtestLoading}
+                  >
+                    {backtestLoading ? (
+                      <span
+                        className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-white/20 border-t-white/80"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Play className="size-3.5 shrink-0" aria-hidden />
+                    )}
+                    {backtestComplete ? "Re-run Backtest" : "Backtest"}
+                  </button>
+                ) : null}
+              </>
             ) : (
               <Button
                 size="sm"
@@ -127,12 +153,16 @@ export default function StrategyCenterWorkspace({
             )}
             <button
               type="button"
-              className={`${theme.gradientCta} gap-1.5 px-4 text-xs sm:text-sm ${!canReview ? "pointer-events-none opacity-50" : ""}`}
+              className={`${theme.gradientCta} gap-1.5 text-xs font-medium ${theme.isV2 ? "" : "px-4 sm:text-sm"} ${!canDeploy ? "pointer-events-none opacity-50" : ""}`}
               onClick={onReviewDeployment}
-              disabled={!canReview}
+              disabled={!canDeploy}
               title={
-                !canReview
-                  ? "Run backtest or paper trading before deployment"
+                !canDeploy
+                  ? theme.isV2 && !theme.isV3
+                    ? isDeployed
+                      ? "Strategy is already deployed"
+                      : undefined
+                    : "Run backtest or paper trading before deployment"
                   : undefined
               }
             >
