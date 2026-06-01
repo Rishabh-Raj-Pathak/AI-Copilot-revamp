@@ -1,10 +1,37 @@
-import { ChevronRight } from "lucide-react";
 import { useCopilotTheme } from "./StrategyCopilotContext.jsx";
-import {
-  v3DetailText,
-  v3LabelText,
-  v3SectionTitle,
-} from "./workstation/V3TabLayout.jsx";
+import { v3SectionTitle } from "./workstation/V3TabLayout.jsx";
+
+function FlowStepList({ steps, titleClassName, shellClassName = "" }) {
+  return (
+    <section className={shellClassName}>
+      <h4 className={titleClassName}>Strategy flow</h4>
+      <ol className="mt-3.5 flex flex-col tablet:mt-4 tablet:flex-row tablet:items-stretch">
+        {steps.map((item, i) => (
+          <li
+            key={item.step}
+            className={`min-w-0 flex-1 py-3.5 first:pt-0 last:pb-0 tablet:px-4 tablet:py-0 ${
+              i > 0
+                ? "border-t border-white/[0.06] tablet:border-t-0 tablet:border-l"
+                : ""
+            } ${i === 0 ? "tablet:pl-0" : ""} ${
+              i === steps.length - 1 ? "tablet:pr-0" : ""
+            }`}
+          >
+            <p className="flex items-baseline gap-2 text-[10px] font-medium uppercase tracking-wide">
+              <span className="tabular-nums text-[#47B881]">{i + 1}</span>
+              <span className="min-w-0 truncate text-[rgba(255,255,255,0.42)]">
+                {item.step}
+              </span>
+            </p>
+            <p className="mt-1.5 text-[12px] leading-snug text-[rgba(255,255,255,0.72)]">
+              {item.detail}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 
 export default function StrategyFlowStepper({ steps }) {
   const theme = useCopilotTheme();
@@ -12,68 +39,41 @@ export default function StrategyFlowStepper({ steps }) {
 
   if (theme.isV3) {
     return (
-      <section className="border-b border-white/6 py-5">
-        <h4 className={v3SectionTitle}>Strategy flow</h4>
-        <ol className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-0">
-          {steps.map((item, i) => (
-            <li
-              key={item.step}
-              className="flex min-w-0 flex-1 items-start gap-2 lg:px-3 lg:first:pl-0 lg:last:pr-0"
-            >
-              <div className="flex min-w-0 flex-1 items-start gap-2.5">
-                <span
-                  className={`mt-0.5 shrink-0 ${theme.flowStepNum}`}
-                  aria-hidden
-                >
-                  {i + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className={v3LabelText}>{item.step}</p>
-                  <p className={`mt-1 ${v3DetailText}`}>{item.detail}</p>
-                </div>
-              </div>
-              {i < steps.length - 1 ? (
-                <ChevronRight
-                  className="mx-1 mt-1 hidden size-3.5 shrink-0 text-[rgba(255,255,255,0.22)] lg:block"
-                  aria-hidden
-                />
-              ) : null}
-            </li>
-          ))}
-        </ol>
-      </section>
+      <FlowStepList
+        steps={steps}
+        titleClassName={v3SectionTitle}
+        shellClassName="border-b border-white/6 py-5"
+      />
+    );
+  }
+
+  if (theme.isV2) {
+    return (
+      <FlowStepList
+        steps={steps}
+        titleClassName="text-sm font-medium text-[rgba(255,255,255,0.88)]"
+        shellClassName="rounded-xl border border-white/6 bg-[#101312] px-4 py-4 sm:px-5"
+      />
     );
   }
 
   return (
     <div className={theme.flowCard}>
       <h4 className="text-sm font-bold text-white">Strategy flow</h4>
-      <ol
-        className={`mt-4 flex flex-col gap-4 ${
-          theme.isV2
-            ? "tablet:flex-row tablet:items-start tablet:gap-1"
-            : "tablet:flex-row tablet:items-stretch tablet:gap-2"
-        }`}
-      >
+      <ol className="mt-3 flex flex-col gap-3 tablet:flex-row tablet:gap-0 tablet:divide-x tablet:divide-[#242424]">
         {steps.map((item, i) => (
-          <li key={item.step} className="flex min-w-0 flex-1 items-start gap-2">
-            <div className="flex min-w-0 flex-1 items-start gap-2">
-              <span className={theme.flowStepNum}>{i + 1}</span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#757575]">
-                  {item.step}
-                </p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-[#929292]">
-                  {item.detail}
-                </p>
-              </div>
-            </div>
-            {theme.isV2 && i < steps.length - 1 ? (
-              <ChevronRight
-                className="mx-0.5 mt-1 hidden size-4 shrink-0 text-[#585858] tablet:block"
-                aria-hidden
-              />
-            ) : null}
+          <li
+            key={item.step}
+            className={`min-w-0 flex-1 ${i > 0 ? "tablet:pl-3" : ""} ${
+              i < steps.length - 1 ? "tablet:pr-3" : ""
+            }`}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#757575]">
+              {i + 1}. {item.step}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-[#929292]">
+              {item.detail}
+            </p>
           </li>
         ))}
       </ol>
