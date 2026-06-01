@@ -11,7 +11,8 @@ export const COPILOT_V2_POSITIVE = "#34D399";
 export const COPILOT_V2_NEGATIVE = "#F87171";
 
 /** Tailwind class fragments for V2 semantic colors */
-export const COPILOT_V2_TEXT_PRIMARY = "text-[var(--ds-copilot-v2-text-primary)]";
+export const COPILOT_V2_TEXT_PRIMARY =
+  "text-[var(--ds-copilot-v2-text-primary)]";
 export const COPILOT_V2_TEXT_SECONDARY =
   "text-[var(--ds-copilot-v2-text-secondary)]";
 export const COPILOT_V2_TEXT_MUTED = "text-[var(--ds-copilot-v2-text-muted)]";
@@ -24,8 +25,16 @@ export function formatStrategyHeaderMeta(strategy) {
   const market = (strategy.market ?? "").trim();
   const tf = (strategy.timeframe ?? "").trim();
   const marketPart =
-    tf && market.includes(tf) ? market : tf ? `${market} · ${tf}`.trim() : market;
-  return [marketPart, strategy.strategy, strategy.model ? `${strategy.model} Model` : null]
+    tf && market.includes(tf)
+      ? market
+      : tf
+        ? `${market} · ${tf}`.trim()
+        : market;
+  return [
+    marketPart,
+    strategy.strategy,
+    strategy.model ? `${strategy.model} Model` : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 }
@@ -34,12 +43,16 @@ export function formatStrategyHeaderMeta(strategy) {
 const V2_ACTION_RADIUS = "rounded-[var(--ds-terminal-connect-wallet-radius)]";
 
 export function getCopilotTheme(version) {
-  const isV2 = version === "v2";
+  const isV3 = version === "v3";
+  const isV2 = version === "v2" || isV3;
 
-  return {
+  const theme = {
     isV2,
+    isV3,
     gradientCta: isV2 ? COPILOT_V2_GRADIENT_CTA : "ds-terminal-gradient-cta",
-    shell: isV2 ? "bg-[#050706] text-[rgba(255,255,255,0.92)]" : "bg-black text-white",
+    shell: isV2
+      ? "bg-[#050706] text-[rgba(255,255,255,0.92)]"
+      : "bg-black text-white",
     panel: isV2
       ? "border-white/6 bg-[#0D100F]"
       : "border-[#242424] bg-[#0a0a0a]",
@@ -118,7 +131,7 @@ export function getCopilotTheme(version) {
     tabsTrigger: isV2
       ? "!shrink-0 !min-h-0 !rounded-none !border-0 !border-b-2 !border-transparent !bg-transparent !px-4 !py-2.5 !text-xs !font-medium !shadow-none text-[rgba(255,255,255,0.36)] hover:text-[rgba(255,255,255,0.72)] aria-selected:!border-[var(--ds-copilot-v2-mint)] aria-selected:!font-semibold aria-selected:!text-[rgba(255,255,255,0.92)]"
       : "!shrink-0 !text-xs",
-    tabsContentWrap: isV2 ? "mt-1" : "",
+    tabsContentWrap: isV3 ? "mt-1" : "",
     chatPanel: isV2
       ? "border-white/6 bg-[#050706] shadow-[inset_1px_0_0_rgba(255,255,255,0.03)]"
       : "border-[#242424] bg-black",
@@ -166,7 +179,93 @@ export function getCopilotTheme(version) {
     textMuted: isV2 ? COPILOT_V2_TEXT_MUTED : "text-[#757575]",
     textMint: isV2 ? COPILOT_V2_TEXT_MINT : "text-[#00f3b6]",
     textPositive: isV2 ? COPILOT_V2_TEXT_POSITIVE : "text-[#00f3b6]",
-    textNegative: isV2 ? "text-[var(--ds-copilot-v2-negative)]" : "text-[#d53d3d]",
+    textNegative: isV2
+      ? "text-[var(--ds-copilot-v2-negative)]"
+      : "text-[#d53d3d]",
     panelDivider: isV2 ? "border-white/[0.04]" : "border-[#242424]",
+    section: "",
+    sectionTitle:
+      "text-sm font-medium tracking-tight text-[rgba(255,255,255,0.88)]",
+    sectionDivider: "border-b border-white/[0.06]",
+    sectionInsetDivider: "border-b border-white/[0.05]",
+    dividerVertical: "border-r border-white/[0.06]",
+    workspaceBody: isV2 ? "space-y-6 p-4 sm:space-y-7 sm:p-5" : "p-4 sm:p-5",
+    workspaceHeader: isV2
+      ? "border-white/[0.06] bg-[#0D100F]"
+      : "border-[#242424]",
+    overviewShell: "flex flex-col gap-0",
+    tableShell: isV2
+      ? "overflow-hidden rounded-xl border border-white/6 bg-[#141716]"
+      : "overflow-x-auto rounded-lg border border-[#242424]",
+  };
+
+  if (!isV3) return theme;
+
+  return {
+    ...theme,
+    shell: "bg-[#050706] text-[rgba(255,255,255,0.94)]",
+    panel: "border-white/[0.05] bg-[#060807]",
+    card: "",
+    cardInner: "",
+    chartSection:
+      "overflow-hidden border border-white/[0.05] bg-[#0a0b0a]",
+    controlBar:
+      "overflow-visible border-t border-white/[0.05] px-3 pb-3 pt-2.5",
+    controlChip:
+      "rounded-none border-0 border-r border-white/[0.06] bg-transparent last:border-r-0",
+    input:
+      "rounded-md border border-white/[0.06] bg-[#0a0b0a] text-[rgba(255,255,255,0.94)] placeholder:text-[rgba(255,255,255,0.45)] focus:border-[var(--ds-copilot-v2-mint)]/35 focus:outline-none",
+    filterActive:
+      "shrink-0 rounded-md border border-[var(--ds-copilot-v2-mint)]/20 bg-[var(--ds-copilot-v2-mint)]/8 px-2 py-0.5 text-[10px] font-medium text-[var(--ds-copilot-v2-mint)]",
+    filterIdle:
+      "shrink-0 rounded-md border border-transparent px-2 py-0.5 text-[10px] font-medium text-[rgba(255,255,255,0.48)] transition-colors hover:bg-white/[0.03] hover:text-[rgba(255,255,255,0.72)]",
+    strategyCard:
+      "relative w-full border-b border-white/[0.05] px-3 py-2.5 text-left transition-colors hover:bg-white/[0.025]",
+    strategyCardActive:
+      "relative w-full border-b border-white/[0.05] px-3 py-2.5 text-left",
+    headerTitle:
+      "text-xl font-semibold tracking-tight text-white sm:text-[1.3rem]",
+    headerMeta: "text-xs text-[rgba(255,255,255,0.58)]",
+    metricCard: "border-y border-white/[0.06] bg-transparent",
+    metricCell:
+      "min-w-0 flex-1 border-white/[0.06] px-4 py-3.5 sm:px-5",
+    metricLabel: "text-xs font-medium text-[rgba(255,255,255,0.52)]",
+    metricValue: "mt-1 text-xl font-semibold tabular-nums tracking-tight",
+    tabsList:
+      "ds-scrollbar-hidden !flex w-full flex-nowrap gap-0 overflow-x-auto border-0 border-b border-white/[0.06] bg-transparent p-0",
+    tabsTrigger:
+      "!shrink-0 !min-h-0 !rounded-none !border-0 !border-b-2 !border-transparent !bg-transparent !px-4 !py-3 !text-xs !font-medium !shadow-none text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.78)] aria-selected:!border-[var(--ds-copilot-v2-mint)] aria-selected:!font-semibold aria-selected:!text-white",
+    tabsContentWrap: "",
+    chatPanel: "border-white/[0.05] bg-[#050706]",
+    chatUserBubble:
+      "rounded-xl rounded-br-sm border border-white/[0.06] bg-[#111413] px-3.5 py-2.5 text-[13px] leading-[1.6] text-[rgba(255,255,255,0.94)]",
+    chatAiBubble:
+      "rounded-xl rounded-bl-sm border border-white/[0.06] bg-[#0d0f0e] px-3.5 py-2.5",
+    chatExampleBtn:
+      "rounded-lg border border-white/[0.06] bg-transparent px-3.5 py-2.5 text-left text-[12px] leading-snug text-[rgba(255,255,255,0.58)] transition-colors hover:border-white/10 hover:bg-white/[0.03] hover:text-[rgba(255,255,255,0.88)]",
+    chatQuickChip:
+      "shrink-0 rounded-md border border-white/[0.06] bg-transparent px-2.5 py-1 text-[11px] text-[rgba(255,255,255,0.48)] transition-colors hover:border-white/10 hover:bg-white/[0.03] hover:text-[rgba(255,255,255,0.72)]",
+    chatPromptShell:
+      "group/composer relative z-10 rounded-xl border border-white/[0.06] bg-[#0a0b0a] p-3 transition-[border-color] duration-200 focus-within:border-[var(--ds-copilot-v2-mint)]/30",
+    chatComposerFooter: "ds-strategy-chat-composer-footer",
+    flowCard: "py-5",
+    flowStepNum:
+      "flex size-5 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-semibold tabular-nums text-[rgba(255,255,255,0.78)]",
+    overviewPanel: "px-4 pb-6 pt-0 sm:px-5",
+    statusCard: "",
+    richCardShell:
+      "mt-4 overflow-hidden border-y border-white/[0.06] bg-transparent",
+    textMuted: "text-[rgba(255,255,255,0.48)]",
+    panelDivider: "border-white/[0.06]",
+    section: "py-5",
+    sectionTitle:
+      "text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]",
+    sectionDivider: "border-b border-white/[0.06]",
+    sectionInsetDivider: "border-b border-white/[0.05]",
+    dividerVertical: "border-r border-white/[0.06]",
+    workspaceBody: "flex flex-col",
+    workspaceHeader: "border-white/[0.06] bg-[#050706]",
+    overviewShell: "flex flex-col",
+    tableShell: "overflow-hidden border-y border-white/[0.06] bg-transparent",
   };
 }

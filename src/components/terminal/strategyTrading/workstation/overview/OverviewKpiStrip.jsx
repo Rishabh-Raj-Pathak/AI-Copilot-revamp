@@ -35,6 +35,41 @@ export default function OverviewKpiStrip({ bt }) {
     },
   ];
 
+  if (theme.isV3) {
+    return (
+      <div className={theme.metricCard}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 lg:divide-x lg:divide-white/[0.06]">
+          {cells.map((cell, idx) => {
+            const color =
+              cell.tone === "positive"
+                ? theme.textPositive
+                : cell.tone === "negative"
+                  ? theme.textNegative
+                  : theme.textPrimary;
+            return (
+              <div
+                key={cell.label}
+                className={`${theme.metricCell} ${
+                  idx > 0 && idx % 2 === 1
+                    ? "border-l border-white/[0.06] lg:border-l-0"
+                    : ""
+                } ${idx >= 2 ? "border-t border-white/[0.06] lg:border-t-0" : ""}`}
+              >
+                <p className={theme.metricLabel}>{cell.label}</p>
+                <p className={`${theme.metricValue} ${color}`}>{cell.value}</p>
+                {cell.sub ? (
+                  <p className={`mt-1 text-xs ${theme.textMuted}`}>
+                    {cell.sub}
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-xl border border-white/6 bg-[#141716]">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -55,7 +90,9 @@ export default function OverviewKpiStrip({ bt }) {
               <p className={theme.metricLabel}>{cell.label}</p>
               <p className={`${theme.metricValue} ${color}`}>{cell.value}</p>
               {cell.sub ? (
-                <p className="mt-1 text-[10px] font-medium text-[#757575]">{cell.sub}</p>
+                <p className="mt-1 text-[10px] font-medium text-[#757575]">
+                  {cell.sub}
+                </p>
               ) : null}
             </div>
           );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Toast, ToastViewport } from "../../ui/toast.jsx";
+import { isStrategyCopilotComposerView } from "./CopilotNavDropdown.jsx";
 import { useStrategyCopilot } from "./StrategyCopilotContext.jsx";
 import { DEFAULT_PREFERENCES } from "./strategyTradingMockData.js";
 import DeployReviewModal from "./workstation/DeployReviewModal.jsx";
@@ -54,7 +55,7 @@ export default function StrategyTradingPage({
     uiVersion,
   } = useStrategyCopilot();
 
-  const isV2StrategyView = copilotView === "strategy-trading-v2";
+  const isComposerStrategyView = isStrategyCopilotComposerView(copilotView);
   const defaultTemplate = CENTER_TEMPLATES[0];
 
   const [modelId, setModelId] = useState(
@@ -69,7 +70,7 @@ export default function StrategyTradingPage({
   );
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [prompt, setPrompt] = useState(
-    () => (isV2StrategyView ? (defaultTemplate?.prompt ?? "") : ""),
+    () => (isComposerStrategyView ? (defaultTemplate?.prompt ?? "") : ""),
   );
   const [loading, setLoading] = useState(false);
   const [sidebarFilter, setSidebarFilter] = useState("all");
@@ -79,7 +80,7 @@ export default function StrategyTradingPage({
   const [optimizeLoading, setOptimizeLoading] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const [composerMode, setComposerMode] = useState(() => isV2StrategyView);
+  const [composerMode, setComposerMode] = useState(() => isComposerStrategyView);
   const [activeTemplateId, setActiveTemplateId] = useState(
     CENTER_TEMPLATES[0]?.id ?? "btc-mean-reversion",
   );
@@ -269,7 +270,7 @@ export default function StrategyTradingPage({
     if (!selectedStrategy) return;
     setBacktestLoading(true);
     setWorkspaceTab("backtest");
-    if (uiVersion === "v2") setMobilePanel("chat");
+    if (uiVersion === "v2" || uiVersion === "v3") setMobilePanel("chat");
     appendLog("Backtest started");
     pushChat(selectedStrategy.id, "Run backtest on this.", {
       text: "Running backtest estimate on your current market, timeframe, and date range…",
@@ -445,7 +446,7 @@ export default function StrategyTradingPage({
   }, [setSelectedStrategyId, applyTemplatePrefs]);
 
   useEffect(() => {
-    if (copilotView === "strategy-trading-v2") {
+    if (isStrategyCopilotComposerView(copilotView)) {
       enterComposerLanding();
       return;
     }

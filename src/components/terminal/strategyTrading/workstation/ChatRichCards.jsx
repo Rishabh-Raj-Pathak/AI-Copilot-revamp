@@ -113,9 +113,15 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
     ["Profit Factor", data.profitFactor, "text-[#f4f4f4]"],
   ];
 
-  const btnOutline = theme.isV2 ? RICH_CARD_V2_BTN_OUTLINE : RICH_CARD_V2_BTN_LEGACY;
-  const btnOptimize = theme.isV2 ? RICH_CARD_V2_BTN_OPTIMIZE : RICH_CARD_V2_BTN_LEGACY;
-  const btnPrimary = theme.isV2 ? RICH_CARD_V2_BTN_GRADIENT : RICH_CARD_V2_BTN_LEGACY;
+  const btnOutline = theme.isV2
+    ? RICH_CARD_V2_BTN_OUTLINE
+    : RICH_CARD_V2_BTN_LEGACY;
+  const btnOptimize = theme.isV2
+    ? RICH_CARD_V2_BTN_OPTIMIZE
+    : RICH_CARD_V2_BTN_LEGACY;
+  const btnPrimary = theme.isV2
+    ? RICH_CARD_V2_BTN_GRADIENT
+    : RICH_CARD_V2_BTN_LEGACY;
 
   return (
     <div className={richCardShell(theme)}>
@@ -150,7 +156,9 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
         {cells.map(([label, value, color]) => (
           <div key={label}>
             <p className="text-[10px] text-[#8a8a8a]">{label}</p>
-            <p className={`mt-0.5 text-[12px] font-semibold tabular-nums ${color}`}>
+            <p
+              className={`mt-0.5 text-[12px] font-semibold tabular-nums ${color}`}
+            >
               {value}
             </p>
           </div>
@@ -203,8 +211,12 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
 
 function PaperSetupCard({ data, onStartPaper, onReview }) {
   const theme = useCopilotTheme();
-  const btnOutline = theme.isV2 ? RICH_CARD_V2_BTN_OUTLINE : RICH_CARD_V2_BTN_LEGACY;
-  const btnGradient = theme.isV2 ? RICH_CARD_V2_BTN_GRADIENT : RICH_CARD_V2_BTN_LEGACY;
+  const btnOutline = theme.isV2
+    ? RICH_CARD_V2_BTN_OUTLINE
+    : RICH_CARD_V2_BTN_LEGACY;
+  const btnGradient = theme.isV2
+    ? RICH_CARD_V2_BTN_GRADIENT
+    : RICH_CARD_V2_BTN_LEGACY;
   return (
     <div className={richCardShell(theme)}>
       <p
@@ -267,8 +279,12 @@ function PaperSetupCard({ data, onStartPaper, onReview }) {
 
 function PaperCard({ data, onViewPosition, onReview }) {
   const theme = useCopilotTheme();
-  const btnOutline = theme.isV2 ? RICH_CARD_V2_BTN_OUTLINE : RICH_CARD_V2_BTN_LEGACY;
-  const btnGradient = theme.isV2 ? RICH_CARD_V2_BTN_GRADIENT : RICH_CARD_V2_BTN_LEGACY;
+  const btnOutline = theme.isV2
+    ? RICH_CARD_V2_BTN_OUTLINE
+    : RICH_CARD_V2_BTN_LEGACY;
+  const btnGradient = theme.isV2
+    ? RICH_CARD_V2_BTN_GRADIENT
+    : RICH_CARD_V2_BTN_LEGACY;
   return (
     <div className={richCardShell(theme)}>
       <p

@@ -1,9 +1,49 @@
 import { ChevronRight } from "lucide-react";
 import { useCopilotTheme } from "./StrategyCopilotContext.jsx";
+import {
+  v3DetailText,
+  v3LabelText,
+  v3SectionTitle,
+} from "./workstation/V3TabLayout.jsx";
 
 export default function StrategyFlowStepper({ steps }) {
   const theme = useCopilotTheme();
   if (!steps?.length) return null;
+
+  if (theme.isV3) {
+    return (
+      <section className="border-b border-white/6 py-5">
+        <h4 className={v3SectionTitle}>Strategy flow</h4>
+        <ol className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-0">
+          {steps.map((item, i) => (
+            <li
+              key={item.step}
+              className="flex min-w-0 flex-1 items-start gap-2 lg:px-3 lg:first:pl-0 lg:last:pr-0"
+            >
+              <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                <span
+                  className={`mt-0.5 shrink-0 ${theme.flowStepNum}`}
+                  aria-hidden
+                >
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={v3LabelText}>{item.step}</p>
+                  <p className={`mt-1 ${v3DetailText}`}>{item.detail}</p>
+                </div>
+              </div>
+              {i < steps.length - 1 ? (
+                <ChevronRight
+                  className="mx-1 mt-1 hidden size-3.5 shrink-0 text-[rgba(255,255,255,0.22)] lg:block"
+                  aria-hidden
+                />
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  }
 
   return (
     <div className={theme.flowCard}>

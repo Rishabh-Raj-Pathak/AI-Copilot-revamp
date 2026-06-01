@@ -25,8 +25,22 @@ export default function OverviewEquityChart({ bt, range }) {
   const plotW = CHART_W - LEFT_PAD - RIGHT_PAD;
   const yTicks = buildYTicks(vmin, vmax, 5);
 
-  const strategyLine = buildSeriesPath(strategyPts, plotW, INNER_H, TOP, vmin, vmax);
-  const buyHoldLine = buildSeriesPath(buyHoldPts, plotW, INNER_H, TOP, vmin, vmax);
+  const strategyLine = buildSeriesPath(
+    strategyPts,
+    plotW,
+    INNER_H,
+    TOP,
+    vmin,
+    vmax,
+  );
+  const buyHoldLine = buildSeriesPath(
+    buyHoldPts,
+    plotW,
+    INNER_H,
+    TOP,
+    vmin,
+    vmax,
+  );
   const strategyArea = buildSeriesAreaPath(
     strategyPts,
     plotW,
@@ -48,9 +62,11 @@ export default function OverviewEquityChart({ bt, range }) {
 
   const yAt = (v) => TOP + ((vmax - v) / (vmax - vmin)) * INNER_H;
 
-  const shellClass = theme.isV2
-    ? "rounded-xl border border-white/6 bg-[#141716] p-4"
-    : "rounded-xl border border-[#2a2a2a] bg-[#141414] p-4";
+  const shellClass = theme.isV3
+    ? "border-b border-white/6 py-5"
+    : theme.isV2
+      ? "rounded-xl border border-white/6 bg-[#141716] p-4"
+      : "rounded-xl border border-[#2a2a2a] bg-[#141414] p-4";
   const legendStrategyClass = theme.isV2
     ? "flex items-center gap-1.5 text-[#19E6A3]"
     : "flex items-center gap-1.5 text-[#f2b500]";
@@ -67,7 +83,7 @@ export default function OverviewEquityChart({ bt, range }) {
     >
       <defs>
         <linearGradient id="overview-eq-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={fillTop} stopOpacity="0.22" />
+          <stop offset="0%" stopColor={fillTop} stopOpacity="0.18" />
           <stop offset="100%" stopColor={fillTop} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -79,14 +95,24 @@ export default function OverviewEquityChart({ bt, range }) {
             y1={yAt(tick)}
             x2={CHART_W - RIGHT_PAD}
             y2={yAt(tick)}
-            stroke={theme.isV2 ? "rgba(255,255,255,0.06)" : "#262626"}
+            stroke={
+              theme.isV3
+                ? "rgba(255,255,255,0.05)"
+                : theme.isV2
+                  ? "rgba(255,255,255,0.06)"
+                  : "#262626"
+            }
             strokeWidth="0.75"
           />
           <text
             x={LEFT_PAD - 6}
             y={yAt(tick) + 3}
             textAnchor="end"
-            className="fill-[rgba(255,255,255,0.36)] text-[9px]"
+            className={
+              theme.isV3
+                ? "fill-[rgba(255,255,255,0.45)] text-[9px]"
+                : "fill-[rgba(255,255,255,0.36)] text-[9px]"
+            }
           >
             {formatEquityTick(tick)}
           </text>
@@ -112,21 +138,33 @@ export default function OverviewEquityChart({ bt, range }) {
             d={strategyLine}
             fill="none"
             stroke={strokeLine}
-            strokeWidth="2"
+            strokeWidth="1.75"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         ) : null}
       </g>
 
-      <text x={LEFT_PAD} y={bottomY + 16} className="fill-[rgba(255,255,255,0.36)] text-[9px]">
+      <text
+        x={LEFT_PAD}
+        y={bottomY + 16}
+        className={
+          theme.isV3
+            ? "fill-[rgba(255,255,255,0.45)] text-[9px]"
+            : "fill-[rgba(255,255,255,0.36)] text-[9px]"
+        }
+      >
         {startLabel}
       </text>
       <text
         x={CHART_W - RIGHT_PAD}
         y={bottomY + 16}
         textAnchor="end"
-        className="fill-[rgba(255,255,255,0.36)] text-[9px]"
+        className={
+          theme.isV3
+            ? "fill-[rgba(255,255,255,0.45)] text-[9px]"
+            : "fill-[rgba(255,255,255,0.36)] text-[9px]"
+        }
       >
         {endLabel}
       </text>
@@ -136,7 +174,13 @@ export default function OverviewEquityChart({ bt, range }) {
   return (
     <div className={shellClass}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h4 className="text-xs font-medium text-[rgba(255,255,255,0.58)]">
+        <h4
+          className={
+            theme.isV3
+              ? "text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]"
+              : "text-xs font-medium text-[rgba(255,255,255,0.58)]"
+          }
+        >
           Equity Curve
         </h4>
         <div className="flex gap-4 text-[10px]">
@@ -147,9 +191,11 @@ export default function OverviewEquityChart({ bt, range }) {
             />
             Strategy
           </span>
-          <span className="flex items-center gap-1.5 text-[rgba(255,255,255,0.36)]">
+          <span
+            className={`flex items-center gap-1.5 ${theme.isV3 ? theme.textMuted : "text-[rgba(255,255,255,0.36)]"}`}
+          >
             <span
-              className="inline-block h-0 w-4 border-t border-dashed border-[rgba(255,255,255,0.36)]"
+              className="inline-block h-0 w-4 border-t border-dashed border-current"
               aria-hidden
             />
             Buy & Hold
@@ -160,7 +206,9 @@ export default function OverviewEquityChart({ bt, range }) {
       {theme.isV2 ? (
         <ScrollFade
           axis="x"
-          fadeColor="var(--ds-copilot-v2-elevated)"
+          fadeColor={
+            theme.isV3 ? "var(--ds-copilot-v2-bg)" : "var(--ds-copilot-v2-elevated)"
+          }
           className="mt-3 w-full"
         >
           {chartSvg}

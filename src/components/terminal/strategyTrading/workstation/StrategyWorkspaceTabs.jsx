@@ -7,6 +7,14 @@ import StrategyLogicCard from "./StrategyLogicCard.jsx";
 import BacktestTabV2 from "./overview/BacktestTabV2.jsx";
 import OverviewTabV2 from "./overview/OverviewTabV2.jsx";
 import ScrollFade from "./ScrollFade.jsx";
+import {
+  CopilotTabLead,
+  V3TabLead,
+  V3TabSection,
+  V3TabShell,
+  v3BodyText,
+  v3SectionTitle,
+} from "./V3TabLayout.jsx";
 import { WORKSPACE_TABS } from "../strategyWorkstationMockData.js";
 
 const WORKSPACE_TABS_V2 = [
@@ -25,6 +33,41 @@ const EXECUTION_SUBTABS = [
 ];
 
 function EmptySectionTable({ columns, message, subtitle, theme }) {
+  if (theme?.isV3) {
+    return (
+      <div className={theme.tableShell}>
+        <ScrollFade
+          axis="x"
+          fadeColor="var(--ds-copilot-v2-bg)"
+          className="border-b border-white/[0.06]"
+        >
+          <table className="w-full min-w-max text-left text-xs">
+            <thead className="text-[rgba(255,255,255,0.48)]">
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col}
+                    className="whitespace-nowrap px-3 py-2.5 font-medium"
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          </table>
+        </ScrollFade>
+        <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+          <p className="text-sm text-[rgba(255,255,255,0.58)]">{message}</p>
+          {subtitle ? (
+            <p className="mt-2 max-w-md text-xs leading-relaxed text-[rgba(255,255,255,0.45)]">
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   if (theme?.isV2) {
     return (
       <div className="overflow-hidden rounded-xl border border-white/6 bg-[#141716]">
@@ -73,7 +116,9 @@ function EmptySectionTable({ columns, message, subtitle, theme }) {
           </tr>
         </thead>
       </table>
-      <div className="px-3 py-10 text-center text-sm text-[#757575]">{message}</div>
+      <div className="px-3 py-10 text-center text-sm text-[#757575]">
+        {message}
+      </div>
     </div>
   );
 }
@@ -117,6 +162,36 @@ function MetricsGrid({ strategy, theme, compact }) {
     { label: "Sharpe", value: m.sharpeRatio ?? "—" },
     { label: "Trades", value: String(m.trades ?? 0) },
   ];
+
+  if (theme.isV3 && compact) {
+    return (
+      <div className={theme.metricCard}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 lg:divide-x lg:divide-white/[0.06]">
+          {cells.map((cell, i) => {
+            const color =
+              cell.tone === "positive"
+                ? theme.textPositive
+                : cell.tone === "negative"
+                  ? theme.textNegative
+                  : theme.textPrimary;
+            return (
+              <div
+                key={cell.label}
+                className={`${theme.metricCell} ${
+                  i > 0 && i % 2 === 1
+                    ? "border-l border-white/[0.06] lg:border-l-0"
+                    : ""
+                } ${i >= 2 ? "border-t border-white/[0.06] lg:border-t-0" : ""}`}
+              >
+                <p className={theme.metricLabel}>{cell.label}</p>
+                <p className={`${theme.metricValue} ${color}`}>{cell.value}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   if (theme.isV2 && compact) {
     return (
@@ -189,7 +264,13 @@ function EquityCurveMock({ theme, compact }) {
             <stop offset="100%" stopColor="#16E6A3" />
           </linearGradient>
           <filter id="eq-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#19E6A3" floodOpacity="0.35" />
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="1.5"
+              floodColor="#19E6A3"
+              floodOpacity="0.35"
+            />
           </filter>
         </defs>
 
@@ -242,6 +323,21 @@ function EquityCurveMock({ theme, compact }) {
 }
 
 function StatusPanel({ strategy, theme }) {
+  if (theme.isV3) {
+    return (
+      <>
+        <h4 className={v3SectionTitle}>Status</h4>
+        <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
+          {strategy.status}
+        </p>
+        <p className={`mt-2 ${v3BodyText}`}>
+          Execution: Manual approval · Max leverage{" "}
+          {strategy.config?.leverage ?? "3x"}
+        </p>
+      </>
+    );
+  }
+
   return (
     <div className={theme.statusCard}>
       <h4
@@ -262,7 +358,7 @@ function StatusPanel({ strategy, theme }) {
       >
         {strategy.status}
       </p>
-      <p className="mt-2 text-[11px] leading-relaxed text-[#757575]">
+      <p className="mt-2 text-[13px] leading-relaxed text-[#757575]">
         Execution: Manual approval · Max leverage{" "}
         {strategy.config?.leverage ?? "3x"}
       </p>
@@ -272,6 +368,27 @@ function StatusPanel({ strategy, theme }) {
 
 function AiNotesPanel({ setup, theme }) {
   const innerCard = theme.card;
+  const notes = setup?.aiNotes ?? ["Backtest estimates are not guarantees."];
+
+  if (theme.isV3) {
+    return (
+      <>
+        <h4 className={v3SectionTitle}>AI notes</h4>
+        <ul className="mt-3 space-y-2.5">
+          {notes.map((n) => (
+            <li key={n} className={`flex gap-2.5 ${v3BodyText}`}>
+              <span
+                className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-[var(--ds-copilot-v2-mint)]"
+                aria-hidden
+              />
+              <span>{n}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
+
   return (
     <div className={theme.isV2 ? theme.statusCard : `p-3 ${innerCard}`}>
       <h4
@@ -284,29 +401,49 @@ function AiNotesPanel({ setup, theme }) {
         AI notes
       </h4>
       <ul className="mt-2 space-y-1.5">
-        {(setup?.aiNotes ?? ["Backtest estimates are not guarantees."]).map(
-          (n) => (
-            <li key={n} className="text-[11px] leading-relaxed text-[#929292]">
-              · {n}
-            </li>
-          ),
-        )}
+        {notes.map((n) => (
+          <li key={n} className="text-[11px] leading-relaxed text-[#929292]">
+            · {n}
+          </li>
+        ))}
       </ul>
     </div>
   );
 }
 
-function ExecutionNestedTabs({ strategy, pos, theme, tabContentClass }) {
+function ExecutionNestedTabs({
+  strategy,
+  pos,
+  theme,
+  tabContentClass,
+  nestedInV3 = false,
+}) {
   const [executionTab, setExecutionTab] = useState("positions");
   const nestedContentClass = theme.isV2 ? "mt-3" : "mt-3 space-y-3";
 
   return (
-    <Tabs value={executionTab} onValueChange={setExecutionTab} className="mt-4">
+    <Tabs
+      value={executionTab}
+      onValueChange={setExecutionTab}
+      className={nestedInV3 ? "" : "mt-4"}
+    >
       {theme.isV2 ? (
-        <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-elevated)">
+        <ScrollFade
+          axis="x"
+          fadeColor={
+            nestedInV3
+              ? "var(--ds-copilot-v2-bg)"
+              : "var(--ds-copilot-v2-elevated)"
+          }
+          className={nestedInV3 ? "border-b border-white/6" : undefined}
+        >
           <TabsList className={`${theme.tabsList} flex-wrap`}>
             {EXECUTION_SUBTABS.map((t) => (
-              <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+              <TabsTrigger
+                key={t.id}
+                value={t.id}
+                className={theme.tabsTrigger}
+              >
                 {t.label}
               </TabsTrigger>
             ))}
@@ -375,7 +512,9 @@ function ExecutionNestedTabs({ strategy, pos, theme, tabContentClass }) {
             </table>
           </div>
         ) : (
-          <p className="text-xs text-[#757575]">No open paper or live positions.</p>
+          <p className="text-xs text-[#757575]">
+            No open paper or live positions.
+          </p>
         )}
       </TabsContent>
 
@@ -444,15 +583,88 @@ function ExecutionNestedTabs({ strategy, pos, theme, tabContentClass }) {
   );
 }
 
-function PaperTradingSummary({ strategy, pos, innerCard, theme }) {
+function PaperTradingSummary({ strategy, pos, innerCard, theme, embedded = false }) {
+  if (theme.isV3) {
+    const sections = (
+      <>
+        <V3TabSection divider={!!pos || !!strategy.paperTrading?.events?.length}>
+          <h4 className={v3SectionTitle}>Paper trading</h4>
+          <p className={`mt-2 ${v3BodyText}`}>
+            Status:{" "}
+            <span className={`font-medium ${theme.textMint}`}>
+              Paper Trading Active
+            </span>
+          </p>
+        </V3TabSection>
+        {pos ? (
+          <V3TabSection
+            divider={!!strategy.paperTrading?.events?.length}
+          >
+            <p className="text-sm font-medium text-white">
+              {pos.market} {pos.side}
+            </p>
+            <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2.5">
+              {[
+                ["Entry", pos.entry],
+                ["Current", pos.current],
+                ["PnL", pos.pnl],
+                ["Stop loss", pos.stopLoss],
+                ["Take profit", pos.takeProfit],
+                ["Time in trade", pos.timeInTrade],
+                ["Status", pos.status],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-3">
+                  <dt className={`text-xs ${theme.textMuted}`}>{k}</dt>
+                  <dd
+                    className={`text-xs font-medium tabular-nums ${
+                      k === "PnL" && String(v).startsWith("+")
+                        ? theme.textPositive
+                        : "text-[rgba(255,255,255,0.78)]"
+                    }`}
+                  >
+                    {v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </V3TabSection>
+        ) : null}
+        {strategy.paperTrading?.events?.length ? (
+          <V3TabSection divider={false}>
+            <p className={`mb-2 text-xs font-medium ${theme.textMuted}`}>
+              Recent events
+            </p>
+            <ul className="space-y-1.5">
+              {strategy.paperTrading.events.map((e) => (
+                <li key={e} className={`flex gap-2.5 ${v3BodyText}`}>
+                  <span
+                    className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-[var(--ds-copilot-v2-mint)]"
+                    aria-hidden
+                  />
+                  {e}
+                </li>
+              ))}
+            </ul>
+          </V3TabSection>
+        ) : null}
+      </>
+    );
+
+    return embedded ? sections : <V3TabShell>{sections}</V3TabShell>;
+  }
+
   return (
     <div className="space-y-3">
       <p className="text-xs">
         Status:{" "}
-        <span className={`font-medium ${theme.textMint}`}>Paper Trading Active</span>
+        <span className={`font-medium ${theme.textMint}`}>
+          Paper Trading Active
+        </span>
       </p>
       {pos ? (
-        <div className={`p-3 ${theme.isV2 ? "rounded-lg border border-white/[0.05] bg-[#101312]" : innerCard}`}>
+        <div
+          className={`p-3 ${theme.isV2 ? "rounded-lg border border-white/[0.05] bg-[#101312]" : innerCard}`}
+        >
           <p className="text-xs font-semibold text-white">
             {pos.market} {pos.side}
           </p>
@@ -470,11 +682,11 @@ function PaperTradingSummary({ strategy, pos, innerCard, theme }) {
                 <dt className="text-[#757575]">{k}</dt>
                 <dd
                   className={
-                            k === "PnL" && String(v).startsWith("+")
-                              ? `font-medium ${theme.textPositive}`
-                              : theme.isV2
-                                ? theme.textSecondary
-                                : "text-[#bfbfbf]"
+                    k === "PnL" && String(v).startsWith("+")
+                      ? `font-medium ${theme.textPositive}`
+                      : theme.isV2
+                        ? theme.textSecondary
+                        : "text-[#bfbfbf]"
                   }
                 >
                   {v}
@@ -512,20 +724,34 @@ export default function StrategyWorkspaceTabs({
   const isPaperActive = strategy?.paperTrading?.status === "active";
   const isDeployed = strategy?.deployment?.status === "active";
 
-  const tabContentClass = theme.isV2 ? "mt-0 p-4 sm:p-5" : "mt-3 space-y-3";
+  const tabContentClass = theme.isV3
+    ? `mt-0 ${theme.overviewPanel}`
+    : theme.isV2
+      ? "mt-0 pt-0"
+      : "mt-3 space-y-3";
 
   return (
     <div className={theme.isV2 ? "" : "mt-4"}>
-      {!theme.isV2 ? (
-        <MetricsGrid strategy={strategy} theme={theme} />
-      ) : null}
+      {!theme.isV2 ? <MetricsGrid strategy={strategy} theme={theme} /> : null}
 
-      <Tabs value={resolvedTab} onValueChange={onTabChange} className={theme.isV2 ? "" : "mt-4"}>
+      <Tabs
+        value={resolvedTab}
+        onValueChange={onTabChange}
+        className={theme.isV2 ? "" : "mt-4"}
+      >
         {theme.isV2 ? (
-          <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-bg)">
+          <ScrollFade
+            axis="x"
+            fadeColor="var(--ds-copilot-v2-bg)"
+            className={theme.isV3 ? "px-4 sm:px-5" : undefined}
+          >
             <TabsList className={theme.tabsList}>
               {tabs.map((t) => (
-                <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+                <TabsTrigger
+                  key={t.id}
+                  value={t.id}
+                  className={theme.tabsTrigger}
+                >
                   {t.label}
                   {t.id === "paper" && isPaperActive ? (
                     <span className="ml-1 inline-block size-1.5 rounded-full bg-[var(--ds-copilot-v2-mint)]" />
@@ -540,7 +766,11 @@ export default function StrategyWorkspaceTabs({
         ) : (
           <TabsList className={theme.tabsList}>
             {tabs.map((t) => (
-              <TabsTrigger key={t.id} value={t.id} className={theme.tabsTrigger}>
+              <TabsTrigger
+                key={t.id}
+                value={t.id}
+                className={theme.tabsTrigger}
+              >
                 {t.label}
                 {t.id === "paper" && isPaperActive ? (
                   <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
@@ -597,79 +827,123 @@ export default function StrategyWorkspaceTabs({
                 </Button>
               </div>
             ) : null}
-            {!theme.isV2 && strategy?.backtest?.status === "complete" && bt ? (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-                    <Metric
-                      label="Total Return"
-                      value={bt.totalReturn}
-                      tone="positive"
-                      theme={theme}
-                    />
-                    <Metric
-                      label="Max Drawdown"
-                      value={bt.maxDrawdown}
-                      tone="negative"
-                      theme={theme}
-                    />
-                    <Metric label="Win Rate" value={bt.winRate} theme={theme} />
-                    <Metric label="Profit Factor" value={bt.profitFactor} theme={theme} />
-                    <Metric label="Sharpe" value={bt.sharpeRatio} theme={theme} />
-                  </div>
-                  <EquityCurveMock theme={theme} />
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className={`p-3 text-xs ${innerCard}`}>
-                      <p className="font-medium text-[#bfbfbf]">Returns</p>
-                      <p className="mt-1 text-[#929292]">
-                        Buy & Hold:{" "}
-                        <span className="text-[#00f3b6]">{bt.buyAndHold}</span>
-                      </p>
-                      <p className="text-[#929292]">
-                        Outperformance:{" "}
-                        <span className="text-[#d53d3d]">{bt.outperformance}</span>
-                      </p>
-                      <p className="text-[#929292]">
-                        Expected payoff: {bt.expectedPayoff}
-                      </p>
-                    </div>
-                    <div className={`p-3 text-xs ${innerCard}`}>
-                      <p className="font-medium text-[#bfbfbf]">Trade analysis</p>
-                      <p className="mt-1 text-[#929292]">Best: {bt.largestWin}</p>
-                      <p className="text-[#929292]">Worst: {bt.largestLoss}</p>
-                      <p className="text-[#929292]">
-                        Avg win / loss: {bt.avgProfit} / {bt.avgLoss}
-                      </p>
-                      <p className="text-[#929292]">{bt.winLoss}</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-[#929292]">
-                    {bt.insights?.map((i) => (
-                      <li key={i}>· {i}</li>
-                    ))}
-                  </ul>
+            {!theme.isV2 &&
+            strategy?.backtest?.status === "complete" &&
+            bt ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                  <Metric
+                    label="Total Return"
+                    value={bt.totalReturn}
+                    tone="positive"
+                    theme={theme}
+                  />
+                  <Metric
+                    label="Max Drawdown"
+                    value={bt.maxDrawdown}
+                    tone="negative"
+                    theme={theme}
+                  />
+                  <Metric label="Win Rate" value={bt.winRate} theme={theme} />
+                  <Metric
+                    label="Profit Factor"
+                    value={bt.profitFactor}
+                    theme={theme}
+                  />
+                  <Metric label="Sharpe" value={bt.sharpeRatio} theme={theme} />
                 </div>
-            ) : (
+                <EquityCurveMock theme={theme} />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className={`p-3 text-xs ${innerCard}`}>
+                    <p className="font-medium text-[#bfbfbf]">Returns</p>
+                    <p className="mt-1 text-[#929292]">
+                      Buy & Hold:{" "}
+                      <span className="text-[#00f3b6]">{bt.buyAndHold}</span>
+                    </p>
+                    <p className="text-[#929292]">
+                      Outperformance:{" "}
+                      <span className="text-[#d53d3d]">
+                        {bt.outperformance}
+                      </span>
+                    </p>
+                    <p className="text-[#929292]">
+                      Expected payoff: {bt.expectedPayoff}
+                    </p>
+                  </div>
+                  <div className={`p-3 text-xs ${innerCard}`}>
+                    <p className="font-medium text-[#bfbfbf]">Trade analysis</p>
+                    <p className="mt-1 text-[#929292]">Best: {bt.largestWin}</p>
+                    <p className="text-[#929292]">Worst: {bt.largestLoss}</p>
+                    <p className="text-[#929292]">
+                      Avg win / loss: {bt.avgProfit} / {bt.avgLoss}
+                    </p>
+                    <p className="text-[#929292]">{bt.winLoss}</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 text-xs text-[#929292]">
+                  {bt.insights?.map((i) => (
+                    <li key={i}>· {i}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : !theme.isV2 ? (
               <p className="text-xs text-[#757575]">
                 Run a backtest to preview historical performance estimates.
               </p>
-            )}
+            ) : null}
           </TabsContent>
 
           <TabsContent value="paper" className={tabContentClass}>
             {!isPaperActive ? (
-              <>
-                <p className="text-xs leading-relaxed text-[#929292]">
-                  Simulate this strategy using market-like data without risking real
-                  capital. Manual approval is required before any live deployment.
-                </p>
-                <button
-                  type="button"
-                  className={theme.primaryActionBtn}
-                  onClick={onStartPaper}
-                >
-                  Start Paper Trading
-                </button>
-              </>
+              theme.isV3 ? (
+                <V3TabShell>
+                  <CopilotTabLead
+                    isV3
+                    title="Paper trading"
+                    description="Simulate this strategy using market-like data without risking real capital. Manual approval is required before any live deployment."
+                    actions={
+                      <button
+                        type="button"
+                        className={theme.primaryActionBtn}
+                        onClick={onStartPaper}
+                      >
+                        Start Paper Trading
+                      </button>
+                    }
+                  />
+                </V3TabShell>
+              ) : (
+                <CopilotTabLead
+                  isV3={false}
+                  title="Paper trading"
+                  description="Simulate this strategy using market-like data without risking real capital. Manual approval is required before any live deployment."
+                  actions={
+                    <button
+                      type="button"
+                      className={theme.primaryActionBtn}
+                      onClick={onStartPaper}
+                    >
+                      Start Paper Trading
+                    </button>
+                  }
+                />
+              )
+            ) : theme.isV3 ? (
+              <V3TabShell>
+                <PaperTradingSummary
+                  strategy={strategy}
+                  pos={pos}
+                  innerCard={innerCard}
+                  theme={theme}
+                  embedded
+                />
+                <ExecutionNestedTabs
+                  strategy={strategy}
+                  pos={pos}
+                  theme={theme}
+                  nestedInV3
+                />
+              </V3TabShell>
             ) : (
               <div className="space-y-1">
                 <PaperTradingSummary
@@ -679,7 +953,11 @@ export default function StrategyWorkspaceTabs({
                   theme={theme}
                 />
                 {theme.isV2 ? (
-                  <ExecutionNestedTabs strategy={strategy} pos={pos} theme={theme} />
+                  <ExecutionNestedTabs
+                    strategy={strategy}
+                    pos={pos}
+                    theme={theme}
+                  />
                 ) : null}
               </div>
             )}
@@ -688,17 +966,56 @@ export default function StrategyWorkspaceTabs({
           {theme.isV2 ? (
             <TabsContent value="deployed" className={tabContentClass}>
               {!isDeployed ? (
-                <>
-                  <p className="text-xs leading-relaxed text-[#929292]">
-                    Deploy this strategy after completing the manual review. Execution
-                    tables (positions, orders, history, balance) appear here once
-                    deployed.
-                  </p>
-                  <p className="mt-2 text-[11px] text-[#757575]">
-                    Use the Deploy button in the header and confirm manual review to
-                    activate live monitoring.
-                  </p>
-                </>
+                theme.isV3 ? (
+                  <V3TabShell>
+                    <V3TabLead>
+                      <h4 className={v3SectionTitle}>Deployed</h4>
+                      <p className={`mt-2 max-w-xl ${v3BodyText}`}>
+                        Deploy this strategy after completing the manual review.
+                        Execution tables (positions, orders, history, balance)
+                        appear here once deployed.
+                      </p>
+                      <p className={`mt-3 ${v3BodyText}`}>
+                        Use the Deploy button in the header and confirm manual
+                        review to activate live monitoring.
+                      </p>
+                    </V3TabLead>
+                  </V3TabShell>
+                ) : (
+                  <>
+                    <p className="text-xs leading-relaxed text-[#929292]">
+                      Deploy this strategy after completing the manual review.
+                      Execution tables (positions, orders, history, balance)
+                      appear here once deployed.
+                    </p>
+                    <p className="mt-2 text-[11px] text-[#757575]">
+                      Use the Deploy button in the header and confirm manual
+                      review to activate live monitoring.
+                    </p>
+                  </>
+                )
+              ) : theme.isV3 ? (
+                <V3TabShell>
+                  <V3TabSection>
+                    <h4 className={v3SectionTitle}>Deployed</h4>
+                    <p className={`mt-2 ${v3BodyText}`}>
+                      Status:{" "}
+                      <span className={`font-medium ${theme.textMint}`}>
+                        Deployed
+                      </span>
+                    </p>
+                    <p className={`mt-2 ${v3BodyText}`}>
+                      Live execution monitoring — manual approval remains
+                      required for each trade.
+                    </p>
+                  </V3TabSection>
+                  <ExecutionNestedTabs
+                    strategy={strategy}
+                    pos={pos}
+                    theme={theme}
+                    nestedInV3
+                  />
+                </V3TabShell>
               ) : (
                 <div className="space-y-1">
                   <p className="text-xs">
@@ -706,131 +1023,146 @@ export default function StrategyWorkspaceTabs({
                     <span className="font-medium text-[#19E6A3]">Deployed</span>
                   </p>
                   <p className="text-[11px] text-[#757575]">
-                    Live execution monitoring — manual approval remains required for
-                    each trade.
+                    Live execution monitoring — manual approval remains required
+                    for each trade.
                   </p>
-                  <ExecutionNestedTabs strategy={strategy} pos={pos} theme={theme} />
+                  <ExecutionNestedTabs
+                    strategy={strategy}
+                    pos={pos}
+                    theme={theme}
+                  />
                 </div>
               )}
             </TabsContent>
           ) : null}
 
           {!theme.isV2 ? (
-          <>
-          <TabsContent value="positions" className={tabContentClass}>
-            {theme.isV2 ? (
-              <EmptySectionTable
-                columns={[
-                  "Coin",
-                  "Size",
-                  "Position Value",
-                  "Entry Price",
-                  "Current Price",
-                  "PNL (ROE%)",
-                  "Liq. Price",
-                  "Margin",
-                  "Funding",
-                  "TP/SL",
-                  "Exp. Profit(%) / Exp. Loss(%)",
-                  "Action",
-                ]}
-                message="No open positions yet."
-              />
-            ) : pos ? (
-              <div className="overflow-x-auto rounded-lg border border-[#242424]">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#242424] text-[#757575]">
-                    <tr>
-                      <th className="px-3 py-2">Market</th>
-                      <th className="px-3 py-2">Side</th>
-                      <th className="px-3 py-2">Size</th>
-                      <th className="px-3 py-2">Entry</th>
-                      <th className="px-3 py-2">Current</th>
-                      <th className="px-3 py-2">PnL</th>
-                      <th className="px-3 py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="px-3 py-2">{pos.market}</td>
-                      <td className="px-3 py-2">{pos.side}</td>
-                      <td className="px-3 py-2">{pos.size ?? "—"}</td>
-                      <td className="px-3 py-2">{pos.entry}</td>
-                      <td className="px-3 py-2">{pos.current}</td>
-                      <td className="px-3 py-2 text-[#00f3b6]">{pos.pnl}</td>
-                      <td className="px-3 py-2">{pos.status}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-xs text-[#757575]">No open paper or live positions.</p>
-            )}
-          </TabsContent>
+            <>
+              <TabsContent value="positions" className={tabContentClass}>
+                {theme.isV2 ? (
+                  <EmptySectionTable
+                    columns={[
+                      "Coin",
+                      "Size",
+                      "Position Value",
+                      "Entry Price",
+                      "Current Price",
+                      "PNL (ROE%)",
+                      "Liq. Price",
+                      "Margin",
+                      "Funding",
+                      "TP/SL",
+                      "Exp. Profit(%) / Exp. Loss(%)",
+                      "Action",
+                    ]}
+                    message="No open positions yet."
+                  />
+                ) : pos ? (
+                  <div className="overflow-x-auto rounded-lg border border-[#242424]">
+                    <table className="w-full text-left text-xs">
+                      <thead className="border-b border-[#242424] text-[#757575]">
+                        <tr>
+                          <th className="px-3 py-2">Market</th>
+                          <th className="px-3 py-2">Side</th>
+                          <th className="px-3 py-2">Size</th>
+                          <th className="px-3 py-2">Entry</th>
+                          <th className="px-3 py-2">Current</th>
+                          <th className="px-3 py-2">PnL</th>
+                          <th className="px-3 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="px-3 py-2">{pos.market}</td>
+                          <td className="px-3 py-2">{pos.side}</td>
+                          <td className="px-3 py-2">{pos.size ?? "—"}</td>
+                          <td className="px-3 py-2">{pos.entry}</td>
+                          <td className="px-3 py-2">{pos.current}</td>
+                          <td className="px-3 py-2 text-[#00f3b6]">
+                            {pos.pnl}
+                          </td>
+                          <td className="px-3 py-2">{pos.status}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#757575]">
+                    No open paper or live positions.
+                  </p>
+                )}
+              </TabsContent>
 
-          <TabsContent value="open-orders" className={tabContentClass}>
-            <EmptySectionTable
-              columns={[
-                "Time",
-                "Type",
-                "Coin",
-                "Direction",
-                "Original Size",
-                "Filled Size",
-                "Order Value",
-                "Price",
-                "Trigger Conditions",
-                "Action",
-              ]}
-              message="No open orders."
-            />
-          </TabsContent>
+              <TabsContent value="open-orders" className={tabContentClass}>
+                <EmptySectionTable
+                  columns={[
+                    "Time",
+                    "Type",
+                    "Coin",
+                    "Direction",
+                    "Original Size",
+                    "Filled Size",
+                    "Order Value",
+                    "Price",
+                    "Trigger Conditions",
+                    "Action",
+                  ]}
+                  message="No open orders."
+                />
+              </TabsContent>
 
-          <TabsContent value="order-history" className={tabContentClass}>
-            <EmptySectionTable
-              columns={[
-                "Time",
-                "Type",
-                "Coin",
-                "Direction",
-                "Original Size",
-                "Filled Size",
-                "Order Value",
-                "Price",
-                "Trigger Conditions",
-              ]}
-              message="No order history."
-            />
-          </TabsContent>
+              <TabsContent value="order-history" className={tabContentClass}>
+                <EmptySectionTable
+                  columns={[
+                    "Time",
+                    "Type",
+                    "Coin",
+                    "Direction",
+                    "Original Size",
+                    "Filled Size",
+                    "Order Value",
+                    "Price",
+                    "Trigger Conditions",
+                  ]}
+                  message="No order history."
+                />
+              </TabsContent>
 
-          <TabsContent value="trade-history" className={tabContentClass}>
-            <EmptySectionTable
-              columns={[
-                "Time",
-                "Coin",
-                "Direction",
-                "Price",
-                "Size",
-                "Trade Value",
-                "Fee",
-                "Closed PNL",
-              ]}
-              message="No trade history."
-            />
-          </TabsContent>
+              <TabsContent value="trade-history" className={tabContentClass}>
+                <EmptySectionTable
+                  columns={[
+                    "Time",
+                    "Coin",
+                    "Direction",
+                    "Price",
+                    "Size",
+                    "Trade Value",
+                    "Fee",
+                    "Closed PNL",
+                  ]}
+                  message="No trade history."
+                />
+              </TabsContent>
 
-          <TabsContent value="balance" className={tabContentClass}>
-            <EmptySectionTable
-              columns={["Coin", "Total balance", "Available balance", "USDC Value"]}
-              message="No balance data."
-            />
-          </TabsContent>
-          </>
+              <TabsContent value="balance" className={tabContentClass}>
+                <EmptySectionTable
+                  columns={[
+                    "Coin",
+                    "Total balance",
+                    "Available balance",
+                    "USDC Value",
+                  ]}
+                  message="No balance data."
+                />
+              </TabsContent>
+            </>
           ) : null}
 
           <TabsContent value="trades" className={tabContentClass}>
             {theme.isV2 ? (
-              <p className="text-xs text-[#757575]">Use Trade History tab in Strategy Copilot v2.</p>
+              <p className="text-xs text-[#757575]">
+                Use Trade History tab in Strategy Copilot v2.
+              </p>
             ) : strategy?.trades?.length ? (
               <div className="overflow-x-auto rounded-lg border border-[#242424]">
                 <table className="w-full text-left text-xs">
@@ -865,13 +1197,17 @@ export default function StrategyWorkspaceTabs({
                 </table>
               </div>
             ) : (
-              <p className="text-xs text-[#757575]">No trades yet — run a backtest first.</p>
+              <p className="text-xs text-[#757575]">
+                No trades yet — run a backtest first.
+              </p>
             )}
           </TabsContent>
 
           <TabsContent value="logs" className={tabContentClass}>
             {theme.isV2 ? (
-              <p className="text-xs text-[#757575]">Use Order History/Trade History in Strategy Copilot v2.</p>
+              <p className="text-xs text-[#757575]">
+                Use Order History/Trade History in Strategy Copilot v2.
+              </p>
             ) : (
               <ul className={`space-y-1.5 p-3 ${innerCard}`}>
                 {strategy?.logs?.map((l) => (

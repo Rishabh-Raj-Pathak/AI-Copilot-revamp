@@ -1,28 +1,78 @@
 import { Check, ChevronDown, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
-import { CHAT_LLM_MODELS } from "../strategyWorkstationMockData.js";
-import ScrollFade from "./ScrollFade.jsx";
+import {
+  CHAT_LLM_MODELS,
+  COMPOSER_CHAT_LLM_MODELS,
+} from "../strategyWorkstationMockData.js";
 
-const PROVIDER_COLORS = {
-  Anthropic: "text-[#d4a574]",
-  OpenAI: "text-[#00a67e]",
-  Google: "text-[#4285f4]",
-  xAI: "text-[#e5e5e5]",
-  DeepSeek: "text-[#4d9fff]",
-  Meta: "text-[#0866ff]",
-};
+const MENU_WIDTH_PX = 200;
+const MENU_GAP_PX = 6;
 
-export default function ChatModelPicker({ value, onChange, disabled }) {
+export default function ChatModelPicker({
+  value,
+  onChange,
+  disabled,
+  variant = "default",
+}) {
+  const isComposer = variant === "composer";
   const theme = useCopilotTheme();
+  const models = isComposer ? COMPOSER_CHAT_LLM_MODELS : CHAT_LLM_MODELS;
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState(null);
   const rootRef = useRef(null);
-  const selected = CHAT_LLM_MODELS.find((m) => m.id === value) ?? CHAT_LLM_MODELS[0];
+  const menuRef = useRef(null);
+  const triggerRef = useRef(null);
+  const selected = models.find((m) => m.id === value) ?? models[0];
+
+  const updateMenuPosition = () => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const left = Math.min(
+      Math.max(8, rect.right - MENU_WIDTH_PX),
+      window.innerWidth - MENU_WIDTH_PX - 8,
+    );
+    const spaceAbove = rect.top;
+    const openAbove = spaceAbove > 140;
+    if (openAbove) {
+      setMenuPos({
+        left,
+        bottom: window.innerHeight - rect.top + MENU_GAP_PX,
+      });
+    } else {
+      setMenuPos({
+        left,
+        top: rect.bottom + MENU_GAP_PX,
+      });
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPos(null);
+      return undefined;
+    }
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
     const onPointerDown = (e) => {
-      if (!rootRef.current?.contains(e.target)) setOpen(false);
+      if (
+        rootRef.current?.contains(e.target) ||
+        menuRef.current?.contains(e.target)
+      ) {
+        return;
+      }
+      setOpen(false);
     };
     const onKey = (e) => {
       if (e.key === "Escape") setOpen(false);
@@ -35,111 +85,110 @@ export default function ChatModelPicker({ value, onChange, disabled }) {
     };
   }, [open]);
 
+  const menuShellClass = `overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
+    theme.isV2
+      ? "border-white/10 bg-[#141414]"
+      : "border-[#242424] bg-[#0a0a0a]"
+  }`;
+
+  const menuList = (
+    <ul className="max-h-56 overflow-y-auto py-1">
+      {models.map((model) => {
+        const active = model.id === value;
+        return (
+          <li key={model.id}>
+            <button
+              type="button"
+              role="option"
+              aria-selected={active}
+              onClick={() => {
+                onChange(model.id);
+                setOpen(false);
+              }}
+              className="flex w-full items-start gap-2 px-3 py-2 text-left text-white"
+            >
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
+                {active ? (
+                  <Check className="size-3.5 text-white" aria-hidden />
+                ) : (
+                  <span className="size-3.5" aria-hidden />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px]">{model.name}</span>
+                {model.tag ? (
+                  <span className="mt-0.5 block truncate text-[11px] text-white/55">
+                    {model.tag}
+                  </span>
+                ) : null}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  const menuDropdown =
+    open && menuPos
+      ? createPortal(
+          <div
+            ref={menuRef}
+            role="listbox"
+            aria-label="Select AI model"
+            className={menuShellClass}
+            style={{
+              position: "fixed",
+              zIndex: 9999,
+              width: MENU_WIDTH_PX,
+              ...menuPos,
+            }}
+          >
+            {menuList}
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div ref={rootRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`AI model: ${selected.name}`}
         onClick={() => setOpen((v) => !v)}
-        className={`flex max-w-[10.5rem] items-center gap-1.5 text-left transition-all duration-150 disabled:opacity-50 sm:max-w-[12rem] ${
-          theme.isV2
-            ? "rounded-full border border-white/[0.1] bg-[#141414] px-2.5 py-1.5 hover:border-white/[0.16] hover:bg-[#1f1f1f]"
-            : "rounded-lg border border-[#242424] bg-[#121212] px-2 py-1 hover:border-[#454545]"
+        className={`flex items-center gap-1 text-left transition-all duration-150 disabled:opacity-50 ${
+          isComposer
+            ? "max-w-36 rounded-lg px-2 py-1.5 text-[13px] text-white sm:max-w-40"
+            : `max-w-42 gap-1.5 sm:max-w-48 ${
+                theme.isV2
+                  ? "rounded-full border border-white/10 bg-[#141414] px-2.5 py-1.5 hover:border-white/16 hover:bg-[#1f1f1f]"
+                  : "rounded-lg border border-[#242424] bg-[#121212] px-2 py-1 hover:border-[#454545]"
+              }`
         }`}
       >
-        <Sparkles
-          className={`size-3 shrink-0 ${theme.isV2 ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
-          aria-hidden
-        />
+        {!isComposer ? (
+          <Sparkles
+            className={`size-3 shrink-0 ${theme.isV2 ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
+            aria-hidden
+          />
+        ) : null}
         <span
           className={`min-w-0 truncate font-medium ${
-            theme.isV2 ? "text-[11px] text-[#d4d4d4]" : "text-[11px] text-white"
+            isComposer ? "text-[13px] text-white" : "text-[11px] text-white"
           }`}
         >
           {selected.name}
         </span>
         <ChevronDown
-          className={`size-3 shrink-0 text-[#8a8a8a] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`size-3 shrink-0 text-white transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </button>
-
-      {open ? (
-        <div
-          role="listbox"
-          aria-label="Select AI model"
-          className={`absolute bottom-full left-0 z-50 mb-1.5 w-[min(16.5rem,calc(100vw-2rem))] overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
-            theme.isV2
-              ? "border-white/[0.1] bg-[#141414]"
-              : "border-[#242424] bg-[#0a0a0a]"
-          }`}
-        >
-          <p
-            className={`border-b px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-[#8a8a8a] ${
-              theme.isV2 ? "border-white/[0.06]" : "border-[#242424]"
-            }`}
-          >
-            Model
-          </p>
-          <ScrollFade
-            axis="y"
-            fadeColor={theme.isV2 ? "var(--ds-copilot-v2-elevated)" : "#0a0a0a"}
-            viewportClassName="max-h-[14rem] py-0.5"
-          >
-            <ul>
-            {CHAT_LLM_MODELS.map((model) => {
-              const active = model.id === value;
-              const providerColor =
-                PROVIDER_COLORS[model.provider] ?? "text-[#929292]";
-              return (
-                <li key={model.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={active}
-                    onClick={() => {
-                      onChange(model.id);
-                      setOpen(false);
-                    }}
-                    className={`flex w-full items-start gap-2 px-3 py-2 text-left transition-colors hover:bg-white/[0.05] ${
-                      active
-                        ? theme.isV2
-                          ? "bg-[#19E6A3]/10"
-                          : "bg-[#171200]/60"
-                        : ""
-                    }`}
-                  >
-                    <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
-                      {active ? (
-                        <Check
-                          className={`size-3.5 ${theme.isV2 ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
-                          aria-hidden
-                        />
-                      ) : (
-                        <span className="size-3.5" aria-hidden />
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-medium text-white">
-                        {model.name}
-                      </span>
-                      <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px]">
-                        <span className={providerColor}>{model.provider}</span>
-                        <span className="text-[#585858]">·</span>
-                        <span className="text-[#757575]">{model.tag}</span>
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-            </ul>
-          </ScrollFade>
-        </div>
-      ) : null}
+      {menuDropdown}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { forwardRef } from 'react'
 import { cn } from '../../lib/utils.js'
 
 /**
@@ -6,9 +7,13 @@ import { cn } from '../../lib/utils.js'
  * @param {boolean} [props.error]
  * @param {import('react').TextareaHTMLAttributes<HTMLTextAreaElement>} props
  */
-export function Textarea({ className, error, disabled, ...rest }) {
+export const Textarea = forwardRef(function Textarea(
+  { className, error, disabled, ...rest },
+  ref,
+) {
   return (
     <textarea
+      ref={ref}
       className={cn(
         'ds-text-body min-h-24 w-full resize-y rounded-md border bg-input px-3 py-2 text-foreground shadow-ds-sm',
         'border-input-border placeholder:text-input-placeholder',
@@ -22,4 +27,4 @@ export function Textarea({ className, error, disabled, ...rest }) {
       {...rest}
     />
   )
-}
+})

@@ -695,7 +695,7 @@ dialog::backdrop {
     width: var(--ds-strategy-composer-shell-width, min(74vw, 1080px));
     min-height: clamp(142px, 13vw, 178px);
     border-radius: var(--ds-radius-lg);
-    border: 1px solid transparent;
+    border: 0.3px solid transparent;
     background-image:
       linear-gradient(
         180deg,
@@ -710,6 +710,11 @@ dialog::backdrop {
       inset -0.5px 0 0 rgb(45 255 190 / 0.05),
       inset 0.5px 0 0 rgb(230 210 30 / 0.05),
       0 20px 50px rgb(0 0 0 / 0.46);
+  }
+
+  .ds-strategy-composer-shell--inline {
+    min-height: auto;
+    border-radius: 1.75rem;
   }
 
   .ds-strategy-composer-cursor {
@@ -798,6 +803,21 @@ dialog::backdrop {
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.05),
       0 0 0 1px rgb(0 0 0 / 0.22);
+  }
+
+  .ds-strategy-chat-composer-footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    padding: 0.5rem 0.875rem 0.875rem;
+    background: rgb(5 7 6);
+  }
+
+  .ds-strategy-chat-composer-footer > * {
+    position: relative;
+    z-index: 1;
   }
 
   .ds-copilot-v2-gradient-cta {

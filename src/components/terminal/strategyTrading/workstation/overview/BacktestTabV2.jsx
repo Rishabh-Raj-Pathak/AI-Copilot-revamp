@@ -1,6 +1,11 @@
 import { Play } from "lucide-react";
 import { useCopilotTheme } from "../../StrategyCopilotContext.jsx";
 import ScrollFade from "../ScrollFade.jsx";
+import {
+  CopilotTabLead,
+  V3TabSection,
+  V3TabShell,
+} from "../V3TabLayout.jsx";
 
 export default function BacktestTabV2({
   strategy,
@@ -13,88 +18,180 @@ export default function BacktestTabV2({
   const complete = strategy?.backtest?.status === "complete" && bt;
   const trades = strategy?.trades ?? [];
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
+  const description = complete
+    ? "Performance summary, equity curve, and trade analysis are available on the Overview tab."
+    : "Run a backtest to preview historical performance estimates for this strategy.";
+
+  const actions = (
+    <>
+      <button
+        type="button"
+        className={theme.primaryActionBtn}
+        onClick={onRunBacktest}
+        disabled={backtestLoading}
+        aria-busy={backtestLoading}
+      >
+        {backtestLoading ? (
+          <span
+            className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-[#030504]/30 border-t-[#030504]"
+            aria-hidden
+          />
+        ) : (
+          <Play className="size-3.5 shrink-0" aria-hidden />
+        )}
+        {complete ? "Re-run Backtest" : "Run Backtest"}
+      </button>
+      {complete && onGoOverview ? (
         <button
           type="button"
-          className={theme.primaryActionBtn}
-          onClick={onRunBacktest}
-          disabled={backtestLoading}
-          aria-busy={backtestLoading}
+          onClick={onGoOverview}
+          className={
+            theme.isV3
+              ? "text-xs font-medium text-[var(--ds-copilot-v2-mint)] transition-colors hover:text-[#4ef0c4]"
+              : "text-xs font-medium text-[#19E6A3] transition-colors hover:text-[#4ef0c4]"
+          }
         >
-          {backtestLoading ? (
-            <span
-              className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-[#030504]/30 border-t-[#030504]"
-              aria-hidden
-            />
-          ) : (
-            <Play className="size-3.5 shrink-0" aria-hidden />
-          )}
-          {complete ? "Re-run Backtest" : "Run Backtest"}
+          View full analytics in Overview →
         </button>
-        {complete && onGoOverview ? (
-          <button
-            type="button"
-            onClick={onGoOverview}
-            className="text-xs font-medium text-[#19E6A3] transition-colors hover:text-[#4ef0c4]"
-          >
-            View full analytics in Overview →
-          </button>
-        ) : null}
-      </div>
+      ) : null}
+    </>
+  );
 
-      {complete ? (
-        <p className="text-xs leading-relaxed text-[#757575]">
-          Performance summary, equity curve, and trade analysis are available on the
-          Overview tab.
-        </p>
+  const tradesTable =
+    complete && trades.length > 0 ? (
+      theme.isV3 ? (
+        <V3TabSection divider={false}>
+          <p className="mb-3 text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]">
+            Backtest trades
+          </p>
+          <div className={theme.tableShell}>
+            <ScrollFade
+              axis="x"
+              fadeColor="var(--ds-copilot-v2-bg)"
+              className="border-b border-white/6"
+            >
+              <table className="w-full text-left text-xs">
+                <thead className="text-[rgba(255,255,255,0.48)]">
+                  <tr>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">
+                      Date
+                    </th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">
+                      Side
+                    </th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">
+                      Entry
+                    </th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">
+                      Exit
+                    </th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">
+                      PnL
+                    </th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">
+                      Reason
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </ScrollFade>
+            <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-bg)">
+              <table className="w-full text-left text-xs">
+                <tbody>
+                  {trades.map((t) => (
+                    <tr
+                      key={t.id}
+                      className="border-b border-white/[0.05] last:border-0"
+                    >
+                      <td className="px-3 py-2.5 text-[rgba(255,255,255,0.48)]">
+                        {t.at}
+                      </td>
+                      <td className="px-3 py-2.5 text-[rgba(255,255,255,0.78)]">
+                        {t.direction}
+                      </td>
+                      <td className="px-3 py-2.5 tabular-nums text-[rgba(255,255,255,0.78)]">
+                        {t.entry}
+                      </td>
+                      <td className="px-3 py-2.5 tabular-nums text-[rgba(255,255,255,0.78)]">
+                        {t.exit}
+                      </td>
+                      <td
+                        className={`px-3 py-2.5 tabular-nums font-medium ${String(t.pnl).startsWith("+") ? theme.textPositive : theme.textNegative}`}
+                      >
+                        {t.pnl}
+                      </td>
+                      <td className="px-3 py-2.5 text-[rgba(255,255,255,0.48)]">
+                        {t.reason}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollFade>
+          </div>
+        </V3TabSection>
       ) : (
-        <p className="text-xs leading-relaxed text-[#757575]">
-          Run a backtest to preview historical performance estimates for this strategy.
-        </p>
-      )}
-
-      {complete && trades.length > 0 ? (
-        <div className="overflow-hidden rounded-xl border border-[#262626]">
+        <div className="mt-4 overflow-hidden rounded-xl border border-[#262626]">
           <p className="border-b border-[#262626] px-4 py-2.5 text-xs font-medium text-[#929292]">
             Backtest trades
           </p>
-          <ScrollFade
-            axis="x"
-            fadeColor="var(--ds-copilot-v2-elevated)"
-          >
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-[#262626] text-[#757575]">
-              <tr>
-                <th className="px-3 py-2">Date</th>
-                <th className="px-3 py-2">Side</th>
-                <th className="px-3 py-2">Entry</th>
-                <th className="px-3 py-2">Exit</th>
-                <th className="px-3 py-2">PnL</th>
-                <th className="px-3 py-2">Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trades.map((t) => (
-                <tr key={t.id} className="border-b border-[#262626]/60">
-                  <td className="px-3 py-2 text-[#929292]">{t.at}</td>
-                  <td className="px-3 py-2">{t.direction}</td>
-                  <td className="px-3 py-2">{t.entry}</td>
-                  <td className="px-3 py-2">{t.exit}</td>
-                  <td
-                    className={`px-3 py-2 ${String(t.pnl).startsWith("+") ? "text-[var(--ds-copilot-v2-positive)]" : "text-[var(--ds-copilot-v2-negative)]"}`}
-                  >
-                    {t.pnl}
-                  </td>
-                  <td className="px-3 py-2 text-[#757575]">{t.reason}</td>
+          <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-elevated)">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-[#262626] text-[#757575]">
+                <tr>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Side</th>
+                  <th className="px-3 py-2">Entry</th>
+                  <th className="px-3 py-2">Exit</th>
+                  <th className="px-3 py-2">PnL</th>
+                  <th className="px-3 py-2">Reason</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {trades.map((t) => (
+                  <tr key={t.id} className="border-b border-[#262626]/60">
+                    <td className="px-3 py-2 text-[#929292]">{t.at}</td>
+                    <td className="px-3 py-2">{t.direction}</td>
+                    <td className="px-3 py-2">{t.entry}</td>
+                    <td className="px-3 py-2">{t.exit}</td>
+                    <td
+                      className={`px-3 py-2 ${String(t.pnl).startsWith("+") ? "text-[var(--ds-copilot-v2-positive)]" : "text-[var(--ds-copilot-v2-negative)]"}`}
+                    >
+                      {t.pnl}
+                    </td>
+                    <td className="px-3 py-2 text-[#757575]">{t.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </ScrollFade>
         </div>
-      ) : null}
+      )
+    ) : null;
+
+  if (theme.isV3) {
+    return (
+      <V3TabShell>
+        <CopilotTabLead
+          isV3
+          title="Backtest"
+          description={description}
+          actions={actions}
+        />
+        {tradesTable}
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <div className="flex flex-col">
+      <CopilotTabLead
+        isV3={false}
+        title="Backtest"
+        description={description}
+        actions={actions}
+      />
+      {tradesTable}
     </div>
   );
 }

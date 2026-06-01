@@ -6,7 +6,10 @@ import {
   useMemo,
   useState,
 } from "react";
-import { getUiVersionFromCopilotView } from "./CopilotNavDropdown.jsx";
+import {
+  getUiVersionFromCopilotView,
+  isStrategyCopilotComposerView,
+} from "./CopilotNavDropdown.jsx";
 import { getCopilotTheme } from "./strategyCopilotUi.js";
 import { INITIAL_WORKSTATION_STRATEGIES } from "./strategyWorkstationMockData.js";
 
@@ -16,14 +19,12 @@ const DEFAULT_STRATEGY_ID = "strat-btc-sniper";
 
 export function StrategyCopilotProvider({ children, copilotView }) {
   const [strategies, setStrategies] = useState(() =>
-    getUiVersionFromCopilotView(copilotView) === "v2"
+    isStrategyCopilotComposerView(copilotView)
       ? []
       : INITIAL_WORKSTATION_STRATEGIES,
   );
   const [selectedStrategyId, setSelectedStrategyId] = useState(() =>
-    getUiVersionFromCopilotView(copilotView) === "v2"
-      ? null
-      : DEFAULT_STRATEGY_ID,
+    isStrategyCopilotComposerView(copilotView) ? null : DEFAULT_STRATEGY_ID,
   );
   const [activityLog, setActivityLog] = useState([]);
   const [lastSetup, setLastSetup] = useState(null);

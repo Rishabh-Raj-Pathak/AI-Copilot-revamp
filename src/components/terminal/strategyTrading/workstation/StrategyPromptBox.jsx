@@ -15,6 +15,7 @@ import { Button } from "../../../ui/button.jsx";
 import { Textarea } from "../../../ui/textarea.jsx";
 import {
   CHAT_LLM_MODELS,
+  DEFAULT_CHAT_LLM_MODEL_ID,
   getPromptSuggestions,
 } from "../strategyWorkstationMockData.js";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
@@ -31,8 +32,9 @@ const ATTACH_MENU = [
   { type: "code", label: "Code", icon: Code2 },
 ];
 
-const COMPOSER_ATTACH = [
-  { type: "document", label: "Form", icon: FileText },
+const COMPOSER_ATTACH_MENU = [
+  { type: "link", label: "Link", icon: Link2 },
+  { type: "document", label: "PDF", icon: FileText },
   { type: "code", label: "Code", icon: Code2 },
 ];
 
@@ -63,22 +65,25 @@ function AttachmentChip({ attachment, onRemove, isV2 }) {
   );
 }
 
-function AttachPill({ icon: Icon, label, onClick, disabled, isComposer = false }) {
+function AttachDropdownMenu({ items, onSelect, className = "" }) {
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={isComposer ? label : undefined}
-      className={
-        isComposer
-          ? "ds-strategy-composer-chip ds-strategy-composer-chip--icon"
-          : "inline-flex items-center gap-1.5 rounded-full border border-[#333] bg-[#141414] px-3 py-1.5 text-xs text-[#929292] transition-colors hover:border-[#454545] hover:text-white disabled:opacity-50"
-      }
+    <div
+      role="menu"
+      className={`absolute bottom-full left-0 z-50 mb-1.5 min-w-46 overflow-hidden rounded-xl border border-white/10 bg-[#1c1f21] py-1 shadow-[0_8px_32px_rgba(0,0,0,0.55)] ${className}`}
     >
-      <Icon className={isComposer ? "size-4" : "size-3.5"} aria-hidden />
-      {isComposer ? null : label}
-    </button>
+      {items.map(({ type, label, icon: Icon }) => (
+        <button
+          key={type}
+          type="button"
+          role="menuitem"
+          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] text-[rgba(255,255,255,0.88)] transition-colors hover:bg-white/6"
+          onClick={() => onSelect(type)}
+        >
+          <Icon className="size-4 shrink-0 text-[rgba(255,255,255,0.55)]" aria-hidden />
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -104,12 +109,17 @@ export default function StrategyPromptBox({
   const [codeSnippet, setCodeSnippet] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [highlightIdx, setHighlightIdx] = useState(-1);
+  const [composerMultiline, setComposerMultiline] = useState(false);
 
   const rootRef = useRef(null);
   const attachRef = useRef(null);
+  const composerTextareaRef = useRef(null);
   const docInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const codeId = useId();
+
+  /** Single-line composer row height (16px × 1.5 line-height). */
+  const COMPOSER_LINE_PX = 24;
 
   const activeLlm =
     CHAT_LLM_MODELS.find((m) => m.id === chatModelId) ?? CHAT_LLM_MODELS[0];
@@ -148,7 +158,7 @@ export default function StrategyPromptBox({
   }, [value, enableSuggestions]);
 
   useEffect(() => {
-    if (!attachOpen || isComposer) return undefined;
+    if (!attachOpen) return undefined;
     const onPointerDown = (e) => {
       if (!attachRef.current?.contains(e.target)) setAttachOpen(false);
     };
@@ -161,7 +171,41 @@ export default function StrategyPromptBox({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [attachOpen, isComposer]);
+  }, [attachOpen]);
+
+  const handleAttachType = useCallback(
+    (type) => {
+      if (type === "document") {
+        docInputRef.current?.click();
+        setAttachOpen(false);
+        return;
+      }
+      if (type === "image") {
+        imageInputRef.current?.click();
+        setAttachOpen(false);
+        return;
+      }
+      if (type === "code") {
+        setCodeOpen(true);
+        setAttachOpen(false);
+        return;
+      }
+      if (type === "link") {
+        const url = window.prompt("Paste link URL");
+        if (url?.trim()) {
+          const trimmed = url.trim();
+          addAttachment({
+            id: `att-${Date.now()}`,
+            type: "link",
+            label: trimmed.length > 40 ? `${trimmed.slice(0, 37)}…` : trimmed,
+            meta: trimmed,
+          });
+        }
+        setAttachOpen(false);
+      }
+    },
+    [addAttachment],
+  );
 
   const insertSuggestion = useCallback(
     (text) => {
@@ -185,7 +229,10 @@ export default function StrategyPromptBox({
         setHighlightIdx((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
         return;
       }
-      if (e.key === "Tab" || (e.key === "Enter" && !e.shiftKey && highlightIdx >= 0)) {
+      if (
+        e.key === "Tab" ||
+        (e.key === "Enter" && !e.shiftKey && highlightIdx >= 0)
+      ) {
         if (highlightIdx >= 0) {
           e.preventDefault();
           insertSuggestion(suggestions[highlightIdx]);
@@ -232,14 +279,22 @@ export default function StrategyPromptBox({
   const showSuggestions = enableSuggestions && suggestions.length > 0;
 
   const resizeTextarea = useCallback(() => {
-    const el = rootRef.current?.querySelector("textarea");
+    const el = isComposer
+      ? composerTextareaRef.current
+      : rootRef.current?.querySelector("textarea");
     if (!el) return;
     const maxHeight = isComposer ? 176 : 144;
     el.style.height = "auto";
-    const nextHeight = Math.min(el.scrollHeight, maxHeight);
+    const scrollHeight = el.scrollHeight;
+    const nextHeight = Math.min(scrollHeight, maxHeight);
     el.style.height = `${nextHeight}px`;
-    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
-  }, [isComposer]);
+    el.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
+    if (isComposer) {
+      setComposerMultiline(
+        scrollHeight > COMPOSER_LINE_PX + 2 || value.includes("\n"),
+      );
+    }
+  }, [isComposer, value]);
 
   useEffect(() => {
     resizeTextarea();
@@ -249,7 +304,9 @@ export default function StrategyPromptBox({
     "focus-within:outline-none focus-within:ring-0 focus-within:ring-offset-0";
 
   const formShell = isComposer
-    ? `ds-strategy-composer-shell ${formFocusReset} px-5 py-4 sm:px-6 sm:py-5`
+    ? `ds-strategy-composer-shell ds-strategy-composer-shell--inline ${formFocusReset} px-3 sm:px-4 ${
+        composerMultiline ? "py-3 sm:py-3.5" : "py-2.5 sm:py-3"
+      }`
     : `${theme.chatPromptShell} ${formFocusReset}`;
 
   const textareaFocusReset =
@@ -257,7 +314,7 @@ export default function StrategyPromptBox({
 
   const textareaScrollClass = theme.isV2 ? "ds-scrollbar-hidden" : "";
   const textareaClass = isComposer
-    ? `!min-h-[3rem] !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal text-[rgba(255,255,255,0.88)] shadow-none placeholder:text-[#7d8689] ${textareaScrollClass} ${textareaFocusReset}`
+    ? `!min-h-6 !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal text-[rgba(255,255,255,0.88)] shadow-none placeholder:text-[#7d8689] ${textareaScrollClass} ${textareaFocusReset}`
     : theme.isV2
       ? `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaScrollClass} ${textareaFocusReset}`
       : `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
@@ -265,6 +322,74 @@ export default function StrategyPromptBox({
   const iconBtnClass = theme.isV2
     ? "shrink-0 rounded-lg p-2 text-[#8a8a8a] transition-colors hover:bg-white/[0.06] hover:text-[#f4f4f4] disabled:opacity-40"
     : "shrink-0 rounded-md p-1.5 text-[#585858] hover:text-white disabled:opacity-50";
+
+  const composerAttachControl = (
+    <div ref={attachRef} className="relative shrink-0">
+      <button
+        type="button"
+        disabled={loading}
+        aria-label="Add attachment"
+        aria-expanded={attachOpen}
+        aria-haspopup="menu"
+        className="flex size-8 items-center justify-center rounded-lg text-[rgba(255,255,255,0.55)] transition-colors hover:bg-white/6 hover:text-[rgba(255,255,255,0.88)] disabled:opacity-40 sm:size-9"
+        onClick={() => {
+          setAttachOpen((v) => !v);
+          setCodeOpen(false);
+        }}
+      >
+        <Plus className="size-5" aria-hidden />
+      </button>
+      {attachOpen ? (
+        <AttachDropdownMenu
+          items={COMPOSER_ATTACH_MENU}
+          onSelect={handleAttachType}
+        />
+      ) : null}
+    </div>
+  );
+
+  const composerSendControl = (
+    <button
+      type="submit"
+      disabled={!value.trim() || loading}
+      aria-label="Send message"
+      className="ds-strategy-composer-send size-8! shrink-0 sm:size-9!"
+    >
+      <ArrowUp className="size-4" aria-hidden />
+    </button>
+  );
+
+  const composerModelControl = onChatModelChange ? (
+    <ChatModelPicker
+      variant="composer"
+      value={chatModelId ?? DEFAULT_CHAT_LLM_MODEL_ID}
+      onChange={onChatModelChange}
+      disabled={loading}
+    />
+  ) : null;
+
+  const composerActionsEnd = (
+    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      {composerModelControl}
+      {composerSendControl}
+    </div>
+  );
+
+  const composerTextarea = (
+    <Textarea
+      ref={composerTextareaRef}
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+        resizeTextarea();
+      }}
+      onKeyDown={handleTextareaKeyDown}
+      placeholder={placeholder}
+      rows={1}
+      disabled={loading}
+      className={`${composerMultiline ? "w-full" : "min-w-0 flex-1"} ${textareaClass}`}
+    />
+  );
 
   return (
     <div ref={rootRef} className={className} data-strategy-chat-input>
@@ -294,7 +419,9 @@ export default function StrategyPromptBox({
             </p>
             <ScrollFade
               axis="y"
-              fadeColor={theme.isV2 ? "var(--ds-copilot-v2-elevated)" : "#141414"}
+              fadeColor={
+                theme.isV2 ? "var(--ds-copilot-v2-elevated)" : "#141414"
+              }
               viewportClassName="max-h-40 py-0.5"
             >
               <ul>
@@ -324,7 +451,9 @@ export default function StrategyPromptBox({
         ) : null}
 
         {attachments.length > 0 ? (
-          <div className={`flex flex-wrap gap-1.5 ${isComposer ? "mb-3" : "mb-2"}`}>
+          <div
+            className={`flex flex-wrap gap-1.5 ${isComposer ? "mb-3" : "mb-2"}`}
+          >
             {attachments.map((a) => (
               <AttachmentChip
                 key={a.id}
@@ -337,20 +466,21 @@ export default function StrategyPromptBox({
         ) : null}
 
         {isComposer ? (
-          <div className="relative pl-4">
-            <Textarea
-              value={value}
-              onChange={(e) => {
-                onChange(e.target.value);
-                resizeTextarea();
-              }}
-              onKeyDown={handleTextareaKeyDown}
-              placeholder={placeholder}
-              rows={1}
-              disabled={loading}
-              className={textareaClass}
-            />
-          </div>
+          composerMultiline ? (
+            <div className="flex flex-col gap-1.5">
+              {composerTextarea}
+              <div className="flex items-center justify-between gap-2">
+                {composerAttachControl}
+                {composerActionsEnd}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-start gap-2">
+              {composerAttachControl}
+              {composerTextarea}
+              {composerActionsEnd}
+            </div>
+          )
         ) : (
           <Textarea
             value={value}
@@ -370,7 +500,7 @@ export default function StrategyPromptBox({
           ref={docInputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.doc,.docx,.txt,.md,.csv,image/*"
+          accept={isComposer ? ".pdf,.doc,.docx,.txt,.md,.csv" : ".pdf,.doc,.docx,.txt,.md,.csv,image/*"}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -389,33 +519,7 @@ export default function StrategyPromptBox({
             e.target.value = "";
           }}
         />
-        {isComposer ? (
-          <div className="mt-5 flex items-end justify-between gap-4 border-t border-white/10 pt-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {COMPOSER_ATTACH.map(({ type, label, icon }) => (
-                <AttachPill
-                  key={type}
-                  icon={icon}
-                  label={label}
-                  isComposer
-                  disabled={loading}
-                  onClick={() => {
-                    if (type === "document") docInputRef.current?.click();
-                    else if (type === "code") setCodeOpen((v) => !v);
-                  }}
-                />
-              ))}
-            </div>
-            <button
-              type="submit"
-              disabled={!value.trim() || loading}
-              aria-label="Send message"
-              className="ds-strategy-composer-send"
-            >
-              <ArrowUp className="size-4" aria-hidden />
-            </button>
-          </div>
-        ) : (
+        {!isComposer && (
           <div
             className={`mt-2.5 flex items-center justify-between gap-2 ${
               theme.isV2 ? "border-t border-white/6 pt-2" : ""
@@ -443,35 +547,15 @@ export default function StrategyPromptBox({
                   <Paperclip className="size-4" aria-hidden />
                 </button>
                 {attachOpen ? (
-                  <div
-                    role="menu"
-                    className={`absolute bottom-full left-0 z-50 mb-1.5 min-w-38 overflow-hidden rounded-xl border py-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${
+                  <AttachDropdownMenu
+                    items={ATTACH_MENU}
+                    onSelect={handleAttachType}
+                    className={
                       theme.isV2
                         ? "border-white/10 bg-[#141414]"
                         : "border-[#242424] bg-[#0a0a0a]"
-                    }`}
-                  >
-                    {ATTACH_MENU.map(({ type, label, icon: Icon }) => (
-                      <button
-                        key={type}
-                        type="button"
-                        role="menuitem"
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-[#a0a0a0] transition-colors hover:bg-white/5 hover:text-[#f4f4f4]"
-                        onClick={() => {
-                          if (type === "document") docInputRef.current?.click();
-                          else if (type === "image") imageInputRef.current?.click();
-                          else if (type === "code") {
-                            setCodeOpen(true);
-                            setAttachOpen(false);
-                          }
-                          if (type !== "code") setAttachOpen(false);
-                        }}
-                      >
-                        <Icon className="size-3.5 text-[#8a8a8a]" aria-hidden />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                    }
+                  />
                 ) : null}
               </div>
               <button
@@ -517,13 +601,15 @@ export default function StrategyPromptBox({
         {codeOpen ? (
           <div
             id={codeId}
-            className={`rounded-xl border p-3 ${isComposer ? "mt-3" : "mt-2"} ${
+            className={`mt-2 rounded-xl border p-3 ${
               theme.isV2
                 ? "border-white/8 bg-[#141414]"
                 : "border-[#2a2a2a] bg-[#121212]"
             }`}
           >
-            <label className="text-[10px] text-[#757575]">Paste code or rules</label>
+            <label className="text-[10px] text-[#757575]">
+              Paste code or rules
+            </label>
             <textarea
               value={codeSnippet}
               onChange={(e) => setCodeSnippet(e.target.value)}
@@ -556,7 +642,6 @@ export default function StrategyPromptBox({
             </div>
           </div>
         ) : null}
-
       </form>
     </div>
   );

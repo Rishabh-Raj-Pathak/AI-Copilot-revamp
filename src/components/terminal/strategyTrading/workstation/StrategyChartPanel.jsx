@@ -9,7 +9,8 @@ import {
 
 function parsePair(market, fallback = "BTC") {
   const raw = market?.split("·")[0]?.trim() ?? "";
-  if (/USDT|USDC|PERP/i.test(raw)) return raw.replace(/-PERP/i, "").replace(/\s/g, "");
+  if (/USDT|USDC|PERP/i.test(raw))
+    return raw.replace(/-PERP/i, "").replace(/\s/g, "");
   const base = raw.replace(/-PERP/i, "").split(/[\s/]/)[0] || fallback;
   return `${base}USDT`;
 }
@@ -19,7 +20,8 @@ function buildCandles(seed = 1, count = 28) {
   const candles = [];
   let price = 50 + (seed % 7);
   for (let i = 0; i < count; i++) {
-    const drift = Math.sin((i + seed) * 0.45) * 1.2 + (i > count * 0.6 ? 0.4 : -0.1);
+    const drift =
+      Math.sin((i + seed) * 0.45) * 1.2 + (i > count * 0.6 ? 0.4 : -0.1);
     const o = price;
     const c = price + drift + (Math.cos(i * 0.7 + seed) > 0 ? 0.6 : -0.8);
     const h = Math.max(o, c) + 0.8 + (i % 5) * 0.15;
@@ -87,6 +89,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
 
   const shellClass = embedded ? "" : `overflow-hidden ${theme.card}`;
   const isV2Chart = theme.isV2 || embedded;
+  const isV3Chart = theme.isV3 && embedded;
 
   return (
     <div className={shellClass}>
@@ -115,9 +118,11 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
         </div>
         <span
           className={`tabular-nums ${
-            theme.isV2
-              ? "rounded-lg bg-[#19D98B]/10 px-2.5 py-1 text-xs font-semibold text-[#19D98B]"
-              : "rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium text-[#00f3b6]"
+            theme.isV3
+              ? "text-xs font-semibold text-[#34D399]"
+              : theme.isV2
+                ? "rounded-lg bg-[#19D98B]/10 px-2.5 py-1 text-xs font-semibold text-[#19D98B]"
+                : "rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium text-[#00f3b6]"
           }`}
         >
           {currentPrice}
@@ -126,9 +131,11 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
 
       <div
         className={
-          isV2Chart
-            ? "bg-[#101312] px-2 pt-2 pb-1"
-            : "bg-[#070707] px-2 pt-2 pb-1"
+          isV3Chart
+            ? "bg-[#0a0b0a] px-2 pt-2 pb-1"
+            : isV2Chart
+              ? "bg-[#101312] px-2 pt-2 pb-1"
+              : "bg-[#070707] px-2 pt-2 pb-1"
         }
       >
         <div
@@ -149,7 +156,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
                   x2={padL + plotW}
                   y1={gy}
                   y2={gy}
-                  stroke="#1a1a1a"
+                  stroke={theme.isV3 ? "rgba(255,255,255,0.05)" : "#1a1a1a"}
                   strokeWidth="0.5"
                 />
               );
@@ -286,7 +293,9 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
                   key={tick}
                   x={padL + plotW + 6}
                   y={ty + 2}
-                  fill="#585858"
+                  fill={
+                    theme.isV3 ? "rgba(255,255,255,0.45)" : "#585858"
+                  }
                   fontSize="5"
                   fontFamily="system-ui, sans-serif"
                   textAnchor="start"
@@ -364,9 +373,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
           <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
             TP{" "}
           </span>
-          <span
-            className={theme.isV2 ? theme.textPositive : "text-[#269755]"}
-          >
+          <span className={theme.isV2 ? theme.textPositive : "text-[#269755]"}>
             {takeProfit}
           </span>
         </span>

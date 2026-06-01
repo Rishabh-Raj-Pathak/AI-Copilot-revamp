@@ -20,7 +20,9 @@ const STATUS_STYLES_V2 = {
 
 export function StatusBadge({ status, className = "", uiVersion }) {
   const theme = useCopilotTheme();
-  const isV2 = uiVersion ? uiVersion === "v2" : theme.isV2;
+  const isV2 = uiVersion
+    ? uiVersion === "v2" || uiVersion === "v3"
+    : theme.isV2;
   const styles = isV2 ? STATUS_STYLES_V2 : STATUS_STYLES_V1;
   const badgeClass = isV2
     ? "shrink-0 text-[10px] font-medium"

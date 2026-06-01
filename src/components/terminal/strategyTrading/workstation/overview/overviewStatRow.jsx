@@ -1,14 +1,29 @@
+import { useCopilotTheme } from "../../StrategyCopilotContext.jsx";
+
 export function OverviewStatRow({ label, value, valueTone }) {
+  const theme = useCopilotTheme();
   const valueClass =
     valueTone === "positive"
-      ? "text-[var(--ds-copilot-v2-positive)]"
+      ? theme.textPositive
       : valueTone === "negative"
-        ? "text-[var(--ds-copilot-v2-negative)]"
-        : "text-[var(--ds-copilot-v2-text-secondary)]";
+        ? theme.textNegative
+        : theme.textSecondary;
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-dotted border-white/[0.06] py-2.5 last:border-0 last:pb-0 first:pt-0">
-      <dt className="text-[11px] text-[var(--ds-copilot-v2-text-muted)]">{label}</dt>
-      <dd className={`text-[11px] font-medium tabular-nums ${valueClass}`}>{value}</dd>
+    <div
+      className={`flex items-center justify-between gap-4 py-2.5 last:border-0 last:pb-0 first:pt-0 ${
+        theme.isV3
+          ? "border-b border-white/[0.05]"
+          : "border-b border-dotted border-white/[0.06]"
+      }`}
+    >
+      <dt
+        className={`text-xs ${theme.isV3 ? theme.textMuted : "text-[var(--ds-copilot-v2-text-muted)]"}`}
+      >
+        {label}
+      </dt>
+      <dd className={`text-xs font-medium tabular-nums ${valueClass}`}>
+        {value}
+      </dd>
     </div>
   );
 }

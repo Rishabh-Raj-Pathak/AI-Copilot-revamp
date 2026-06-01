@@ -92,7 +92,7 @@ export default function StrategyCenterWorkspace({
   return (
     <div className={scrollShellClass}>
       <header
-        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.isV2 ? "border-white/[0.06] bg-[#0D100F]" : "border-[#242424]"}`}
+        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.workspaceHeader}`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -142,9 +142,11 @@ export default function StrategyCenterWorkspace({
         </div>
       </header>
 
-      <div className={theme.isV2 ? "space-y-6 p-4 sm:space-y-7 sm:p-5" : "p-4 sm:p-5"}>
+      <div className={theme.workspaceBody}>
         {theme.isV2 ? (
-          <div className={theme.chartSection}>
+          <div
+            className={`${theme.chartSection} ${theme.isV3 ? "mx-4 mt-4 sm:mx-5 sm:mt-5" : ""}`}
+          >
             <StrategyChartPanel strategy={strategy} embedded />
             <StrategyWorkspaceControls
               strategy={strategy}
@@ -166,10 +168,9 @@ export default function StrategyCenterWorkspace({
           </>
         )}
 
-        {!theme.isV2 ? (
-          <StrategyLogicCard setup={strategy.setup} />
-        ) : null}
+        {!theme.isV2 ? <StrategyLogicCard setup={strategy.setup} /> : null}
 
+        <div className={theme.isV3 ? "border-t border-white/[0.06]" : undefined}>
         <StrategyWorkspaceTabs
           strategy={strategy}
           activeTab={activeTab}
@@ -178,6 +179,7 @@ export default function StrategyCenterWorkspace({
           onStartPaper={onStartPaper}
           backtestLoading={backtestLoading}
         />
+        </div>
       </div>
     </div>
   );

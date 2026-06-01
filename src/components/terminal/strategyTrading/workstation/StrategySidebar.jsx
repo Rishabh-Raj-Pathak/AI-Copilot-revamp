@@ -75,9 +75,7 @@ export default function StrategySidebar({
             key={f.id}
             type="button"
             onClick={() => onFilterChange(f.id)}
-            className={
-              filter === f.id ? theme.filterActive : theme.filterIdle
-            }
+            className={filter === f.id ? theme.filterActive : theme.filterIdle}
           >
             {f.label}
           </button>
@@ -86,9 +84,9 @@ export default function StrategySidebar({
 
       <ScrollFade
         axis="y"
-        fadeColor="#0D100F"
+        fadeColor={theme.isV3 ? "#060807" : "#0D100F"}
         className="min-h-0 flex-1"
-        viewportClassName="space-y-2 p-2.5"
+        viewportClassName={theme.isV3 ? "p-0" : "space-y-2 p-2.5"}
       >
         {filtered.length === 0 ? (
           <p
@@ -121,7 +119,9 @@ export default function StrategySidebar({
                   {s.market?.replace(" · ", " · ") ?? s.market}
                 </p>
                 <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
-                  <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
+                  <span
+                    className={theme.isV2 ? theme.textMuted : "text-[#585858]"}
+                  >
                     {s.lastUpdated}
                   </span>
                   {perf ? (

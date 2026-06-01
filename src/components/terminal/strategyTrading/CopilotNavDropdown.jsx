@@ -5,17 +5,32 @@ export const COPILOT_VIEWS = [
   { id: "suggestions", label: "AI Copilot" },
   { id: "strategy-trading-v1", label: "Strategy Copilot v1" },
   { id: "strategy-trading-v2", label: "Strategy Copilot v2" },
+  { id: "strategy-trading-v3", label: "Strategy Copilot v3" },
 ];
 
 export function isStrategyCopilotView(viewId) {
   return (
-    viewId === "strategy-trading-v1" || viewId === "strategy-trading-v2"
+    viewId === "strategy-trading-v1" ||
+    viewId === "strategy-trading-v2" ||
+    viewId === "strategy-trading-v3"
   );
+}
+
+/** v2/v3 share composer landing + lime-mint workstation UI (independent state per view). */
+export function isStrategyCopilotComposerView(viewId) {
+  return (
+    viewId === "strategy-trading-v2" || viewId === "strategy-trading-v3"
+  );
+}
+
+export function isModernStrategyCopilotNav(viewId) {
+  return isStrategyCopilotComposerView(viewId);
 }
 
 export function getUiVersionFromCopilotView(viewId) {
   if (viewId === "strategy-trading-v1") return "v1";
   if (viewId === "strategy-trading-v2") return "v2";
+  if (viewId === "strategy-trading-v3") return "v3";
   return "v2";
 }
 
@@ -75,7 +90,7 @@ export default function CopilotNavDropdown({
   };
 
   const isMobile = variant === "mobile";
-  const isV2Nav = activeView === "strategy-trading-v2";
+  const isV2Nav = isModernStrategyCopilotNav(activeView);
 
   const triggerClass = isV2Nav
     ? "flex shrink-0 items-center gap-1 rounded-md border border-white/8 bg-[rgba(255,255,255,0.04)] px-2.5 py-1.5 text-xs font-medium text-[#19E6A3] backdrop-blur-sm transition-colors hover:border-white/12 hover:bg-[rgba(255,255,255,0.06)] sm:px-3 sm:text-sm"

@@ -36,20 +36,22 @@ export const CHAT_QUICK_ACTIONS = [
 ];
 
 /** Frontend-only LLM picker (Strategy Copilot chat). */
-export const CHAT_LLM_MODELS = [
+export const COMPOSER_CHAT_LLM_MODELS = [
   {
     id: "deepseek",
     name: "DeepSeek",
     provider: "DeepSeek",
-    tag: "Reasoning",
+    tag: "Reasoning & analysis",
   },
   {
     id: "qwen",
     name: "Qwen",
     provider: "Alibaba",
-    tag: "Fast",
+    tag: "Fast general tasks",
   },
 ];
+
+export const CHAT_LLM_MODELS = COMPOSER_CHAT_LLM_MODELS;
 
 export const DEFAULT_CHAT_LLM_MODEL_ID = "deepseek";
 

@@ -240,7 +240,7 @@ export default function StrategyChatPanel({
 
   return (
     <aside
-      className={`flex h-full min-h-0 w-full flex-col border-l ${theme.chatPanel}`}
+      className={`relative flex h-full min-h-0 w-full flex-col border-l ${theme.chatPanel}`}
       data-strategy-chat-panel
     >
       {!theme.isV2 ? (
@@ -279,9 +279,11 @@ export default function StrategyChatPanel({
       >
         <div
           className={
-            theme.isV2
-              ? "space-y-5 px-4 py-4 pb-32"
-              : "space-y-3 p-3 pb-24"
+            theme.isV3
+              ? "space-y-5 px-4 py-4 pb-56"
+              : theme.isV2
+                ? "space-y-5 px-4 py-4 pb-32"
+                : "space-y-3 p-3 pb-24"
           }
         >
           {messages.length === 0 ? (
@@ -307,9 +309,11 @@ export default function StrategyChatPanel({
 
       <footer
         className={
-          theme.isV2
-            ? "relative z-20 shrink-0 px-3.5 pb-3.5 pt-2"
-            : `relative shrink-0 z-20 border-t p-3 ${theme.panel}`
+          theme.isV3
+            ? theme.chatComposerFooter
+            : theme.isV2
+              ? "relative z-20 shrink-0 px-3.5 pb-3.5 pt-2"
+              : `relative shrink-0 z-20 border-t p-3 ${theme.panel}`
         }
       >
         {quickActions.length > 0 ? (
@@ -343,7 +347,11 @@ export default function StrategyChatPanel({
               attachments={attachments}
               onAttachmentsChange={onAttachmentsChange}
               enableSuggestions
-              placeholder="Ask AI to build, test, optimize, or paper trade…"
+              placeholder={
+                theme.isV3
+                  ? "Describe your trading idea in plain language, upload an image, a video, or code."
+                  : "Ask AI to build, test, optimize, or paper trade…"
+              }
             />
           </div>
         ) : (
