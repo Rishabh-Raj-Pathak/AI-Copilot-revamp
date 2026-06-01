@@ -322,95 +322,6 @@ function EquityCurveMock({ theme, compact }) {
   );
 }
 
-function StatusPanel({ strategy, theme }) {
-  if (theme.isV3) {
-    return (
-      <>
-        <h4 className={v3SectionTitle}>Status</h4>
-        <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
-          {strategy.status}
-        </p>
-        <p className={`mt-2 ${v3BodyText}`}>
-          Execution: Manual approval · Max leverage{" "}
-          {strategy.config?.leverage ?? "3x"}
-        </p>
-      </>
-    );
-  }
-
-  return (
-    <div className={theme.statusCard}>
-      <h4
-        className={
-          theme.isV2
-            ? "text-xs font-medium text-[#929292]"
-            : "text-xs font-semibold text-[#bfbfbf]"
-        }
-      >
-        Status
-      </h4>
-      <p
-        className={
-          theme.isV2
-            ? "mt-2 text-2xl font-bold text-white"
-            : "mt-2 text-lg font-bold text-white"
-        }
-      >
-        {strategy.status}
-      </p>
-      <p className="mt-2 text-[13px] leading-relaxed text-[#757575]">
-        Execution: Manual approval · Max leverage{" "}
-        {strategy.config?.leverage ?? "3x"}
-      </p>
-    </div>
-  );
-}
-
-function AiNotesPanel({ setup, theme }) {
-  const innerCard = theme.card;
-  const notes = setup?.aiNotes ?? ["Backtest estimates are not guarantees."];
-
-  if (theme.isV3) {
-    return (
-      <>
-        <h4 className={v3SectionTitle}>AI notes</h4>
-        <ul className="mt-3 space-y-2.5">
-          {notes.map((n) => (
-            <li key={n} className={`flex gap-2.5 ${v3BodyText}`}>
-              <span
-                className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-[var(--ds-copilot-v2-mint)]"
-                aria-hidden
-              />
-              <span>{n}</span>
-            </li>
-          ))}
-        </ul>
-      </>
-    );
-  }
-
-  return (
-    <div className={theme.isV2 ? theme.statusCard : `p-3 ${innerCard}`}>
-      <h4
-        className={
-          theme.isV2
-            ? "text-xs font-medium text-[#929292]"
-            : "text-xs font-semibold text-[#bfbfbf]"
-        }
-      >
-        AI notes
-      </h4>
-      <ul className="mt-2 space-y-1.5">
-        {notes.map((n) => (
-          <li key={n} className="text-[11px] leading-relaxed text-[#929292]">
-            · {n}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 function ExecutionNestedTabs({
   strategy,
   pos,
@@ -786,22 +697,11 @@ export default function StrategyWorkspaceTabs({
         <div className={theme.isV2 ? theme.tabsContentWrap : undefined}>
           <TabsContent value="overview" className={tabContentClass}>
             {theme.isV2 ? (
-              <OverviewTabV2
-                strategy={strategy}
-                setup={setup}
-                statusPanel={<StatusPanel strategy={strategy} theme={theme} />}
-                aiNotesPanel={<AiNotesPanel setup={setup} theme={theme} />}
-              />
+              <OverviewTabV2 strategy={strategy} setup={setup} />
             ) : (
-              <>
-                {setup?.flowSteps ? (
-                  <StrategyFlowStepper steps={setup.flowSteps} />
-                ) : null}
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <StatusPanel strategy={strategy} theme={theme} />
-                  <AiNotesPanel setup={setup} theme={theme} />
-                </div>
-              </>
+              setup?.flowSteps ? (
+                <StrategyFlowStepper steps={setup.flowSteps} />
+              ) : null
             )}
           </TabsContent>
 

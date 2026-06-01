@@ -480,7 +480,7 @@ export default function StrategyTradingPage({
       applyTemplatePrefs(template);
       const mapId = {
         "btc-mean-reversion": "strat-btc-sniper",
-        "eth-funding": "strat-eth-funding",
+        "eth-funding": "strat-eth-breakout",
         "sol-breakout": "strat-sol-breakout",
         "hype-trend": "strat-hype-trend",
       };

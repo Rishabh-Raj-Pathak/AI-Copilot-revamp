@@ -198,21 +198,15 @@ export default function StrategyLogicCard({ setup, className = "" }) {
       ) : null}
 
       {setup.personalizationNote ? (
-        <div
-          className={`mt-4 flex items-start gap-2.5 px-3 py-2.5 text-[10px] leading-relaxed ${
+        <p
+          className={`mt-4 text-[10px] leading-relaxed ${
             theme.isV2
-              ? "rounded-xl border border-white/6 bg-white/3 text-[#9a9a9a]"
-              : "rounded-md border border-[#3e2e00]/30 bg-[#171200]/30 text-[#f2b500]"
+              ? "text-[rgba(255,255,255,0.52)]"
+              : "text-[#f2b500]"
           }`}
         >
-          {theme.isV2 ? (
-            <span
-              className="mt-0.5 inline-block size-1.5 shrink-0 rounded-full bg-[#19E6A3]/80"
-              aria-hidden
-            />
-          ) : null}
-          <p>{setup.personalizationNote}</p>
-        </div>
+          {setup.personalizationNote}
+        </p>
       ) : null}
     </div>
   );

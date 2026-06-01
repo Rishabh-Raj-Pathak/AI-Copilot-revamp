@@ -75,7 +75,7 @@ export function getCopilotTheme(version) {
       ? "rounded-lg border border-white/6 bg-[#0D100F] text-[rgba(255,255,255,0.92)] placeholder:text-[rgba(255,255,255,0.36)] focus:border-[var(--ds-copilot-v2-mint)]/30 focus:outline-none"
       : "rounded-md border border-[#242424] bg-black text-white placeholder:text-[#585858] focus:border-[#454545] focus:outline-none",
     filterActive: isV2
-      ? "shrink-0 rounded-full border border-[var(--ds-copilot-v2-mint)]/25 bg-[var(--ds-copilot-v2-mint)]/10 px-2.5 py-1 text-[10px] font-medium text-[var(--ds-copilot-v2-mint)]"
+      ? "shrink-0 rounded-full border border-[rgba(72,183,128,0.5)] bg-transparent px-2.5 py-1 text-[10px] font-medium text-[rgb(71,184,129)]"
       : "rounded-md bg-[#3e2e00] px-2 py-1 text-[10px] font-medium text-[#f2b500]",
     filterIdle: isV2
       ? "shrink-0 rounded-full border border-white/[0.05] bg-[rgba(255,255,255,0.02)] px-2.5 py-1 text-[10px] font-medium text-[rgba(255,255,255,0.36)] transition-colors hover:border-white/10 hover:text-[rgba(255,255,255,0.58)]"
@@ -86,6 +86,14 @@ export function getCopilotTheme(version) {
     strategyCardActive: isV2
       ? "rounded-xl border border-white/10 bg-[#141716] p-3"
       : "rounded-lg border border-[#f2b500]/35 bg-[#121212] p-2.5 shadow-[inset_0_0_0_1px_rgba(242,181,0,0.15)]",
+    sidebarSectionTitle:
+      "text-[10px] font-medium text-[rgba(255,255,255,0.52)]",
+    sidebarRow:
+      "flex w-full items-start gap-2.5 border-b border-white/[0.05] px-3 py-2.5 text-left transition-colors hover:bg-white/[0.02]",
+    sidebarRowActive:
+      "ds-strategy-sidebar-row-active flex w-full items-start gap-2.5 border-b border-white/[0.05] px-3 py-2.5 text-left",
+    sidebarRowMeta: "text-[rgba(255,255,255,0.45)]",
+    sidebarRowTime: "text-[rgba(255,255,255,0.45)]",
     newStrategyBtn:
       "mt-2 w-full justify-center gap-1.5 shadow-none transition-[filter,opacity] hover:brightness-[1.04] active:brightness-[0.96]",
     headerTitle: isV2
@@ -216,7 +224,7 @@ export function getCopilotTheme(version) {
     input:
       "rounded-md border border-white/[0.06] bg-[#0a0b0a] text-[rgba(255,255,255,0.94)] placeholder:text-[rgba(255,255,255,0.45)] focus:border-[var(--ds-copilot-v2-mint)]/35 focus:outline-none",
     filterActive:
-      "shrink-0 rounded-md border border-[var(--ds-copilot-v2-mint)]/20 bg-[var(--ds-copilot-v2-mint)]/8 px-2 py-0.5 text-[10px] font-medium text-[var(--ds-copilot-v2-mint)]",
+      "shrink-0 rounded-md border border-[rgba(72,183,128,0.5)] bg-transparent px-2 py-0.5 text-[10px] font-medium text-[rgb(71,184,129)]",
     filterIdle:
       "shrink-0 rounded-md border border-transparent px-2 py-0.5 text-[10px] font-medium text-[rgba(255,255,255,0.48)] transition-colors hover:bg-white/[0.03] hover:text-[rgba(255,255,255,0.72)]",
     strategyCard:

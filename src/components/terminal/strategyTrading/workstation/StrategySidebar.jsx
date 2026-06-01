@@ -1,10 +1,123 @@
 import { Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { terminalGradientCta } from "../../../../design-system/tokens/terminalConnectWallet";
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
 import { SIDEBAR_FILTERS } from "../strategyWorkstationMockData.js";
 import ScrollFade from "./ScrollFade.jsx";
 import { StatusBadge } from "./statusBadge.jsx";
+import StrategySidebarRow from "./StrategySidebarRow.jsx";
+import StrategySidebarSection from "./StrategySidebarSection.jsx";
+import { groupStrategiesForSidebar } from "./strategySidebarUtils.js";
+
+function StrategySidebarV1List({
+  strategies,
+  selectedId,
+  filter,
+  onSelect,
+  theme,
+}) {
+  const filtered = strategies.filter((s) => {
+    if (filter === "all") return true;
+    if (filter === "draft") return s.status === "Draft";
+    if (filter === "backtested") return s.status === "Backtested";
+    if (filter === "paper") return s.status === "Paper Trading";
+    if (filter === "ready") return s.status === "Ready";
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    return (
+      <p
+        className={`px-1 py-4 text-center text-[10px] ${theme.isV2 ? theme.textMuted : "text-[#757575]"}`}
+      >
+        No strategies match.
+      </p>
+    );
+  }
+
+  return filtered.map((s) => {
+    const active = s.id === selectedId;
+    const perf = s.performancePreview;
+    return (
+      <button
+        key={s.id}
+        type="button"
+        onClick={() => onSelect(s.id)}
+        className={`w-full text-left transition-colors ${
+          active ? theme.strategyCardActive : theme.strategyCard
+        }`}
+      >
+        <div className="flex items-start justify-between gap-1">
+          <p className="truncate text-xs font-semibold text-white">{s.name}</p>
+          <StatusBadge status={s.status} />
+        </div>
+        <p
+          className={`mt-1 text-[10px] ${theme.isV2 ? theme.textSecondary : "text-[#757575]"}`}
+        >
+          {s.market?.replace(" · ", " · ") ?? s.market}
+        </p>
+        <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
+          <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
+            {s.lastUpdated}
+          </span>
+          {perf ? (
+            <span
+              className={
+                perf.startsWith("+") || perf.startsWith("Sharpe")
+                  ? `font-semibold ${theme.isV2 ? theme.textPositive : "text-[#269755]"}`
+                  : perf.startsWith("-")
+                    ? `font-semibold ${theme.isV2 ? theme.textNegative : "text-[#d53d3d]"}`
+                    : theme.isV2
+                      ? theme.textMuted
+                      : "text-[#929292]"
+              }
+            >
+              {perf}
+            </span>
+          ) : null}
+        </div>
+      </button>
+    );
+  });
+}
+
+function StrategySidebarV2List({ strategies, selectedId, search, onSelect }) {
+  const sections = useMemo(
+    () => groupStrategiesForSidebar(strategies, search),
+    [strategies, search],
+  );
+
+  if (sections.length === 0) {
+    return (
+      <p className="px-3 py-4 text-center text-[10px] text-[rgba(255,255,255,0.45)]">
+        No strategies match.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {sections.map((section) => (
+        <StrategySidebarSection
+          key={section.id}
+          label={section.label}
+          count={section.items.length}
+          selectedId={selectedId}
+          itemIds={section.items.map((s) => s.id)}
+        >
+          {section.items.map((s) => (
+            <StrategySidebarRow
+              key={`${section.id}-${s.id}`}
+              strategy={s}
+              active={s.id === selectedId}
+              onSelect={onSelect}
+            />
+          ))}
+        </StrategySidebarSection>
+      ))}
+    </div>
+  );
+}
 
 export default function StrategySidebar({
   strategies,
@@ -16,23 +129,6 @@ export default function StrategySidebar({
 }) {
   const [search, setSearch] = useState("");
   const theme = useCopilotTheme();
-
-  const filtered = strategies.filter((s) => {
-    const q = search.trim().toLowerCase();
-    if (
-      q &&
-      !s.name.toLowerCase().includes(q) &&
-      !s.market?.toLowerCase().includes(q)
-    ) {
-      return false;
-    }
-    if (filter === "all") return true;
-    if (filter === "draft") return s.status === "Draft";
-    if (filter === "backtested") return s.status === "Backtested";
-    if (filter === "paper") return s.status === "Paper Trading";
-    if (filter === "ready") return s.status === "Ready";
-    return true;
-  });
 
   return (
     <aside
@@ -64,85 +160,47 @@ export default function StrategySidebar({
         </label>
       </div>
 
-      <ScrollFade
-        axis="x"
-        fadeColor="#0D100F"
-        className={`shrink-0 border-b ${theme.panel} ${theme.isV2 ? "border-white/[0.04]" : ""}`}
-        viewportClassName="flex gap-1.5 px-2 py-2.5"
-      >
-        {SIDEBAR_FILTERS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => onFilterChange(f.id)}
-            className={filter === f.id ? theme.filterActive : theme.filterIdle}
-          >
-            {f.label}
-          </button>
-        ))}
-      </ScrollFade>
+      {!theme.isV2 ? (
+        <ScrollFade
+          axis="x"
+          fadeColor="#0D100F"
+          className={`shrink-0 border-b ${theme.panel} ${theme.isV2 ? "border-white/[0.04]" : ""}`}
+          viewportClassName="flex gap-1.5 px-2 py-2.5"
+        >
+          {SIDEBAR_FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => onFilterChange(f.id)}
+              className={filter === f.id ? theme.filterActive : theme.filterIdle}
+            >
+              {f.label}
+            </button>
+          ))}
+        </ScrollFade>
+      ) : null}
 
       <ScrollFade
         axis="y"
         fadeColor={theme.isV3 ? "#060807" : "#0D100F"}
         className="min-h-0 flex-1"
-        viewportClassName={theme.isV3 ? "p-0" : "space-y-2 p-2.5"}
+        viewportClassName={theme.isV3 ? "p-0" : theme.isV2 ? "p-2" : "space-y-2 p-2.5"}
       >
-        {filtered.length === 0 ? (
-          <p
-            className={`px-1 py-4 text-center text-[10px] ${theme.isV2 ? theme.textMuted : "text-[#757575]"}`}
-          >
-            No strategies match.
-          </p>
+        {theme.isV2 ? (
+          <StrategySidebarV2List
+            strategies={strategies}
+            selectedId={selectedId}
+            search={search}
+            onSelect={onSelect}
+          />
         ) : (
-          filtered.map((s) => {
-            const active = s.id === selectedId;
-            const perf = s.performancePreview;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => onSelect(s.id)}
-                className={`w-full text-left transition-colors ${
-                  active ? theme.strategyCardActive : theme.strategyCard
-                }`}
-              >
-                <div className="flex items-start justify-between gap-1">
-                  <p className="truncate text-xs font-semibold text-white">
-                    {s.name}
-                  </p>
-                  <StatusBadge status={s.status} />
-                </div>
-                <p
-                  className={`mt-1 text-[10px] ${theme.isV2 ? theme.textSecondary : "text-[#757575]"}`}
-                >
-                  {s.market?.replace(" · ", " · ") ?? s.market}
-                </p>
-                <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
-                  <span
-                    className={theme.isV2 ? theme.textMuted : "text-[#585858]"}
-                  >
-                    {s.lastUpdated}
-                  </span>
-                  {perf ? (
-                    <span
-                      className={
-                        perf.startsWith("+") || perf.startsWith("Sharpe")
-                          ? `font-semibold ${theme.isV2 ? theme.textPositive : "text-[#269755]"}`
-                          : perf.startsWith("-")
-                            ? `font-semibold ${theme.isV2 ? theme.textNegative : "text-[#d53d3d]"}`
-                            : theme.isV2
-                              ? theme.textMuted
-                              : "text-[#929292]"
-                      }
-                    >
-                      {perf}
-                    </span>
-                  ) : null}
-                </div>
-              </button>
-            );
-          })
+          <StrategySidebarV1List
+            strategies={strategies}
+            selectedId={selectedId}
+            filter={filter}
+            onSelect={onSelect}
+            theme={theme}
+          />
         )}
       </ScrollFade>
     </aside>

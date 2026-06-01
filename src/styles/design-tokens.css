@@ -805,6 +805,16 @@ dialog::backdrop {
       0 0 0 1px rgb(0 0 0 / 0.22);
   }
 
+  .ds-strategy-sidebar-row-active {
+    background: linear-gradient(
+      90deg,
+      rgb(71 184 129 / 0.22) 9%,
+      rgb(71 184 129 / 0.12) 52%,
+      rgb(71 184 129 / 0.04) 75%,
+      transparent 100%
+    );
+  }
+
   .ds-strategy-chat-composer-footer {
     position: absolute;
     right: 0;
