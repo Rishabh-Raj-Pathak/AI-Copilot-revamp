@@ -697,7 +697,7 @@ export default function StrategyWorkspaceTabs({
         <div className={theme.isV2 ? theme.tabsContentWrap : undefined}>
           <TabsContent value="overview" className={tabContentClass}>
             {theme.isV2 ? (
-              <OverviewTabV2 strategy={strategy} setup={setup} />
+              <OverviewTabV2 setup={setup} />
             ) : (
               setup?.flowSteps ? (
                 <StrategyFlowStepper steps={setup.flowSteps} />
@@ -709,10 +709,10 @@ export default function StrategyWorkspaceTabs({
             {theme.isV2 ? (
               <BacktestTabV2
                 strategy={strategy}
+                setup={setup}
                 bt={bt}
                 backtestLoading={backtestLoading}
                 onRunBacktest={onRunBacktest}
-                onGoOverview={() => onTabChange("overview")}
               />
             ) : strategy?.backtest?.status !== "complete" || !bt ? (
               <div className="mb-3">

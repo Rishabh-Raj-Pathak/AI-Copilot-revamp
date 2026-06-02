@@ -6,56 +6,62 @@ import {
   V3TabSection,
   V3TabShell,
 } from "../V3TabLayout.jsx";
+import OverviewBacktestInsights from "./OverviewBacktestInsights.jsx";
+import OverviewEquityChart from "./OverviewEquityChart.jsx";
+import OverviewKpiStrip from "./OverviewKpiStrip.jsx";
+import OverviewPerformancePanel from "./OverviewPerformancePanel.jsx";
+import OverviewTradesAnalysis from "./OverviewTradesAnalysis.jsx";
+
+function BacktestResultsSections({ bt, setup }) {
+  return (
+    <>
+      <OverviewKpiStrip bt={bt} />
+      <OverviewEquityChart bt={bt} range={setup} />
+      <OverviewPerformancePanel bt={bt} />
+      <OverviewTradesAnalysis bt={bt} />
+      <OverviewBacktestInsights insights={bt.insights} />
+    </>
+  );
+}
 
 export default function BacktestTabV2({
   strategy,
+  setup,
   bt,
   backtestLoading,
   onRunBacktest,
-  onGoOverview,
 }) {
   const theme = useCopilotTheme();
   const complete = strategy?.backtest?.status === "complete" && bt;
   const trades = strategy?.trades ?? [];
 
   const description = complete
-    ? "Performance summary, equity curve, and trade analysis are available on the Overview tab."
+    ? "Historical performance estimate for this strategy configuration."
     : "Run a backtest to preview historical performance estimates for this strategy.";
 
   const actions = (
-    <>
-      <button
-        type="button"
-        className={theme.primaryActionBtn}
-        onClick={onRunBacktest}
-        disabled={backtestLoading}
-        aria-busy={backtestLoading}
-      >
-        {backtestLoading ? (
-          <span
-            className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-[#030504]/30 border-t-[#030504]"
-            aria-hidden
-          />
-        ) : (
-          <Play className="size-3.5 shrink-0" aria-hidden />
-        )}
-        {complete ? "Re-run Backtest" : "Run Backtest"}
-      </button>
-      {complete && onGoOverview ? (
-        <button
-          type="button"
-          onClick={onGoOverview}
-          className={
-            theme.isV3
-              ? "text-xs font-medium text-[var(--ds-copilot-v2-mint)] transition-colors hover:text-[#4ef0c4]"
-              : "text-xs font-medium text-white transition-colors hover:text-[#4ef0c4]"
-          }
-        >
-          View full analytics in Overview →
-        </button>
-      ) : null}
-    </>
+    <button
+      type="button"
+      className={theme.primaryActionBtn}
+      onClick={onRunBacktest}
+      disabled={backtestLoading}
+      aria-busy={backtestLoading}
+    >
+      {backtestLoading ? (
+        <span
+          className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-[#030504]/30 border-t-[#030504]"
+          aria-hidden
+        />
+      ) : (
+        <Play className="size-3.5 shrink-0" aria-hidden />
+      )}
+      {complete ? "Re-run Backtest" : "Run Backtest"}
+    </button>
   );
+
+  const resultsSections = complete ? (
+    <BacktestResultsSections bt={bt} setup={setup} />
+  ) : null;
 
   const tradesTable =
     complete && trades.length > 0 ? (
@@ -131,7 +137,7 @@ export default function BacktestTabV2({
           </div>
         </V3TabSection>
       ) : (
-        <div className="mt-4 overflow-hidden rounded-xl border border-[#262626]">
+        <div className="overflow-hidden rounded-xl border border-[#262626]">
           <p className="border-b border-[#262626] px-4 py-2.5 text-xs font-medium text-[#929292]">
             Backtest trades
           </p>
@@ -178,19 +184,21 @@ export default function BacktestTabV2({
           description={description}
           actions={actions}
         />
+        {resultsSections}
         {tradesTable}
       </V3TabShell>
     );
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
       <CopilotTabLead
         isV3={false}
         title="Backtest"
         description={description}
         actions={actions}
       />
+      {resultsSections}
       {tradesTable}
     </div>
   );
