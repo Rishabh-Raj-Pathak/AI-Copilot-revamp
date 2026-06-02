@@ -132,10 +132,10 @@ export default function StrategySidebar({
 
   return (
     <aside
-      className={`flex h-full w-full min-h-0 flex-col border-r ${theme.panel}`}
+      className={`flex h-full w-full min-h-0 flex-col border-r border-r-[#242424] ${theme.panel}`}
     >
       <div
-        className={`shrink-0 border-b p-3 ${theme.panel} ${theme.isV2 ? "border-white/[0.04]" : ""}`}
+        className={`shrink-0 border-b p-3 ${theme.panel} ${theme.isV2 ? "border-[#242424]" : ""}`}
       >
         <button
           type="button"

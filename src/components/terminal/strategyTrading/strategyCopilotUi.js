@@ -54,16 +54,16 @@ export function getCopilotTheme(version) {
       ? "bg-[#050706] text-[rgba(255,255,255,0.92)]"
       : "bg-black text-white",
     panel: isV2
-      ? "border-white/6 bg-[#0D100F]"
+      ? "border-[#242424] bg-[#121212]"
       : "border-[#242424] bg-[#0a0a0a]",
     card: isV2
-      ? "rounded-xl border border-white/6 bg-[#141716]"
+      ? "rounded-xl border border-[#242424] bg-[#121212]"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a]",
     cardInner: isV2
-      ? "rounded-xl border border-white/[0.05] bg-[#101312]"
+      ? "rounded-xl border border-[#242424] bg-[#121212]"
       : "rounded-lg border border-[#242424] bg-[#121212]",
     chartSection: isV2
-      ? "overflow-hidden rounded-xl border border-white/6 bg-[#141716] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]"
+      ? "overflow-hidden rounded-xl border border-[#242424] bg-[#121212] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]"
       : "",
     controlBar: isV2
       ? "overflow-visible border-t border-white/[0.04] px-3 pb-3 pt-2.5"
@@ -81,17 +81,17 @@ export function getCopilotTheme(version) {
       ? "shrink-0 rounded-full border border-white/[0.05] bg-[rgba(255,255,255,0.02)] px-2.5 py-1 text-[10px] font-medium text-[rgba(255,255,255,0.36)] transition-colors hover:border-white/10 hover:text-[rgba(255,255,255,0.58)]"
       : "rounded-md px-2 py-1 text-[10px] font-medium text-[#929292] hover:text-white",
     strategyCard: isV2
-      ? "relative rounded-xl border border-white/6 bg-[#101312] p-3 transition-colors hover:border-white/10 hover:bg-[#141716]"
+      ? "relative rounded-xl border border-[#242424] bg-[#121212] p-3 transition-colors hover:border-[#2d2d2d] hover:bg-[#161616]"
       : "rounded-lg border border-[#242424] bg-black p-2.5 hover:border-[#313131] hover:bg-[#0a0a0a]",
     strategyCardActive: isV2
-      ? "rounded-xl border border-white/10 bg-[#141716] p-3"
+      ? "rounded-xl border border-[#242424] bg-[#121212] p-3"
       : "rounded-lg border border-[#f2b500]/35 bg-[#121212] p-2.5 shadow-[inset_0_0_0_1px_rgba(242,181,0,0.15)]",
     sidebarSectionTitle:
       "text-[10px] font-medium text-[rgba(255,255,255,0.52)]",
     sidebarRow:
       "flex w-full items-start gap-2.5 border-b border-white/[0.05] px-3 py-2.5 text-left transition-colors hover:bg-white/[0.02]",
     sidebarRowActive:
-      "ds-strategy-sidebar-row-active flex w-full items-start gap-2.5 border-b border-white/[0.05] px-3 py-2.5 text-left",
+      "ds-strategy-sidebar-row-active flex w-full items-start gap-2.5 px-3 py-2.5 text-left",
     sidebarRowMeta: "text-[rgba(255,255,255,0.45)]",
     sidebarRowTime: "text-[rgba(255,255,255,0.45)]",
     newStrategyBtn:
@@ -118,7 +118,7 @@ export function getCopilotTheme(version) {
       ? `${V2_ACTION_RADIUS} border border-white/8 bg-[rgba(255,255,255,0.03)] text-[rgba(255,255,255,0.88)] hover:bg-[rgba(255,255,255,0.06)] !text-xs`
       : "",
     metricCard: isV2
-      ? "rounded-xl border border-white/6 bg-[#141716]"
+      ? "rounded-xl border border-[#242424] bg-[#121212]"
       : "rounded-md border border-[#242424] bg-[#121212] px-2.5 py-2",
     metricCell: isV2 ? "border-white/[0.04] px-4 py-4" : "",
     metricLabel: isV2
@@ -145,19 +145,19 @@ export function getCopilotTheme(version) {
       : "border-[#242424] bg-black",
     chatScrollArea: isV2 ? "bg-[#050706]" : "",
     chatUserBubble: isV2
-      ? "rounded-2xl rounded-br-md border border-white/[0.05] bg-[#1a1e1c] px-3.5 py-2.5 text-[13px] leading-[1.6] text-[rgba(255,255,255,0.92)]"
+      ? "rounded-2xl rounded-br-md border border-[#242424] bg-[#121212] px-3.5 py-2.5 text-[13px] leading-[1.6] text-[rgba(255,255,255,0.92)]"
       : "rounded-lg bg-[#171200] px-3 py-2 text-white",
     chatAiBubble: isV2
-      ? "rounded-2xl rounded-bl-md border border-white/[0.05] bg-[#141716] px-3.5 py-2.5"
+      ? "rounded-2xl rounded-bl-md border border-[#242424] bg-[#121212] px-3.5 py-2.5"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a] px-3 py-2 text-[#bfbfbf]",
     chatExampleBtn: isV2
-      ? "rounded-xl border border-white/6 bg-[#141716] px-3.5 py-2.5 text-left text-[12px] leading-snug text-[rgba(255,255,255,0.58)] transition-all duration-200 hover:border-white/10 hover:bg-[#171a18] hover:text-[rgba(255,255,255,0.88)]"
+      ? "rounded-xl border border-[#242424] bg-[#121212] px-3.5 py-2.5 text-left text-[12px] leading-snug text-[rgba(255,255,255,0.58)] transition-all duration-200 hover:border-[#2d2d2d] hover:bg-[#161616] hover:text-[rgba(255,255,255,0.88)]"
       : "rounded-md border border-[#242424] bg-[#0a0a0a] px-2.5 py-2 text-left text-[11px] text-[#bfbfbf] hover:border-[#454545] hover:text-white",
     chatQuickChip: isV2
-      ? "shrink-0 rounded-full border border-white/6 bg-[#141716] px-3 py-1.5 text-[11px] text-[rgba(255,255,255,0.36)] transition-colors hover:border-white/10 hover:bg-[#171a18] hover:text-[rgba(255,255,255,0.58)]"
+      ? "shrink-0 rounded-full border border-[#242424] bg-[#121212] px-3 py-1.5 text-[11px] text-[rgba(255,255,255,0.36)] transition-colors hover:border-[#2d2d2d] hover:bg-[#161616] hover:text-[rgba(255,255,255,0.58)]"
       : "shrink-0 rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white",
     chatPromptShell: isV2
-      ? "group/composer relative z-10 rounded-2xl border border-white/6 bg-[#141716] p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] transition-[border-color,box-shadow] duration-200 focus-within:border-[var(--ds-copilot-v2-mint)]/22 focus-within:shadow-[0_-8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,243,182,0.08)]"
+      ? "group/composer relative z-10 rounded-2xl border border-[#242424] bg-[#121212] p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] transition-[border-color,box-shadow] duration-200 focus-within:border-[var(--ds-copilot-v2-mint)]/22 focus-within:shadow-[0_-8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,243,182,0.08)]"
       : "relative rounded-xl border border-[#242424] bg-[#0a0a0a] p-2",
     chatSendBtn: isV2
       ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#F2B500] to-[#00F3B6] text-[#030504] shadow-[0_1px_2px_rgba(0,0,0,0.35)] transition-all duration-150 hover:brightness-[1.05] active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-[#1a1e1c] disabled:text-[rgba(255,255,255,0.36)] disabled:shadow-none disabled:hover:scale-100"
@@ -167,7 +167,7 @@ export function getCopilotTheme(version) {
       : "relative z-20 shrink-0 border-t p-3",
     badge: isV2 ? "text-[10px]" : "rounded px-1.5 py-0.5",
     flowCard: isV2
-      ? "rounded-xl border border-white/6 bg-[#101312] p-4"
+      ? "rounded-xl border border-[#242424] bg-[#121212] p-4"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a] p-3 sm:p-4",
     flowStepNum: isV2
       ? "flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#F2B500] to-[#00F3B6] text-xs font-bold text-[#030504]"
@@ -177,10 +177,10 @@ export function getCopilotTheme(version) {
       : "!min-h-8 !text-xs",
     overviewPanel: isV2 ? "p-4 sm:p-5" : "",
     statusCard: isV2
-      ? "rounded-xl border border-white/6 bg-[#141716] p-4"
+      ? "rounded-xl border border-[#242424] bg-[#121212] p-4"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a] p-3",
     richCardShell: isV2
-      ? "mt-4 overflow-hidden rounded-xl border border-white/6 bg-[var(--ds-copilot-v2-elevated)]"
+      ? "mt-4 overflow-hidden rounded-xl border border-[#242424] bg-[var(--ds-copilot-v2-elevated)]"
       : "",
     textPrimary: isV2 ? COPILOT_V2_TEXT_PRIMARY : "text-white",
     textSecondary: isV2 ? COPILOT_V2_TEXT_SECONDARY : "text-[#929292]",
@@ -199,11 +199,11 @@ export function getCopilotTheme(version) {
     dividerVertical: "border-r border-white/[0.06]",
     workspaceBody: isV2 ? "space-y-6 p-4 sm:space-y-7 sm:p-5" : "p-4 sm:p-5",
     workspaceHeader: isV2
-      ? "border-white/[0.06] bg-[#0D100F]"
+      ? "border-[#242424] bg-[#121212]"
       : "border-[#242424]",
     overviewShell: "flex flex-col gap-0",
     tableShell: isV2
-      ? "overflow-hidden rounded-xl border border-white/6 bg-[#141716]"
+      ? "overflow-hidden rounded-xl border border-[#242424] bg-[#121212]"
       : "overflow-x-auto rounded-lg border border-[#242424]",
   };
 

@@ -134,7 +134,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
           isV3Chart
             ? "bg-[#0a0b0a] px-2 pt-2 pb-1"
             : isV2Chart
-              ? "bg-[#101312] px-2 pt-2 pb-1"
+              ? "bg-[#121212] px-2 pt-2 pb-1"
               : "bg-[#070707] px-2 pt-2 pb-1"
         }
       >

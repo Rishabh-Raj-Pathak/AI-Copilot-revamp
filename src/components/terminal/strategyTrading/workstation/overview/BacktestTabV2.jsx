@@ -48,7 +48,7 @@ export default function BacktestTabV2({
           className={
             theme.isV3
               ? "text-xs font-medium text-[var(--ds-copilot-v2-mint)] transition-colors hover:text-[#4ef0c4]"
-              : "text-xs font-medium text-[#00F3B6] transition-colors hover:text-[#4ef0c4]"
+              : "text-xs font-medium text-white transition-colors hover:text-[#4ef0c4]"
           }
         >
           View full analytics in Overview →

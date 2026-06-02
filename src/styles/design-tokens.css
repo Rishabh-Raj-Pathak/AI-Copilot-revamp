@@ -237,7 +237,7 @@
   /* Strategy Copilot V2 — lime-to-mint brand (no yellow accent system) */
   --ds-copilot-v2-bg: #050706;
   --ds-copilot-v2-surface: #101312;
-  --ds-copilot-v2-elevated: #141716;
+  --ds-copilot-v2-elevated: #121212;
   --ds-copilot-v2-border: rgb(255 255 255 / 0.06);
   --ds-copilot-v2-divider: rgb(255 255 255 / 0.04);
   --ds-copilot-v2-mint: #00f3b6;
@@ -812,12 +812,13 @@ dialog::backdrop {
   }
 
   .ds-strategy-sidebar-row-active {
+    border-radius: 10px 0 0 10px;
     background: linear-gradient(
       90deg,
-      rgb(0 243 182 / 0.22) 9%,
-      rgb(0 243 182 / 0.12) 52%,
-      rgb(0 243 182 / 0.04) 75%,
-      transparent 100%
+      rgb(242 181 0 / 0.32) 9%,
+      rgb(0 243 182 / 0.22) 52%,
+      rgb(0 243 182 / 0.1) 75%,
+      rgb(0 0 0 / 0.06) 100%
     );
   }
 

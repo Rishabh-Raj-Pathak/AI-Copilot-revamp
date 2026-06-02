@@ -71,7 +71,7 @@ export default function OverviewKpiStrip({ bt }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/6 bg-[#141716]">
+    <div className="overflow-hidden rounded-xl border border-[#242424] bg-[#121212]">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         {cells.map((cell, idx) => {
           const color =

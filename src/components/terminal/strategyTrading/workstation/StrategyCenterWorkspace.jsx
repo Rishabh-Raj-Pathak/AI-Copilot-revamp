@@ -97,7 +97,7 @@ export default function StrategyCenterWorkspace({
   return (
     <div className={scrollShellClass}>
       <header
-        className={`shrink-0 border-b px-4 py-4 sm:px-5 ${theme.workspaceHeader}`}
+        className={`shrink-0 border-b border-b-[#242424] bg-[#121212] px-4 py-4 sm:px-5 ${theme.workspaceHeader}`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">

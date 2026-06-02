@@ -134,7 +134,7 @@ export default function OverviewTradesAnalysis({ bt }) {
   }
 
   return (
-    <div className="rounded-xl border border-white/6 bg-[var(--ds-copilot-v2-elevated)] p-4 sm:p-5">
+    <div className="rounded-xl border border-[#242424] bg-[var(--ds-copilot-v2-elevated)] p-4 sm:p-5">
       {header}
       {body}
     </div>

@@ -31,7 +31,7 @@ export function OverviewStatRow({ label, value, valueTone }) {
 export function OverviewDetailCard({ title, children, className = "" }) {
   return (
     <div
-      className={`flex h-full flex-col rounded-xl border border-white/6 bg-[var(--ds-copilot-v2-elevated)] p-4 ${className}`}
+      className={`flex h-full flex-col rounded-xl border border-[#242424] bg-[var(--ds-copilot-v2-elevated)] p-4 ${className}`}
     >
       <h4 className="text-xs font-medium text-[var(--ds-copilot-v2-text-secondary)]">
         {title}

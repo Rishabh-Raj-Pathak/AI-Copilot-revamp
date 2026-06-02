@@ -72,7 +72,7 @@ export default function OverviewPerformancePanel({ bt }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#2a2a2a] bg-[#141414] p-4 sm:p-5">
+    <div className="rounded-xl border border-[#242424] bg-[#121212] p-4 sm:p-5">
       <h4 className="text-xs font-medium text-[#929292]">Performance</h4>
       <div className="mt-4">{content}</div>
     </div>
