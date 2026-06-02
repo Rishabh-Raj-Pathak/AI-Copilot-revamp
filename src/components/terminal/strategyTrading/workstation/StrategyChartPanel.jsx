@@ -122,7 +122,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               ? "text-xs font-semibold text-[#34D399]"
               : theme.isV2
                 ? "rounded-lg bg-[#19D98B]/10 px-2.5 py-1 text-xs font-semibold text-[#19D98B]"
-                : "rounded-md bg-[#121212] px-2 py-0.5 text-[11px] font-medium text-[#00f3b6]"
+                : "rounded-md bg-[#0f0f0f] px-2 py-0.5 text-[11px] font-medium text-[#00f3b6]"
           }`}
         >
           {currentPrice}
@@ -134,7 +134,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
           isV3Chart
             ? "bg-[#0a0b0a] px-2 pt-2 pb-1"
             : isV2Chart
-              ? "bg-[#121212] px-2 pt-2 pb-1"
+              ? "bg-[rgba(15,15,15,1)] px-2 pt-2 pb-1"
               : "bg-[#070707] px-2 pt-2 pb-1"
         }
       >

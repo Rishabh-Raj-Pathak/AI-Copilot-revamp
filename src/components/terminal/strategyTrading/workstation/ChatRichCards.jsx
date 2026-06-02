@@ -99,7 +99,7 @@ function ConfigCard({ data, onPreset }) {
 function richCardShell(theme, className = "") {
   return theme.isV2
     ? `${theme.richCardShell} ${className}`
-    : `mt-2 rounded-lg border border-[#242424] bg-[#121212] p-3 ${className}`;
+    : `mt-2 rounded-lg border border-[#242424] bg-[#0f0f0f] p-3 ${className}`;
 }
 
 function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {

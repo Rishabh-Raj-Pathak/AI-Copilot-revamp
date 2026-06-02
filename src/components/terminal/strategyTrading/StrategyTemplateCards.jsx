@@ -12,8 +12,8 @@ export default function StrategyTemplateCards({ onSelect, selectedId }) {
             onClick={() => onSelect(card)}
             className={`group rounded-lg border p-3 text-left transition-all ${
               active
-                ? "border-[#f2b500]/40 bg-[#121212] shadow-[0_0_0_1px_rgba(242,181,0,0.2)]"
-                : "border-[#242424] bg-[#0a0a0a] hover:border-[#454545] hover:bg-[#121212]"
+                ? "border-[#f2b500]/40 bg-[#0f0f0f] shadow-[0_0_0_1px_rgba(242,181,0,0.2)]"
+                : "border-[#242424] bg-[#0a0a0a] hover:border-[#454545] hover:bg-[#0f0f0f]"
             }`}
           >
             <h3 className="text-sm font-semibold text-white group-hover:text-[#f2b500]">

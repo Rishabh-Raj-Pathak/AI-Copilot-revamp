@@ -86,7 +86,7 @@ export default function StrategyLogicCard({ setup, className = "" }) {
 
   return (
     <div
-      className={`${theme.isV2 ? "" : "mt-3"} p-4 sm:p-5 ${theme.card} ${className}`}
+      className={`${theme.isV2 ? "rounded-xl border border-[#242424] bg-[rgba(15,15,15,1)]" : `mt-3 ${theme.card}`} p-4 sm:p-5 ${className}`}
     >
       <h4
         className={

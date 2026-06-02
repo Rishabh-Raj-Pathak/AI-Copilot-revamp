@@ -29,7 +29,7 @@ export default function OverviewBacktestInsights({ insights }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#242424] bg-[#121212] p-4">
+    <div className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4">
       <h4 className="text-xs font-medium text-[#929292]">AI insights</h4>
       <ul className="mt-3 space-y-2.5">
         {insights.map((item) => (

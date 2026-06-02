@@ -23,7 +23,7 @@ export default function StrategyPromptPanel({
               key={msg.id}
               className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${
                 msg.role === "user"
-                  ? "ml-4 border border-[#242424] bg-[#121212] text-white"
+                  ? "ml-4 border border-[#242424] bg-[#0f0f0f] text-white"
                   : "mr-2 border border-[#242424]/80 bg-[#0a0a0a] text-[#bfbfbf]"
               }`}
             >

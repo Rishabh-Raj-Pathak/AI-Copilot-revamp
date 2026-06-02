@@ -52,7 +52,7 @@ export default function StrategyFlowStepper({ steps }) {
       <FlowStepList
         steps={steps}
         titleClassName="text-sm font-medium text-[rgba(255,255,255,0.88)]"
-        shellClassName="rounded-xl border border-[#242424] bg-[#121212] px-4 py-4 sm:px-5"
+        shellClassName="rounded-xl border border-[#242424] bg-[rgba(15,15,15,1)] px-4 py-4 sm:px-5"
       />
     );
   }

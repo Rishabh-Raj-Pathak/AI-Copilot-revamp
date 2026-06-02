@@ -76,7 +76,7 @@ export default function CopilotBottomNav({
               {moreMenuOpen && hasMoreMenu ? (
                 <div
                   role="menu"
-                  className="absolute bottom-full left-1/2 z-[60] mb-2 w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-lg border border-[#242424] bg-[#121212] py-1 shadow-lg"
+                  className="absolute bottom-full left-1/2 z-[60] mb-2 w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-lg border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
                 >
                   {typeof onCopilotTutorial === "function" ? (
                     <button

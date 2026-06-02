@@ -26,7 +26,7 @@
 - **Aquamarine (accent):** `#00F3B6`
 - **Semantic red / destructive:** `#D53D3D`
 - **Semantic green / success:** `#269755`
-- **Neutral ramp:** `#000000` → `#121212` → `#242424` → `#313131` → … → `#BFBFBF` (muted text) → … → `#FFFFFF`
+- **Neutral ramp:** `#000000` → `#0f0f0f` → `#242424` → `#313131` → … → `#BFBFBF` (muted text) → … → `#FFFFFF`
 - **Raw ramp** exposed as `--palette-*` in `design-tokens.css` and `rawPalette` in `tokens/colors.ts`.
 
 ### Spacing (named steps → px)

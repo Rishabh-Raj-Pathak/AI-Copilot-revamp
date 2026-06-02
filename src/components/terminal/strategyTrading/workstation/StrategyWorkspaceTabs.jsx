@@ -70,7 +70,7 @@ function EmptySectionTable({ columns, message, subtitle, theme }) {
 
   if (theme?.isV2) {
     return (
-      <div className="overflow-hidden rounded-xl border border-[#242424] bg-[#121212]">
+      <div className="overflow-hidden rounded-xl border border-[#242424] bg-[#0f0f0f]">
         <ScrollFade
           axis="x"
           fadeColor="var(--ds-copilot-v2-elevated)"
@@ -574,7 +574,7 @@ function PaperTradingSummary({ strategy, pos, innerCard, theme, embedded = false
       </p>
       {pos ? (
         <div
-          className={`p-3 ${theme.isV2 ? "rounded-lg border border-[#242424] bg-[#121212]" : innerCard}`}
+          className={`p-3 ${theme.isV2 ? "rounded-lg border border-[#242424] bg-[#0f0f0f]" : innerCard}`}
         >
           <p className="text-xs font-semibold text-white">
             {pos.market} {pos.side}

@@ -86,7 +86,7 @@ export default function VaultsPositionsHistoryTable() {
 
         <div className="mt-8 flex min-w-0 max-w-full overflow-x-auto pb-0.5 [scrollbar-width:thin]">
           <div
-            className="inline-flex h-[49px] shrink-0 items-center gap-1 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#121212] p-1"
+            className="inline-flex h-[49px] shrink-0 items-center gap-1 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#0f0f0f] p-1"
             role="tablist"
             aria-label="Venue filters for positions table"
           >

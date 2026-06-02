@@ -160,7 +160,7 @@ export default function HeaderTerminal({
           {mobileNavOpen ? (
             <nav
               id="terminal-mobile-nav"
-              className="absolute left-0 top-full z-[120] mt-1 max-h-[min(70dvh,20rem)] min-w-[12rem] overflow-y-auto rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
+              className="absolute left-0 top-full z-[120] mt-1 max-h-[min(70dvh,20rem)] min-w-[12rem] overflow-y-auto rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
             >
               {nav.map((label) => {
                 const active = label === activeNavItem;
@@ -323,7 +323,7 @@ export default function HeaderTerminal({
             ) : null}
             {moreMenuOpen && moreMenuHasTutorial ? (
               <div
-                className="absolute right-0 top-full z-[120] mt-1 min-w-[12.5rem] rounded-md border border-[#242424] bg-[#121212] py-1 shadow-lg"
+                className="absolute right-0 top-full z-[120] mt-1 min-w-[12.5rem] rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
                 role="menu"
               >
                 {showCopilotTutorialItem ? (

@@ -129,10 +129,14 @@ export default function StrategySidebar({
 }) {
   const [search, setSearch] = useState("");
   const theme = useCopilotTheme();
+  const sidebarPanelClass =
+    theme.isV2 && !theme.isV3
+      ? "border-[#242424] bg-[rgba(15,15,15,1)]"
+      : theme.panel;
 
   return (
     <aside
-      className={`flex h-full w-full min-h-0 flex-col border-r border-r-[#242424] ${theme.panel}`}
+      className={`flex h-full w-full min-h-0 flex-col border-r border-r-[#242424] ${sidebarPanelClass}`}
     >
       <div
         className={`shrink-0 border-b p-3 ${theme.panel} ${theme.isV2 ? "border-[#242424]" : ""}`}

@@ -396,7 +396,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                         <Checkbox checked={earlyExit} onChange={setEarlyExit} />
                       </div>
                       <div className="minimal-scrollbar overflow-x-auto overflow-y-hidden rounded-lg border border-[#242424] max-tablet:-mx-0.5">
-                        <div className="flex border-b border-[#242424] bg-[#121212] text-[10px] text-[#bfbfbf]">
+                        <div className="flex border-b border-[#242424] bg-[#0f0f0f] text-[10px] text-[#bfbfbf]">
                           <div className="flex min-w-0 flex-1 items-center justify-center px-3 py-3">
                             Take Profit
                           </div>

@@ -611,7 +611,7 @@ export default function StrategyPromptBox({
             className={`mt-2 rounded-xl border p-3 ${
               theme.isV2
                 ? "border-white/8 bg-[#141414]"
-                : "border-[#2a2a2a] bg-[#121212]"
+                : "border-[#2a2a2a] bg-[#0f0f0f]"
             }`}
           >
             <label className="text-[10px] text-[#757575]">

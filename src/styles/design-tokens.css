@@ -11,7 +11,7 @@
    * Semantic tokens below reference these for traceability.
    */
   --palette-neutral-0: #000000;
-  --palette-neutral-5: #121212;
+  --palette-neutral-5: #0f0f0f;
   --palette-neutral-10: #242424;
   /* Between 10 and 15 — terminal outline controls on pure black (e.g. Backtest) */
   --palette-neutral-12: #333333;
@@ -237,7 +237,7 @@
   /* Strategy Copilot V2 — lime-to-mint brand (no yellow accent system) */
   --ds-copilot-v2-bg: #050706;
   --ds-copilot-v2-surface: #101312;
-  --ds-copilot-v2-elevated: #121212;
+  --ds-copilot-v2-elevated: #0f0f0f;
   --ds-copilot-v2-border: rgb(255 255 255 / 0.06);
   --ds-copilot-v2-divider: rgb(255 255 255 / 0.04);
   --ds-copilot-v2-mint: #00f3b6;
@@ -721,6 +721,41 @@ dialog::backdrop {
   .ds-strategy-composer-shell--chat {
     min-height: auto;
     border-radius: 1rem;
+  }
+
+  /** New-strategy template cards — default: flat border; selected: composer gradient border */
+  .ds-strategy-template-card {
+    border-radius: var(--ds-radius-xl);
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: linear-gradient(
+      180deg,
+      rgb(12 17 18 / 0.96) 0%,
+      rgb(6 10 11 / 0.98) 100%
+    );
+    box-shadow: none;
+  }
+
+  .ds-strategy-template-card:hover:not(.ds-strategy-template-card--selected) {
+    border-color: rgb(255 255 255 / 0.12);
+    background: linear-gradient(
+      180deg,
+      rgb(14 20 21 / 0.97) 0%,
+      rgb(7 12 12 / 0.99) 100%
+    );
+  }
+
+  .ds-strategy-template-card--selected {
+    border: 0.3px solid transparent;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(12 17 18 / 0.96) 0%,
+        rgb(6 10 11 / 0.98) 100%
+      ),
+      linear-gradient(90deg, rgb(242 181 0 / 0.5) 0%, rgb(0 243 182 / 0.5) 100%);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: none;
   }
 
   .ds-strategy-composer-cursor {

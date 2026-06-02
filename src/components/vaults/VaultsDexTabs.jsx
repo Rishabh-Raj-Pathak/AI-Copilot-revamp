@@ -20,7 +20,7 @@ export default function VaultsDexTabs({ activeId, onChange, tabs }) {
       data-tour="vaults-dex-tabs"
     >
       <div
-        className="inline-flex h-[49px] shrink-0 items-center gap-1 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#121212] p-1"
+        className="inline-flex h-[49px] shrink-0 items-center gap-1 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#0f0f0f] p-1"
         role="tablist"
         aria-label="Venue filters"
       >

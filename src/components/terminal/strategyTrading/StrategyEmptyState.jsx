@@ -18,7 +18,7 @@ export default function StrategyEmptyState({ onActionClick }) {
             key={action.id}
             type="button"
             onClick={() => onActionClick(action.prompt)}
-            className="rounded-lg border border-[#242424] bg-[#0a0a0a] p-3.5 text-left transition-colors hover:border-[#454545] hover:bg-[#121212]"
+            className="rounded-lg border border-[#242424] bg-[#0a0a0a] p-3.5 text-left transition-colors hover:border-[#454545] hover:bg-[#0f0f0f]"
           >
             <p className="text-sm font-semibold text-white">{action.title}</p>
             <p className="mt-1 text-xs leading-relaxed text-[#929292]">

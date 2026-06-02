@@ -7,7 +7,7 @@ export default function OnboardingOverlay({ open, onDismiss }) {
       role="presentation"
     >
       <div
-        className="w-full max-w-md rounded-t-2xl border border-[#242424] border-b-0 bg-[#121212] p-5 shadow-2xl max-tablet:max-h-[min(92dvh,36rem)] max-tablet:overflow-y-auto max-tablet:overscroll-y-contain max-tablet:pb-[max(1.25rem,env(safe-area-inset-bottom))] tablet:rounded-xl tablet:border-b tablet:p-6"
+        className="w-full max-w-md rounded-t-2xl border border-[#242424] border-b-0 bg-[#0f0f0f] p-5 shadow-2xl max-tablet:max-h-[min(92dvh,36rem)] max-tablet:overflow-y-auto max-tablet:overscroll-y-contain max-tablet:pb-[max(1.25rem,env(safe-area-inset-bottom))] tablet:rounded-xl tablet:border-b tablet:p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="copilot-welcome-title"

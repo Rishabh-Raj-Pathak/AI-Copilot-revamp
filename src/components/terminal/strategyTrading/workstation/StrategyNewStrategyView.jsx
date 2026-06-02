@@ -7,25 +7,8 @@ import ScrollFade from "./ScrollFade.jsx";
 import StrategyTemplateIllustration from "./StrategyTemplateIllustration.jsx";
 
 function StrategyTemplateCard({ template, selected, onSelect }) {
-  const cardBorder = "rgba(255,255,255,0.06)";
-  const cardSurfaceGradient =
-    "linear-gradient(180deg, rgba(13,18,15,0.98) 0%, rgba(5,8,7,0.99) 100%)";
-  const cardBorderGradient =
-    "linear-gradient(90deg, rgba(242,181,0,0.55) 0%, rgba(0,243,182,0.72) 100%)";
   const panelSurface =
     "linear-gradient(180deg, rgba(8,12,10,0.92) 0%, rgba(4,7,6,0.96) 100%)";
-  const cardSurfaceHighlight = "inset 0 1px 0 rgba(255,255,255,0.05)";
-  const cardInnerShadowBase = `${cardSurfaceHighlight}, inset 0 -18px 36px rgba(0,0,0,0.28)`;
-  const cardInnerShadowHover = `${cardSurfaceHighlight}, inset 0 -20px 40px rgba(0,0,0,0.32)`;
-  const cardInnerShadowSelected = [
-    cardSurfaceHighlight,
-    "inset 0 -22px 44px rgba(0,0,0,0.34)",
-    "inset 0.5px 0 0 rgba(230,210,30,0.08)",
-    "inset -0.5px 0 0 rgba(45,255,190,0.1)",
-    "0 0 0 1px rgba(0,243,182,0.14)",
-    "0 0 28px rgba(0,243,182,0.12)",
-    "0 8px 32px rgba(0,0,0,0.38)",
-  ].join(", ");
   const details = [
     { label: "Asset", value: template.cardAsset ?? template.asset },
     { label: "Timeframe", value: template.cardTimeframe ?? template.timeframe },
@@ -40,28 +23,9 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
       type="button"
       onClick={() => onSelect(template)}
       aria-pressed={selected}
-      className={`group relative flex min-h-[272px] flex-col overflow-hidden rounded-[var(--ds-radius-xl)] border text-left transition-all duration-200 ${
-        selected ? "" : "hover:brightness-[1.02]"
+      className={`ds-strategy-template-card group relative flex min-h-[272px] flex-col overflow-hidden text-left transition-colors duration-200${
+        selected ? " ds-strategy-template-card--selected" : ""
       }`}
-      style={{
-        background: selected
-          ? `${cardSurfaceGradient} padding-box, ${cardBorderGradient} border-box`
-          : cardSurfaceGradient,
-        backgroundOrigin: selected ? "padding-box, border-box" : undefined,
-        backgroundClip: selected ? "padding-box, border-box" : undefined,
-        borderColor: selected ? "transparent" : cardBorder,
-        borderWidth: selected ? "1px" : "1px",
-        boxShadow: selected ? cardInnerShadowSelected : cardInnerShadowBase,
-      }}
-      onMouseEnter={(event) => {
-        if (!selected)
-          event.currentTarget.style.boxShadow = cardInnerShadowHover;
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.boxShadow = selected
-          ? cardInnerShadowSelected
-          : cardInnerShadowBase;
-      }}
     >
       <div className="relative z-10 px-5 pb-1 pt-5">
         <h3 className="text-[20px] font-semibold leading-tight tracking-[-0.02em] text-[#F4F7F2]">

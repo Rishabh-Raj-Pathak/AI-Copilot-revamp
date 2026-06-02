@@ -446,7 +446,7 @@ function LegacySection({ title, children, theme }) {
         className={
           theme.isV2
             ? "space-y-1 rounded-xl border border-white/6 bg-[var(--ds-copilot-v2-surface)] p-2.5"
-            : "space-y-1 rounded-lg border border-[#242424] bg-[#121212] p-2.5"
+            : "space-y-1 rounded-lg border border-[#242424] bg-[#0f0f0f] p-2.5"
         }
       >
         {children}

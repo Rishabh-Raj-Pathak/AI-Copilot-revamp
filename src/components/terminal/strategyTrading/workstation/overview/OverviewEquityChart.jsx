@@ -65,7 +65,7 @@ export default function OverviewEquityChart({ bt, range }) {
   const shellClass = theme.isV3
     ? "border-b border-white/6 py-5"
     : theme.isV2
-      ? "rounded-xl border border-[#242424] bg-[#121212] p-4"
+      ? "rounded-xl border border-[#242424] bg-[#0f0f0f] p-4"
       : "rounded-xl border border-[#2a2a2a] bg-[#141414] p-4";
   const legendStrategyClass = theme.isV2
     ? "flex items-center gap-1.5 text-[#00F3B6]"

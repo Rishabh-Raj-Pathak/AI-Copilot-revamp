@@ -166,7 +166,7 @@ export default function ChatModelPicker({
             : `max-w-42 gap-1.5 sm:max-w-48 ${
                 theme.isV2
                   ? "rounded-full border border-white/10 bg-[#141414] px-2.5 py-1.5 hover:border-white/16 hover:bg-[#1f1f1f]"
-                  : "rounded-lg border border-[#242424] bg-[#121212] px-2 py-1 hover:border-[#454545]"
+                  : "rounded-lg border border-[#242424] bg-[#0f0f0f] px-2 py-1 hover:border-[#454545]"
               }`
         }`}
       >

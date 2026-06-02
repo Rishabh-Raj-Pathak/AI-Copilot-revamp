@@ -28,7 +28,7 @@ export default function SetupChip({ chip }) {
 
   if (chip.kind === 'review') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-[#242424] bg-[#121212] px-2 py-0.5 text-xs font-medium text-white">
+      <span className="inline-flex items-center gap-1 rounded-full border border-[#242424] bg-[#0f0f0f] px-2 py-0.5 text-xs font-medium text-white">
         <ClockIcon className="size-3 shrink-0 text-[#bfbfbf]" />
         {chip.label}
       </span>
@@ -37,7 +37,7 @@ export default function SetupChip({ chip }) {
 
   if (chip.kind === 'muted') {
     return (
-      <span className="rounded-full border border-[#242424] bg-[#121212] px-2 py-0.5 text-xs font-medium text-white">
+      <span className="rounded-full border border-[#242424] bg-[#0f0f0f] px-2 py-0.5 text-xs font-medium text-white">
         {chip.label}
       </span>
     )
@@ -51,14 +51,14 @@ export default function SetupChip({ chip }) {
 
   if (chip.kind === 'range') {
     return (
-      <span className="rounded-full border border-[#242424] bg-[#121212] px-2.5 py-0.5 text-xs font-medium text-[#bfbfbf]">
+      <span className="rounded-full border border-[#242424] bg-[#0f0f0f] px-2.5 py-0.5 text-xs font-medium text-[#bfbfbf]">
         {chip.label}
       </span>
     )
   }
 
   return (
-    <span className="rounded-full border border-[#242424] bg-[#121212] px-2 py-0.5 text-xs font-medium text-white">
+    <span className="rounded-full border border-[#242424] bg-[#0f0f0f] px-2 py-0.5 text-xs font-medium text-white">
       {chip.label}
     </span>
   )

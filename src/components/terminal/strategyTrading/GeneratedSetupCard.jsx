@@ -11,7 +11,7 @@ function directionVariant(dir) {
 
 function MetricTile({ label, value }) {
   return (
-    <div className="rounded-md border border-[#242424] bg-[#121212] px-3 py-2.5">
+    <div className="rounded-md border border-[#242424] bg-[#0f0f0f] px-3 py-2.5">
       <p className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
         {label}
       </p>
