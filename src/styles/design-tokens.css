@@ -36,8 +36,8 @@
   --palette-red-50: #d53d3d;
   --palette-green-55: #269755;
   /* Terminal navbar — Connect Wallet CTA (Figma Terminal `1017:35291`) */
-  --palette-terminal-connect-wallet-start: #f1d302;
-  --palette-terminal-connect-wallet-end: #24e5af;
+  --palette-terminal-connect-wallet-start: #f2b500;
+  --palette-terminal-connect-wallet-end: #00f3b6;
 
   /* Surfaces (neutral ramp) */
   --ds-background: var(--palette-neutral-0);
@@ -240,13 +240,13 @@
   --ds-copilot-v2-elevated: #141716;
   --ds-copilot-v2-border: rgb(255 255 255 / 0.06);
   --ds-copilot-v2-divider: rgb(255 255 255 / 0.04);
-  --ds-copilot-v2-mint: #47b881;
+  --ds-copilot-v2-mint: #00f3b6;
   --ds-copilot-v2-positive: #34d399;
   --ds-copilot-v2-negative: #f87171;
   --ds-copilot-v2-text-primary: rgb(255 255 255 / 0.92);
   --ds-copilot-v2-text-secondary: rgb(255 255 255 / 0.58);
   --ds-copilot-v2-text-muted: rgb(255 255 255 / 0.36);
-  --ds-copilot-v2-gradient: linear-gradient(90deg, #d7f70b 0%, #16e6a3 100%);
+  --ds-copilot-v2-gradient: linear-gradient(90deg, #f2b500 0%, #00f3b6 100%);
   --ds-copilot-v2-gradient-fg: #030504;
   --ds-copilot-v2-scroll-fade-size-y: 1rem;
   --ds-copilot-v2-scroll-fade-size-x: 1.25rem;
@@ -814,9 +814,9 @@ dialog::backdrop {
   .ds-strategy-sidebar-row-active {
     background: linear-gradient(
       90deg,
-      rgb(71 184 129 / 0.22) 9%,
-      rgb(71 184 129 / 0.12) 52%,
-      rgb(71 184 129 / 0.04) 75%,
+      rgb(0 243 182 / 0.22) 9%,
+      rgb(0 243 182 / 0.12) 52%,
+      rgb(0 243 182 / 0.04) 75%,
       transparent 100%
     );
   }
@@ -864,7 +864,7 @@ dialog::backdrop {
 
   .ds-copilot-v2-gradient-cta:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px rgb(25 230 163 / 0.35);
+    box-shadow: 0 0 0 2px rgb(0 243 182 / 0.35);
   }
 
   .ds-copilot-v2-gradient-cta:active {
@@ -912,7 +912,7 @@ dialog::backdrop {
     padding: var(--ds-terminal-connect-wallet-padding-y)
       var(--ds-terminal-connect-wallet-padding-x);
     border-radius: var(--ds-terminal-connect-wallet-radius);
-    border: 1px solid rgb(25 230 163 / 0.16);
+    border: 1px solid rgb(0 243 182 / 0.16);
     background: rgb(255 255 255 / 0.04);
     color: rgb(255 255 255 / 0.88);
     font-family: var(--ds-font-sans);
@@ -926,7 +926,7 @@ dialog::backdrop {
   }
 
   .ds-copilot-v2-btn-optimize:hover {
-    border-color: rgb(25 230 163 / 0.28);
+    border-color: rgb(0 243 182 / 0.28);
     background: rgb(255 255 255 / 0.06);
   }
 

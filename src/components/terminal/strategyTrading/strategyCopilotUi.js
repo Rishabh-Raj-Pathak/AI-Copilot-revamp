@@ -75,7 +75,7 @@ export function getCopilotTheme(version) {
       ? "rounded-lg border border-white/6 bg-[#0D100F] text-[rgba(255,255,255,0.92)] placeholder:text-[rgba(255,255,255,0.36)] focus:border-[var(--ds-copilot-v2-mint)]/30 focus:outline-none"
       : "rounded-md border border-[#242424] bg-black text-white placeholder:text-[#585858] focus:border-[#454545] focus:outline-none",
     filterActive: isV2
-      ? "shrink-0 rounded-full border border-[rgba(72,183,128,0.5)] bg-transparent px-2.5 py-1 text-[10px] font-medium text-[rgb(71,184,129)]"
+      ? "shrink-0 rounded-full border border-[rgba(0,243,182,0.5)] bg-transparent px-2.5 py-1 text-[10px] font-medium text-[rgb(0,243,182)]"
       : "rounded-md bg-[#3e2e00] px-2 py-1 text-[10px] font-medium text-[#f2b500]",
     filterIdle: isV2
       ? "shrink-0 rounded-full border border-white/[0.05] bg-[rgba(255,255,255,0.02)] px-2.5 py-1 text-[10px] font-medium text-[rgba(255,255,255,0.36)] transition-colors hover:border-white/10 hover:text-[rgba(255,255,255,0.58)]"
@@ -157,10 +157,10 @@ export function getCopilotTheme(version) {
       ? "shrink-0 rounded-full border border-white/6 bg-[#141716] px-3 py-1.5 text-[11px] text-[rgba(255,255,255,0.36)] transition-colors hover:border-white/10 hover:bg-[#171a18] hover:text-[rgba(255,255,255,0.58)]"
       : "shrink-0 rounded-md border border-[#242424] px-2 py-0.5 text-[10px] text-[#929292] hover:border-[#454545] hover:text-white",
     chatPromptShell: isV2
-      ? "group/composer relative z-10 rounded-2xl border border-white/6 bg-[#141716] p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] transition-[border-color,box-shadow] duration-200 focus-within:border-[var(--ds-copilot-v2-mint)]/22 focus-within:shadow-[0_-8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(71,184,129,0.08)]"
+      ? "group/composer relative z-10 rounded-2xl border border-white/6 bg-[#141716] p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] transition-[border-color,box-shadow] duration-200 focus-within:border-[var(--ds-copilot-v2-mint)]/22 focus-within:shadow-[0_-8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,243,182,0.08)]"
       : "relative rounded-xl border border-[#242424] bg-[#0a0a0a] p-2",
     chatSendBtn: isV2
-      ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#D7F70B] to-[#16E6A3] text-[#030504] shadow-[0_1px_2px_rgba(0,0,0,0.35)] transition-all duration-150 hover:brightness-[1.05] active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-[#1a1e1c] disabled:text-[rgba(255,255,255,0.36)] disabled:shadow-none disabled:hover:scale-100"
+      ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#F2B500] to-[#00F3B6] text-[#030504] shadow-[0_1px_2px_rgba(0,0,0,0.35)] transition-all duration-150 hover:brightness-[1.05] active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-[#1a1e1c] disabled:text-[rgba(255,255,255,0.36)] disabled:shadow-none disabled:hover:scale-100"
       : "size-8! rounded-full! p-0!",
     chatComposerFooter: isV2
       ? "relative z-20 shrink-0 bg-gradient-to-t from-[#050706] via-[#050706]/98 to-transparent px-3.5 pb-3.5 pt-1"
@@ -170,7 +170,7 @@ export function getCopilotTheme(version) {
       ? "rounded-xl border border-white/6 bg-[#101312] p-4"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a] p-3 sm:p-4",
     flowStepNum: isV2
-      ? "flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#D7F70B] to-[#16E6A3] text-xs font-bold text-[#030504]"
+      ? "flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#F2B500] to-[#00F3B6] text-xs font-bold text-[#030504]"
       : "flex size-5 shrink-0 items-center justify-center rounded-md bg-[#171200] text-[10px] font-semibold text-[#f2b500]",
     versionSelect: isV2
       ? "!min-h-8 !rounded-lg !border-white/6 !bg-[#0D100F] !text-[11px] !font-medium"
@@ -224,7 +224,7 @@ export function getCopilotTheme(version) {
     input:
       "rounded-md border border-white/[0.06] bg-[#0a0b0a] text-[rgba(255,255,255,0.94)] placeholder:text-[rgba(255,255,255,0.45)] focus:border-[var(--ds-copilot-v2-mint)]/35 focus:outline-none",
     filterActive:
-      "shrink-0 rounded-md border border-[rgba(72,183,128,0.5)] bg-transparent px-2 py-0.5 text-[10px] font-medium text-[rgb(71,184,129)]",
+      "shrink-0 rounded-md border border-[rgba(0,243,182,0.5)] bg-transparent px-2 py-0.5 text-[10px] font-medium text-[rgb(0,243,182)]",
     filterIdle:
       "shrink-0 rounded-md border border-transparent px-2 py-0.5 text-[10px] font-medium text-[rgba(255,255,255,0.48)] transition-colors hover:bg-white/[0.03] hover:text-[rgba(255,255,255,0.72)]",
     strategyCard:

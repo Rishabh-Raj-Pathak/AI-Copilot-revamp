@@ -68,11 +68,11 @@ export default function OverviewEquityChart({ bt, range }) {
       ? "rounded-xl border border-white/6 bg-[#141716] p-4"
       : "rounded-xl border border-[#2a2a2a] bg-[#141414] p-4";
   const legendStrategyClass = theme.isV2
-    ? "flex items-center gap-1.5 text-[#19E6A3]"
+    ? "flex items-center gap-1.5 text-[#00F3B6]"
     : "flex items-center gap-1.5 text-[#f2b500]";
-  const legendLineClass = theme.isV2 ? "bg-[#19E6A3]" : "bg-[#f2b500]";
-  const fillTop = theme.isV2 ? "#19E6A3" : "#f2b500";
-  const strokeLine = theme.isV2 ? "#16E6A3" : "#f2b500";
+  const legendLineClass = theme.isV2 ? "bg-[#00F3B6]" : "bg-[#f2b500]";
+  const fillTop = theme.isV2 ? "#00F3B6" : "#f2b500";
+  const strokeLine = theme.isV2 ? "#00F3B6" : "#f2b500";
 
   const chartSvg = (
     <svg

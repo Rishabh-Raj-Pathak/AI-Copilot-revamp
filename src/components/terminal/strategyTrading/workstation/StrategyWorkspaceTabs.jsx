@@ -256,19 +256,19 @@ function EquityCurveMock({ theme, compact }) {
       <svg viewBox="0 0 240 56" className={`mt-3 w-full ${chartH}`} aria-hidden>
         <defs>
           <linearGradient id="eq-fill-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#19E6A3" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#19E6A3" stopOpacity="0" />
+            <stop offset="0%" stopColor="#00F3B6" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#00F3B6" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="eq-line-gradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#D7F70B" />
-            <stop offset="100%" stopColor="#16E6A3" />
+            <stop offset="0%" stopColor="#F2B500" />
+            <stop offset="100%" stopColor="#00F3B6" />
           </linearGradient>
           <filter id="eq-glow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow
               dx="0"
               dy="0"
               stdDeviation="1.5"
-              floodColor="#19E6A3"
+              floodColor="#00F3B6"
               floodOpacity="0.35"
             />
           </filter>
@@ -302,12 +302,12 @@ function EquityCurveMock({ theme, compact }) {
           strokeDasharray="4 3"
           strokeLinecap="round"
         />
-        <circle cx="232" cy="11" r="2.4" fill="#19E6A3" />
+        <circle cx="232" cy="11" r="2.4" fill="#00F3B6" />
         <circle cx="232" cy="15" r="2" fill="#7b7b7b" />
       </svg>
       <div className="mt-2.5 flex gap-4 text-[10px]">
-        <span className="flex items-center gap-1.5 text-[#19E6A3]">
-          <span className="inline-block h-px w-3 bg-[#19E6A3]" aria-hidden />
+        <span className="flex items-center gap-1.5 text-[#00F3B6]">
+          <span className="inline-block h-px w-3 bg-[#00F3B6]" aria-hidden />
           Strategy
         </span>
         <span className="flex items-center gap-1.5 text-[#585858]">
@@ -668,7 +668,7 @@ export default function StrategyWorkspaceTabs({
                     <span className="ml-1 inline-block size-1.5 rounded-full bg-[var(--ds-copilot-v2-mint)]" />
                   ) : null}
                   {t.id === "deployed" && isDeployed ? (
-                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[#19E6A3]" />
+                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00F3B6]" />
                   ) : null}
                 </TabsTrigger>
               ))}
@@ -687,7 +687,7 @@ export default function StrategyWorkspaceTabs({
                   <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
                 ) : null}
                 {t.id === "deployed" && isDeployed ? (
-                  <span className="ml-1 inline-block size-1.5 rounded-full bg-[#19E6A3]" />
+                  <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00F3B6]" />
                 ) : null}
               </TabsTrigger>
             ))}
@@ -920,7 +920,7 @@ export default function StrategyWorkspaceTabs({
                 <div className="space-y-1">
                   <p className="text-xs">
                     Status:{" "}
-                    <span className="font-medium text-[#19E6A3]">Deployed</span>
+                    <span className="font-medium text-[#00F3B6]">Deployed</span>
                   </p>
                   <p className="text-[11px] text-[#757575]">
                     Live execution monitoring — manual approval remains required

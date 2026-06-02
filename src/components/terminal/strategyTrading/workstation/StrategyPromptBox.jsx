@@ -441,7 +441,7 @@ export default function StrategyPromptBox({
                       className={`w-full px-3 py-2 text-left text-[11px] transition-colors hover:bg-white/5 ${
                         idx === highlightIdx
                           ? theme.isV2
-                            ? "bg-[#19E6A3]/10 text-white"
+                            ? "bg-[#00F3B6]/10 text-white"
                             : "bg-[#171200]/60 text-white"
                           : "text-[#bfbfbf]"
                       }`}
@@ -639,7 +639,7 @@ export default function StrategyPromptBox({
                 type="button"
                 className={
                   theme.isV2
-                    ? "rounded-md border border-[#19E6A3]/20 bg-[#19E6A3]/10 px-2.5 py-1 text-[10px] font-medium text-[#19E6A3]"
+                    ? "rounded-md border border-[#00F3B6]/20 bg-[#00F3B6]/10 px-2.5 py-1 text-[10px] font-medium text-[#00F3B6]"
                     : "rounded-md bg-[#3e2e00] px-2.5 py-1 text-[10px] font-medium text-[#f2b500]"
                 }
                 onClick={handleAddCode}

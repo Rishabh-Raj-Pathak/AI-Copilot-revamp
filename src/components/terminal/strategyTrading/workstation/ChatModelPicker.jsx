@@ -172,7 +172,7 @@ export default function ChatModelPicker({
       >
         {!isComposer ? (
           <Sparkles
-            className={`size-3 shrink-0 ${theme.isV2 ? "text-[#19E6A3]" : "text-[#f2b500]"}`}
+            className={`size-3 shrink-0 ${theme.isV2 ? "text-[#00F3B6]" : "text-[#f2b500]"}`}
             aria-hidden
           />
         ) : null}

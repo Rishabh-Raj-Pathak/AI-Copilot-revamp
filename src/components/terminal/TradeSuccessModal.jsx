@@ -6,8 +6,8 @@ import { terminalAssets as a } from "../../figma/terminalAssets.js";
 
 /** Brand-aligned confetti (terminal gradient CTA ramp + light highlights). */
 const CELEBRATION_COLORS = [
-  "#f1d302",
-  "#24e5af",
+  "#f2b500",
+  "#00f3b6",
   "#fefce8",
   "#f7bb08",
   "#2fffce",

@@ -14,7 +14,7 @@ const RICH_CARD_V2_BTN_BASE =
   "!h-8 !rounded-[var(--ds-terminal-connect-wallet-radius)] !text-[11px]";
 const RICH_CARD_V2_BTN_LEGACY = "!h-7 !rounded-md !text-[10px]";
 const RICH_CARD_V2_BTN_OUTLINE = `${RICH_CARD_V2_BTN_BASE} !border-white/10 !bg-[#181818] !text-[#cfcfcf] hover:!border-white/18 hover:!bg-[#212121]`;
-const RICH_CARD_V2_BTN_OPTIMIZE = `${RICH_CARD_V2_BTN_BASE} !border-[#19E6A3]/16 !bg-[rgba(255,255,255,0.04)] !text-[rgba(255,255,255,0.88)] hover:!border-[#19E6A3]/28`;
+const RICH_CARD_V2_BTN_OPTIMIZE = `${RICH_CARD_V2_BTN_BASE} !border-[#00F3B6]/16 !bg-[rgba(255,255,255,0.04)] !text-[rgba(255,255,255,0.88)] hover:!border-[#00F3B6]/28`;
 const RICH_CARD_V2_BTN_GRADIENT = `${RICH_CARD_V2_BTN_BASE} !border-0 !font-medium !shadow-none !text-[var(--ds-copilot-v2-gradient-fg)] hover:!text-[var(--ds-copilot-v2-gradient-fg)] ${COPILOT_V2_GRADIENT_CTA}`;
 
 const CONFIG_PRESET_BTN =
@@ -290,7 +290,7 @@ function PaperCard({ data, onViewPosition, onReview }) {
       <p
         className={
           theme.isV2
-            ? "border-b border-white/5 px-4 py-3 text-[12px] font-semibold text-[#19E6A3]"
+            ? "border-b border-white/5 px-4 py-3 text-[12px] font-semibold text-[#00F3B6]"
             : "text-[11px] font-semibold text-[#00f3b6]"
         }
       >

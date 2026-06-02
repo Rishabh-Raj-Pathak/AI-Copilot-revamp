@@ -550,7 +550,7 @@ export default function StrategyTradingPage({
             onClick={() => setMobilePanel(p.id)}
             className={`flex-1 py-2.5 text-xs font-medium ${
               mobilePanel === p.id
-                ? `border-b-2 ${theme.isV2 ? "border-[#19E6A3] text-[rgba(255,255,255,0.92)]" : "border-[#f2b500] text-[#f2b500]"}`
+                ? `border-b-2 ${theme.isV2 ? "border-[#00F3B6] text-[rgba(255,255,255,0.92)]" : "border-[#f2b500] text-[#f2b500]"}`
                 : "text-[#929292]"
             }`}
           >

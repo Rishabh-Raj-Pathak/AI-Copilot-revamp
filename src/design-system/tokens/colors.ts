@@ -27,7 +27,7 @@ export const rawPalette = {
   amber: { 70: '#f2b500', 5: '#171200' },
   aquamarine: { 80: '#00f3b6', 5: '#001610' },
   /** Figma Terminal `1017:35291` — navbar Connect Wallet pill gradient */
-  terminalConnectWallet: { start: '#f1d302', end: '#24e5af' },
+  terminalConnectWallet: { start: '#f2b500', end: '#00f3b6' },
   semantic: { red: '#d53d3d', green: '#269755' },
 } as const
 

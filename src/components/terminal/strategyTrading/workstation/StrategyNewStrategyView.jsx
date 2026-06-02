@@ -11,7 +11,7 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
   const cardSurfaceGradient =
     "linear-gradient(180deg, rgba(13,18,15,0.98) 0%, rgba(5,8,7,0.99) 100%)";
   const cardBorderGradient =
-    "linear-gradient(90deg, rgba(242,181,0,0.55) 0%, rgba(25,230,163,0.72) 100%)";
+    "linear-gradient(90deg, rgba(242,181,0,0.55) 0%, rgba(0,243,182,0.72) 100%)";
   const panelSurface =
     "linear-gradient(180deg, rgba(8,12,10,0.92) 0%, rgba(4,7,6,0.96) 100%)";
   const cardSurfaceHighlight = "inset 0 1px 0 rgba(255,255,255,0.05)";
@@ -22,8 +22,8 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
     "inset 0 -22px 44px rgba(0,0,0,0.34)",
     "inset 0.5px 0 0 rgba(230,210,30,0.08)",
     "inset -0.5px 0 0 rgba(45,255,190,0.1)",
-    "0 0 0 1px rgba(25,230,163,0.14)",
-    "0 0 28px rgba(25,230,163,0.12)",
+    "0 0 0 1px rgba(0,243,182,0.14)",
+    "0 0 28px rgba(0,243,182,0.12)",
     "0 8px 32px rgba(0,0,0,0.38)",
   ].join(", ");
   const details = [
@@ -104,7 +104,7 @@ function StrategyTemplateCard({ template, selected, onSelect }) {
                       <Icon
                         size={15}
                         strokeWidth={1.6}
-                        className="text-[#19E6A3]/70"
+                        className="text-[#00F3B6]/70"
                       />
                       <span className="text-[12px] text-[rgba(244,247,242,0.55)]">
                         {item.label}
