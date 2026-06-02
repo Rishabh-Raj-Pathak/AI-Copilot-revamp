@@ -175,67 +175,69 @@ export default function StrategyNewStrategyView({
         className="relative flex min-h-full flex-1 flex-col"
         onMouseMove={handleBgMove}
         onMouseEnter={() => setBgPointer((prev) => ({ ...prev, active: true }))}
-        onMouseLeave={() => setBgPointer((prev) => ({ ...prev, active: false }))}
+        onMouseLeave={() =>
+          setBgPointer((prev) => ({ ...prev, active: false }))
+        }
       >
-      <StrategyInteractiveDotBackground
-        width={bgSize.width}
-        height={bgSize.height}
-        pointerX={bgPointer.x}
-        pointerY={bgPointer.y}
-        hoverActive={bgPointer.active}
-      />
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 py-8 sm:px-6 sm:py-10">
-        <header className="mb-8 text-center sm:mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-[2.55rem]">
-            Turn Ideas Into{" "}
-            <span
-              className="bg-clip-text text-transparent"
-              style={{
-                backgroundImage: "var(--ds-copilot-v2-gradient)",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Strategies
-            </span>
-          </h1>
-        </header>
+        <StrategyInteractiveDotBackground
+          width={bgSize.width}
+          height={bgSize.height}
+          pointerX={bgPointer.x}
+          pointerY={bgPointer.y}
+          hoverActive={bgPointer.active}
+        />
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 py-8 sm:px-6 sm:py-10">
+          <header className="mb-8 text-center sm:mb-10">
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-[2.55rem]">
+              Turn Ideas Into{" "}
+              <span
+                className="bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: "var(--ds-copilot-v2-gradient)",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Strategies
+              </span>
+            </h1>
+          </header>
 
-        <div className="mx-auto w-full max-w-222">
-          <div className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {CENTER_TEMPLATES.slice(0, 3).map((t) => (
-              <StrategyTemplateCard
-                key={t.id}
-                template={t}
-                selected={t.id === activeTemplateId}
-                onSelect={handleSelect}
-              />
-            ))}
-          </div>
+          <div className="mx-auto w-full max-w-222">
+            <div className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {CENTER_TEMPLATES.slice(0, 3).map((t) => (
+                <StrategyTemplateCard
+                  key={t.id}
+                  template={t}
+                  selected={t.id === activeTemplateId}
+                  onSelect={handleSelect}
+                />
+              ))}
+            </div>
 
-          <div className="mt-8 sm:mt-10">
-            <div
-              className="ds-strategy-composer-stage relative z-0"
-              style={{ "--ds-strategy-composer-shell-width": "100%" }}
-            >
-              {/* <div className="ds-strategy-composer-glow" aria-hidden /> */}
-              <StrategyPromptBox
-                className="w-full"
-                variant="composer"
-                value={prompt}
-                onChange={onPromptChange}
-                onSubmit={onSubmit}
-                loading={loading}
-                chatModelId={chatModelId}
-                onChatModelChange={onChatModelChange}
-                attachments={attachments}
-                onAttachmentsChange={onAttachmentsChange}
-                enableSuggestions
-                placeholder="Describe your trading idea in plain language, upload an image, a video, or code."
-              />
+            <div className="mt-8 sm:mt-10">
+              <div
+                className="ds-strategy-composer-stage relative z-0"
+                style={{ "--ds-strategy-composer-shell-width": "100%" }}
+              >
+                {/* <div className="ds-strategy-composer-glow" aria-hidden /> */}
+                <StrategyPromptBox
+                  className="w-full"
+                  variant="composer"
+                  value={prompt}
+                  onChange={onPromptChange}
+                  onSubmit={onSubmit}
+                  loading={loading}
+                  chatModelId={chatModelId}
+                  onChatModelChange={onChatModelChange}
+                  attachments={attachments}
+                  onAttachmentsChange={onAttachmentsChange}
+                  enableSuggestions
+                  placeholder="Describe your trading idea in plain language, upload an image, a video, or code."
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </ScrollFade>
   );

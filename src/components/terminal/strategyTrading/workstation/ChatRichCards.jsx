@@ -106,7 +106,7 @@ function BacktestCard({ data, onViewBacktest, onStartPaper, onOptimize }) {
   const theme = useCopilotTheme();
   const cells = [
     ["Total Return", data.totalReturn, "text-[var(--ds-copilot-v2-positive)]"],
-    ["Max Drawdown", data.maxDrawdown, "text-[#d53d3d]"],
+    ["Max Drawdown", data.maxDrawdown, "text-[var(--ds-copilot-v2-negative)]"],
     ["Win Rate", data.winRate, "text-[#f4f4f4]"],
     ["Sharpe", data.sharpeRatio, "text-[#f4f4f4]"],
     ["Trades", String(data.trades), "text-[#f4f4f4]"],

@@ -7,8 +7,8 @@ export const COPILOT_V2_BTN_OPTIMIZE = "ds-copilot-v2-btn-optimize";
 /** Mint accent — active states, links, icons */
 export const COPILOT_V2_MINT = "#47B881";
 /** Positive PnL / gains */
-export const COPILOT_V2_POSITIVE = "#34D399";
-export const COPILOT_V2_NEGATIVE = "#F87171";
+export const COPILOT_V2_POSITIVE = "#269755";
+export const COPILOT_V2_NEGATIVE = "#D53D3D";
 
 /** Tailwind class fragments for V2 semantic colors */
 export const COPILOT_V2_TEXT_PRIMARY =
@@ -137,7 +137,7 @@ export function getCopilotTheme(version) {
       ? "ds-scrollbar-hidden overflow-x-auto"
       : "minimal-scrollbar overflow-x-auto",
     tabsTrigger: isV2
-      ? "!shrink-0 !min-h-0 !rounded-none !border-0 !border-b-2 !border-transparent !bg-transparent !px-4 !py-2.5 !text-xs !font-medium !shadow-none text-[rgba(255,255,255,0.36)] hover:text-[rgba(255,255,255,0.72)] aria-selected:!border-[var(--ds-copilot-v2-mint)] aria-selected:!font-semibold aria-selected:!text-[rgba(255,255,255,0.92)]"
+      ? "!shrink-0 !min-h-0 !rounded-none !border-0 !border-b-2 !border-transparent !bg-transparent !px-4 !py-2.5 !text-xs !font-medium !shadow-none text-[rgba(255,255,255,0.36)] hover:text-[rgba(255,255,255,0.72)] aria-selected:!border-[#F2B500] aria-selected:!font-semibold aria-selected:!text-[#F2B500]"
       : "!shrink-0 !text-xs",
     tabsContentWrap: isV3 ? "mt-1" : "",
     chatPanel: isV2
@@ -186,10 +186,10 @@ export function getCopilotTheme(version) {
     textSecondary: isV2 ? COPILOT_V2_TEXT_SECONDARY : "text-[#929292]",
     textMuted: isV2 ? COPILOT_V2_TEXT_MUTED : "text-[#757575]",
     textMint: isV2 ? COPILOT_V2_TEXT_MINT : "text-[#00f3b6]",
-    textPositive: isV2 ? COPILOT_V2_TEXT_POSITIVE : "text-[#00f3b6]",
+    textPositive: isV2 ? COPILOT_V2_TEXT_POSITIVE : "text-[#269755]",
     textNegative: isV2
       ? "text-[var(--ds-copilot-v2-negative)]"
-      : "text-[#d53d3d]",
+      : "text-[#D53D3D]",
     panelDivider: isV2 ? "border-white/[0.04]" : "border-[#242424]",
     section: "",
     sectionTitle:

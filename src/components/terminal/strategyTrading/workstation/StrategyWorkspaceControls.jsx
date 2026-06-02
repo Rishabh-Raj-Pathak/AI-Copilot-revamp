@@ -232,7 +232,6 @@ export default function StrategyWorkspaceControls({
             onClick={onOptimize}
             disabled={optimizeLoading}
           >
-            <Sparkles className="size-3.5 shrink-0" aria-hidden />
             {optimizeLoading ? "Optimizing…" : "Optimize"}
           </button>
         ) : (

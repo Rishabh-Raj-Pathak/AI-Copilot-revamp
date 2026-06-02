@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 
-const DOT_STEP_X = 14;
-const DOT_STEP_Y = 14;
-const HOVER_HALF_SIZE = 230;
+const DOT_STEP_X = 10;
+const DOT_STEP_Y = 10;
+const HOVER_HALF_SIZE = 150;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));

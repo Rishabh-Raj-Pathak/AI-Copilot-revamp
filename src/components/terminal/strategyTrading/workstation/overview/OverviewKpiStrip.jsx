@@ -76,9 +76,9 @@ export default function OverviewKpiStrip({ bt }) {
         {cells.map((cell, idx) => {
           const color =
             cell.tone === "positive"
-              ? "text-[#19D98B]"
+              ? theme.textPositive
               : cell.tone === "negative"
-                ? "text-[#EF4444]"
+                ? theme.textNegative
                 : "text-[rgba(255,255,255,0.92)]";
           return (
             <div

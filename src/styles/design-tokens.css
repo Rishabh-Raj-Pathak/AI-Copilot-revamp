@@ -241,8 +241,8 @@
   --ds-copilot-v2-border: rgb(255 255 255 / 0.06);
   --ds-copilot-v2-divider: rgb(255 255 255 / 0.04);
   --ds-copilot-v2-mint: #00f3b6;
-  --ds-copilot-v2-positive: #34d399;
-  --ds-copilot-v2-negative: #f87171;
+  --ds-copilot-v2-positive: #269755;
+  --ds-copilot-v2-negative: #d53d3d;
   --ds-copilot-v2-text-primary: rgb(255 255 255 / 0.92);
   --ds-copilot-v2-text-secondary: rgb(255 255 255 / 0.58);
   --ds-copilot-v2-text-muted: rgb(255 255 255 / 0.36);
@@ -816,7 +816,7 @@ dialog::backdrop {
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    border: 1px solid rgb(255 255 255 / 0.14);
+    border: 1px solid rgb(255 255 255 / 0.28);
     background: linear-gradient(
       180deg,
       rgb(16 21 24 / 0.9),
@@ -833,8 +833,8 @@ dialog::backdrop {
   }
 
   .ds-strategy-composer-send:hover {
-    border-color: rgb(38 232 195 / 0.48);
-    color: #24efc9;
+    border-color: rgb(255 255 255 / 0.52);
+    color: #fff;
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.1),
       0 0 18px rgb(20 220 184 / 0.16);
@@ -950,22 +950,29 @@ dialog::backdrop {
     padding: var(--ds-terminal-connect-wallet-padding-y)
       var(--ds-terminal-connect-wallet-padding-x);
     border-radius: var(--ds-terminal-connect-wallet-radius);
-    border: 1px solid rgb(0 243 182 / 0.16);
-    background: rgb(255 255 255 / 0.04);
-    color: rgb(255 255 255 / 0.88);
+    border: var(--ds-stroke-width) solid transparent;
+    background-color: transparent;
+    background-image:
+      linear-gradient(
+        var(--ds-terminal-view-thesis-bg),
+        var(--ds-terminal-view-thesis-bg)
+      ),
+      var(--ds-brand-gradient-horizontal);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+    color: var(--ds-terminal-view-thesis-fg);
     font-family: var(--ds-font-sans);
     font-size: var(--ds-terminal-connect-wallet-font-size);
     font-weight: 500;
     line-height: 1.25;
     cursor: pointer;
     transition:
-      background-color 0.15s ease,
-      border-color 0.15s ease;
+      filter 0.15s ease,
+      opacity 0.15s ease;
   }
 
   .ds-copilot-v2-btn-optimize:hover {
-    border-color: rgb(0 243 182 / 0.28);
-    background: rgb(255 255 255 / 0.06);
+    filter: brightness(1.05);
   }
 
   .ds-copilot-v2-btn-optimize svg {

@@ -250,7 +250,7 @@ export default function CopilotBottomActivityDock({
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`group relative flex shrink-0 items-center gap-1.5 px-2 py-2 text-xs font-medium whitespace-nowrap max-tablet:min-h-10 max-tablet:px-2.5 ${
-                  active ? "text-white" : "text-[#8c8c8c] hover:text-[#bfbfbf]"
+                  active ? "text-[#F2B500]" : "text-[#8c8c8c] hover:text-[#bfbfbf]"
                 }`}
               >
                 <span>{tab.label}</span>

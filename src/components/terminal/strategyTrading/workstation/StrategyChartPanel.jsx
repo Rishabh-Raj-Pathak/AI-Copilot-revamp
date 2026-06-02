@@ -119,10 +119,10 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
         <span
           className={`tabular-nums ${
             theme.isV3
-              ? "text-xs font-semibold text-[#34D399]"
+              ? `text-xs font-semibold ${theme.textPositive}`
               : theme.isV2
-                ? "rounded-lg bg-[#19D98B]/10 px-2.5 py-1 text-xs font-semibold text-[#19D98B]"
-                : "rounded-md bg-[#0f0f0f] px-2 py-0.5 text-[11px] font-medium text-[#00f3b6]"
+                ? "rounded-lg bg-[#269755]/10 px-2.5 py-1 text-xs font-semibold text-[#269755]"
+                : "rounded-md bg-[#0f0f0f] px-2 py-0.5 text-[11px] font-medium text-[#269755]"
           }`}
         >
           {currentPrice}
@@ -172,11 +172,11 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               const bullish = c.c >= c.o;
               const color = bullish
                 ? theme.isV2
-                  ? "#19D98B"
-                  : "#00f3b6"
+                  ? COPILOT_V2_POSITIVE
+                  : "#269755"
                 : theme.isV2
-                  ? "#EF4444"
-                  : "#d53d3d";
+                  ? COPILOT_V2_NEGATIVE
+                  : "#D53D3D";
               const bodyTop = Math.min(openY, closeY);
               const bodyHeight = Math.max(Math.abs(closeY - openY), 0.6);
               return (
@@ -216,7 +216,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               x2={padL + plotW}
               y1={slY}
               y2={slY}
-              stroke="#d53d3d"
+              stroke={COPILOT_V2_NEGATIVE}
               strokeWidth="0.5"
               strokeDasharray="3 2"
               opacity="0.7"
@@ -226,7 +226,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               x2={padL + plotW}
               y1={tpY}
               y2={tpY}
-              stroke="#269755"
+              stroke={COPILOT_V2_POSITIVE}
               strokeWidth="0.5"
               strokeDasharray="3 2"
               opacity="0.7"
@@ -256,7 +256,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
               {
                 y: slY,
                 label: "SL",
-                fill: theme.isV2 ? COPILOT_V2_NEGATIVE : "#d53d3d",
+                fill: theme.isV2 ? COPILOT_V2_NEGATIVE : "#D53D3D",
               },
               {
                 y: tpY,
@@ -321,10 +321,10 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
                     bullish
                       ? theme.isV2
                         ? COPILOT_V2_POSITIVE
-                        : "#00f3b6"
+                        : "#269755"
                       : theme.isV2
                         ? COPILOT_V2_NEGATIVE
-                        : "#d53d3d"
+                        : "#D53D3D"
                   }
                   opacity="0.12"
                 />
@@ -359,7 +359,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
           <span className={theme.isV2 ? theme.textMuted : "text-[#585858]"}>
             SL{" "}
           </span>
-          <span className={theme.isV2 ? theme.textNegative : "text-[#d53d3d]"}>
+          <span className={theme.isV2 ? theme.textNegative : "text-[#D53D3D]"}>
             {stopLoss}
           </span>
         </span>

@@ -464,7 +464,7 @@ function LegacyRow({ label, value, highlight, theme }) {
           highlight
             ? theme.isV2
               ? theme.textPositive
-              : "text-[#00f3b6]"
+              : "text-[#269755]"
             : theme.isV2
               ? theme.textPrimary
               : "text-white"

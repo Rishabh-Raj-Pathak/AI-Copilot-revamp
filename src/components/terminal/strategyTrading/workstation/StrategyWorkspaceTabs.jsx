@@ -128,11 +128,11 @@ function Metric({ label, value, tone, theme }) {
     tone === "positive"
       ? theme.isV2
         ? theme.textPositive
-        : "text-[#00f3b6]"
+        : "text-[#269755]"
       : tone === "negative"
         ? theme.isV2
           ? theme.textNegative
-          : "text-[#d53d3d]"
+          : "text-[#D53D3D]"
         : theme.isV2
           ? theme.textPrimary
           : "text-white";
@@ -416,7 +416,7 @@ function ExecutionNestedTabs({
                   <td className="px-3 py-2">{pos.size ?? "—"}</td>
                   <td className="px-3 py-2">{pos.entry}</td>
                   <td className="px-3 py-2">{pos.current}</td>
-                  <td className="px-3 py-2 text-[#00f3b6]">{pos.pnl}</td>
+                  <td className="px-3 py-2 text-[#269755]">{pos.pnl}</td>
                   <td className="px-3 py-2">{pos.status}</td>
                 </tr>
               </tbody>
@@ -758,11 +758,11 @@ export default function StrategyWorkspaceTabs({
                     <p className="font-medium text-[#bfbfbf]">Returns</p>
                     <p className="mt-1 text-[#929292]">
                       Buy & Hold:{" "}
-                      <span className="text-[#00f3b6]">{bt.buyAndHold}</span>
+                      <span className="text-[#269755]">{bt.buyAndHold}</span>
                     </p>
                     <p className="text-[#929292]">
                       Outperformance:{" "}
-                      <span className="text-[#d53d3d]">
+                      <span className="text-[#D53D3D]">
                         {bt.outperformance}
                       </span>
                     </p>
@@ -978,7 +978,7 @@ export default function StrategyWorkspaceTabs({
                           <td className="px-3 py-2">{pos.size ?? "—"}</td>
                           <td className="px-3 py-2">{pos.entry}</td>
                           <td className="px-3 py-2">{pos.current}</td>
-                          <td className="px-3 py-2 text-[#00f3b6]">
+                          <td className="px-3 py-2 text-[#269755]">
                             {pos.pnl}
                           </td>
                           <td className="px-3 py-2">{pos.status}</td>
@@ -1086,7 +1086,7 @@ export default function StrategyWorkspaceTabs({
                         <td className="px-3 py-2">{t.entry}</td>
                         <td className="px-3 py-2">{t.exit}</td>
                         <td
-                          className={`px-3 py-2 ${String(t.pnl).startsWith("+") ? "text-[#00f3b6]" : "text-[#d53d3d]"}`}
+                          className={`px-3 py-2 ${String(t.pnl).startsWith("+") ? "text-[#269755]" : "text-[#D53D3D]"}`}
                         >
                           {t.pnl}
                         </td>

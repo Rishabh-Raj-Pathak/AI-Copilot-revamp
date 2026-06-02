@@ -338,7 +338,7 @@ export default function StrategyPromptBox({
         aria-label="Add attachment"
         aria-expanded={attachOpen}
         aria-haspopup="menu"
-        className="flex size-8 items-center justify-center rounded-lg text-[rgba(255,255,255,0.55)] transition-colors hover:bg-white/6 hover:text-[rgba(255,255,255,0.88)] disabled:opacity-40 sm:size-9"
+        className="flex size-8 items-center justify-center rounded-lg text-[rgba(255,255,255,0.55)] transition-colors hover:text-white disabled:opacity-40 sm:size-9"
         onClick={() => {
           setAttachOpen((v) => !v);
           setCodeOpen(false);
@@ -362,7 +362,7 @@ export default function StrategyPromptBox({
       aria-label="Send message"
       className="ds-strategy-composer-send size-8! shrink-0 sm:size-9!"
     >
-      <ArrowUp className="size-4" aria-hidden />
+      <ArrowUp className="size-4 text-white" aria-hidden />
     </button>
   );
 
