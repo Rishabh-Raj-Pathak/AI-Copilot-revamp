@@ -755,7 +755,9 @@ dialog::backdrop {
       linear-gradient(90deg, rgb(242 181 0 / 0.5) 0%, rgb(0 243 182 / 0.5) 100%);
     background-origin: padding-box, border-box;
     background-clip: padding-box, border-box;
-    box-shadow: none;
+    box-shadow:
+      0 0 14px rgb(242 181 0 / 0.1),
+      0 0 18px rgb(0 243 182 / 0.09);
   }
 
   .ds-strategy-composer-cursor {
