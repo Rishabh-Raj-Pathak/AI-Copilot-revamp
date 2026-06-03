@@ -1,5 +1,6 @@
 import { generateStrategySetup } from "./strategyTradingEngine.js";
 import {
+  DEFAULT_PAPER_STATS,
   MOCK_BACKTEST,
   PAPER_POSITION_BTC,
   STRATEGY_CONFIG_DEFAULT,
@@ -218,6 +219,8 @@ export function applyPaperTrading(strategy) {
       balance: "$10,000",
       pnl: position.pnl,
       mode: "Paper simulation",
+      versionLabel: "Running V1",
+      stats: { ...DEFAULT_PAPER_STATS },
       position,
       events: [
         "Paper trading simulation started",

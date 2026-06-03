@@ -293,9 +293,7 @@ export default function StrategyChartPanel({ strategy, embedded = false }) {
                   key={tick}
                   x={padL + plotW + 6}
                   y={ty + 2}
-                  fill={
-                    theme.isV3 ? "rgba(255,255,255,0.45)" : "#585858"
-                  }
+                  fill={theme.isV3 ? "rgba(255,255,255,0.45)" : "#585858"}
                   fontSize="5"
                   fontFamily="system-ui, sans-serif"
                   textAnchor="start"

@@ -4,11 +4,7 @@ import {
   getMarketTokenIcon,
 } from "./strategySidebarUtils.js";
 
-export default function StrategySidebarRow({
-  strategy,
-  active,
-  onSelect,
-}) {
+export default function StrategySidebarRow({ strategy, active, onSelect }) {
   const theme = useCopilotTheme();
   const meta = formatStrategyRowMeta(strategy);
   const tokenIcon = getMarketTokenIcon(strategy.marketId);

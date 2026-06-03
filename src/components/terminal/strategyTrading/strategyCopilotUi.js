@@ -23,6 +23,8 @@ export const COPILOT_V2_TEXT_SECONDARY =
 export const COPILOT_V2_TEXT_MUTED = "text-[var(--ds-copilot-v2-text-muted)]";
 export const COPILOT_V2_TEXT_MINT = "text-[var(--ds-copilot-v2-mint)]";
 export const COPILOT_V2_TEXT_POSITIVE = "text-[var(--ds-copilot-v2-positive)]";
+/** Live / paper-active indicators (tabs, status dots) — matches success green */
+export const COPILOT_V2_ACTIVE_DOT = "bg-[var(--ds-copilot-v2-positive)]";
 
 /** Header subtitle: market · strategy · model (no duplicate timeframe). */
 export function formatStrategyHeaderMeta(strategy) {
@@ -142,7 +144,7 @@ export function getCopilotTheme(version) {
       ? "ds-scrollbar-hidden overflow-x-auto"
       : "minimal-scrollbar overflow-x-auto",
     tabsTrigger: isV2
-      ? "!shrink-0 !min-h-0 !rounded-none !border-0 !border-b-2 !border-transparent !bg-transparent !px-4 !py-2.5 !text-xs !font-medium !shadow-none text-[rgba(255,255,255,0.36)] hover:text-[rgba(255,255,255,0.72)] aria-selected:!border-[#F2B500] aria-selected:!font-semibold aria-selected:!text-[#F2B500]"
+      ? "!shrink-0 !min-h-0 !rounded-none !border-0 !border-b-2 !border-transparent !bg-transparent !px-4 !py-2.5 !text-xs !font-medium !shadow-none text-[rgba(255,255,255,0.36)] hover:text-[rgba(255,255,255,0.72)] aria-selected:!border-[#F2B500] aria-selected:!font-semibold aria-selected:!text-white"
       : "!shrink-0 !text-xs",
     tabsContentWrap: isV3 ? "mt-1" : "",
     chatPanel: isV2
@@ -192,6 +194,7 @@ export function getCopilotTheme(version) {
     textMuted: isV2 ? COPILOT_V2_TEXT_MUTED : "text-[#757575]",
     textMint: isV2 ? COPILOT_V2_TEXT_MINT : "text-[#00f3b6]",
     textPositive: isV2 ? COPILOT_V2_TEXT_POSITIVE : "text-[#269755]",
+    activeDot: isV2 ? COPILOT_V2_ACTIVE_DOT : "bg-[#269755]",
     textNegative: isV2
       ? "text-[var(--ds-copilot-v2-negative)]"
       : "text-[#D53D3D]",

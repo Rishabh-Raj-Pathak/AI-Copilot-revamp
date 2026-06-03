@@ -5,7 +5,6 @@ export const COPILOT_VIEWS = [
   { id: "suggestions", label: "AI Copilot" },
   { id: "strategy-trading-v1", label: "Strategy Copilot v1" },
   { id: "strategy-trading-v2", label: "Strategy Copilot v2" },
-  { id: "strategy-trading-v2-new", label: "Strategy copilot new" },
   // PROTOTYPE OFF — Strategy Copilot v3 (divider workstation / V3TabLayout).
   // Implementation stays in-repo; uncomment entry + helpers below when v3 is demo-ready.
   // { id: "strategy-trading-v3", label: "Strategy Copilot v3" },
@@ -13,9 +12,7 @@ export const COPILOT_VIEWS = [
 
 export function isStrategyCopilotView(viewId) {
   return (
-    viewId === "strategy-trading-v1" ||
-    viewId === "strategy-trading-v2" ||
-    viewId === "strategy-trading-v2-new"
+    viewId === "strategy-trading-v1" || viewId === "strategy-trading-v2"
     // || viewId === "strategy-trading-v3" // see COPILOT_VIEWS — prototype off
   );
 }
@@ -23,8 +20,7 @@ export function isStrategyCopilotView(viewId) {
 /** v2/v3 share composer landing + lime-mint workstation UI (independent state per view). */
 export function isStrategyCopilotComposerView(viewId) {
   return (
-    viewId === "strategy-trading-v2" ||
-    viewId === "strategy-trading-v2-new"
+    viewId === "strategy-trading-v2"
     // || viewId === "strategy-trading-v3" // see COPILOT_VIEWS — prototype off
   );
 }
@@ -36,7 +32,6 @@ export function isModernStrategyCopilotNav(viewId) {
 export function getUiVersionFromCopilotView(viewId) {
   if (viewId === "strategy-trading-v1") return "v1";
   if (viewId === "strategy-trading-v2") return "v2";
-  if (viewId === "strategy-trading-v2-new") return "v2";
   // if (viewId === "strategy-trading-v3") return "v3"; // see COPILOT_VIEWS — prototype off
   return "v2";
 }
@@ -105,9 +100,7 @@ export default function CopilotNavDropdown({
       ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] sm:text-sm"
       : "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] transition-colors sm:px-3 sm:text-sm";
 
-  const chevronClass = isV2Nav
-    ? "text-[#00F3B6]"
-    : "text-[#f2b500]";
+  const chevronClass = isV2Nav ? "text-[#00F3B6]" : "text-[#f2b500]";
 
   return (
     <div ref={rootRef} className={`relative shrink-0 ${className}`}>

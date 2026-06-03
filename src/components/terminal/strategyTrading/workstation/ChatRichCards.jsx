@@ -290,8 +290,8 @@ function PaperCard({ data, onViewPosition, onReview }) {
       <p
         className={
           theme.isV2
-            ? "border-b border-white/5 px-4 py-3 text-[12px] font-semibold text-[#00F3B6]"
-            : "text-[11px] font-semibold text-[#00f3b6]"
+            ? `border-b border-white/5 px-4 py-3 text-[12px] font-semibold ${theme.textPositive}`
+            : "text-[11px] font-semibold text-[#269755]"
         }
       >
         Paper trading active

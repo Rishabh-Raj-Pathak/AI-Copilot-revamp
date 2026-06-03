@@ -4,10 +4,8 @@ import { useCopilotTheme } from "./StrategyCopilotContext.jsx";
 import { COPILOT_V2_GRADIENT_CSS } from "./strategyCopilotUi.js";
 import { v3SectionTitle } from "./workstation/V3TabLayout.jsx";
 
-/** Gentle ease-out — entrance only (no ease-in-out punch). */
-const ENTRANCE_EASE = [0.33, 0, 0.2, 1];
-const STAGGER_CHILDREN = 0.07;
 const STAGGER_DELAY_CHILDREN = 0.06;
+const STAGGER_CHILDREN = 0.07;
 const STEP_ACTIVE_MS = 680;
 const LOOP_PAUSE_MS = 1100;
 const ENTRANCE_TAIL_S = 0.24;
@@ -18,11 +16,6 @@ const FLOW_SPRING = {
   stiffness: 320,
   damping: 34,
   mass: 0.82,
-};
-
-const ENTRANCE_TRANSITION = {
-  duration: 0.38,
-  ease: ENTRANCE_EASE,
 };
 
 const MARKER_GLOW =
@@ -36,34 +29,6 @@ function entranceDelayMs(stepCount) {
     1000
   );
 }
-
-const sectionVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: ENTRANCE_TRANSITION,
-  },
-};
-
-const listVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: STAGGER_CHILDREN,
-      delayChildren: STAGGER_DELAY_CHILDREN,
-    },
-  },
-};
-
-const stepVariants = {
-  hidden: { opacity: 0, y: 6 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: ENTRANCE_TRANSITION,
-  },
-};
 
 function useFlowActiveIndex(stepCount, reducedMotion, enabled) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -228,32 +193,10 @@ function FlowTimeline({ steps, titleClassName, shellClassName = "" }) {
     loopEnabled,
     reducedMotion,
   );
-  const motionState = reducedMotion
-    ? undefined
-    : isInView
-      ? "visible"
-      : "hidden";
 
   return (
-    <motion.section
-      ref={sectionRef}
-      className={shellClassName}
-      variants={reducedMotion ? undefined : sectionVariants}
-      initial={reducedMotion ? false : "hidden"}
-      animate={motionState}
-    >
-      <motion.h4
-        className={titleClassName}
-        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-        animate={
-          reducedMotion || isInView
-            ? { opacity: 1, y: 0 }
-            : { opacity: 0, y: 8 }
-        }
-        transition={{ ...ENTRANCE_TRANSITION, delay: isInView && !reducedMotion ? 0.03 : 0 }}
-      >
-        Strategy flow
-      </motion.h4>
+    <section ref={sectionRef} className={shellClassName}>
+      <h4 className={titleClassName}>Strategy flow</h4>
 
       <div className="relative mt-8 sm:mt-9">
         <VerticalTimelineTrack
@@ -261,21 +204,15 @@ function FlowTimeline({ steps, titleClassName, shellClassName = "" }) {
           reducedMotion={reducedMotion}
         />
 
-        <motion.ol
-          className="relative z-1 m-0 list-none p-0"
-          variants={reducedMotion ? undefined : listVariants}
-          initial={reducedMotion ? false : "hidden"}
-          animate={motionState}
-        >
+        <ol className="relative z-1 m-0 list-none p-0">
           {steps.map((item, i) => {
             const isFilled = isStepTouched(i, fillPercent, steps.length);
             const isActive = i === touchedIndex;
             const isPast = touchedIndex >= 0 && i < touchedIndex;
 
             return (
-              <motion.li
+              <li
                 key={`${item.step}-${i}`}
-                variants={reducedMotion ? undefined : stepVariants}
                 className={`relative flex gap-5 sm:gap-6 ${
                   i < steps.length - 1 ? "pb-10 sm:pb-12" : ""
                 }`}
@@ -317,12 +254,12 @@ function FlowTimeline({ steps, titleClassName, shellClassName = "" }) {
                     {item.detail}
                   </motion.p>
                 </div>
-              </motion.li>
+              </li>
             );
           })}
-        </motion.ol>
+        </ol>
       </div>
-    </motion.section>
+    </section>
   );
 }
 

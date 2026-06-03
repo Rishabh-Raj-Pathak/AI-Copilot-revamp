@@ -1,8 +1,31 @@
 import { useCopilotTheme } from "../StrategyCopilotContext.jsx";
-import {
-  v3DetailText,
-  v3SectionTitle,
-} from "./V3TabLayout.jsx";
+import { v3DetailText, v3SectionTitle } from "./V3TabLayout.jsx";
+
+function getStrategyLogicPoints(setup) {
+  if (!setup) return [];
+  if (setup.strategyLogic?.length) return setup.strategyLogic;
+  const points = [];
+  for (const r of setup.entryRules ?? []) points.push(`Entry: ${r}`);
+  for (const r of setup.exitRules ?? []) points.push(`Exit: ${r}`);
+  for (const r of setup.riskRules ?? []) points.push(`Risk: ${r}`);
+  return points;
+}
+
+function StrategyLogicBulletList({ items, itemClassName = "text-[11px] leading-relaxed text-[#929292]" }) {
+  if (!items?.length) return null;
+  return (
+    <ul className="mt-2 space-y-1.5">
+      {items.map((item) => (
+        <li key={item} className="flex gap-2">
+          <span className="shrink-0 text-[#585858]" aria-hidden>
+            ·
+          </span>
+          <span className={itemClassName}>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function StrategyLogicCard({ setup, className = "" }) {
   const theme = useCopilotTheme();
@@ -11,12 +34,11 @@ export default function StrategyLogicCard({ setup, className = "" }) {
   const entry = setup.entryRules ?? [];
   const exit = setup.exitRules ?? [];
   const risk = setup.riskRules ?? [];
+  const logicPoints = getStrategyLogicPoints(setup);
 
   if (theme.isV3) {
     return (
-      <section
-        className={`border-b border-white/6 py-5 ${className}`.trim()}
-      >
+      <section className={`border-b border-white/6 py-5 ${className}`.trim()}>
         <div className="flex items-center gap-2">
           <span
             className="size-1.5 shrink-0 rounded-full bg-[var(--ds-copilot-v2-mint)]"
@@ -24,7 +46,9 @@ export default function StrategyLogicCard({ setup, className = "" }) {
           />
           <h4 className={v3SectionTitle}>Strategy Logic</h4>
         </div>
-        {setup.description ? (
+        {logicPoints.length > 0 ? (
+          <StrategyLogicBulletList items={logicPoints} itemClassName={v3DetailText} />
+        ) : setup.description ? (
           <p className={`mt-2.5 ${v3DetailText}`}>{setup.description}</p>
         ) : null}
 
@@ -97,13 +121,15 @@ export default function StrategyLogicCard({ setup, className = "" }) {
       >
         Strategy Logic
       </h4>
-      {setup.description ? (
+      {logicPoints.length > 0 ? (
+        <StrategyLogicBulletList items={logicPoints} />
+      ) : setup.description ? (
         <p className="mt-2 text-[11px] leading-relaxed text-[#929292]">
           {setup.description}
         </p>
       ) : null}
 
-      {theme.isV2 && (entry.length > 0 || exit.length > 0) ? (
+      {theme.isV2 && !logicPoints.length && (entry.length > 0 || exit.length > 0) ? (
         <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:gap-0">
           {entry.length > 0 ? (
             <div className="sm:pr-5">
@@ -199,10 +225,8 @@ export default function StrategyLogicCard({ setup, className = "" }) {
 
       {setup.personalizationNote ? (
         <p
-          className={`mt-4 text-[10px] leading-relaxed ${
-            theme.isV2
-              ? "text-[rgba(255,255,255,0.52)]"
-              : "text-[#f2b500]"
+          className={`mt-4 text-[11px] leading-relaxed sm:text-[12px] sm:leading-[1.65] ${
+            theme.isV2 ? "text-[rgba(255,255,255,0.52)]" : "text-[#f2b500]"
           }`}
         >
           {setup.personalizationNote}

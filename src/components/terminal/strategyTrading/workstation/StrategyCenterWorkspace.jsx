@@ -7,6 +7,7 @@ import StrategyChartPanel from "./StrategyChartPanel.jsx";
 import StrategyNewStrategyView from "./StrategyNewStrategyView.jsx";
 import StrategyLogicCard from "./StrategyLogicCard.jsx";
 import StrategyWorkspaceControls from "./StrategyWorkspaceControls.jsx";
+import RecommendedFlowStepper from "./RecommendedFlowStepper.jsx";
 import StrategyWorkspaceTabs from "./StrategyWorkspaceTabs.jsx";
 
 export default function StrategyCenterWorkspace({
@@ -170,6 +171,9 @@ export default function StrategyCenterWorkspace({
             </button>
           </div>
         </div>
+        {theme.isV2 ? (
+          <RecommendedFlowStepper strategy={strategy} className="mt-4" />
+        ) : null}
       </header>
 
       <div className={theme.workspaceBody}>
@@ -200,15 +204,17 @@ export default function StrategyCenterWorkspace({
 
         {!theme.isV2 ? <StrategyLogicCard setup={strategy.setup} /> : null}
 
-        <div className={theme.isV3 ? "border-t border-white/[0.06]" : undefined}>
-        <StrategyWorkspaceTabs
-          strategy={strategy}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          onRunBacktest={onRunBacktest}
-          onStartPaper={onStartPaper}
-          backtestLoading={backtestLoading}
-        />
+        <div
+          className={theme.isV3 ? "border-t border-white/[0.06]" : undefined}
+        >
+          <StrategyWorkspaceTabs
+            strategy={strategy}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+            onRunBacktest={onRunBacktest}
+            onStartPaper={onStartPaper}
+            backtestLoading={backtestLoading}
+          />
         </div>
       </div>
     </div>

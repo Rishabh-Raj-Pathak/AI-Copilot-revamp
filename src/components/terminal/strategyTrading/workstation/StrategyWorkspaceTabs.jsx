@@ -15,7 +15,10 @@ import {
   v3BodyText,
   v3SectionTitle,
 } from "./V3TabLayout.jsx";
-import { WORKSPACE_TABS } from "../strategyWorkstationMockData.js";
+import {
+  DEFAULT_PAPER_STATS,
+  WORKSPACE_TABS,
+} from "../strategyWorkstationMockData.js";
 
 const WORKSPACE_TABS_V2 = [
   { id: "overview", label: "Overview" },
@@ -494,126 +497,125 @@ function ExecutionNestedTabs({
   );
 }
 
-function PaperTradingSummary({ strategy, pos, innerCard, theme, embedded = false }) {
-  if (theme.isV3) {
-    const sections = (
-      <>
-        <V3TabSection divider={!!pos || !!strategy.paperTrading?.events?.length}>
-          <h4 className={v3SectionTitle}>Paper trading</h4>
-          <p className={`mt-2 ${v3BodyText}`}>
-            Status:{" "}
-            <span className={`font-medium ${theme.textMint}`}>
-              Paper Trading Active
-            </span>
-          </p>
-        </V3TabSection>
-        {pos ? (
-          <V3TabSection
-            divider={!!strategy.paperTrading?.events?.length}
-          >
-            <p className="text-sm font-medium text-white">
-              {pos.market} {pos.side}
-            </p>
-            <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2.5">
-              {[
-                ["Entry", pos.entry],
-                ["Current", pos.current],
-                ["PnL", pos.pnl],
-                ["Stop loss", pos.stopLoss],
-                ["Take profit", pos.takeProfit],
-                ["Time in trade", pos.timeInTrade],
-                ["Status", pos.status],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-3">
-                  <dt className={`text-xs ${theme.textMuted}`}>{k}</dt>
-                  <dd
-                    className={`text-xs font-medium tabular-nums ${
-                      k === "PnL" && String(v).startsWith("+")
-                        ? theme.textPositive
-                        : "text-[rgba(255,255,255,0.78)]"
-                    }`}
-                  >
-                    {v}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </V3TabSection>
-        ) : null}
-        {strategy.paperTrading?.events?.length ? (
-          <V3TabSection divider={false}>
-            <p className={`mb-2 text-xs font-medium ${theme.textMuted}`}>
-              Recent events
-            </p>
-            <ul className="space-y-1.5">
-              {strategy.paperTrading.events.map((e) => (
-                <li key={e} className={`flex gap-2.5 ${v3BodyText}`}>
-                  <span
-                    className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-[var(--ds-copilot-v2-mint)]"
-                    aria-hidden
-                  />
-                  {e}
-                </li>
-              ))}
-            </ul>
-          </V3TabSection>
-        ) : null}
-      </>
-    );
+function getPaperMarketSymbol(strategy) {
+  const raw = (strategy?.market ?? "").trim();
+  return raw.split(" · ")[0]?.trim() || raw;
+}
 
-    return embedded ? sections : <V3TabShell>{sections}</V3TabShell>;
-  }
+function resolvePaperTradingStats(strategy) {
+  const stats = strategy?.paperTrading?.stats;
+  if (stats) return stats;
+  const m = strategy?.metrics ?? {};
+  return {
+    totalReturn: m.totalReturn ?? DEFAULT_PAPER_STATS.totalReturn,
+    maxDrawdown: m.maxDrawdown ?? DEFAULT_PAPER_STATS.maxDrawdown,
+    totalTrades: m.trades ?? DEFAULT_PAPER_STATS.totalTrades,
+    winRate: m.winRate ?? DEFAULT_PAPER_STATS.winRate,
+    profitFactor: m.profitFactor ?? DEFAULT_PAPER_STATS.profitFactor,
+    funding: DEFAULT_PAPER_STATS.funding,
+    runningTime: DEFAULT_PAPER_STATS.runningTime,
+  };
+}
 
-  return (
-    <div className="space-y-3">
-      <p className="text-xs">
-        Status:{" "}
-        <span className={`font-medium ${theme.textMint}`}>
-          Paper Trading Active
-        </span>
-      </p>
-      {pos ? (
-        <div
-          className={`p-3 ${theme.isV2 ? "rounded-lg border border-[#242424] bg-[#0f0f0f]" : innerCard}`}
-        >
-          <p className="text-xs font-semibold text-white">
-            {pos.market} {pos.side}
-          </p>
-          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-            {[
-              ["Entry", pos.entry],
-              ["Current", pos.current],
-              ["PnL", pos.pnl],
-              ["Stop loss", pos.stopLoss],
-              ["Take profit", pos.takeProfit],
-              ["Time in trade", pos.timeInTrade],
-              ["Status", pos.status],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-2">
-                <dt className="text-[#757575]">{k}</dt>
-                <dd
-                  className={
-                    k === "PnL" && String(v).startsWith("+")
-                      ? `font-medium ${theme.textPositive}`
-                      : theme.isV2
-                        ? theme.textSecondary
-                        : "text-[#bfbfbf]"
-                  }
-                >
-                  {v}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+const PAPER_SUMMARY_METRICS = [
+  { key: "totalReturn", label: "Total Return" },
+  { key: "maxDrawdown", label: "Max Drawdown" },
+  { key: "totalTrades", label: "Total Trades" },
+  { key: "winRate", label: "Win Rate" },
+  { key: "profitFactor", label: "Profit Factor" },
+  { key: "funding", label: "Funding" },
+  { key: "runningTime", label: "Running Time" },
+];
+
+function PaperTradingPerformanceSummary({ strategy, theme, innerCard }) {
+  const setup = strategy?.setup;
+  const stats = resolvePaperTradingStats(strategy);
+  const leverage = strategy?.config?.leverage ?? setup?.leverage ?? "—";
+  const marketSymbol = getPaperMarketSymbol(strategy);
+  const timeframe = strategy?.timeframe ?? setup?.timeframe ?? "";
+  const configMeta = [marketSymbol, timeframe, leverage].filter(Boolean).join(" · ");
+  const versionLabel =
+    strategy?.paperTrading?.versionLabel ?? "Running V1";
+
+  const headerRow = (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-snug">
+      <span className={theme.textMuted}>{strategy?.name}</span>
+      {configMeta ? (
+        <>
+          <span className={theme.textMuted} aria-hidden>
+            ·
+          </span>
+          <span className={`font-medium ${theme.textPrimary}`}>{configMeta}</span>
+        </>
       ) : null}
-      <ul className="space-y-0.5 text-[11px] text-[#757575]">
-        {strategy.paperTrading.events?.map((e) => (
-          <li key={e}>· {e}</li>
-        ))}
-      </ul>
+      <span className={theme.textMuted} aria-hidden>
+        ·
+      </span>
+      <span className={`text-[11px] font-semibold uppercase tracking-wide ${theme.textPositive}`}>
+        ACTIVE
+      </span>
+      <span className={theme.textMuted} aria-hidden>
+        ·
+      </span>
+      <span className={theme.textMuted}>{versionLabel}</span>
     </div>
   );
+
+  const metricsRow = (
+    <div
+      className={`mt-3 border-t pt-3 ${
+        theme.isV2 ? "border-white/[0.06]" : "border-[#242424]"
+      }`}
+    >
+      <div className="ds-scrollbar-hidden -mx-1 overflow-x-auto px-1">
+        <div className="flex min-w-max gap-6 sm:gap-8">
+          {PAPER_SUMMARY_METRICS.map(({ key, label }) => (
+            <div key={key} className="min-w-[4.5rem] shrink-0">
+              <p className={theme.metricLabel}>{label}</p>
+              <p
+                className={`mt-1 text-sm font-semibold tabular-nums tracking-tight ${theme.textPrimary}`}
+              >
+                {stats[key] ?? "—"}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const shellClass = theme.isV2
+    ? "rounded-lg border border-[#242424] bg-[#0f0f0f] p-3 sm:p-4"
+    : `p-3 ${innerCard}`;
+
+  return (
+    <div className={shellClass}>
+      {headerRow}
+      {metricsRow}
+    </div>
+  );
+}
+
+function PaperTradingSummary({ strategy, innerCard, theme, embedded = false }) {
+  const summary = (
+    <PaperTradingPerformanceSummary
+      strategy={strategy}
+      theme={theme}
+      innerCard={innerCard}
+    />
+  );
+
+  if (theme.isV3) {
+    return embedded ? (
+      <V3TabSection divider={false}>{summary}</V3TabSection>
+    ) : (
+      <V3TabShell>
+        <V3TabSection divider={false}>{summary}</V3TabSection>
+      </V3TabShell>
+    );
+  }
+
+  return summary;
 }
 
 export default function StrategyWorkspaceTabs({
@@ -665,10 +667,14 @@ export default function StrategyWorkspaceTabs({
                 >
                   {t.label}
                   {t.id === "paper" && isPaperActive ? (
-                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[var(--ds-copilot-v2-mint)]" />
+                    <span
+                      className={`ml-1 inline-block size-1.5 rounded-full ${theme.activeDot}`}
+                    />
                   ) : null}
                   {t.id === "deployed" && isDeployed ? (
-                    <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00F3B6]" />
+                    <span
+                      className={`ml-1 inline-block size-1.5 rounded-full ${theme.activeDot}`}
+                    />
                   ) : null}
                 </TabsTrigger>
               ))}
@@ -684,10 +690,14 @@ export default function StrategyWorkspaceTabs({
               >
                 {t.label}
                 {t.id === "paper" && isPaperActive ? (
-                  <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00f3b6]" />
+                  <span
+                    className={`ml-1 inline-block size-1.5 rounded-full ${theme.activeDot}`}
+                  />
                 ) : null}
                 {t.id === "deployed" && isDeployed ? (
-                  <span className="ml-1 inline-block size-1.5 rounded-full bg-[#00F3B6]" />
+                  <span
+                    className={`ml-1 inline-block size-1.5 rounded-full ${theme.activeDot}`}
+                  />
                 ) : null}
               </TabsTrigger>
             ))}
@@ -698,11 +708,9 @@ export default function StrategyWorkspaceTabs({
           <TabsContent value="overview" className={tabContentClass}>
             {theme.isV2 ? (
               <OverviewTabV2 setup={setup} />
-            ) : (
-              setup?.flowSteps ? (
-                <StrategyFlowStepper steps={setup.flowSteps} />
-              ) : null
-            )}
+            ) : setup?.flowSteps ? (
+              <StrategyFlowStepper steps={setup.flowSteps} />
+            ) : null}
           </TabsContent>
 
           <TabsContent value="backtest" className={tabContentClass}>
@@ -727,9 +735,7 @@ export default function StrategyWorkspaceTabs({
                 </Button>
               </div>
             ) : null}
-            {!theme.isV2 &&
-            strategy?.backtest?.status === "complete" &&
-            bt ? (
+            {!theme.isV2 && strategy?.backtest?.status === "complete" && bt ? (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                   <Metric
@@ -832,7 +838,6 @@ export default function StrategyWorkspaceTabs({
               <V3TabShell>
                 <PaperTradingSummary
                   strategy={strategy}
-                  pos={pos}
                   innerCard={innerCard}
                   theme={theme}
                   embedded
@@ -848,7 +853,6 @@ export default function StrategyWorkspaceTabs({
               <div className="space-y-1">
                 <PaperTradingSummary
                   strategy={strategy}
-                  pos={pos}
                   innerCard={innerCard}
                   theme={theme}
                 />
@@ -900,7 +904,7 @@ export default function StrategyWorkspaceTabs({
                     <h4 className={v3SectionTitle}>Deployed</h4>
                     <p className={`mt-2 ${v3BodyText}`}>
                       Status:{" "}
-                      <span className={`font-medium ${theme.textMint}`}>
+                      <span className={`font-medium ${theme.textPositive}`}>
                         Deployed
                       </span>
                     </p>

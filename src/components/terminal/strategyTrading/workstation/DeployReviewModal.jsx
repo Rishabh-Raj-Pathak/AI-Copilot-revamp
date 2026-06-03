@@ -278,7 +278,7 @@ function DetailRow({ label, value, theme, highlight }) {
       <dt className={`text-xs leading-snug ${theme.textMuted}`}>{label}</dt>
       <dd
         className={`text-right text-xs font-medium leading-snug tabular-nums ${
-          highlight ? theme.textMint : theme.textPrimary
+          highlight ? theme.textPositive : theme.textPrimary
         }`}
       >
         {value}

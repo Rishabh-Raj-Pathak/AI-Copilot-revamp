@@ -132,6 +132,16 @@ export const STRATEGY_CONFIG_DEFAULT = {
   execution: "Manual approval",
 };
 
+export const DEFAULT_PAPER_STATS = {
+  totalReturn: "0%",
+  maxDrawdown: "0%",
+  totalTrades: 0,
+  winRate: "0%",
+  profitFactor: "0",
+  funding: "$0",
+  runningTime: "0d 1h",
+};
+
 export const PAPER_POSITION_BTC = {
   market: "BTCUSDT",
   side: "Long",
@@ -211,7 +221,7 @@ function buildBtcSniperSetup(preferences) {
       "Paper trading uses market-like simulation without real capital.",
     ],
     personalizationNote:
-      "Adjusted for your balanced profile, max 3x leverage, and manual approval preference.",
+      "Tuned for your balanced risk profile with max 3x leverage and manual approval before any live order. The copilot only surfaces BTCUSDT 15m mean-reversion setups when price wicks below the Bollinger lower band, RSI is below 25, and candles reclaim support without a volatility spike. Take-profit and stop-loss follow your +8% / −2.5% plan, with early exits if funding or RSI stretch against the position. High-volatility expansion is filtered out so the strategy does not chase unstable dips. Backtest metrics are estimates—paper trade each signal and confirm entry, stop, and target before deployment.",
   };
 }
 
@@ -405,7 +415,8 @@ function buildStrategyRecord({
   let resolvedStatus = status;
   if (ready) resolvedStatus = "Ready";
   else if (paperActive) resolvedStatus = "Paper Trading";
-  else if (backtestComplete && status === "Draft") resolvedStatus = "Backtested";
+  else if (backtestComplete && status === "Draft")
+    resolvedStatus = "Backtested";
 
   return {
     id,
@@ -419,7 +430,8 @@ function buildStrategyRecord({
     model: setup.model,
     strategy: setup.strategy,
     strategyType: setup.strategy,
-    lastUpdated: lastUpdated ?? (id === "strat-btc-sniper" ? "12m ago" : "2h ago"),
+    lastUpdated:
+      lastUpdated ?? (id === "strat-btc-sniper" ? "12m ago" : "2h ago"),
     sortOrder,
     performancePreview: performancePreview ?? null,
     setup,
@@ -434,6 +446,8 @@ function buildStrategyRecord({
       balance: "$10,000",
       pnl: paperActive ? "+0.41%" : "$0.00",
       mode: "Paper simulation",
+      versionLabel: "Running V1",
+      stats: paperActive ? { ...DEFAULT_PAPER_STATS } : null,
       position: paperActive ? PAPER_POSITION_BTC : null,
       events: paperActive
         ? [
@@ -450,12 +464,28 @@ function buildStrategyRecord({
       id === "strat-btc-sniper"
         ? BTC_SNIPER_LOGS.map((l) => ({ ...l, at: l.ago }))
         : [
-            { id: `${id}-l1`, message: "Strategy draft created", at: "Just now" },
+            {
+              id: `${id}-l1`,
+              message: "Strategy draft created",
+              at: "Just now",
+            },
             ...(backtestComplete
-              ? [{ id: `${id}-l2`, message: "Backtest completed", at: "Recently" }]
+              ? [
+                  {
+                    id: `${id}-l2`,
+                    message: "Backtest completed",
+                    at: "Recently",
+                  },
+                ]
               : []),
             ...(paperActive
-              ? [{ id: `${id}-l3`, message: "Paper trading started", at: "Recently" }]
+              ? [
+                  {
+                    id: `${id}-l3`,
+                    message: "Paper trading started",
+                    at: "Recently",
+                  },
+                ]
               : []),
           ],
     trades:
@@ -612,9 +642,11 @@ export const CENTER_TEMPLATES = [
     cardSetupType: "Funding Arbitrage",
     cardRiskProfile: "Low",
     illustration: "flow",
-    description: "Monitor funding differences and identify carry opportunities.",
+    description:
+      "Monitor funding differences and identify carry opportunities.",
     tags: ["Funding", "ETH", "1h", "Medium Risk"],
-    prompt: "Build an ETH funding capture strategy on 1h across preferred DEXes.",
+    prompt:
+      "Build an ETH funding capture strategy on 1h across preferred DEXes.",
     modelId: "funding",
     strategyId: "funding-capture",
     marketId: "eth",
@@ -632,9 +664,11 @@ export const CENTER_TEMPLATES = [
     cardSetupType: "Breakout",
     cardRiskProfile: "Moderate - High",
     illustration: "line",
-    description: "Watch for breakout confirmation with volume and open interest.",
+    description:
+      "Watch for breakout confirmation with volume and open interest.",
     tags: ["Aggressive", "SOL", "15m", "High Risk"],
-    prompt: "Build a SOL breakout continuation strategy with volume confirmation on 15m.",
+    prompt:
+      "Build a SOL breakout continuation strategy with volume confirmation on 15m.",
     modelId: "aggressive",
     strategyId: "momentum-breakout",
     marketId: "sol",
@@ -654,7 +688,8 @@ export const CENTER_TEMPLATES = [
     illustration: "anchor",
     description: "Follow higher-timeframe trend with rule-based entries.",
     tags: ["Quant", "HYPE", "1h", "Medium Risk"],
-    prompt: "Build a HYPE trend-following strategy on 1h with rule-based entries.",
+    prompt:
+      "Build a HYPE trend-following strategy on 1h with rule-based entries.",
     modelId: "quant",
     strategyId: "trend-following",
     marketId: "hype",
@@ -662,8 +697,24 @@ export const CENTER_TEMPLATES = [
 ];
 
 export const STARTER_STRATEGIES = [
-  { id: "starter-btc-mr", title: "BTC Mean Reversion", market: "BTCUSDT · 15m" },
-  { id: "starter-eth-funding", title: "ETH Funding Capture", market: "ETHUSDT · 1h" },
-  { id: "starter-sol-breakout", title: "SOL Breakout Strategy", market: "SOLUSDT · 15m" },
-  { id: "starter-hype-trend", title: "HYPE Trend Following", market: "HYPEUSDT · 1h" },
+  {
+    id: "starter-btc-mr",
+    title: "BTC Mean Reversion",
+    market: "BTCUSDT · 15m",
+  },
+  {
+    id: "starter-eth-funding",
+    title: "ETH Funding Capture",
+    market: "ETHUSDT · 1h",
+  },
+  {
+    id: "starter-sol-breakout",
+    title: "SOL Breakout Strategy",
+    market: "SOLUSDT · 15m",
+  },
+  {
+    id: "starter-hype-trend",
+    title: "HYPE Trend Following",
+    market: "HYPEUSDT · 1h",
+  },
 ];

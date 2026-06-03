@@ -23,12 +23,14 @@ const DIRECTION_BY_MODEL = {
 
 function riskLevelFromPrefs(prefs, strategyRisk) {
   if (prefs.riskPreference === "low") return "Low";
-  if (prefs.riskPreference === "high") return strategyRisk === "High" ? "High" : "Medium-High";
+  if (prefs.riskPreference === "high")
+    return strategyRisk === "High" ? "High" : "Medium-High";
   return strategyRisk === "High" ? "Medium-High" : "Medium";
 }
 
 function confidenceFromModel(modelId, prefs) {
-  if (prefs.riskPreference === "low" || modelId === "conservative") return "Medium";
+  if (prefs.riskPreference === "low" || modelId === "conservative")
+    return "Medium";
   if (modelId === "aggressive") return "Medium";
   return "Medium";
 }
@@ -45,7 +47,8 @@ export function generateStrategySetup({
   preferences,
   terminalPlatform,
 }) {
-  const model = STRATEGY_MODELS.find((m) => m.id === modelId) ?? STRATEGY_MODELS[0];
+  const model =
+    STRATEGY_MODELS.find((m) => m.id === modelId) ?? STRATEGY_MODELS[0];
   const strategy =
     STRATEGY_TYPES.find((s) => s.id === strategyId) ?? STRATEGY_TYPES[0];
   const symbol = MARKET_SYMBOL[marketId] ?? "BTC";
@@ -68,7 +71,9 @@ export function generateStrategySetup({
     );
   }
   if (preferences.executionPreference === "explain-only") {
-    personalizationNotes.push("This setup is for analysis only — no trade suggestion.");
+    personalizationNotes.push(
+      "This setup is for analysis only — no trade suggestion.",
+    );
   }
 
   const reasoning = [
@@ -153,8 +158,14 @@ export function generateStrategySetup({
     strategy: strategy.name,
     timeframe: strategy.timeframe.split(" - ")[0] ?? "15m",
     entryZone: SAMPLE_SETUP.entryZone.replace("BTC", symbol),
-    stopLoss: SAMPLE_SETUP.stopLoss.replace("67", symbol === "ETH" ? "34" : "67"),
-    takeProfit: SAMPLE_SETUP.takeProfit.replace("69", symbol === "ETH" ? "36" : "69"),
+    stopLoss: SAMPLE_SETUP.stopLoss.replace(
+      "67",
+      symbol === "ETH" ? "34" : "67",
+    ),
+    takeProfit: SAMPLE_SETUP.takeProfit.replace(
+      "69",
+      symbol === "ETH" ? "36" : "69",
+    ),
     riskReward: SAMPLE_SETUP.riskReward,
     confidence,
     riskLevel,
@@ -185,7 +196,7 @@ function buildPersonalizationNote(prefs) {
       : prefs.executionPreference === "explain-only"
         ? "explain-only"
         : prefs.executionPreference.replace("-", " ");
-  return `Adjusted for your ${risk} profile, max ${prefs.maxLeverage} leverage, and ${exec} preference.`;
+  return `This configuration is tuned for your ${risk} profile with max ${prefs.maxLeverage} leverage and ${exec} on every trade idea. The copilot applies your execution preference before surfacing entries, keeps risk rules aligned with your leverage cap, and skips marginal setups when volatility or funding diverge from your guardrails. Review backtest and paper-trade results as guidance only—confirm each entry zone, stop, and target before any deployment decision.`;
 }
 
 /**
@@ -196,7 +207,9 @@ export function buildAgentFromSetup(setup, prefs, overrides = {}) {
   const id = `agent-${Date.now()}`;
   return {
     id,
-    name: overrides.name ?? `${setup.market.split("-")[0]} ${setup.strategy} Watcher`,
+    name:
+      overrides.name ??
+      `${setup.market.split("-")[0]} ${setup.strategy} Watcher`,
     status: "Watching",
     market: setup.market,
     model: setup.model,

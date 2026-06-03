@@ -12,7 +12,7 @@ const STATUS_STYLES_V1 = {
 const STATUS_STYLES_V2 = {
   Draft: "text-[var(--ds-copilot-v2-text-muted)]",
   Backtested: "text-[var(--ds-copilot-v2-mint)]",
-  "Paper Trading": "text-[var(--ds-copilot-v2-mint)]",
+  "Paper Trading": "text-[var(--ds-copilot-v2-positive)]",
   Ready: "text-[var(--ds-copilot-v2-positive)]",
   Paused: "text-[rgba(255,255,255,0.36)]",
   Completed: "text-[rgba(255,255,255,0.36)]",

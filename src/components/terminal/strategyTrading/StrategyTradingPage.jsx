@@ -69,8 +69,8 @@ export default function StrategyTradingPage({
     () => defaultTemplate?.marketId ?? "btc",
   );
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
-  const [prompt, setPrompt] = useState(
-    () => (isComposerStrategyView ? (defaultTemplate?.prompt ?? "") : ""),
+  const [prompt, setPrompt] = useState(() =>
+    isComposerStrategyView ? (defaultTemplate?.prompt ?? "") : "",
   );
   const [loading, setLoading] = useState(false);
   const [sidebarFilter, setSidebarFilter] = useState("all");
@@ -80,7 +80,9 @@ export default function StrategyTradingPage({
   const [optimizeLoading, setOptimizeLoading] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const [composerMode, setComposerMode] = useState(() => isComposerStrategyView);
+  const [composerMode, setComposerMode] = useState(
+    () => isComposerStrategyView,
+  );
   const [activeTemplateId, setActiveTemplateId] = useState(
     CENTER_TEMPLATES[0]?.id ?? "btc-mean-reversion",
   );
