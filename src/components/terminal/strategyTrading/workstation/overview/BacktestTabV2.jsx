@@ -67,9 +67,7 @@ export default function BacktestTabV2({
     complete && trades.length > 0 ? (
       theme.isV3 ? (
         <V3TabSection divider={false}>
-          <p className="mb-3 text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]">
-            Backtest trades
-          </p>
+          <p className={`mb-3 ${theme.overviewPanelTitle}`}>Backtest trades</p>
           <div className={theme.tableShell}>
             <ScrollFade
               axis="x"
@@ -138,7 +136,9 @@ export default function BacktestTabV2({
         </V3TabSection>
       ) : (
         <div className="overflow-hidden rounded-xl border border-[#262626]">
-          <p className="border-b border-[#262626] px-4 py-2.5 text-xs font-medium text-[#929292]">
+          <p
+            className={`border-b border-[#262626] px-4 py-2.5 ${theme.overviewPanelTitle}`}
+          >
             Backtest trades
           </p>
           <ScrollFade axis="x" fadeColor="var(--ds-copilot-v2-elevated)">

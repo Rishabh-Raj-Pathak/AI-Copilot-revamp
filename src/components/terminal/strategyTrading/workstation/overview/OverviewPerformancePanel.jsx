@@ -63,9 +63,7 @@ export default function OverviewPerformancePanel({ bt }) {
   if (theme.isV3) {
     return (
       <section className="border-b border-white/6 py-5">
-        <h4 className="text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]">
-          Performance
-        </h4>
+        <h4 className={theme.overviewPanelTitle}>Performance</h4>
         <div className="mt-4">{content}</div>
       </section>
     );
@@ -73,7 +71,7 @@ export default function OverviewPerformancePanel({ bt }) {
 
   return (
     <div className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4 sm:p-5">
-      <h4 className="text-xs font-medium text-[#929292]">Performance</h4>
+      <h4 className={theme.overviewPanelTitle}>Performance</h4>
       <div className="mt-4">{content}</div>
     </div>
   );

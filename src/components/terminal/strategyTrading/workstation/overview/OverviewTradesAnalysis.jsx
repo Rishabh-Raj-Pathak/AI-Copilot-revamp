@@ -207,15 +207,7 @@ export default function OverviewTradesAnalysis({ bt }) {
 
   const header = (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h4
-        className={
-          theme.isV3
-            ? "text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]"
-            : "text-xs font-medium text-[var(--ds-copilot-v2-text-secondary)]"
-        }
-      >
-        Trades Analysis
-      </h4>
+      <h4 className={theme.overviewPanelTitle}>Trades Analysis</h4>
       <div
         className={`flex flex-wrap items-center gap-3 text-[11px] ${theme.isV3 ? theme.textMuted : "text-[var(--ds-copilot-v2-text-muted)]"}`}
       >

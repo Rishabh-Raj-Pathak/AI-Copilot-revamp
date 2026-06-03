@@ -7,9 +7,7 @@ export default function OverviewBacktestInsights({ insights }) {
   if (theme.isV3) {
     return (
       <section className="border-b border-white/6 py-5">
-        <h4 className="text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]">
-          AI insights
-        </h4>
+        <h4 className={theme.overviewPanelTitle}>AI insights</h4>
         <ul className="mt-3 space-y-2.5">
           {insights.map((item) => (
             <li
@@ -30,7 +28,7 @@ export default function OverviewBacktestInsights({ insights }) {
 
   return (
     <div className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4">
-      <h4 className="text-xs font-medium text-[#929292]">AI insights</h4>
+      <h4 className={theme.overviewPanelTitle}>AI insights</h4>
       <ul className="mt-3 space-y-2.5">
         {insights.map((item) => (
           <li

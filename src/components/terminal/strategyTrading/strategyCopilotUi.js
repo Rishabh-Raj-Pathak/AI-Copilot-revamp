@@ -20,6 +20,11 @@ export const COPILOT_V2_TEXT_PRIMARY =
   "text-[var(--ds-copilot-v2-text-primary)]";
 export const COPILOT_V2_TEXT_SECONDARY =
   "text-[var(--ds-copilot-v2-text-secondary)]";
+/** Backtest overview card titles — matches Equity Curve heading */
+export const COPILOT_V2_OVERVIEW_PANEL_TITLE =
+  "text-xs font-medium text-[rgba(255,255,255,0.72)]";
+export const COPILOT_V3_OVERVIEW_PANEL_TITLE =
+  "text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]";
 export const COPILOT_V2_TEXT_MUTED = "text-[var(--ds-copilot-v2-text-muted)]";
 export const COPILOT_V2_TEXT_MINT = "text-[var(--ds-copilot-v2-mint)]";
 export const COPILOT_V2_TEXT_POSITIVE = "text-[var(--ds-copilot-v2-positive)]";
@@ -183,6 +188,7 @@ export function getCopilotTheme(version) {
       ? "!min-h-8 !rounded-lg !border-white/6 !bg-[#0D100F] !text-[11px] !font-medium"
       : "!min-h-8 !text-xs",
     overviewPanel: isV2 ? "p-4 sm:p-5" : "",
+    overviewPanelTitle: COPILOT_V2_OVERVIEW_PANEL_TITLE,
     statusCard: isV2
       ? "rounded-xl border border-[#242424] bg-[#0f0f0f] p-4"
       : "rounded-lg border border-[#242424] bg-[#0a0a0a] p-3",
@@ -268,6 +274,7 @@ export function getCopilotTheme(version) {
     flowStepNum:
       "flex size-5 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-semibold tabular-nums text-[rgba(255,255,255,0.78)]",
     overviewPanel: "px-4 pb-6 pt-0 sm:px-5",
+    overviewPanelTitle: COPILOT_V3_OVERVIEW_PANEL_TITLE,
     statusCard: "",
     richCardShell:
       "mt-4 overflow-hidden border-y border-white/[0.06] bg-transparent",

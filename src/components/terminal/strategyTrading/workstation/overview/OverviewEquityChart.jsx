@@ -103,13 +103,7 @@ export default function OverviewEquityChart({ bt, range }) {
   return (
     <div className={shellClass}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h4
-          className={
-            theme.isV3
-              ? "text-sm font-medium tracking-tight text-[rgba(255,255,255,0.9)]"
-              : "text-xs font-medium text-[rgba(255,255,255,0.72)]"
-          }
-        >
+        <h4 className={theme.overviewPanelTitle}>
           Equity Curve
         </h4>
         <div className="flex flex-wrap gap-3 text-[10px]">
