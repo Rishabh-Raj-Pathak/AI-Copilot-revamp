@@ -312,8 +312,10 @@ export default function StrategyPromptBox({
 
   const formShell = isComposer
     ? `ds-strategy-composer-shell ${composerShellClass} ${formFocusReset} ${
-        isChatComposer ? "px-3" : "px-3 sm:px-4"
-      } ${composerMultiline ? "py-3 sm:py-3.5" : "py-2.5 sm:py-3"}`
+        composerMultiline ? "ds-strategy-composer-shell--multiline" : ""
+      } ${isChatComposer ? "px-3" : "px-3 sm:px-4"} ${
+        composerMultiline ? "py-3 sm:py-3.5" : "py-2.5 sm:py-3"
+      }`
     : `${theme.chatPromptShell} ${formFocusReset}`;
 
   const textareaFocusReset =

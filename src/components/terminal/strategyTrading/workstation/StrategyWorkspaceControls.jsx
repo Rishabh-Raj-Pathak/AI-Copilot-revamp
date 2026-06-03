@@ -224,14 +224,15 @@ export default function StrategyWorkspaceControls({
         </ControlShell>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5 self-center">
+      <div className="flex shrink-0 items-stretch gap-1.5 self-stretch">
         {theme.isV2 ? (
           <button
             type="button"
-            className={`${theme.optimizeBtn} disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`${theme.optimizeBtn} h-full gap-1 disabled:cursor-not-allowed disabled:opacity-50`}
             onClick={onOptimize}
             disabled={optimizeLoading}
           >
+            <Sparkles className="size-3 shrink-0" aria-hidden />
             {optimizeLoading ? "Optimizing…" : "Optimize"}
           </button>
         ) : (

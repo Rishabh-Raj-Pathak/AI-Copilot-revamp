@@ -4,6 +4,11 @@ export const COPILOT_V2_GRADIENT_CTA = "ds-copilot-v2-gradient-cta";
 export const COPILOT_V2_BTN_SECONDARY = "ds-copilot-v2-btn-secondary";
 export const COPILOT_V2_BTN_OPTIMIZE = "ds-copilot-v2-btn-optimize";
 
+/** Primary HyprEarn gradient — `design-tokens.css` `--ds-copilot-v2-gradient` */
+export const COPILOT_V2_GRADIENT_CSS = "var(--ds-copilot-v2-gradient)";
+export const COPILOT_V2_GRADIENT_STOP_START = "#f2b500";
+export const COPILOT_V2_GRADIENT_STOP_END = "#00f3b6";
+
 /** Mint accent — active states, links, icons */
 export const COPILOT_V2_MINT = "#47B881";
 /** Positive PnL / gains */
@@ -112,7 +117,7 @@ export function getCopilotTheme(version) {
       ? `gap-1.5 ${V2_ACTION_RADIUS} border border-white/8 bg-[rgba(255,255,255,0.04)] text-[rgba(255,255,255,0.88)] hover:bg-[rgba(255,255,255,0.07)] !text-xs`
       : "gap-1 !text-xs",
     optimizeBtn: isV2
-      ? `${COPILOT_V2_BTN_OPTIMIZE} !text-xs`
+      ? `${COPILOT_V2_BTN_OPTIMIZE} !text-[11px] !font-medium`
       : "gap-1.5 rounded-lg bg-[#f2b500] font-semibold text-black hover:bg-[#ffd633] !text-xs",
     outlineBtn: isV2
       ? `${V2_ACTION_RADIUS} border border-white/8 bg-[rgba(255,255,255,0.03)] text-[rgba(255,255,255,0.88)] hover:bg-[rgba(255,255,255,0.06)] !text-xs`

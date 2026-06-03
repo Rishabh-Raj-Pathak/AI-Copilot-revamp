@@ -715,6 +715,12 @@ dialog::backdrop {
   .ds-strategy-composer-shell--inline {
     min-height: auto;
     border-radius: 1.75rem;
+    transition: border-radius 200ms ease;
+  }
+
+  /** Multiline inline composer — match template card corner radius */
+  .ds-strategy-composer-shell--inline.ds-strategy-composer-shell--multiline {
+    border-radius: var(--ds-radius-xl);
   }
 
   /** Chat sidebar prompt — tighter radius than new-strategy composer */
@@ -941,42 +947,38 @@ dialog::backdrop {
     background: rgb(255 255 255 / 0.06);
   }
 
+  /** Matches StrategyWorkspaceControls `ControlShell` chips (py-1.5 px-2, 11px label). */
   .ds-copilot-v2-btn-optimize {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.375rem;
-    min-height: 2rem;
-    padding: var(--ds-terminal-connect-wallet-padding-y)
-      var(--ds-terminal-connect-wallet-padding-x);
-    border-radius: var(--ds-terminal-connect-wallet-radius);
-    border: var(--ds-stroke-width) solid transparent;
-    background-color: transparent;
-    background-image:
-      linear-gradient(
-        var(--ds-terminal-view-thesis-bg),
-        var(--ds-terminal-view-thesis-bg)
-      ),
-      var(--ds-brand-gradient-horizontal);
-    background-origin: padding-box, border-box;
-    background-clip: padding-box, border-box;
-    color: var(--ds-terminal-view-thesis-fg);
+    gap: 0.25rem;
+    box-sizing: border-box;
+    min-height: 1.5rem;
+    height: 100%;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid rgb(255 255 255 / 0.05);
+    background: rgb(255 255 255 / 0.03);
+    color: var(--ds-copilot-v2-text-primary);
     font-family: var(--ds-font-sans);
-    font-size: var(--ds-terminal-connect-wallet-font-size);
+    font-size: 0.6875rem;
     font-weight: 500;
     line-height: 1.25;
+    white-space: nowrap;
     cursor: pointer;
     transition:
-      filter 0.15s ease,
-      opacity 0.15s ease;
+      background-color 0.15s ease,
+      border-color 0.15s ease;
   }
 
   .ds-copilot-v2-btn-optimize:hover {
-    filter: brightness(1.05);
+    background: rgb(255 255 255 / 0.06);
+    border-color: rgb(255 255 255 / 0.06);
   }
 
   .ds-copilot-v2-btn-optimize svg {
-    color: var(--ds-copilot-v2-mint);
+    color: inherit;
   }
 }
 
