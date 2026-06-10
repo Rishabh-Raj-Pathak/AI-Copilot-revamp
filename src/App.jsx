@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { destroyCopilotProductTourIfStillActive } from "./copilot/copilotTour.js";
 import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
+import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import TerminalCopilotPage from "./components/terminal/TerminalCopilotPage.jsx";
 import VaultsPage from "./components/vaults/VaultsPage.jsx";
 
@@ -11,8 +12,8 @@ export default function App() {
   const [runCopilotTourOnEnter, setRunCopilotTourOnEnter] = useState(false);
   const [runVaultTourOnEnter, setRunVaultTourOnEnter] = useState(false);
 
-  if (page === "vaults") {
-    return (
+  const content =
+    page === "vaults" ? (
       <VaultsPage
         walletConnected={walletConnected}
         onWalletConnected={() => setWalletConnected(true)}
@@ -27,23 +28,27 @@ export default function App() {
         runProductTourOnEnter={runVaultTourOnEnter}
         onProductTourEnterConsumed={() => setRunVaultTourOnEnter(false)}
       />
+    ) : (
+      <TerminalCopilotPage
+        walletConnected={walletConnected}
+        onWalletConnected={() => setWalletConnected(true)}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={setTerminalPlatform}
+        onOpenVaults={() => setPage("vaults")}
+        onOpenVaultTutorial={() => {
+          destroyCopilotProductTourIfStillActive();
+          setRunVaultTourOnEnter(true);
+          setPage("vaults");
+        }}
+        runProductTourOnEnter={runCopilotTourOnEnter}
+        onProductTourEnterConsumed={() => setRunCopilotTourOnEnter(false)}
+      />
     );
-  }
 
   return (
-    <TerminalCopilotPage
-      walletConnected={walletConnected}
-      onWalletConnected={() => setWalletConnected(true)}
-      terminalPlatform={terminalPlatform}
-      onTerminalPlatformChange={setTerminalPlatform}
-      onOpenVaults={() => setPage("vaults")}
-      onOpenVaultTutorial={() => {
-        destroyCopilotProductTourIfStillActive();
-        setRunVaultTourOnEnter(true);
-        setPage("vaults");
-      }}
-      runProductTourOnEnter={runCopilotTourOnEnter}
-      onProductTourEnterConsumed={() => setRunCopilotTourOnEnter(false)}
-    />
+    <>
+      {content}
+      <InstallAppPrompt page={page} />
+    </>
   );
 }
