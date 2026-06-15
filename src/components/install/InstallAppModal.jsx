@@ -21,16 +21,16 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#030504]/82 p-0 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#030504]/82 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-[3px]"
       role="presentation"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-2xl bg-[image:var(--ds-terminal-copilot-tour-popover-border-gradient)] p-px pb-0 shadow-[0_-8px_40px_rgba(0,0,0,0.55)] max-h-[min(92dvh,40rem)]"
+        className="w-full max-w-md rounded-2xl bg-[image:var(--ds-terminal-copilot-tour-popover-border-gradient)] p-px shadow-[0_24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] max-h-[min(88dvh,40rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="flex max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-t-2xl bg-[#0D100F] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]"
+          className="flex max-h-[min(88dvh,40rem)] flex-col overflow-hidden rounded-2xl bg-[#0D100F] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="install-app-title"
