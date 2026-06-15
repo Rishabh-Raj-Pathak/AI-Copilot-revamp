@@ -703,3 +703,11 @@ body.driver-active .hyprearn-trade-success-modal-root * {
   animation: copilot-position-row-sheen 1.28s linear infinite;
   opacity: 1;
 }
+
+/** Install app bottom sheet — numbered step badges (Figma Terminal brand ramp). */
+.install-app-modal__step-index {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#0d100f, #0d100f) padding-box,
+    var(--ds-copilot-v2-gradient) border-box;
+}
