@@ -11,17 +11,12 @@ import CopilotBottomActivityDock from "./CopilotBottomActivityDock.jsx";
 import { AiCopilotThesisModal } from "./AiCopilotThesisModal.tsx";
 import CopilotTutorialToast from "./CopilotTutorialToast.jsx";
 import CopilotMobileTourBar from "./CopilotMobileTourBar.jsx";
-import OnboardingOverlay from "./OnboardingOverlay.jsx";
 import { isStrategyCopilotView } from "./strategyTrading/CopilotNavDropdown.jsx";
 import {
   StrategyCopilotProvider,
   useStrategyCopilot,
 } from "./strategyTrading/StrategyCopilotContext.jsx";
 import StrategyTradingPage from "./strategyTrading/StrategyTradingPage.jsx";
-import {
-  hasSeenCopilotWelcome,
-  markCopilotWelcomeSeen,
-} from "../../copilot/copilotWelcome.js";
 import {
   NARROW_VIEWPORT_MEDIA,
   queryVisibleTourTarget,
@@ -92,7 +87,6 @@ export default function TerminalCopilotPage({
   const viewThesisModalOpenedOnTourStepRef = useRef(false);
   const [highlightOpenedPositionRow, setHighlightOpenedPositionRow] =
     useState(false);
-  const [welcomeOpen, setWelcomeOpen] = useState(() => !hasSeenCopilotWelcome());
   const [isNarrowViewport, setIsNarrowViewport] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.matchMedia(NARROW_VIEWPORT_MEDIA).matches;
@@ -422,8 +416,7 @@ export default function TerminalCopilotPage({
   );
 
   useEffect(() => {
-    if (!walletConnected || welcomeOpen || !shouldAutoStartCopilotTutorial())
-      return;
+    if (!walletConnected || !shouldAutoStartCopilotTutorial()) return;
     let cancelled = false;
     const engagement = getCopilotTutorialEngagement();
     const startStep =
@@ -450,7 +443,7 @@ export default function TerminalCopilotPage({
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [walletConnected, welcomeOpen, copilotTourHandlers, prepareSuggestionTourStep]);
+  }, [walletConnected, copilotTourHandlers, prepareSuggestionTourStep]);
 
   const handleThesisOpenChange = useCallback((open) => {
     setThesisOpen(open);
@@ -711,21 +704,6 @@ export default function TerminalCopilotPage({
         open={mobilePositionToastOpen}
         variant="position-added"
         onDismiss={() => setMobilePositionToastOpen(false)}
-      />
-      <OnboardingOverlay
-        open={welcomeOpen}
-        onDismiss={() => {
-          markCopilotWelcomeSeen();
-          setWelcomeOpen(false);
-          if (!selectedId && FIRST_SETUP_ID) {
-            setSelectedId(FIRST_SETUP_ID);
-          }
-          if (isNarrowViewport) {
-            setMobileDetailsSheetDismissed(true);
-          } else {
-            setMobileDetailsSheetDismissed(false);
-          }
-        }}
       />
       <CopilotBottomNav
         activeId="copilot"
