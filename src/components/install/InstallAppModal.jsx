@@ -1,20 +1,11 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Smartphone } from "lucide-react";
+
+const STEP_ADD_TO_HOME = "Select Add to Home Screen, as shown in your browser";
 
 const STEPS = {
-  ios: [
-    "Tap Share in your browser toolbar",
-    "Choose Add to Home Screen",
-    "Tap Add to confirm",
-  ],
-  android: [
-    "Open the browser menu",
-    "Tap Install app or Add to Home screen",
-  ],
-  other: [
-    "Open your browser menu",
-    "Select Add to Home Screen or Install app",
-  ],
+  ios: ["Tap Share in your browser", STEP_ADD_TO_HOME],
+  android: ["Open your browser menu (⋮)", STEP_ADD_TO_HOME],
+  other: ["Open your browser menu", STEP_ADD_TO_HOME],
 };
 
 const SHEET_TRANSITION = { type: "spring", damping: 32, stiffness: 360, mass: 0.9 };
@@ -62,16 +53,16 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
                     id="install-app-title"
                     className="text-[1.125rem] font-semibold leading-[1.35] tracking-tight text-[rgba(255,255,255,0.92)] max-tablet:text-[17px]"
                   >
-                    Add{" "}
+                    Keep{" "}
                     <span className="bg-[image:var(--ds-copilot-v2-gradient)] bg-clip-text text-transparent">
                       HyprEarn
                     </span>{" "}
-                    to your home screen
+                    one tap away
                   </h2>
 
-                  <p className="mx-auto mt-3 max-w-[17.5rem] text-sm leading-relaxed text-[rgba(255,255,255,0.58)] max-tablet:mt-2.5 max-tablet:text-[13px]">
-                    Install the app for faster access to AI Copilot and your trade
-                    setups.
+                  <p className="mx-auto mt-3 max-w-[19rem] text-sm leading-relaxed text-[rgba(255,255,255,0.58)] max-tablet:mt-2.5 max-tablet:text-[13px]">
+                    Add it to your home screen—open the full HyprEarn app in one
+                    tap: trade, vaults, and AI Copilot, no browser tab needed.
                   </p>
                 </header>
 
@@ -83,7 +74,7 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
                     >
                       <span
                         aria-hidden
-                        className="install-app-modal__step-index flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-[#f2b500]"
+                        className="install-app-modal__step-index flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
                       >
                         {index + 1}
                       </span>
@@ -99,7 +90,7 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
                   className="ds-copilot-v2-gradient-cta mt-7 w-full min-h-12 max-tablet:mt-6"
                   onClick={onClose}
                 >
-                  Done
+                  Got it
                 </button>
               </div>
             </div>
