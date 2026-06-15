@@ -711,3 +711,85 @@ body.driver-active .hyprearn-trade-success-modal-root * {
     linear-gradient(#0d100f, #0d100f) padding-box,
     var(--ds-copilot-v2-gradient) border-box;
 }
+
+/** Install app FAB — warm running fill (Trending chip palette, no border ring). */
+@keyframes install-app-prompt-flow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes install-app-prompt-sheen {
+  0% {
+    background-position: 130% 0;
+  }
+
+  100% {
+    background-position: -130% 0;
+  }
+}
+
+.install-app-prompt-btn {
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #3e2e00;
+  background-image: linear-gradient(
+    90deg,
+    #2a1f00 0%,
+    #3e2e00 20%,
+    #524100 38%,
+    #6b5500 50%,
+    #524100 62%,
+    #3e2e00 80%,
+    #2a1f00 100%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: install-app-prompt-flow 4.8s ease-in-out infinite;
+  box-shadow: 0 0 18px rgb(242 181 0 / 0.16);
+}
+
+.install-app-prompt-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    108deg,
+    transparent 0%,
+    transparent 40%,
+    rgb(255 236 170 / 0.2) 48%,
+    rgb(242 181 0 / 0.28) 50%,
+    rgb(255 236 170 / 0.2) 52%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 42% 100%;
+  background-repeat: no-repeat;
+  animation: install-app-prompt-sheen 3s ease-in-out infinite;
+}
+
+.install-app-prompt-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 18px rgb(242 181 0 / 0.16),
+    0 0 0 2px rgb(242 181 0 / 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-app-prompt-btn {
+    animation: none;
+    background-size: 100% 100%;
+  }
+
+  .install-app-prompt-btn::after {
+    animation: none;
+    opacity: 0;
+  }
+}

@@ -9,11 +9,11 @@ export default function InstallAppButton({ page = "copilot", onClick }) {
   return (
     <button
       type="button"
-      className={`fixed right-4 z-[60] hidden max-tablet:flex items-center rounded-full border-[0.5px] border-white/20 bg-[#0f0f0f] px-3.5 py-2 text-xs font-medium text-[rgba(255,255,255,0.88)] transition-colors hover:border-white/30 hover:bg-[#141414] ${bottomClass}`}
+      className={`install-app-prompt-btn fixed right-4 left-auto z-[60] hidden max-tablet:flex items-center rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold text-[#f2b500] transition-[filter] duration-200 hover:brightness-110 ${bottomClass}`}
       onClick={onClick}
       aria-label="Install app"
     >
-      Install app
+      <span className="relative z-[1]">Install app</span>
     </button>
   );
 }
