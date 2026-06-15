@@ -711,10 +711,3 @@ body.driver-active .hyprearn-trade-success-modal-root * {
     linear-gradient(#0d100f, #0d100f) padding-box,
     var(--ds-copilot-v2-gradient) border-box;
 }
-
-.install-app-prompt-btn:focus-visible {
-  outline: none;
-  box-shadow:
-    0 8px 28px rgba(242, 181, 0, 0.38),
-    0 0 0 2px rgb(0 243 182 / 0.35);
-}
