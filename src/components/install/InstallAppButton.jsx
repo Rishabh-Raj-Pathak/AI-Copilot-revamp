@@ -9,11 +9,11 @@ export default function InstallAppButton({ page = "copilot", onClick }) {
   return (
     <button
       type="button"
-      className={`fixed right-4 z-[60] hidden max-tablet:flex items-center rounded-full border border-[#3e2e00] bg-[#171200] px-3.5 py-2 text-xs font-semibold text-[#f2b500] ${bottomClass}`}
+      className={`install-app-prompt-btn fixed right-4 left-auto z-[60] hidden max-tablet:flex items-center rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold text-[#f2b500] transition-[filter] duration-200 hover:brightness-110 ${bottomClass}`}
       onClick={onClick}
-      aria-label="Install app"
+      aria-label="Add HyprEarn to your home screen"
     >
-      Install app
+      <span className="relative z-[1]">Get the app</span>
     </button>
   );
 }
