@@ -41,7 +41,7 @@ export default function VaultsPositionsHistoryTable() {
 
   return (
     <section
-      className="vaults-root w-full max-w-[1150px]"
+      className="vaults-root w-full"
       aria-label="Positions and trade history"
     >
       <div className="rounded-[24px] border border-[rgba(255,255,255,0.06)] bg-[#050505] px-6 pb-6 pt-8 sm:px-8">

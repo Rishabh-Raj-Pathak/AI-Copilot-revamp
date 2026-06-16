@@ -123,6 +123,13 @@
   border: none;
 }
 
+.vaults-strategy-scroll {
+  scrollbar-width: none;
+}
+.vaults-strategy-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /** Enter motion when a vault moves into “Activated Vaults”. */
 @keyframes vaults-activated-row-in {
   from {

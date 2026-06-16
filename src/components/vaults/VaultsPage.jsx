@@ -17,6 +17,7 @@ import VaultsSectionHeader from "./VaultsSectionHeader.jsx";
 import VaultsPositionsHistoryTable from "./VaultsPositionsHistoryTable.jsx";
 import VaultsStatsRow from "./VaultsStatsRow.jsx";
 import { DEFAULT_SHARE_PCT } from "./vaultUiUtils.js";
+import { resolveVaultStrategies } from "./vaultStrategiesData.js";
 import {
   advanceVaultsTourAfterFeaturedActivateClick,
   isVaultsTourCompleted,
@@ -40,6 +41,8 @@ function buildInitialRowUi() {
         amountStr: "5",
         activated: false,
         activatedAt: null,
+        selectedStrategyId:
+          resolveVaultStrategies(v)[0]?.id ?? null,
       },
     ]),
   );
@@ -196,7 +199,7 @@ export default function VaultsPage({
       />
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="mx-auto flex w-full max-w-[1190px] flex-col gap-10 px-5 py-8 pb-16">
+        <div className="flex w-full flex-col gap-10 px-5 py-8 pb-16 sm:px-8 lg:px-10 xl:px-12">
           <VaultsHero />
           <VaultsStatsRow />
 

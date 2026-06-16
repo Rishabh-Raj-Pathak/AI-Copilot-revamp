@@ -4,6 +4,8 @@ import {
   clampAmountStr,
   feePctFromShare,
 } from "./vaultUiUtils.js";
+import VaultStrategySelector from "./VaultStrategySelector.jsx";
+import { resolveVaultStrategies } from "./vaultStrategiesData.js";
 
 const ICONS = {
   pulse: Activity,
@@ -19,6 +21,9 @@ export default function VaultGridCard({ vault, ui, onPatch }) {
   const sharePct = ui.sharePct;
   const feeLabel = feePctFromShare(sharePct);
   const activated = ui.activated;
+  const strategies = resolveVaultStrategies(vault);
+  const selectedStrategyId =
+    ui.selectedStrategyId ?? strategies[0]?.id ?? null;
 
   return (
     <div
@@ -35,9 +40,6 @@ export default function VaultGridCard({ vault, ui, onPatch }) {
         <div className="min-w-0">
           <p className="truncate text-base font-medium text-[#e8d5b5]">
             {vault.name}
-          </p>
-          <p className="mt-1 text-[11px] uppercase tracking-[0.275px] text-[#717182]">
-            {vault.strategyLabel}
           </p>
         </div>
       </div>
@@ -133,20 +135,41 @@ export default function VaultGridCard({ vault, ui, onPatch }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        disabled={activated}
-        onClick={() =>
-          onPatch(vault.id, { activated: true, activatedAt: Date.now() })
-        }
-        className={`mt-auto h-9 w-full rounded-lg border border-[rgba(120,90,40,0.25)] text-xs font-medium uppercase tracking-[0.35px] transition-colors ${
-          activated
-            ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
-            : "cursor-pointer bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:text-white"
-        }`}
-      >
-        {activated ? "Active" : "Activate"}
-      </button>
+      <div className="mt-auto flex flex-col gap-2 sm:flex-row sm:items-center">
+        <VaultStrategySelector
+          strategies={strategies}
+          selectedId={selectedStrategyId}
+          disabled={activated}
+          onSelect={(id) => onPatch(vault.id, { selectedStrategyId: id })}
+          inline
+        />
+        <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            onPatch(vault.id, { backtestRequestedAt: Date.now() })
+          }
+          className="h-9 min-w-0 flex-1 rounded-lg border border-[rgba(120,90,40,0.22)] bg-[rgba(255,255,255,0.02)] text-xs font-medium uppercase tracking-[0.35px] text-[#8a8a94] transition-colors hover:border-[#785a28] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d4d4d8]"
+        >
+          Backtest
+        </button>
+
+        <button
+          type="button"
+          disabled={activated}
+          onClick={() =>
+            onPatch(vault.id, { activated: true, activatedAt: Date.now() })
+          }
+          className={`h-9 min-w-0 flex-1 rounded-lg border text-xs font-medium uppercase tracking-[0.35px] transition-colors ${
+            activated
+              ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
+              : "cursor-pointer border-[#785a28] bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:border-[#ccb17f] hover:text-white"
+          }`}
+        >
+          {activated ? "Active" : selectedStrategyId ? "Activate" : "Pick strategy"}
+        </button>
+        </div>
+      </div>
     </div>
   );
 }

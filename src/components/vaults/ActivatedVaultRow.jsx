@@ -55,8 +55,8 @@ export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPa
           "linear-gradient(90deg, rgba(26, 22, 18, 0.75) 0%, rgba(12, 10, 8, 0.55) 100%), linear-gradient(90deg, rgb(14, 12, 11) 0%, rgb(10, 10, 10) 100%)",
       }}
     >
-      <div className="relative z-1 flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-0 sm:py-0 sm:pr-4 sm:pl-4">
-        <div className="flex min-w-0 flex-1 items-start gap-3 sm:max-w-[220px] sm:flex-none sm:py-4">
+      <div className="relative z-1 flex w-full flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-0 sm:py-0 sm:pr-6 sm:pl-4">
+        <div className="flex min-w-0 items-start gap-3 sm:w-[16%] sm:min-w-[200px] sm:max-w-[280px] sm:flex-none sm:py-4">
           <div className="mt-0.5 shrink-0">
             {useCirclesBrand ? (
               <TealOverlappingCircles />
@@ -86,7 +86,7 @@ export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPa
 
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.06)] sm:mx-4 sm:block" />
 
-        <div className="grid flex-1 grid-cols-2 gap-x-6 gap-y-3 sm:flex sm:max-w-[400px] sm:flex-nowrap sm:gap-8 sm:py-4">
+        <div className="grid min-w-[240px] flex-1 grid-cols-2 gap-x-6 gap-y-3 sm:flex sm:flex-nowrap sm:gap-10 sm:py-4 lg:gap-12">
           {[
             ["Volume", stats.volume, "font-medium text-white"],
             ["APR", stats.apr, "font-medium text-[#5eead4]"],
@@ -104,7 +104,7 @@ export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPa
 
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.06)] lg:mx-2 lg:block" />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:flex-[1.35]">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:min-w-[320px] lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:flex-[1.5]">
           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex min-w-[140px] flex-1 items-center gap-2">
               <div className="relative flex h-[18px] flex-1 items-center px-0.5">
@@ -140,7 +140,7 @@ export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPa
               </span>
             </div>
 
-            <div className="flex min-w-[180px] max-w-[220px] flex-col gap-0.5">
+            <div className="flex min-w-[200px] max-w-[300px] flex-col gap-0.5">
               <div className="relative flex h-[34px] items-center rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)]">
                 <span className="text-sm font-medium leading-[21px] text-white">$</span>
                 <span className="ml-1.5 min-w-0 flex-1 text-right text-sm font-semibold leading-[21px] tabular-nums text-white">

@@ -10,7 +10,7 @@ const HERO_TRUST_FILL =
 export default function VaultsHero() {
   return (
     <section
-      className="vaults-root flex w-full max-w-[1150px] flex-col gap-2"
+      className="vaults-root flex w-full flex-col gap-2"
       data-tour="vaults-overview"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">

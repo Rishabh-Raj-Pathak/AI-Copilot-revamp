@@ -21,16 +21,16 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#030504]/82 p-0 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#030504]/82 p-0 backdrop-blur-[3px] max-tablet:px-4 max-tablet:pb-[max(1rem,env(safe-area-inset-bottom))]"
       role="presentation"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-2xl bg-[image:var(--ds-terminal-copilot-tour-popover-border-gradient)] p-px pb-0 shadow-[0_-8px_40px_rgba(0,0,0,0.55)] max-h-[min(92dvh,40rem)]"
+        className="w-full max-w-md max-tablet:max-w-[min(100%,20.5rem)] max-tablet:rounded-2xl rounded-t-2xl bg-[image:var(--ds-terminal-copilot-tour-popover-border-gradient)] p-px pb-0 shadow-[0_-8px_40px_rgba(0,0,0,0.55)] max-tablet:shadow-[0_8px_40px_rgba(0,0,0,0.55)] max-h-[min(92dvh,40rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="flex max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-t-2xl bg-[#0D100F] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]"
+          className="flex max-h-[min(92dvh,40rem)] flex-col overflow-hidden max-tablet:rounded-2xl rounded-t-2xl bg-[#0D100F] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="install-app-title"
@@ -40,7 +40,7 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
             aria-hidden
           />
 
-          <div className="minimal-scrollbar flex-1 overflow-y-auto overscroll-y-contain px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <div className="minimal-scrollbar flex-1 overflow-y-auto overscroll-y-contain px-6 max-tablet:px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] max-tablet:pb-5">
             <header className="border-b border-white/[0.06] pb-6 pt-5 text-center">
               <h2
                 id="install-app-title"

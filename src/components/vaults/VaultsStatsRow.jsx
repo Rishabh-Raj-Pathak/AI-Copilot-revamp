@@ -21,7 +21,7 @@ const STATS = [
  */
 export default function VaultsStatsRow() {
   return (
-    <section className="vaults-root grid w-full max-w-[1150px] grid-cols-1 gap-4 md:grid-cols-3">
+    <section className="vaults-root grid w-full grid-cols-1 gap-4 md:grid-cols-3">
       {STATS.map((s) => (
         <div
           key={s.label}

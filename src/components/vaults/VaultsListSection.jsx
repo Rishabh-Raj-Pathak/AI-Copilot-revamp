@@ -42,7 +42,7 @@ export default function VaultsListSection({
         </h3>
         <div className="vaults-section-hairline" />
       </div>
-      <div className="overflow-hidden rounded-[14px]">
+      <div className="overflow-hidden rounded-[14px] w-full">
         {vaults.map((v, i) => (
           <VaultRow
             key={v.id}
@@ -59,8 +59,12 @@ export default function VaultsListSection({
             onMaxClick={() =>
               onPatch(v.id, { amountStr: String(parseMaxUsdcFromLabel(v.maxLabel)) })
             }
+            onBacktest={() => onPatch(v.id, { backtestRequestedAt: Date.now() })}
             onActivate={() =>
               onPatch(v.id, { activated: true, activatedAt: Date.now() })
+            }
+            onStrategySelect={(strategyId) =>
+              onPatch(v.id, { selectedStrategyId: strategyId })
             }
           />
         ))}

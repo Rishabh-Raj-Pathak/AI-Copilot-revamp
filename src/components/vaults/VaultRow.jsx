@@ -4,6 +4,8 @@ import {
   feePctFromShare,
   parseMaxUsdcFromLabel,
 } from "./vaultUiUtils.js";
+import VaultStrategySelector from "./VaultStrategySelector.jsx";
+import { resolveVaultStrategies } from "./vaultStrategiesData.js";
 
 const ICONS = {
   pulse: Activity,
@@ -72,7 +74,9 @@ export default function VaultRow({
   onShareChange,
   onAmountStrChange,
   onMaxClick,
+  onBacktest,
   onActivate,
+  onStrategySelect,
   tourControlsDataTour,
 }) {
   const {
@@ -94,12 +98,15 @@ export default function VaultRow({
   const activated = ui.activated;
   const feeLabel = feePctFromShare(sharePct);
   const vaultMaxUsdc = parseMaxUsdcFromLabel(maxLabel);
+  const strategies = resolveVaultStrategies(vault);
+  const selectedStrategyId =
+    ui.selectedStrategyId ?? strategies[0]?.id ?? null;
 
   const paddedForStrip = Boolean(bronzeStrip);
 
   return (
     <article
-      className={`vaults-root relative min-h-[72px] overflow-hidden shadow-[0_4px_20px_-5px_rgba(0,0,0,0.5)] ${
+      className={`vaults-root relative w-full min-h-[72px] overflow-hidden shadow-[0_4px_20px_-5px_rgba(0,0,0,0.5)] ${
         isFirst ? "" : "border-t border-[rgba(255,255,255,0.03)]"
       }`}
       style={{
@@ -109,11 +116,11 @@ export default function VaultRow({
     >
       {bronzeStrip ? <BronzeStrip /> : null}
       <div
-        className={`relative z-1 flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-0 sm:py-0 sm:pr-4 sm:pl-4 ${
+        className={`relative z-1 flex w-full flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-0 sm:py-0 sm:pr-6 sm:pl-4 ${
           paddedForStrip ? "sm:pl-10" : ""
         }`}
       >
-        <div className="flex min-w-0 flex-1 items-start gap-3 sm:max-w-[220px] sm:flex-none sm:py-4">
+        <div className="flex min-w-0 items-start gap-3 sm:w-[16%] sm:min-w-[200px] sm:max-w-[280px] sm:flex-none sm:py-4">
           <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-[#ccb17f] opacity-80">
             <Icon className="size-5" strokeWidth={2} aria-hidden />
           </div>
@@ -135,19 +142,12 @@ export default function VaultRow({
                 {subline}
               </p>
             ) : null}
-            <p
-              className={`text-[11px] font-normal uppercase leading-4 tracking-[0.275px] text-[#717182] ${
-                tall && subline ? "mt-0.5" : ""
-              }`}
-            >
-              {strategyLabel}
-            </p>
           </div>
         </div>
 
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] sm:mx-4 sm:block" />
 
-        <div className="flex flex-1 gap-6 sm:max-w-[320px] sm:gap-8 sm:py-4">
+        <div className="flex min-w-[240px] flex-1 gap-6 sm:gap-10 sm:py-4 lg:gap-12">
           {[
             ["Volume", stats.volume, "font-medium text-[#d4d4d8]"],
             ["APR", stats.apr, "font-bold text-[#ccb17f]"],
@@ -165,7 +165,7 @@ export default function VaultRow({
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] lg:mx-2 lg:block" />
 
         <div
-          className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:flex-row lg:items-center lg:justify-end lg:gap-3 lg:flex-[1.4]"
+          className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:min-w-[380px] lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:flex-[1.85]"
           {...(tourControlsDataTour
             ? { "data-tour": tourControlsDataTour }
             : {})}
@@ -203,7 +203,7 @@ export default function VaultRow({
               </span>
             </div>
 
-            <div className="relative flex h-[34px] min-w-[180px] max-w-[220px] flex-1 items-center rounded-lg border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]">
+            <div className="relative flex h-[34px] min-w-[200px] max-w-[300px] flex-1 items-center rounded-lg border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]">
               <span className="text-sm font-medium leading-[21px] text-[#ccb17f]">
                 $
               </span>
@@ -232,26 +232,43 @@ export default function VaultRow({
             </div>
           </div>
 
-          <button
-            type="button"
-            disabled={activated}
-            onClick={onActivate}
-            className={`h-[37px] w-full shrink-0 rounded-[10px] border border-[rgba(120,90,40,0.2)] px-4 text-[13px] font-medium uppercase tracking-[0.35px] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors sm:w-[120px] ${
-              activated
-                ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
-                : "cursor-pointer bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:text-white"
-            }`}
-            style={
-              activated
-                ? undefined
-                : {
-                    backgroundImage:
-                      "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
-                  }
-            }
-          >
-            {activated ? "Active" : "Activate"}
-          </button>
+          <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+            <VaultStrategySelector
+              strategies={strategies}
+              selectedId={selectedStrategyId}
+              disabled={activated}
+              onSelect={(id) => onStrategySelect?.(id)}
+              inline
+            />
+            <button
+              type="button"
+              onClick={onBacktest}
+              className="h-[37px] min-w-0 flex-1 rounded-[10px] border border-[rgba(120,90,40,0.22)] bg-[rgba(255,255,255,0.02)] px-3 text-[13px] font-medium uppercase tracking-[0.35px] text-[#8a8a94] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[#785a28] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d4d4d8] sm:w-[122px] sm:flex-none"
+            >
+              Backtest
+            </button>
+
+            <button
+              type="button"
+              disabled={activated}
+              onClick={onActivate}
+              className={`h-[37px] min-w-0 flex-1 rounded-[10px] border px-3 text-[13px] font-medium uppercase tracking-[0.35px] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors sm:w-[122px] sm:flex-none ${
+                activated
+                  ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
+                  : "cursor-pointer border-[#785a28] bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:border-[#ccb17f] hover:text-white"
+              }`}
+              style={
+                activated
+                  ? undefined
+                  : {
+                      backgroundImage:
+                        "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
+                    }
+              }
+            >
+              {activated ? "Active" : selectedStrategyId ? "Activate" : "Pick strategy"}
+            </button>
+          </div>
         </div>
       </div>
     </article>
