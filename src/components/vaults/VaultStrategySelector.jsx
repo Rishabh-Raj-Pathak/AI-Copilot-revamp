@@ -180,7 +180,9 @@ function VaultStrategyMobileSheet({
   strategies,
   highlightId,
   selectedId,
-  onHighlight,
+  returnToPicker,
+  onViewDetails,
+  onBackToPicker,
   onClose,
   onConfirm,
 }) {
@@ -259,8 +261,19 @@ function VaultStrategyMobileSheet({
             className="mb-3 h-1 w-10 shrink-0 rounded-full bg-[#454545]"
             aria-hidden
           />
-          <div className="flex w-full items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-[#e8d5b5]">
+          <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2">
+            {!isPicker && returnToPicker ? (
+              <button
+                type="button"
+                onClick={onBackToPicker}
+                className="text-sm font-medium text-[#ccb17f] transition-opacity hover:opacity-90"
+              >
+                ← Back
+              </button>
+            ) : (
+              <span className="size-9" aria-hidden />
+            )}
+            <h3 className="text-center text-base font-semibold text-[#e8d5b5]">
               {isPicker ? "Choose strategy" : "Strategy details"}
             </h3>
             <button
@@ -274,91 +287,62 @@ function VaultStrategyMobileSheet({
           </div>
         </div>
 
-        <div className={`vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 ${isPicker ? "" : "pb-[max(1rem,env(safe-area-inset-bottom))]"}`}>
+        <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {isPicker ? (
-            <ul className="flex flex-col gap-3" role="listbox" aria-label="Vault strategies">
+            <>
+              <p className="mb-3 text-xs leading-relaxed text-[#717182]">
+                Tap a strategy to select it, or open Details to read more first.
+              </p>
+              <ul className="flex flex-col gap-3" role="listbox" aria-label="Vault strategies">
               {strategies.map((strategy) => {
-                const expanded = strategy.id === highlightId;
                 const selected = strategy.id === selectedId;
                 return (
                   <li key={strategy.id}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      onClick={() => onHighlight(strategy.id)}
-                      className={`w-full rounded-[14px] border p-4 text-left transition-colors ${
-                        expanded
+                    <div
+                      className={`overflow-hidden rounded-[14px] border transition-colors ${
+                        selected
                           ? "border-[#785a28] bg-[rgba(204,177,127,0.08)]"
-                          : "border-[rgba(255,255,255,0.06)] bg-[#0c0a08] hover:border-[rgba(120,90,40,0.35)]"
+                          : "border-[rgba(255,255,255,0.06)] bg-[#0c0a08]"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#e8d5b5]">
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        onClick={() => onConfirm(strategy.id)}
+                        className="w-full px-4 pb-3 pt-4 text-left transition-colors active:bg-[rgba(255,255,255,0.03)]"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="min-w-0 text-sm font-semibold leading-5 text-[#e8d5b5]">
                             {strategy.name}
                           </p>
-                          <p className="mt-1 line-clamp-2 text-xs leading-[1.5] text-[#717182]">
-                            {strategy.description}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-2">
                           <StrategyRiskBadge risk={strategy.risk} />
-                          {selected ? (
-                            <Check
-                              className="size-4 text-[#ccb17f]"
-                              strokeWidth={2}
-                              aria-hidden
-                            />
-                          ) : null}
                         </div>
+                        <p className="mt-2 line-clamp-2 text-xs leading-[1.55] text-[#717182]">
+                          {strategy.description}
+                        </p>
+                      </button>
+                      <div className="flex justify-end border-t border-[rgba(255,255,255,0.05)] px-4 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(strategy.id)}
+                          className="text-[10px] font-medium uppercase tracking-[0.35px] text-[#ccb17f] transition-opacity hover:opacity-90"
+                        >
+                          Details
+                        </button>
                       </div>
-                      {expanded ? (
-                        <div className="mt-4 border-t border-[rgba(255,255,255,0.06)] pt-4">
-                          <dl className="flex flex-col gap-2 text-[11px]">
-                            <div className="flex gap-2">
-                              <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
-                                Timeframe
-                              </dt>
-                              <dd className="text-[#d4d4d8]">{strategy.timeframe}</dd>
-                            </div>
-                            <div className="flex gap-2">
-                              <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
-                                Best for
-                              </dt>
-                              <dd className="text-[#d4d4d8]">{strategy.bestFor}</dd>
-                            </div>
-                          </dl>
-                        </div>
-                      ) : null}
-                    </button>
+                    </div>
                   </li>
                 );
               })}
             </ul>
+            </>
           ) : (
             <div className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#0c0a08] p-4">
               <StrategyDetailBody strategy={highlighted} />
             </div>
           )}
         </div>
-
-        {isPicker ? (
-          <div className="shrink-0 border-t border-[rgba(255,255,255,0.06)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-            <button
-              type="button"
-              disabled={!highlightId}
-              onClick={() => onConfirm(highlightId)}
-              className="h-11 w-full rounded-[12px] border border-[#785a28] bg-linear-to-b from-[#14100a] to-[#0a0805] text-sm font-semibold uppercase tracking-[0.35px] text-[#e8d5b5] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-opacity disabled:cursor-default disabled:opacity-50"
-              style={{
-                backgroundImage:
-                  "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
-              }}
-            >
-              Use this strategy
-            </button>
-          </div>
-        ) : null}
       </div>
     </div>,
     document.body,
@@ -391,6 +375,7 @@ export default function VaultStrategySelector({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState("picker");
   const [sheetHighlightId, setSheetHighlightId] = useState(null);
+  const [sheetReturnToPicker, setSheetReturnToPicker] = useState(false);
 
   const controlHeight = inline ? "h-[37px]" : "h-8";
   const controlRadius = inline ? "rounded-[10px]" : "rounded-lg";
@@ -492,11 +477,29 @@ export default function VaultStrategySelector({
     if (disabled) return;
     setSheetMode(mode);
     setSheetHighlightId(active.id);
+    setSheetReturnToPicker(false);
     setSheetOpen(true);
   };
 
   const closeMobileSheet = () => {
+    if (sheetMode === "details" && sheetReturnToPicker) {
+      setSheetMode("picker");
+      setSheetReturnToPicker(false);
+      return;
+    }
     setSheetOpen(false);
+  };
+
+  const handleBackToPicker = () => {
+    setSheetMode("picker");
+    setSheetReturnToPicker(false);
+  };
+
+  const handleMobileViewDetails = (strategyId) => {
+    setSheetHighlightId(strategyId);
+    setSheetReturnToPicker(sheetOpen && sheetMode === "picker");
+    setSheetMode("details");
+    setSheetOpen(true);
   };
 
   const handleToggleMenu = () => {
@@ -529,8 +532,13 @@ export default function VaultStrategySelector({
   return (
     <div
       ref={rootRef}
-      className={`flex min-w-0 flex-col gap-2 ${inline ? "shrink-0 tablet:w-[130px]" : "w-full"}`}
+      className={`flex min-w-0 flex-col gap-1.5 ${inline ? "shrink-0 tablet:w-[130px]" : "w-full"}`}
     >
+      {isNarrow ? (
+        <span className="text-[10px] font-semibold uppercase tracking-[0.35px] text-[#717182]">
+          Strategy
+        </span>
+      ) : null}
       <button
         ref={triggerRef}
         type="button"
@@ -538,6 +546,9 @@ export default function VaultStrategySelector({
         aria-haspopup={isNarrow ? "dialog" : "listbox"}
         aria-expanded={isNarrow ? sheetOpen : menuOpen}
         aria-controls={isNarrow ? undefined : listId}
+        aria-label={
+          isNarrow ? `Change strategy, currently ${active.name}` : undefined
+        }
         onClick={handleToggleMenu}
         onMouseEnter={() => {
           if (isNarrow || menuOpen) return;
@@ -603,7 +614,9 @@ export default function VaultStrategySelector({
           strategies={strategies}
           highlightId={resolvedHighlightId}
           selectedId={selectedId ?? active.id}
-          onHighlight={setSheetHighlightId}
+          returnToPicker={sheetReturnToPicker}
+          onViewDetails={handleMobileViewDetails}
+          onBackToPicker={handleBackToPicker}
           onClose={closeMobileSheet}
           onConfirm={handleMobileConfirm}
         />
