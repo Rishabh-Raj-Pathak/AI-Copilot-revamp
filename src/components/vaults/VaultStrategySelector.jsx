@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import {
   useEffect,
   useId,
@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 
 const RISK_STYLES = {
   Low: "border-[rgba(0,188,125,0.25)] bg-[rgba(0,188,125,0.1)] text-[#00d492]",
@@ -20,6 +21,68 @@ const MENU_GAP_PX = 6;
 const Z_MENU = 240;
 const Z_POPOVER_TRIGGER = 230;
 const Z_POPOVER_MENU = 250;
+const Z_SHEET_BACKDROP = 56;
+const Z_SHEET = 57;
+
+function useNarrowViewport() {
+  const [narrow, setNarrow] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(NARROW_VIEWPORT_MEDIA).matches;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_VIEWPORT_MEDIA);
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  return narrow;
+}
+
+function StrategyRiskBadge({ risk }) {
+  const riskClass = RISK_STYLES[risk] ?? RISK_STYLES.Medium;
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.4px] ${riskClass}`}
+    >
+      {risk} risk
+    </span>
+  );
+}
+
+function StrategyDetailBody({ strategy }) {
+  if (!strategy) return null;
+
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-semibold leading-5 text-[#e8d5b5]">
+          {strategy.name}
+        </p>
+        <StrategyRiskBadge risk={strategy.risk} />
+      </div>
+      <p className="mt-2 text-xs leading-[1.55] text-[#a1a1aa]">
+        {strategy.description}
+      </p>
+      <dl className="mt-3 flex flex-col gap-2 border-t border-[rgba(255,255,255,0.06)] pt-3 text-[11px]">
+        <div className="flex gap-2">
+          <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
+            Timeframe
+          </dt>
+          <dd className="text-[#d4d4d8]">{strategy.timeframe}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
+            Best for
+          </dt>
+          <dd className="text-[#d4d4d8]">{strategy.bestFor}</dd>
+        </div>
+      </dl>
+    </>
+  );
+}
 
 function StrategyInfoPopover({
   strategy,
@@ -90,8 +153,6 @@ function StrategyInfoPopover({
 
   if (!open || !pos || !strategy) return null;
 
-  const riskClass = RISK_STYLES[strategy.risk] ?? RISK_STYLES.Medium;
-
   return createPortal(
     <div
       ref={popoverRef}
@@ -107,40 +168,205 @@ function StrategyInfoPopover({
         zIndex,
       }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-semibold leading-5 text-[#e8d5b5]">
-          {strategy.name}
-        </p>
-        <span
-          className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.4px] ${riskClass}`}
-        >
-          {strategy.risk} risk
-        </span>
+      <StrategyDetailBody strategy={strategy} />
+    </div>,
+    document.body,
+  );
+}
+
+function VaultStrategyMobileSheet({
+  open,
+  mode,
+  strategies,
+  highlightId,
+  selectedId,
+  onHighlight,
+  onClose,
+  onConfirm,
+}) {
+  const sheetRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      document.documentElement.style.removeProperty(
+        "--vault-strategy-sheet-height",
+      );
+      return undefined;
+    }
+
+    const el = sheetRef.current;
+    if (!el) return undefined;
+
+    const sync = () => {
+      document.documentElement.style.setProperty(
+        "--vault-strategy-sheet-height",
+        `${el.getBoundingClientRect().height}px`,
+      );
+    };
+
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+      document.documentElement.style.removeProperty(
+        "--vault-strategy-sheet-height",
+      );
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  const highlighted =
+    strategies.find((s) => s.id === highlightId) ?? strategies[0];
+  const isPicker = mode === "picker";
+
+  return createPortal(
+    <div className="vaults-root max-tablet:block tablet:hidden">
+      <button
+        type="button"
+        aria-label="Close strategy panel"
+        className="fixed inset-0 bg-black/60"
+        style={{ zIndex: Z_SHEET_BACKDROP }}
+        onClick={onClose}
+      />
+      <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={isPicker ? "Choose vault strategy" : "Strategy details"}
+        className="fixed inset-x-0 bottom-0 flex max-h-[min(88dvh,720px)] flex-col overflow-hidden rounded-t-[20px] border border-[rgba(255,255,255,0.08)] bg-[#0a0908] shadow-[0_-12px_40px_rgba(0,0,0,0.55)]"
+        style={{ zIndex: Z_SHEET }}
+      >
+        <div className="flex shrink-0 flex-col items-center border-b border-[rgba(255,255,255,0.06)] px-4 pb-3 pt-2">
+          <div
+            className="mb-3 h-1 w-10 shrink-0 rounded-full bg-[#454545]"
+            aria-hidden
+          />
+          <div className="flex w-full items-center justify-between gap-3">
+            <h3 className="text-base font-semibold text-[#e8d5b5]">
+              {isPicker ? "Choose strategy" : "Strategy details"}
+            </h3>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] hover:bg-white/5 hover:text-white"
+              aria-label="Close"
+            >
+              <X className="size-5" strokeWidth={2} aria-hidden />
+            </button>
+          </div>
+        </div>
+
+        <div className={`vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 ${isPicker ? "" : "pb-[max(1rem,env(safe-area-inset-bottom))]"}`}>
+          {isPicker ? (
+            <ul className="flex flex-col gap-3" role="listbox" aria-label="Vault strategies">
+              {strategies.map((strategy) => {
+                const expanded = strategy.id === highlightId;
+                const selected = strategy.id === selectedId;
+                return (
+                  <li key={strategy.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      onClick={() => onHighlight(strategy.id)}
+                      className={`w-full rounded-[14px] border p-4 text-left transition-colors ${
+                        expanded
+                          ? "border-[#785a28] bg-[rgba(204,177,127,0.08)]"
+                          : "border-[rgba(255,255,255,0.06)] bg-[#0c0a08] hover:border-[rgba(120,90,40,0.35)]"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#e8d5b5]">
+                            {strategy.name}
+                          </p>
+                          <p className="mt-1 line-clamp-2 text-xs leading-[1.5] text-[#717182]">
+                            {strategy.description}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-2">
+                          <StrategyRiskBadge risk={strategy.risk} />
+                          {selected ? (
+                            <Check
+                              className="size-4 text-[#ccb17f]"
+                              strokeWidth={2}
+                              aria-hidden
+                            />
+                          ) : null}
+                        </div>
+                      </div>
+                      {expanded ? (
+                        <div className="mt-4 border-t border-[rgba(255,255,255,0.06)] pt-4">
+                          <dl className="flex flex-col gap-2 text-[11px]">
+                            <div className="flex gap-2">
+                              <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
+                                Timeframe
+                              </dt>
+                              <dd className="text-[#d4d4d8]">{strategy.timeframe}</dd>
+                            </div>
+                            <div className="flex gap-2">
+                              <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
+                                Best for
+                              </dt>
+                              <dd className="text-[#d4d4d8]">{strategy.bestFor}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#0c0a08] p-4">
+              <StrategyDetailBody strategy={highlighted} />
+            </div>
+          )}
+        </div>
+
+        {isPicker ? (
+          <div className="shrink-0 border-t border-[rgba(255,255,255,0.06)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+            <button
+              type="button"
+              disabled={!highlightId}
+              onClick={() => onConfirm(highlightId)}
+              className="h-11 w-full rounded-[12px] border border-[#785a28] bg-linear-to-b from-[#14100a] to-[#0a0805] text-sm font-semibold uppercase tracking-[0.35px] text-[#e8d5b5] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-opacity disabled:cursor-default disabled:opacity-50"
+              style={{
+                backgroundImage:
+                  "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
+              }}
+            >
+              Use this strategy
+            </button>
+          </div>
+        ) : null}
       </div>
-      <p className="mt-2 text-xs leading-[1.55] text-[#a1a1aa]">
-        {strategy.description}
-      </p>
-      <dl className="mt-3 flex flex-col gap-2 border-t border-[rgba(255,255,255,0.06)] pt-3 text-[11px]">
-        <div className="flex gap-2">
-          <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
-            Timeframe
-          </dt>
-          <dd className="text-[#d4d4d8]">{strategy.timeframe}</dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#717182]">
-            Best for
-          </dt>
-          <dd className="text-[#d4d4d8]">{strategy.bestFor}</dd>
-        </div>
-      </dl>
     </div>,
     document.body,
   );
 }
 
 /**
- * Custom strategy dropdown — hover any option (or the trigger) to preview details.
+ * Custom strategy dropdown — desktop hover preview; mobile bottom sheet picker.
  */
 export default function VaultStrategySelector({
   strategies,
@@ -149,10 +375,7 @@ export default function VaultStrategySelector({
   onSelect,
   inline = false,
 }) {
-  if (!strategies?.length) return null;
-
-  const active =
-    strategies.find((s) => s.id === selectedId) ?? strategies[0];
+  const isNarrow = useNarrowViewport();
   const listId = useId();
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
@@ -165,6 +388,9 @@ export default function VaultStrategySelector({
   const [previewStrategy, setPreviewStrategy] = useState(null);
   const [previewAnchorEl, setPreviewAnchorEl] = useState(null);
   const [previewFromMenu, setPreviewFromMenu] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetMode, setSheetMode] = useState("picker");
+  const [sheetHighlightId, setSheetHighlightId] = useState(null);
 
   const controlHeight = inline ? "h-[37px]" : "h-8";
   const controlRadius = inline ? "rounded-[10px]" : "rounded-lg";
@@ -186,7 +412,7 @@ export default function VaultStrategySelector({
   };
 
   const openPreview = (strategy, anchorEl, fromMenu = false) => {
-    if (disabled || !strategy || !anchorEl) return;
+    if (disabled || !strategy || !anchorEl || isNarrow) return;
     clearCloseTimer();
     setPreviewStrategy(strategy);
     setPreviewAnchorEl(anchorEl);
@@ -215,7 +441,7 @@ export default function VaultStrategySelector({
   };
 
   useLayoutEffect(() => {
-    if (!menuOpen) {
+    if (!menuOpen || isNarrow) {
       setMenuPos(null);
       return undefined;
     }
@@ -226,10 +452,10 @@ export default function VaultStrategySelector({
       window.removeEventListener("resize", updateMenuPosition);
       window.removeEventListener("scroll", updateMenuPosition, true);
     };
-  }, [menuOpen, menuWidth]);
+  }, [menuOpen, menuWidth, isNarrow]);
 
   useEffect(() => {
-    if (!menuOpen) return undefined;
+    if (!menuOpen || isNarrow) return undefined;
     const onPointerDown = (e) => {
       if (
         rootRef.current?.contains(e.target) ||
@@ -252,12 +478,33 @@ export default function VaultStrategySelector({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [menuOpen]);
+  }, [menuOpen, isNarrow]);
 
   useEffect(() => () => clearCloseTimer(), []);
 
+  if (!strategies?.length) return null;
+
+  const active =
+    strategies.find((s) => s.id === selectedId) ?? strategies[0];
+  const resolvedHighlightId = sheetHighlightId ?? active.id;
+
+  const openMobileSheet = (mode) => {
+    if (disabled) return;
+    setSheetMode(mode);
+    setSheetHighlightId(active.id);
+    setSheetOpen(true);
+  };
+
+  const closeMobileSheet = () => {
+    setSheetOpen(false);
+  };
+
   const handleToggleMenu = () => {
     if (disabled) return;
+    if (isNarrow) {
+      openMobileSheet("picker");
+      return;
+    }
     setMenuOpen((open) => {
       const next = !open;
       if (next) {
@@ -273,32 +520,39 @@ export default function VaultStrategySelector({
     closePreview();
   };
 
+  const handleMobileConfirm = (strategyId) => {
+    if (!strategyId) return;
+    onSelect(strategyId);
+    closeMobileSheet();
+  };
+
   return (
     <div
       ref={rootRef}
-      className={`flex min-w-0 ${inline ? "shrink-0 sm:w-[130px]" : "w-full"}`}
+      className={`flex min-w-0 flex-col gap-2 ${inline ? "shrink-0 tablet:w-[130px]" : "w-full"}`}
     >
       <button
         ref={triggerRef}
         type="button"
         disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={menuOpen}
-        aria-controls={listId}
+        aria-haspopup={isNarrow ? "dialog" : "listbox"}
+        aria-expanded={isNarrow ? sheetOpen : menuOpen}
+        aria-controls={isNarrow ? undefined : listId}
         onClick={handleToggleMenu}
         onMouseEnter={() => {
-          if (menuOpen) return;
+          if (isNarrow || menuOpen) return;
           openPreview(active, triggerRef.current, false);
         }}
         onMouseLeave={() => {
-          if (menuOpen) return;
+          if (isNarrow || menuOpen) return;
           scheduleClosePreview();
         }}
         onFocus={() => {
-          if (menuOpen) return;
+          if (isNarrow || menuOpen) return;
           openPreview(active, triggerRef.current, false);
         }}
         onBlur={(e) => {
+          if (isNarrow) return;
           if (rootRef.current?.contains(e.relatedTarget)) return;
           if (menuRef.current?.contains(e.relatedTarget)) return;
           if (menuOpen) return;
@@ -313,14 +567,49 @@ export default function VaultStrategySelector({
         <span className="truncate">{active.name}</span>
         <ChevronDown
           className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#717182] transition-transform ${
-            menuOpen ? "rotate-180" : ""
+            menuOpen || sheetOpen ? "rotate-180" : ""
           } ${disabled ? "opacity-50" : ""}`}
           strokeWidth={2}
           aria-hidden
         />
       </button>
 
-      {menuOpen && menuPos
+      {!disabled && isNarrow && selectedId ? (
+        <div className="rounded-[10px] border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 py-2.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <StrategyRiskBadge risk={active.risk} />
+              </div>
+              <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.45] text-[#717182]">
+                {active.description}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openMobileSheet("details")}
+              className="shrink-0 text-[11px] font-medium uppercase tracking-[0.3px] text-[#ccb17f] transition-opacity hover:opacity-90"
+            >
+              Details
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {isNarrow ? (
+        <VaultStrategyMobileSheet
+          open={sheetOpen}
+          mode={sheetMode}
+          strategies={strategies}
+          highlightId={resolvedHighlightId}
+          selectedId={selectedId ?? active.id}
+          onHighlight={setSheetHighlightId}
+          onClose={closeMobileSheet}
+          onConfirm={handleMobileConfirm}
+        />
+      ) : null}
+
+      {!isNarrow && menuOpen && menuPos
         ? createPortal(
             <div
               ref={menuRef}
@@ -374,7 +663,7 @@ export default function VaultStrategySelector({
           )
         : null}
 
-      {!disabled && !menuOpen ? (
+      {!disabled && !isNarrow && !menuOpen ? (
         <StrategyInfoPopover
           strategy={previewStrategy}
           anchorEl={previewAnchorEl}
@@ -386,7 +675,7 @@ export default function VaultStrategySelector({
         />
       ) : null}
 
-      {!disabled && menuOpen && previewFromMenu ? (
+      {!disabled && !isNarrow && menuOpen && previewFromMenu ? (
         <StrategyInfoPopover
           strategy={previewStrategy}
           anchorEl={previewAnchorEl}
