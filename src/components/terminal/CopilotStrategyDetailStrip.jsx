@@ -50,11 +50,11 @@ export default function CopilotStrategyDetailStrip({
   if (!strategy) return null;
 
   const facts = (
-    <div
+    <aside
       className={
         compact
-          ? "mt-2.5 grid grid-cols-2 gap-2"
-          : "grid grid-cols-1 gap-2 sm:grid-cols-2"
+          ? "mt-2.5 grid grid-cols-2 gap-2 border-t border-[#242424] pt-2.5"
+          : "grid w-full shrink-0 gap-2 sm:w-[10.5rem] lg:w-48"
       }
     >
       <StrategyFact
@@ -67,11 +67,11 @@ export default function CopilotStrategyDetailStrip({
         value={strategy.bestFor}
         compact={compact}
       />
-    </div>
+    </aside>
   );
 
-  return (
-    <div aria-live="polite" className="min-w-0">
+  const main = (
+    <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span
           className={`font-semibold text-[#f2b500] ${
@@ -112,7 +112,20 @@ export default function CopilotStrategyDetailStrip({
         {strategy.description}
       </p>
 
-      {facts}
+      {compact ? facts : null}
+    </div>
+  );
+
+  return (
+    <div aria-live="polite" className="min-w-0">
+      {compact ? (
+        main
+      ) : (
+        <div className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+          {main}
+          {facts}
+        </div>
+      )}
     </div>
   );
 }
