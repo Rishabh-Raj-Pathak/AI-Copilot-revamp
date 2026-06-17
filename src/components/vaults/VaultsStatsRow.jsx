@@ -25,7 +25,7 @@ export default function VaultsStatsRow() {
       {STATS.map((s) => (
         <div
           key={s.label}
-          className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-6 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] max-tablet:px-5 max-tablet:py-5 tablet:px-6 tablet:py-6"
         >
           <div className="flex flex-col gap-2">
             <p className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.08em] text-[#717182]">

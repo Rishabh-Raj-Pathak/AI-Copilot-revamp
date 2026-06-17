@@ -43,7 +43,7 @@ function Badge({ badge }) {
 function BronzeStrip() {
   return (
     <div
-      className="pointer-events-none absolute inset-y-0 left-0 z-2 flex w-[26px] flex-col items-center justify-center overflow-hidden rounded-l-[inherit] bg-[#785a28] shadow-[inset_0_0_4px_rgba(0,0,0,0.5)]"
+      className="pointer-events-none absolute inset-y-0 left-0 z-2 hidden w-[26px] flex-col items-center justify-center overflow-hidden rounded-l-[inherit] bg-[#785a28] shadow-[inset_0_0_4px_rgba(0,0,0,0.5)] tablet:flex"
       aria-hidden
     >
       <div
@@ -64,6 +64,12 @@ function BronzeStrip() {
   );
 }
 
+const STAT_ROWS = [
+  ["VOL", "Volume", "volume", "font-medium text-[#d4d4d8]"],
+  ["APR", "APR", "apr", "font-bold text-[#ccb17f]"],
+  ["USERS", "Users", "users", "font-medium text-[#717182]"],
+];
+
 /**
  * Figma: `4421:6264` outer shell + `4421:6266` inner row — interactive controls match `4421:6299`.
  */
@@ -81,14 +87,12 @@ export default function VaultRow({
 }) {
   const {
     name,
-    strategyLabel,
     badge,
     subline,
     sublineTone,
     stats,
     maxLabel,
     bronzeStrip,
-    tall,
     iconKey,
   } = vault;
 
@@ -106,8 +110,10 @@ export default function VaultRow({
 
   return (
     <article
-      className={`vaults-root relative w-full min-h-[72px] overflow-hidden shadow-[0_4px_20px_-5px_rgba(0,0,0,0.5)] ${
-        isFirst ? "" : "border-t border-[rgba(255,255,255,0.03)]"
+      className={`vaults-root relative w-full min-h-[72px] overflow-hidden shadow-[0_4px_20px_-5px_rgba(0,0,0,0.5)] max-tablet:rounded-[14px] max-tablet:border max-tablet:border-[rgba(255,255,255,0.06)] ${
+        isFirst
+          ? ""
+          : "border-t border-[rgba(255,255,255,0.03)] max-tablet:border-t"
       }`}
       style={{
         backgroundImage:
@@ -116,48 +122,63 @@ export default function VaultRow({
     >
       {bronzeStrip ? <BronzeStrip /> : null}
       <div
-        className={`relative z-1 flex w-full flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:gap-0 sm:py-0 sm:pr-6 sm:pl-4 ${
-          paddedForStrip ? "sm:pl-10" : ""
+        className={`relative z-1 flex w-full flex-col gap-4 px-4 py-4 tablet:flex-row tablet:items-center tablet:gap-0 tablet:py-0 tablet:pr-6 tablet:pl-4 ${
+          paddedForStrip ? "tablet:pl-10" : ""
         }`}
       >
-        <div className="flex min-w-0 items-start gap-3 sm:w-[16%] sm:min-w-[200px] sm:max-w-[280px] sm:flex-none sm:py-4">
-          <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-[#ccb17f] opacity-80">
-            <Icon className="size-5" strokeWidth={2} aria-hidden />
-          </div>
-          <div className="min-w-0 flex flex-col gap-0.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base font-medium leading-5 text-[#e8d5b5]">
-                {name}
-              </span>
-              <Badge badge={badge} />
+        <div className="flex min-w-0 items-start justify-between gap-3 tablet:w-[16%] tablet:min-w-[200px] tablet:max-w-[280px] tablet:flex-none tablet:justify-start tablet:py-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-[#ccb17f] opacity-80">
+              <Icon className="size-5" strokeWidth={2} aria-hidden />
             </div>
-            {subline ? (
-              <p
-                className={`text-[11px] font-medium uppercase tracking-[0.275px] ${
-                  sublineTone === "gold"
-                    ? "text-[#ccb17f]"
-                    : "text-[#717182]"
-                }`}
-              >
-                {subline}
-              </p>
-            ) : null}
+            <div className="min-w-0 flex flex-col gap-0.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-base font-medium leading-5 text-[#e8d5b5]">
+                  {name}
+                </span>
+                <Badge badge={badge} />
+              </div>
+              {subline ? (
+                <p
+                  className={`text-[11px] font-medium uppercase tracking-[0.275px] ${
+                    sublineTone === "gold"
+                      ? "text-[#ccb17f]"
+                      : "text-[#717182]"
+                  }`}
+                >
+                  {subline}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
-        <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] sm:mx-4 sm:block" />
+        <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] tablet:mx-4 tablet:block" />
 
-        <div className="flex min-w-[240px] flex-1 gap-6 sm:gap-10 sm:py-4 lg:gap-12">
-          {[
-            ["Volume", stats.volume, "font-medium text-[#d4d4d8]"],
-            ["APR", stats.apr, "font-bold text-[#ccb17f]"],
-            ["Users", stats.users, "font-medium text-[#717182]"],
-          ].map(([label, val, valClass]) => (
+        {/* Mobile: row-pair stats */}
+        <div className="flex flex-col gap-2.5 tablet:hidden">
+          {STAT_ROWS.map(([mobileLabel, , key, valClass]) => (
+            <div key={mobileLabel} className="flex items-center justify-between">
+              <span className="text-[10px] uppercase leading-[15px] tracking-[0.5px] text-[#717182]">
+                {mobileLabel}
+              </span>
+              <span className={`text-sm leading-5 ${valClass}`}>
+                {stats[key]}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: column stats */}
+        <div className="hidden min-w-[240px] flex-1 gap-6 tablet:flex tablet:gap-10 tablet:py-4 lg:gap-12">
+          {STAT_ROWS.map(([, label, key, valClass]) => (
             <div key={label} className="flex min-w-[72px] flex-col gap-0.5">
               <span className="text-[10px] uppercase leading-[15px] tracking-[0.5px] text-[#717182]">
                 {label}
               </span>
-              <span className={`text-sm leading-5 ${valClass}`}>{val}</span>
+              <span className={`text-sm leading-5 ${valClass}`}>
+                {stats[key]}
+              </span>
             </div>
           ))}
         </div>
@@ -165,12 +186,12 @@ export default function VaultRow({
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] lg:mx-2 lg:block" />
 
         <div
-          className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:min-w-[380px] lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:flex-[1.85]"
+          className="flex min-w-0 flex-1 flex-col gap-3 tablet:py-4 lg:min-w-[380px] lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:flex-[1.85]"
           {...(tourControlsDataTour
             ? { "data-tour": tourControlsDataTour }
             : {})}
         >
-          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 tablet:flex-row tablet:items-center tablet:gap-4">
             <div className="flex min-w-[140px] flex-1 items-center gap-2">
               <div className="relative flex h-[18px] flex-1 items-center px-0.5">
                 <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#1e1b18] shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]" />
@@ -203,7 +224,7 @@ export default function VaultRow({
               </span>
             </div>
 
-            <div className="relative flex h-[34px] min-w-[200px] max-w-[300px] flex-1 items-center rounded-lg border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]">
+            <div className="relative flex h-[34px] w-full max-w-none flex-1 items-center rounded-lg border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)] tablet:min-w-[200px] tablet:max-w-[300px]">
               <span className="text-sm font-medium leading-[21px] text-[#ccb17f]">
                 $
               </span>
@@ -232,7 +253,7 @@ export default function VaultRow({
             </div>
           </div>
 
-          <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+          <div className="flex w-full shrink-0 flex-col gap-2 tablet:w-auto tablet:flex-row tablet:items-center">
             <VaultStrategySelector
               strategies={strategies}
               selectedId={selectedStrategyId}
@@ -240,34 +261,36 @@ export default function VaultRow({
               onSelect={(id) => onStrategySelect?.(id)}
               inline
             />
-            <button
-              type="button"
-              onClick={onBacktest}
-              className="h-[37px] min-w-0 flex-1 rounded-[10px] border border-[rgba(120,90,40,0.22)] bg-[rgba(255,255,255,0.02)] px-3 text-[13px] font-medium uppercase tracking-[0.35px] text-[#8a8a94] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[#785a28] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d4d4d8] sm:w-[122px] sm:flex-none"
-            >
-              Backtest
-            </button>
+            <div className="flex w-full gap-2">
+              <button
+                type="button"
+                onClick={onBacktest}
+                className="h-[37px] min-w-0 flex-1 rounded-[10px] border border-[rgba(120,90,40,0.22)] bg-[rgba(255,255,255,0.02)] px-3 text-[13px] font-medium uppercase tracking-[0.35px] text-[#8a8a94] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[#785a28] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d4d4d8] tablet:w-[122px] tablet:flex-none"
+              >
+                Backtest
+              </button>
 
-            <button
-              type="button"
-              disabled={activated}
-              onClick={onActivate}
-              className={`h-[37px] min-w-0 flex-1 rounded-[10px] border px-3 text-[13px] font-medium uppercase tracking-[0.35px] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors sm:w-[122px] sm:flex-none ${
-                activated
-                  ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
-                  : "cursor-pointer border-[#785a28] bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:border-[#ccb17f] hover:text-white"
-              }`}
-              style={
-                activated
-                  ? undefined
-                  : {
-                      backgroundImage:
-                        "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
-                    }
-              }
-            >
-              {activated ? "Active" : selectedStrategyId ? "Activate" : "Pick strategy"}
-            </button>
+              <button
+                type="button"
+                disabled={activated}
+                onClick={onActivate}
+                className={`h-[37px] min-w-0 flex-1 rounded-[10px] border px-3 text-[13px] font-medium uppercase tracking-[0.35px] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors tablet:w-[122px] tablet:flex-none ${
+                  activated
+                    ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
+                    : "cursor-pointer border-[#785a28] bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:border-[#ccb17f] hover:text-white"
+                }`}
+                style={
+                  activated
+                    ? undefined
+                    : {
+                        backgroundImage:
+                          "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
+                      }
+                }
+              >
+                {activated ? "Active" : selectedStrategyId ? "Activate" : "Pick strategy"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

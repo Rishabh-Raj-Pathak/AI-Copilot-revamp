@@ -7,14 +7,15 @@ import {
   useState,
 } from "react";
 import "../../design-system/vaults/index.css";
+import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
 import VaultsHero from "./VaultsHero.jsx";
 import VaultGridCard from "./VaultGridCard.jsx";
 import VaultsActivatedSection from "./VaultsActivatedSection.jsx";
 import VaultsListSection from "./VaultsListSection.jsx";
 import VaultsSectionHeader from "./VaultsSectionHeader.jsx";
-import VaultsPositionsHistoryTable from "./VaultsPositionsHistoryTable.jsx";
 import VaultsStatsRow from "./VaultsStatsRow.jsx";
 import { DEFAULT_SHARE_PCT } from "./vaultUiUtils.js";
 import { resolveVaultStrategies } from "./vaultStrategiesData.js";
@@ -117,6 +118,16 @@ export default function VaultsPage({
     runVaultsProductTour,
   ]);
 
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_VIEWPORT_MEDIA);
+    const sync = () => {
+      if (mq.matches) setViewMode("list");
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const patchRow = useCallback((id, partial) => {
     setRowUi((prev) => {
       const cur = prev[id];
@@ -183,7 +194,7 @@ export default function VaultsPage({
   );
 
   return (
-    <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
+    <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
       <HeaderTerminal
         activeNavItem="Vaults"
         onNavItemClick={(label) => {
@@ -199,7 +210,7 @@ export default function VaultsPage({
       />
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="flex w-full flex-col gap-10 px-5 py-8 pb-16 sm:px-8 lg:px-10 xl:px-12">
+        <div className="flex w-full flex-col gap-10 px-5 py-8 pb-16 max-tablet:gap-6 max-tablet:px-4 max-tablet:py-6 max-tablet:pb-8 sm:px-8 lg:px-10 xl:px-12">
           <VaultsHero />
           <VaultsStatsRow />
 
@@ -230,6 +241,7 @@ export default function VaultsPage({
                 >
                   <VaultsListSection
                     title="Featured Opportunities"
+                    mobileTitle="Featured Vaults"
                     vaults={inactiveFeatured}
                     rowUi={rowUi}
                     onPatch={patchRow}
@@ -262,10 +274,17 @@ export default function VaultsPage({
               </p>
             ) : null}
           </div>
-
-          <VaultsPositionsHistoryTable />
         </div>
       </div>
+
+      <CopilotBottomNav
+        activeId="vaults"
+        onNavClick={(id) => {
+          if (id === "copilot") onOpenCopilot?.();
+        }}
+        onCopilotTutorial={onOpenCopilotTutorial}
+        onVaultTutorial={runVaultsProductTour}
+      />
     </div>
   );
 }

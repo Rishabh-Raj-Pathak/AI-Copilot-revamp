@@ -74,6 +74,14 @@
   );
 }
 
+/** Mobile section headers — centered label with bilateral hairlines. */
+.vaults-section-title-centered {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
 /** Figma `4421:6264` row shell — invisible range for hit target over custom track. */
 .vaults-range-input {
   -webkit-appearance: none;
