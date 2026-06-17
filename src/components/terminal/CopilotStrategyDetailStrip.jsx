@@ -21,7 +21,7 @@ function StrategyRiskBadge({ risk, compact = false }) {
 
 function StrategyFact({ label, value, compact }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 rounded-md border border-[#1a1a1a] bg-[#050505] px-2.5 py-2">
       <dt
         className={`font-medium uppercase tracking-[0.3px] text-[#757575] ${
           compact ? "text-[9px]" : "text-[10px]"
@@ -30,7 +30,7 @@ function StrategyFact({ label, value, compact }) {
         {label}
       </dt>
       <dd
-        className={`mt-0.5 leading-snug text-[#d4d4d4] ${
+        className={`mt-1 leading-snug text-[#d4d4d4] ${
           compact ? "text-[10px]" : "text-[11px] sm:text-xs"
         }`}
       >
@@ -50,11 +50,11 @@ export default function CopilotStrategyDetailStrip({
   if (!strategy) return null;
 
   const facts = (
-    <aside
+    <div
       className={
         compact
-          ? "mt-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[#242424] pt-2"
-          : "grid gap-3 rounded-md border border-[#1a1a1a] bg-[#050505] px-3 py-2.5 sm:gap-2.5 sm:self-start"
+          ? "mt-2.5 grid grid-cols-2 gap-2"
+          : "grid grid-cols-1 gap-2 sm:grid-cols-2"
       }
     >
       <StrategyFact
@@ -67,45 +67,52 @@ export default function CopilotStrategyDetailStrip({
         value={strategy.bestFor}
         compact={compact}
       />
-    </aside>
+    </div>
   );
 
   return (
-    <div aria-live="polite">
-      <div
-        className={
-          compact
-            ? "grid gap-2"
-            : "grid gap-3 sm:grid-cols-[minmax(0,1fr)_10.5rem] sm:items-start lg:grid-cols-[minmax(0,1fr)_12rem]"
-        }
-      >
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span
-              className={`font-semibold text-[#f2b500] ${
-                compact ? "text-[11px]" : "text-xs"
-              }`}
-            >
-              {strategy.shortLabel ?? strategy.name}
-            </span>
-            <StrategyRiskBadge risk={strategy.risk} compact={compact} />
-          </div>
-
-          <p
-            className={`mt-1.5 leading-relaxed text-[#bfbfbf] ${
-              compact
-                ? "line-clamp-2 text-[11px]"
-                : "text-xs sm:text-[13px] sm:leading-[1.55]"
+    <div aria-live="polite" className="min-w-0">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span
+          className={`font-semibold text-[#f2b500] ${
+            compact ? "text-[11px]" : "text-xs sm:text-sm"
+          }`}
+        >
+          {strategy.shortLabel ?? strategy.name}
+        </span>
+        {strategy.catalogName ? (
+          <span
+            className={`text-[#999] ${
+              compact ? "text-[10px]" : "text-[11px] sm:text-xs"
             }`}
           >
-            {strategy.description}
-          </p>
-
-          {compact ? facts : null}
-        </div>
-
-        {!compact ? facts : null}
+            {strategy.catalogName}
+          </span>
+        ) : null}
+        <StrategyRiskBadge risk={strategy.risk} compact={compact} />
       </div>
+
+      {strategy.tagline ? (
+        <p
+          className={`mt-1.5 font-medium text-[#e8e8e8] ${
+            compact ? "text-[11px]" : "text-xs sm:text-[13px]"
+          }`}
+        >
+          {strategy.tagline}
+        </p>
+      ) : null}
+
+      <p
+        className={`leading-relaxed text-[#bfbfbf] ${
+          compact
+            ? "mt-1.5 line-clamp-3 text-[11px]"
+            : "mt-2 text-xs sm:text-[13px] sm:leading-[1.55]"
+        }`}
+      >
+        {strategy.description}
+      </p>
+
+      {facts}
     </div>
   );
 }

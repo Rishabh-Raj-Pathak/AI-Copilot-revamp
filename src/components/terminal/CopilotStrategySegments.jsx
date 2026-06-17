@@ -2,7 +2,11 @@ import { Check, ChevronDown } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import CopilotStrategyDetailStrip from "./CopilotStrategyDetailStrip.jsx";
-import { resolveCopilotSegmentStrategies } from "./copilotStrategies.js";
+import {
+  getInitialCopilotStrategyDetailsOpen,
+  markCopilotStrategyDetailsIntroSeen,
+  resolveCopilotSegmentStrategies,
+} from "./copilotStrategies.js";
 
 const RISK_DOT = {
   Low: "bg-[#269755]",
@@ -10,36 +14,36 @@ const RISK_DOT = {
   High: "bg-[#d53d3d]",
 };
 
-function StrategyCollapsedSummary({ strategy, inline = false }) {
+function StrategyCollapsedSummary({ strategy, className = "" }) {
   if (!strategy) return null;
 
   return (
     <p
-      className={
-        inline
-          ? "shrink-0 text-[10px] leading-snug text-[#757575]"
-          : "text-[11px] leading-snug text-[#757575]"
-      }
+      className={`shrink-0 whitespace-nowrap text-[10px] leading-snug text-[#757575] sm:text-[11px] ${className}`}
     >
       {strategy.risk} risk · {strategy.timeframe}
     </p>
   );
 }
 
-function StrategyDetailsChevron({ open, onToggle, mobile = false }) {
+function StrategyDetailsToggle({ open, onToggle, mobile = false }) {
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={open}
       aria-controls="copilot-strategy-details"
-      aria-label={open ? "Hide strategy details" : "Show strategy details"}
-      className={`inline-flex shrink-0 items-center justify-center rounded-md border border-[#242424] text-[#bfbfbf] transition-colors hover:bg-white/[0.03] hover:text-white ${
-        mobile ? "size-7" : "size-7 sm:size-8"
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md border font-medium transition-colors ${
+        mobile ? "px-2 py-1 text-[10px]" : "px-2 py-1 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px]"
+      } ${
+        open
+          ? "border-[#3e2e00] bg-[#171200] text-[#f2b500]"
+          : "border-[#242424] text-[#bfbfbf] hover:bg-white/[0.03] hover:text-white"
       }`}
     >
+      <span>{open ? "Hide details" : "Details"}</span>
       <ChevronDown
-        className={`size-4 shrink-0 transition-transform ${
+        className={`size-3.5 shrink-0 transition-transform ${
           open ? "rotate-180" : ""
         }`}
         strokeWidth={2}
@@ -69,16 +73,18 @@ function SegmentControl({
   moreButtonRef,
   onSelect,
   onToggleOverflow,
+  onStrategyHover,
   mobile,
 }) {
   return (
     <div
       role="tablist"
       aria-label="AI strategy"
+      onMouseLeave={() => onStrategyHover?.(null)}
       className={
         mobile
           ? "minimal-scrollbar min-w-0 flex-1 overflow-x-auto"
-          : "min-w-0 flex-1"
+          : "min-w-0 shrink-0"
       }
     >
       <div className="inline-flex min-w-min rounded-md border border-[#1f1f1f] bg-[#050505] p-0.5">
@@ -93,7 +99,12 @@ function SegmentControl({
               role="tab"
               id={`${listId}-${strategy.id}`}
               aria-selected={selected}
-              title={strategy.catalogName ?? strategy.name}
+              title={
+                strategy.tagline ??
+                strategy.catalogName ??
+                strategy.name
+              }
+              onMouseEnter={() => onStrategyHover?.(strategy.id)}
               onClick={() => onSelect(strategy.id)}
               className={`${segmentButtonClass(selected, mobile)} ${
                 !selected && !isLast
@@ -112,6 +123,7 @@ function SegmentControl({
             type="button"
             aria-haspopup="listbox"
             aria-expanded={overflowOpen}
+            aria-label={`Browse ${overflow.length} more strategies`}
             onClick={onToggleOverflow}
             className={`${segmentButtonClass(
               overflowSelected,
@@ -207,7 +219,7 @@ function StrategyOverflowMenu({
     >
       <div className="border-b border-[#242424] px-3 py-2">
         <p className="text-[10px] font-medium uppercase tracking-[0.35px] text-[#757575]">
-          More strategies
+          Choose a strategy
         </p>
       </div>
       <ul className="max-h-[min(320px,50vh)] overflow-y-auto p-1.5">
@@ -253,6 +265,11 @@ function StrategyOverflowMenu({
                       {strategy.catalogName}
                     </span>
                   ) : null}
+                  {strategy.tagline ? (
+                    <span className="mt-1 block text-[11px] font-medium leading-snug text-[#bfbfbf]">
+                      {strategy.tagline}
+                    </span>
+                  ) : null}
                   <span className="mt-1 line-clamp-2 text-[11px] leading-snug text-[#999]">
                     {strategy.description}
                   </span>
@@ -268,7 +285,7 @@ function StrategyOverflowMenu({
 }
 
 /**
- * AI strategy lens — segments, chevron accordion details, overflow menu.
+ * AI strategy lens — segments, details accordion, overflow menu.
  */
 export default function CopilotStrategySegments({
   strategies,
@@ -277,32 +294,77 @@ export default function CopilotStrategySegments({
   mobile = false,
   layout = "default",
   showDetails = true,
+  embedded = false,
   detailsOpen: detailsOpenProp,
   onDetailsOpenChange,
 }) {
   const listId = useId();
   const moreButtonRef = useRef(null);
   const [overflowOpen, setOverflowOpen] = useState(false);
-  const [detailsOpenInternal, setDetailsOpenInternal] = useState(false);
+  const [hoveredStrategyId, setHoveredStrategyId] = useState(null);
+  const [detailsOpenInternal, setDetailsOpenInternal] = useState(
+    getInitialCopilotStrategyDetailsOpen,
+  );
   const detailsOpen = detailsOpenProp ?? detailsOpenInternal;
   const setDetailsOpen = onDetailsOpenChange ?? setDetailsOpenInternal;
+  const isControlled = detailsOpenProp !== undefined;
 
-  if (!strategies?.length) return null;
+  useEffect(() => {
+    if (!isControlled && detailsOpenInternal) {
+      markCopilotStrategyDetailsIntroSeen();
+    }
+  }, [detailsOpenInternal, isControlled]);
+
+  useEffect(() => {
+    if (isControlled && detailsOpen) {
+      markCopilotStrategyDetailsIntroSeen();
+    }
+  }, [detailsOpen, isControlled]);
 
   const active =
-    strategies.find((s) => s.id === selectedId) ?? strategies[0];
+    strategies?.find((s) => s.id === selectedId) ?? strategies?.[0] ?? null;
+
+  useEffect(() => {
+    setOverflowOpen(false);
+  }, [active?.id]);
+
+  if (!strategies?.length || !active) return null;
+
   const { visible, overflow } = resolveCopilotSegmentStrategies(
     strategies,
     active.id,
   );
   const overflowSelected = overflow.some((s) => s.id === active.id);
+  const hoveredStrategy = hoveredStrategyId
+    ? (strategies.find((s) => s.id === hoveredStrategyId) ?? null)
+    : null;
 
-  useEffect(() => {
-    setOverflowOpen(false);
-  }, [active.id]);
+  const handleSelect = (id) => {
+    if (id === active.id && showDetails) {
+      setDetailsOpen(!detailsOpen);
+      return;
+    }
+    onSelect(id);
+    if (showDetails) {
+      setDetailsOpen(true);
+    }
+  };
+
+  const detailsToggle = showDetails ? (
+    <StrategyDetailsToggle
+      open={detailsOpen}
+      onToggle={() => setDetailsOpen(!detailsOpen)}
+      mobile={mobile}
+    />
+  ) : null;
 
   const isToolbar = layout === "toolbar" && !mobile;
-  const isSplit = isToolbar; // legacy alias
+  const isSplit = isToolbar;
+
+  const hoverSummary =
+    hoveredStrategy && !detailsOpen ? (
+      <StrategyCollapsedSummary strategy={hoveredStrategy} />
+    ) : null;
 
   const headerRow = isToolbar ? (
     <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
@@ -314,45 +376,31 @@ export default function CopilotStrategySegments({
         overflowOpen={overflowOpen}
         overflowSelected={overflowSelected}
         moreButtonRef={moreButtonRef}
-        onSelect={onSelect}
+        onSelect={handleSelect}
         onToggleOverflow={() => setOverflowOpen((open) => !open)}
+        onStrategyHover={setHoveredStrategyId}
         mobile={false}
       />
-      {showDetails ? (
-        <StrategyDetailsChevron
-          open={detailsOpen}
-          onToggle={() => setDetailsOpen(!detailsOpen)}
-        />
-      ) : null}
+      {hoverSummary}
+      {detailsToggle}
     </div>
   ) : (
-    <div className="flex items-start justify-between gap-2">
-      <div className="min-w-0 flex-1">
-        <SegmentControl
-          listId={listId}
-          visible={visible}
-          overflow={overflow}
-          active={active}
-          overflowOpen={overflowOpen}
-          overflowSelected={overflowSelected}
-          moreButtonRef={moreButtonRef}
-          onSelect={onSelect}
-          onToggleOverflow={() => setOverflowOpen((open) => !open)}
-          mobile={mobile}
-        />
-        {showDetails && !detailsOpen && !isToolbar ? (
-          <div className={mobile ? "mt-2" : "mt-2.5"}>
-            <StrategyCollapsedSummary strategy={active} />
-          </div>
-        ) : null}
-      </div>
-      {showDetails ? (
-        <StrategyDetailsChevron
-          open={detailsOpen}
-          onToggle={() => setDetailsOpen(!detailsOpen)}
-          mobile={mobile}
-        />
-      ) : null}
+    <div className="flex items-center gap-2">
+      <SegmentControl
+        listId={listId}
+        visible={visible}
+        overflow={overflow}
+        active={active}
+        overflowOpen={overflowOpen}
+        overflowSelected={overflowSelected}
+        moreButtonRef={moreButtonRef}
+        onSelect={handleSelect}
+        onToggleOverflow={() => setOverflowOpen((open) => !open)}
+        onStrategyHover={mobile ? undefined : setHoveredStrategyId}
+        mobile={mobile}
+      />
+      {!mobile ? hoverSummary : null}
+      {detailsToggle}
     </div>
   );
 
@@ -365,7 +413,7 @@ export default function CopilotStrategySegments({
           anchorEl={moreButtonRef.current}
           items={overflow}
           selectedId={active.id}
-          onSelect={onSelect}
+          onSelect={handleSelect}
           onClose={() => setOverflowOpen(false)}
         />
       </>
@@ -373,21 +421,29 @@ export default function CopilotStrategySegments({
   }
 
   if (mobile) {
-    return (
-      <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
+    const mobileBody = (
+      <>
         <div
-          className={`px-3 py-2.5 ${
-            showDetails && detailsOpen ? "border-b border-[#242424]" : ""
-          }`}
+          className={
+            embedded
+              ? undefined
+              : `px-3 py-2.5 ${
+                  showDetails && detailsOpen ? "border-b border-[#242424]" : ""
+                }`
+          }
         >
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.35px] text-[#757575]">
-            AI strategy
-          </p>
           {headerRow}
         </div>
 
         {showDetails && detailsOpen ? (
-          <div id="copilot-strategy-details" className="px-3 py-2.5">
+          <div
+            id="copilot-strategy-details"
+            className={
+              embedded
+                ? "mt-2.5 border-t border-[#242424] pt-2.5"
+                : "px-3 py-2.5"
+            }
+          >
             <CopilotStrategyDetailStrip strategy={active} compact />
           </div>
         ) : null}
@@ -397,9 +453,19 @@ export default function CopilotStrategySegments({
           anchorEl={moreButtonRef.current}
           items={overflow}
           selectedId={active.id}
-          onSelect={onSelect}
+          onSelect={handleSelect}
           onClose={() => setOverflowOpen(false)}
         />
+      </>
+    );
+
+    if (embedded) {
+      return mobileBody;
+    }
+
+    return (
+      <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
+        {mobileBody}
       </div>
     );
   }
@@ -411,11 +477,6 @@ export default function CopilotStrategySegments({
           showDetails && detailsOpen ? "border-b border-[#242424]" : ""
         }`}
       >
-        <div className="mb-2.5 flex items-center gap-3">
-          <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.35px] text-[#757575]">
-            AI strategy
-          </span>
-        </div>
         {headerRow}
       </div>
 
@@ -430,7 +491,7 @@ export default function CopilotStrategySegments({
         anchorEl={moreButtonRef.current}
         items={overflow}
         selectedId={active.id}
-        onSelect={onSelect}
+        onSelect={handleSelect}
         onClose={() => setOverflowOpen(false)}
       />
     </div>

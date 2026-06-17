@@ -1,6 +1,5 @@
-import { Clock } from 'lucide-react'
+import { Clock, RefreshCw, Share2 } from 'lucide-react'
 import { terminalGradientCta } from '../../design-system/tokens/terminalConnectWallet'
-import { terminalAssets as a } from '../../figma/terminalAssets.js'
 
 function formatCountdown(totalSec) {
   const s = Math.max(0, totalSec)
@@ -45,13 +44,11 @@ export default function SuggestionToolbar({
             : 'px-3 py-2 text-sm sm:py-1.5'
         }`}
       >
-        <span className={`relative shrink-0 ${compact ? 'size-3.5' : 'size-4'}`}>
-          <img
-            alt=""
-            className="absolute inset-0 size-full max-w-none p-[12.5%]"
-            src={a.shareIcon}
-          />
-        </span>
+        <Share2
+          className={`shrink-0 ${compact ? 'size-3.5' : 'size-4'}`}
+          strokeWidth={2}
+          aria-hidden
+        />
         Share
       </button>
       <button
@@ -63,13 +60,11 @@ export default function SuggestionToolbar({
             : 'py-2 sm:py-1.5'
         }`}
       >
-        <span className={`relative shrink-0 ${compact ? 'size-3.5' : 'size-4'}`}>
-          <img
-            alt=""
-            className="absolute inset-0 size-full max-w-none p-[16.66%]"
-            src={a.refreshIcon}
-          />
-        </span>
+        <RefreshCw
+          className={`shrink-0 ${compact ? 'size-3.5' : 'size-4'}`}
+          strokeWidth={2}
+          aria-hidden
+        />
         Refresh
       </button>
     </div>

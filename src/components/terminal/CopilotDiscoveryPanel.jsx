@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CopilotStrategyDetailStrip from "./CopilotStrategyDetailStrip.jsx";
 import { CopilotPlatformKpis } from "./CopilotStrategyLensKpis.jsx";
 import CopilotStrategySegments from "./CopilotStrategySegments.jsx";
+import {
+  getInitialCopilotStrategyDetailsOpen,
+  markCopilotStrategyDetailsIntroSeen,
+} from "./copilotStrategies.js";
 
 /**
  * Discovery panel — strategy lens (left) + platform KPIs (right).
@@ -13,7 +17,15 @@ export default function CopilotDiscoveryPanel({
   stats,
   mobile = false,
 }) {
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(
+    getInitialCopilotStrategyDetailsOpen,
+  );
+
+  useEffect(() => {
+    if (detailsOpen) {
+      markCopilotStrategyDetailsIntroSeen();
+    }
+  }, [detailsOpen]);
 
   const active =
     strategies?.find((s) => s.id === selectedId) ?? strategies?.[0] ?? null;
@@ -30,6 +42,7 @@ export default function CopilotDiscoveryPanel({
             selectedId={selectedId}
             onSelect={onSelect}
             mobile
+            embedded
           />
         </div>
       </div>
@@ -41,7 +54,7 @@ export default function CopilotDiscoveryPanel({
   return (
     <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
       <div
-        className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-3 py-2 sm:gap-x-4 sm:px-3.5 sm:py-2.5 ${
+        className={`flex items-center justify-between gap-x-3 px-3 py-2 sm:gap-x-4 sm:px-3.5 sm:py-2.5 ${
           detailsOpen ? "border-b border-[#242424]" : ""
         }`}
       >
@@ -67,7 +80,10 @@ export default function CopilotDiscoveryPanel({
       </div>
 
       {detailsOpen && active ? (
-        <div id="copilot-strategy-details" className="px-3.5 py-2.5 sm:px-4 sm:py-3">
+        <div
+          id="copilot-strategy-details"
+          className="border-t border-[#242424] px-3.5 py-3 sm:px-4"
+        >
           <CopilotStrategyDetailStrip strategy={active} />
         </div>
       ) : null}
