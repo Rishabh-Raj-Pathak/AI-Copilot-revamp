@@ -3,7 +3,7 @@ import HeaderTerminal from "./HeaderTerminal.jsx";
 import CopilotMobileHeader from "./CopilotMobileHeader.jsx";
 import CopilotBottomNav from "./CopilotBottomNav.jsx";
 import MarketFiltersBar from "./MarketFiltersBar.jsx";
-import SuggestionToolbar from "./SuggestionToolbar.jsx";
+import CopilotSuggestionsEmpty from "./CopilotSuggestionsEmpty.jsx";
 import CopilotSuggestionCard from "./suggestion/CopilotSuggestionCard.jsx";
 import DetailsPanel from "./DetailsPanel.jsx";
 import TradeSuccessModal from "./TradeSuccessModal.jsx";
@@ -21,7 +21,15 @@ import {
   NARROW_VIEWPORT_MEDIA,
   queryVisibleTourTarget,
 } from "../../styles/breakpoints.js";
-import { COPILOT_SETUPS } from "./copilotSetups.js";
+import {
+  COPILOT_SETUPS,
+  getCopilotSetups,
+} from "./copilotSetups.js";
+import {
+  COPILOT_STRATEGIES,
+  DEFAULT_COPILOT_STRATEGY_ID,
+  getCopilotStrategyById,
+} from "./copilotStrategies.js";
 import {
   advanceCopilotTourMoveNextIfActive,
   advanceCopilotTourToPositionsFromOpenTradeClick,
@@ -40,8 +48,6 @@ import {
   isCopilotProductTourActive,
   startCopilotProductTour,
 } from "../../copilot/copilotTour.js";
-
-const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
 
 function StrategyCopilotViews({ copilotView, terminalPlatform }) {
   if (isStrategyCopilotView(copilotView)) {
@@ -95,6 +101,11 @@ export default function TerminalCopilotPage({
     useState(false);
   const [copilotView, setCopilotView] = useState("suggestions");
   const [activeFilter, setActiveFilter] = useState("trending");
+  const [selectedStrategyId, setSelectedStrategyId] = useState(
+    DEFAULT_COPILOT_STRATEGY_ID,
+  );
+  const [listRefreshing, setListRefreshing] = useState(false);
+  const lensChangeRef = useRef(false);
   const [expireSec, setExpireSec] = useState(0);
   const [stats, setStats] = useState({
     volume: 27_960_000,
@@ -161,19 +172,67 @@ export default function TerminalCopilotPage({
     if (!isNarrowViewport) return;
     if (copilotTourVariant !== COPILOT_TOUR_VARIANT_2) return;
     if (copilotTourStepIndex < 4) return;
-    if (!selectedId && FIRST_SETUP_ID) setSelectedId(FIRST_SETUP_ID);
+    const tourSetupId = getCopilotSetups({
+      strategyId: selectedStrategyId,
+      categoryId: activeFilter,
+    })[0]?.id;
+    if (!selectedId && tourSetupId) setSelectedId(tourSetupId);
     setMobileDetailsSheetDismissed(false);
   }, [
     isNarrowViewport,
     copilotTourVariant,
     copilotTourStepIndex,
     selectedId,
+    selectedStrategyId,
+    activeFilter,
   ]);
+
+  const visibleSetups = useMemo(
+    () =>
+      getCopilotSetups({
+        strategyId: selectedStrategyId,
+        categoryId: activeFilter,
+      }),
+    [selectedStrategyId, activeFilter],
+  );
+
+  const firstVisibleSetupId = visibleSetups[0]?.id ?? null;
+
+  const activeStrategy = useMemo(
+    () => getCopilotStrategyById(selectedStrategyId),
+    [selectedStrategyId],
+  );
+
+  useEffect(() => {
+    if (!lensChangeRef.current) {
+      lensChangeRef.current = true;
+      return;
+    }
+    setListRefreshing(true);
+    setExpireSec(630);
+    const nextSetups = getCopilotSetups({
+      strategyId: selectedStrategyId,
+      categoryId: activeFilter,
+    });
+    const timer = window.setTimeout(() => {
+      setSelectedId(nextSetups[0]?.id ?? null);
+      setListRefreshing(false);
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [selectedStrategyId, activeFilter]);
+
+  const handleCycleStrategy = useCallback(() => {
+    const idx = COPILOT_STRATEGIES.findIndex((s) => s.id === selectedStrategyId);
+    const next =
+      COPILOT_STRATEGIES[(idx + 1) % COPILOT_STRATEGIES.length] ??
+      COPILOT_STRATEGIES[0];
+    if (next) setSelectedStrategyId(next.id);
+  }, [selectedStrategyId]);
 
   const prepareSuggestionTourStep = useCallback(
     () =>
       new Promise((resolve) => {
-        const setupId = FIRST_SETUP_ID ?? null;
+        const setupId = firstVisibleSetupId;
         setSelectedId((id) => id ?? setupId);
         if (isNarrowViewport) {
           setMobileDetailsSheetDismissed(true);
@@ -197,7 +256,7 @@ export default function TerminalCopilotPage({
           });
         });
       }),
-    [isNarrowViewport],
+    [isNarrowViewport, firstVisibleSetupId],
   );
 
   const ensureMobileFeedVisibleForTour = useCallback(
@@ -237,7 +296,7 @@ export default function TerminalCopilotPage({
           resolve();
           return;
         }
-        setSelectedId((id) => id ?? FIRST_SETUP_ID ?? null);
+        setSelectedId((id) => id ?? firstVisibleSetupId ?? null);
         setMobileDetailsSheetDismissed(false);
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -245,16 +304,18 @@ export default function TerminalCopilotPage({
           });
         });
       }),
-    [isNarrowViewport],
+    [isNarrowViewport, firstVisibleSetupId],
   );
 
   const ensureThesisOpenForTour = useCallback(
     () =>
       new Promise((resolve) => {
-        const id = selectedId ?? FIRST_SETUP_ID ?? null;
+        const id = selectedId ?? firstVisibleSetupId ?? null;
         const s = id
-          ? (COPILOT_SETUPS.find((x) => x.id === id) ?? COPILOT_SETUPS[0])
-          : COPILOT_SETUPS[0];
+          ? (COPILOT_SETUPS.find((x) => x.id === id) ??
+            visibleSetups[0] ??
+            COPILOT_SETUPS[0])
+          : (visibleSetups[0] ?? COPILOT_SETUPS[0]);
         if (s) setThesisInstrumentTitle(`${s.symbol}/USDC`);
         setThesisOpen(true);
         requestAnimationFrame(() => {
@@ -263,7 +324,7 @@ export default function TerminalCopilotPage({
           });
         });
       }),
-    [selectedId],
+    [selectedId, firstVisibleSetupId, visibleSetups],
   );
 
   useEffect(() => {
@@ -280,7 +341,7 @@ export default function TerminalCopilotPage({
 
   const tourDemoPosition = useMemo(() => {
     if (!tourFirstTradeDemo) return null;
-    const s = selectedSetup ?? COPILOT_SETUPS[0];
+    const s = selectedSetup ?? visibleSetups[0] ?? COPILOT_SETUPS[0];
     if (!s) return null;
     const entry = Number(s.price);
     const mark = Math.round((entry - 0.02) * 100) / 100;
@@ -293,7 +354,7 @@ export default function TerminalCopilotPage({
       upnl: "+$2.40",
       openedAt: "Just now",
     };
-  }, [tourFirstTradeDemo, selectedSetup]);
+  }, [tourFirstTradeDemo, selectedSetup, visibleSetups]);
 
   const handleTourContextChange = useCallback((ctx) => {
     setCopilotTourStepIndex(ctx.stepIndex);
@@ -547,14 +608,12 @@ export default function TerminalCopilotPage({
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
               stats={stats}
+              expireSeconds={expireSec}
+              onRefresh={handleRefresh}
+              strategies={COPILOT_STRATEGIES}
+              selectedStrategyId={selectedStrategyId}
+              onStrategySelect={setSelectedStrategyId}
             />
-            <div className="px-3 py-2 sm:px-5 sm:pt-5 sm:pb-5">
-              <SuggestionToolbar
-                variant="desktop"
-                expireSeconds={expireSec}
-                onRefresh={handleRefresh}
-              />
-            </div>
           </div>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div
@@ -568,34 +627,50 @@ export default function TerminalCopilotPage({
                   stats={stats}
                   expireSeconds={expireSec}
                   onRefresh={handleRefresh}
+                  strategies={COPILOT_STRATEGIES}
+                  selectedStrategyId={selectedStrategyId}
+                  onStrategySelect={setSelectedStrategyId}
                 />
               </div>
-              <div className="flex flex-col gap-3 px-3 max-tablet:gap-2.5 max-tablet:pt-3 sm:px-5 tablet:gap-4">
-                {COPILOT_SETUPS.map((setup) => {
-                  const isSelected = setup.id === selectedId;
-                  return (
-                    <div
-                      key={setup.id}
-                      id={`copilot-setup-${setup.id}`}
-                      className="scroll-mt-4"
-                      data-tour={
-                        isSelected ? "copilot-expanded-suggestion" : undefined
-                      }
-                    >
-                      <CopilotSuggestionCard
-                        setup={setup}
-                        expanded={isSelected && !isNarrowViewport}
-                        selected={isSelected}
-                        mobileFeed={isNarrowViewport}
-                        onSelect={handleSuggestionSelect}
-                        onViewThesis={() => {
-                          setThesisInstrumentTitle(`${setup.symbol}/USDC`);
-                          setThesisOpen(true);
-                        }}
-                      />
-                    </div>
-                  );
-                })}
+              <div
+                className={`flex flex-col gap-3 px-3 pt-2 transition-opacity duration-300 max-tablet:gap-2.5 sm:px-5 tablet:gap-4 tablet:pt-3 ${
+                  listRefreshing ? "pointer-events-none opacity-40" : "opacity-100"
+                }`}
+              >
+                {visibleSetups.length === 0 ? (
+                  <CopilotSuggestionsEmpty
+                    strategyName={activeStrategy?.name ?? "AI"}
+                    categoryId={activeFilter}
+                    onSwitchCategory={setActiveFilter}
+                    onSwitchStrategy={handleCycleStrategy}
+                  />
+                ) : (
+                  visibleSetups.map((setup) => {
+                    const isSelected = setup.id === selectedId;
+                    return (
+                      <div
+                        key={setup.id}
+                        id={`copilot-setup-${setup.id}`}
+                        className="scroll-mt-4"
+                        data-tour={
+                          isSelected ? "copilot-expanded-suggestion" : undefined
+                        }
+                      >
+                        <CopilotSuggestionCard
+                          setup={setup}
+                          expanded={isSelected && !isNarrowViewport}
+                          selected={isSelected}
+                          mobileFeed={isNarrowViewport}
+                          onSelect={handleSuggestionSelect}
+                          onViewThesis={() => {
+                            setThesisInstrumentTitle(`${setup.symbol}/USDC`);
+                            setThesisOpen(true);
+                          }}
+                        />
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
             <div className="max-tablet:hidden">
@@ -660,7 +735,7 @@ export default function TerminalCopilotPage({
           <DetailsPanel
             setup={selectedSetup}
             onSelectFirstSetup={() => {
-              if (FIRST_SETUP_ID) setSelectedId(FIRST_SETUP_ID);
+              if (firstVisibleSetupId) setSelectedId(firstVisibleSetupId);
             }}
             openTradeCtaLabel={
               copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&

@@ -1,10 +1,6 @@
-import { terminalKpiBar } from '../../design-system/tokens/terminalKpiBar'
 import { terminalAssets as a } from '../../figma/terminalAssets.js'
-import {
-  formatMobileCount,
-  formatMobileRewardsUsd,
-  formatMobileVolumeUsd,
-} from './copilotMobileFormat.js'
+import CopilotDiscoveryPanel from './CopilotDiscoveryPanel.jsx'
+import { CopilotPlatformKpis } from './CopilotStrategyLensKpis.jsx'
 import SuggestionToolbar from './SuggestionToolbar.jsx'
 
 const filterDefs = [
@@ -22,10 +18,6 @@ const mobileFilterDefs = [
   { id: 'hip3', label: 'HIP-3', icon: a.hyperliquid },
   { id: 'tradexyz', label: 'Trade[XYZ]', icon: a.spotlight },
 ]
-
-function formatVol(n) {
-  return `$${n.toLocaleString('en-US')}`
-}
 
 function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
   return (
@@ -74,54 +66,82 @@ function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
   )
 }
 
+function MarketsRow({
+  defs,
+  activeFilter,
+  onFilterChange,
+  mobile = false,
+  expireSeconds,
+  onRefresh,
+}) {
+  const showUtilities =
+    expireSeconds !== undefined && typeof onRefresh === 'function'
+
+  return (
+    <div
+      className={
+        mobile
+          ? 'flex flex-col gap-2'
+          : 'flex w-full items-center gap-x-3 gap-y-2'
+      }
+    >
+      <FilterPills
+        defs={defs}
+        activeFilter={activeFilter}
+        onFilterChange={onFilterChange}
+        mobile={mobile}
+      />
+      {!mobile && showUtilities ? (
+        <SuggestionToolbar
+          variant="desktop"
+          compact
+          expireSeconds={expireSeconds}
+          onRefresh={onRefresh}
+        />
+      ) : null}
+    </div>
+  )
+}
+
 export default function MarketFiltersBar({
   activeFilter,
   onFilterChange,
   stats,
   expireSeconds,
   onRefresh,
+  strategies,
+  selectedStrategyId,
+  onStrategySelect,
 }) {
-  const rewards = stats.rewards ?? stats.volume * 0.0003
-  const showMobileToolbar =
+  const showUtilities =
     expireSeconds !== undefined && typeof onRefresh === 'function'
+  const showStrategy =
+    strategies?.length &&
+    selectedStrategyId &&
+    typeof onStrategySelect === 'function'
 
   return (
     <div className="flex w-full shrink-0 flex-col border-b border-[#242424]">
-      {/* Mobile — Figma 1017:24652 */}
-      <div className="flex flex-col gap-3 px-3 py-3 max-tablet:flex tablet:hidden">
-        <div className="grid grid-cols-3 gap-2 border-b border-[#242424] pb-3">
-          <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
-            <span className="text-[11px] leading-tight text-[#757575]">
-              Total Volume
-            </span>
-            <span className="truncate text-sm font-semibold text-white">
-              {formatMobileVolumeUsd(stats.volume)}
-            </span>
-          </div>
-          <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
-            <span className="text-[11px] leading-tight text-[#757575]">
-              Trades Executed
-            </span>
-            <span className="truncate text-sm font-semibold text-white">
-              {formatMobileCount(stats.trades)}
-            </span>
-          </div>
-          <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
-            <span className="text-[11px] leading-tight text-[#757575]">
-              Rewards Distributed
-            </span>
-            <span className="truncate text-sm font-semibold text-white">
-              {formatMobileRewardsUsd(rewards)}
-            </span>
-          </div>
-        </div>
-        <FilterPills
+      {/* Mobile */}
+      <div className="flex flex-col gap-2.5 px-3 py-2.5 max-tablet:flex tablet:hidden">
+        {showStrategy ? (
+          <CopilotDiscoveryPanel
+            strategies={strategies}
+            selectedId={selectedStrategyId}
+            onSelect={onStrategySelect}
+            stats={stats}
+            mobile
+          />
+        ) : (
+          <CopilotPlatformKpis stats={stats} variant="standalone" mobile />
+        )}
+        <MarketsRow
           defs={mobileFilterDefs}
           activeFilter={activeFilter}
           onFilterChange={onFilterChange}
           mobile
         />
-        {showMobileToolbar ? (
+        {showUtilities ? (
           <SuggestionToolbar
             variant="mobile"
             expireSeconds={expireSeconds}
@@ -130,33 +150,25 @@ export default function MarketFiltersBar({
         ) : null}
       </div>
 
-      {/* Desktop / tablet — unchanged */}
-      <div className="hidden w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3 tablet:flex">
-        <FilterPills
+      {/* Desktop — performance + strategy side by side */}
+      <div className="hidden flex-col gap-2 px-3 py-2 sm:px-5 sm:py-2.5 tablet:flex">
+        {showStrategy ? (
+          <CopilotDiscoveryPanel
+            strategies={strategies}
+            selectedId={selectedStrategyId}
+            onSelect={onStrategySelect}
+            stats={stats}
+          />
+        ) : (
+          <CopilotPlatformKpis stats={stats} variant="standalone" />
+        )}
+        <MarketsRow
           defs={filterDefs}
           activeFilter={activeFilter}
           onFilterChange={onFilterChange}
+          expireSeconds={expireSeconds}
+          onRefresh={onRefresh}
         />
-        <div className="flex w-full shrink-0 flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end sm:gap-3">
-          <div className="flex flex-wrap items-start justify-start gap-x-3 gap-y-1.5 leading-tight sm:gap-5 sm:whitespace-nowrap">
-            <div className="flex items-center gap-2">
-              <span className={terminalKpiBar.labelClassName}>Total Volume:</span>
-              <span className={terminalKpiBar.valueClassName}>
-                {formatVol(stats.volume)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={terminalKpiBar.labelClassName}>Total Trades:</span>
-              <span className={terminalKpiBar.valueClassName}>
-                {stats.trades.toLocaleString('en-US')}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={terminalKpiBar.labelClassName}>Winning %:</span>
-              <span className={terminalKpiBar.valueClassName}>{stats.winPct}%</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

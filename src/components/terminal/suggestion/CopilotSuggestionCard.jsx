@@ -1,3 +1,4 @@
+import { getCopilotStrategyById } from "../copilotStrategies.js";
 import SetupChip from "./SetupChip.jsx";
 import SetupRadio from "./SetupRadio.jsx";
 import SuggestionPriceChart from "./SuggestionPriceChart.jsx";
@@ -66,8 +67,11 @@ function MobileCopilotCard({
         <ChevronRight className="size-[18px] shrink-0 text-[#757575]" />
       </div>
 
-      {tagChips.length > 0 ? (
+      {tagChips.length > 0 || strategyLabel ? (
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          {strategyLabel ? (
+            <SetupChip chip={{ kind: "muted", label: strategyLabel }} />
+          ) : null}
           {tagChips.map((c, i) => (
             <SetupChip key={`${setup.id}-tag-${i}`} chip={c} />
           ))}
@@ -105,6 +109,10 @@ export default function CopilotSuggestionCard({
   onViewThesis,
   mobileFeed = false,
 }) {
+  const strategyLabel = setup.strategyId
+    ? getCopilotStrategyById(setup.strategyId)?.shortLabel
+    : null;
+
   if (mobileFeed) {
     return (
       <MobileCopilotCard
@@ -159,6 +167,9 @@ export default function CopilotSuggestionCard({
         </div>
         <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            {strategyLabel ? (
+              <SetupChip chip={{ kind: "muted", label: strategyLabel }} />
+            ) : null}
             {setup.chips.map((c, i) => (
               <SetupChip key={`${setup.id}-${i}-${c.label}`} chip={c} />
             ))}
