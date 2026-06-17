@@ -99,11 +99,7 @@ function SegmentControl({
               role="tab"
               id={`${listId}-${strategy.id}`}
               aria-selected={selected}
-              title={
-                strategy.tagline ??
-                strategy.catalogName ??
-                strategy.name
-              }
+              title={strategy.tagline ?? strategy.name}
               onMouseEnter={() => onStrategyHover?.(strategy.id)}
               onClick={() => onSelect(strategy.id)}
               className={`${segmentButtonClass(selected, mobile)} ${
@@ -260,11 +256,6 @@ function StrategyOverflowMenu({
                       />
                     ) : null}
                   </span>
-                  {strategy.catalogName ? (
-                    <span className="mt-0.5 block text-[10px] text-[#757575]">
-                      {strategy.catalogName}
-                    </span>
-                  ) : null}
                   {strategy.tagline ? (
                     <span className="mt-1 block text-[11px] font-medium leading-snug text-[#bfbfbf]">
                       {strategy.tagline}

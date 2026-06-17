@@ -80,15 +80,6 @@ export default function CopilotStrategyDetailStrip({
         >
           {strategy.shortLabel ?? strategy.name}
         </span>
-        {strategy.catalogName ? (
-          <span
-            className={`text-[#999] ${
-              compact ? "text-[10px]" : "text-[11px] sm:text-xs"
-            }`}
-          >
-            {strategy.catalogName}
-          </span>
-        ) : null}
         <StrategyRiskBadge risk={strategy.risk} compact={compact} />
       </div>
 
