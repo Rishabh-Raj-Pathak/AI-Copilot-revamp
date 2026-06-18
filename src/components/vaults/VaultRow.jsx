@@ -73,6 +73,7 @@ export default function VaultRow({
   onAmountStrChange,
   onMaxClick,
   onActivate,
+  onBacktest,
   tourControlsDataTour,
 }) {
   const {
@@ -165,13 +166,13 @@ export default function VaultRow({
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.05)] lg:mx-2 lg:block" />
 
         <div
-          className="flex min-w-0 flex-1 flex-col gap-3 sm:py-4 lg:flex-row lg:items-center lg:justify-end lg:gap-3 lg:flex-[1.4]"
+          className="flex min-w-0 flex-[2] flex-col gap-3 sm:py-4 lg:min-w-[620px] lg:flex-[2.2]"
           {...(tourControlsDataTour
             ? { "data-tour": tourControlsDataTour }
             : {})}
         >
-          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex min-w-[140px] flex-1 items-center gap-2">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <div className="flex min-w-[132px] flex-1 items-center gap-2 sm:max-w-[168px] sm:flex-none">
               <div className="relative flex h-[18px] flex-1 items-center px-0.5">
                 <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full border border-[rgba(255,255,255,0.05)] bg-[#1e1b18] shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]" />
                 <div
@@ -203,7 +204,7 @@ export default function VaultRow({
               </span>
             </div>
 
-            <div className="relative flex h-[34px] min-w-[180px] max-w-[220px] flex-1 items-center rounded-lg border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]">
+            <div className="relative flex h-[34px] w-full shrink-0 items-center rounded-lg border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)] sm:w-[176px]">
               <span className="text-sm font-medium leading-[21px] text-[#ccb17f]">
                 $
               </span>
@@ -230,28 +231,38 @@ export default function VaultRow({
                 {maxLabel}
               </button>
             </div>
-          </div>
 
-          <button
-            type="button"
-            disabled={activated}
-            onClick={onActivate}
-            className={`h-[37px] w-full shrink-0 rounded-[10px] border border-[rgba(120,90,40,0.2)] px-4 text-[13px] font-medium uppercase tracking-[0.35px] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors sm:w-[120px] ${
-              activated
-                ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
-                : "cursor-pointer bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:text-white"
-            }`}
-            style={
-              activated
-                ? undefined
-                : {
-                    backgroundImage:
-                      "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
-                  }
-            }
-          >
-            {activated ? "Active" : "Activate"}
-          </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => onBacktest?.()}
+                className="h-[37px] w-[108px] rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#0c0a08] px-3 text-[13px] font-medium uppercase tracking-[0.35px] text-[#bfbfbf] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors hover:border-[rgba(204,177,127,0.22)] hover:text-white"
+              >
+                Backtest
+              </button>
+
+              <button
+                type="button"
+                disabled={activated}
+                onClick={onActivate}
+                className={`h-[37px] w-[120px] rounded-[10px] border border-[rgba(120,90,40,0.2)] px-4 text-[13px] font-medium uppercase tracking-[0.35px] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors ${
+                  activated
+                    ? "cursor-default border-[rgba(0,188,125,0.35)] bg-[rgba(0,188,125,0.12)] text-[#00d492]"
+                    : "cursor-pointer bg-linear-to-b from-[#14100a] to-[#0a0805] text-[#bfbfbf] hover:text-white"
+                }`}
+                style={
+                  activated
+                    ? undefined
+                    : {
+                        backgroundImage:
+                          "linear-gradient(180deg, rgb(20, 16, 10) 0%, rgb(10, 8, 5) 100%)",
+                      }
+                }
+              >
+                {activated ? "Active" : "Activate"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </article>

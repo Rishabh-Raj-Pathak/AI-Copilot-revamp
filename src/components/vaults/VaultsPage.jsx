@@ -196,7 +196,7 @@ export default function VaultsPage({
       />
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="mx-auto flex w-full max-w-[1190px] flex-col gap-10 px-5 py-8 pb-16">
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-5 py-8 pb-16">
           <VaultsHero />
           <VaultsStatsRow />
 
