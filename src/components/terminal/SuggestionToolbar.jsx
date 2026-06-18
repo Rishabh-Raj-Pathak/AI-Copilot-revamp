@@ -21,15 +21,19 @@ export default function SuggestionToolbar({
 
   const expireBlock = (
     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 leading-tight sm:items-center sm:whitespace-nowrap">
-      <p className={compact ? 'text-xs text-[#757575]' : 'text-sm text-white'}>
-        {compact ? 'Expires in' : 'Suggestions Expire in:'}
+      <p
+        className={`${
+          compact || showMobile ? "text-xs text-[#757575]" : "text-sm text-white"
+        }`}
+      >
+        {compact || showMobile ? "Expires in:" : "Suggestions Expire in:"}
       </p>
       <p
         className={`font-semibold ${
-          compact ? 'text-sm' : 'text-base'
-        } ${expired ? 'text-[#d53d3d]' : 'text-[#269755]'}`}
+          compact || showMobile ? "text-sm" : "text-base"
+        } ${expired ? "text-[#d53d3d]" : "text-[#269755]"}`}
       >
-        {expired ? 'Expired' : formatCountdown(expireSeconds)}
+        {expired ? "Expired" : formatCountdown(expireSeconds)}
       </p>
     </div>
   )

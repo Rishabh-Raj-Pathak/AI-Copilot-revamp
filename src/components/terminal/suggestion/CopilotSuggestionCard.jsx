@@ -50,7 +50,7 @@ function MobileCopilotCard({
       className={`cursor-pointer rounded-lg border bg-[#0a0a0a] p-3.5 transition-[border-color,box-shadow] ${
         selected
           ? "border-[#f7bb08] shadow-[0_0_0_1px_rgba(247,187,8,0.35)]"
-          : "border-[#242424]"
+          : "border-[#242424] hover:border-[#333333]"
       }`}
     >
       <div className="flex items-center gap-2.5">
@@ -80,9 +80,13 @@ function MobileCopilotCard({
       ) : null}
 
       {rrChip || rangeChip ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
           {rrChip ? <SetupChip chip={rrChip} /> : null}
-          {rangeChip ? <SetupChip chip={rangeChip} /> : null}
+          {rangeChip ? (
+            <span className="min-w-0 max-w-full truncate">
+              <SetupChip chip={rangeChip} />
+            </span>
+          ) : null}
         </div>
       ) : null}
 

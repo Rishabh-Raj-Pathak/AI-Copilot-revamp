@@ -32,28 +32,33 @@ export default function CopilotDiscoveryPanel({
 
   if (mobile) {
     return (
-      <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
-        <div className="border-b border-[#242424] px-3 py-2.5">
-          <CopilotPlatformKpis stats={stats} mobile />
+      <div className="border-b border-[#242424] px-3 py-2.5">
+        <div className="mb-2 flex min-w-0 items-baseline justify-between gap-2">
+          <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.35px] text-[#757575]">
+            AI strategy
+          </span>
+          {active ? (
+            <span className="min-w-0 truncate text-right text-[10px] leading-snug text-[#757575]">
+              {active.shortLabel ?? active.name} · {active.risk} risk
+            </span>
+          ) : null}
         </div>
 
-        <div className="px-3 py-2.5">
-          <CopilotStrategySegments
-            strategies={strategies}
-            selectedId={selectedId}
-            onSelect={onSelect}
-            mobile
-            embedded
-            detailsOpen={detailsOpen}
-            onDetailsOpenChange={setDetailsOpen}
-            renderDetailsPanel={false}
-          />
-        </div>
+        <CopilotStrategySegments
+          strategies={strategies}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          mobile
+          embedded
+          detailsOpen={detailsOpen}
+          onDetailsOpenChange={setDetailsOpen}
+          renderDetailsPanel={false}
+        />
 
         {detailsOpen && active ? (
           <div
             id="copilot-strategy-details"
-            className="border-t border-[#242424] px-3 py-2.5"
+            className="mt-2.5 border-t border-[#242424] pt-2.5"
           >
             <CopilotStrategyDetailStrip strategy={active} compact />
           </div>

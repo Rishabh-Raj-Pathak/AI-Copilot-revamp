@@ -35,7 +35,7 @@ function StrategyDetailsToggle({ open, onToggle, mobile = false }) {
       aria-expanded={open}
       aria-controls="copilot-strategy-details"
       className={`inline-flex shrink-0 items-center gap-1 rounded-md border font-medium transition-colors ${
-        mobile ? "min-h-9 px-2.5 py-1.5 text-[11px]" : "px-2 py-1 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px]"
+        mobile ? "min-h-8 px-2 py-1 text-[11px]" : "px-2 py-1 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px]"
       } ${
         open
           ? "border-[#3e2e00] bg-[#171200] text-[#f2b500]"
@@ -55,9 +55,15 @@ function StrategyDetailsToggle({ open, onToggle, mobile = false }) {
 }
 
 function segmentButtonClass(selected, mobile) {
-  return `relative shrink-0 font-medium transition-colors ${
-    mobile ? "min-h-9 px-3 py-2 text-xs" : "px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs"
-  } ${
+  if (mobile) {
+    return `flex shrink-0 items-center border font-medium transition-colors min-h-8 rounded-md px-2.5 py-1 text-xs ${
+      selected
+        ? "border-transparent bg-[#3e2e00] text-[#f2b500]"
+        : "border-[#242424] bg-transparent text-[#bfbfbf] hover:bg-white/5 hover:text-white"
+    }`;
+  }
+
+  return `relative shrink-0 font-medium transition-colors px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs ${
     selected
       ? "rounded-md bg-[#3e2e00] text-[#f2b500] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
       : "rounded-md text-[#bfbfbf] hover:bg-white/[0.03] hover:text-white"
@@ -84,11 +90,17 @@ function SegmentControl({
       onMouseLeave={() => onStrategyHover?.(null)}
       className={
         mobile
-          ? "minimal-scrollbar w-full overflow-x-auto pb-0.5"
+          ? "minimal-scrollbar min-w-0 flex-1 overflow-x-auto pb-0.5"
           : "min-w-0 shrink-0"
       }
     >
-      <div className="inline-flex min-w-min rounded-md border border-[#1f1f1f] bg-[#050505] p-0.5">
+      <div
+        className={
+          mobile
+            ? "flex w-max min-w-full items-center gap-2"
+            : "inline-flex min-w-min rounded-md border border-[#1f1f1f] bg-[#050505] p-0.5"
+        }
+      >
         {visible.map((strategy, index) => {
           const selected = strategy.id === active.id;
           const isLast = index === visible.length - 1 && !overflow.length;
@@ -117,14 +129,12 @@ function SegmentControl({
               onMouseEnter={() => onStrategyHover?.(strategy.id)}
               onClick={() => onSelect(strategy.id)}
               className={`${segmentButtonClass(selected, mobile)} ${
-                !selected && !isLast
+                !mobile && !selected && !isLast
                   ? "after:absolute after:right-0 after:top-1/2 after:h-3.5 after:w-px after:-translate-y-1/2 after:bg-[#242424]"
                   : ""
-              }`}
+              } ${!mobile && selected ? "relative" : ""}`}
             >
-              {mobile
-                ? (strategy.letter ?? strategy.shortLabel ?? strategy.name)
-                : (strategy.shortLabel ?? strategy.name)}
+              {strategy.shortLabel ?? strategy.name}
             </button>
           );
         })}
@@ -140,9 +150,13 @@ function SegmentControl({
             className={`${segmentButtonClass(
               overflowSelected,
               mobile,
-            )} inline-flex items-center gap-1 pl-2.5 pr-2 ${
-              visible.length > 0
-                ? "before:absolute before:left-0 before:top-1/2 before:h-3.5 before:w-px before:-translate-y-1/2 before:bg-[#242424]"
+            )} inline-flex items-center gap-1 ${
+              !mobile
+                ? `pl-2.5 pr-2 ${
+                    visible.length > 0
+                      ? "before:absolute before:left-0 before:top-1/2 before:h-3.5 before:w-px before:-translate-y-1/2 before:bg-[#242424]"
+                      : ""
+                  }`
                 : ""
             }`}
           >
@@ -401,7 +415,7 @@ export default function CopilotStrategySegments({
       {detailsToggle}
     </div>
   ) : mobile ? (
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <SegmentControl
         listId={listId}
         visible={visible}
@@ -414,10 +428,7 @@ export default function CopilotStrategySegments({
         onToggleOverflow={() => setOverflowOpen((open) => !open)}
         mobile
       />
-      <div className="flex min-w-0 items-center justify-between gap-2">
-        <StrategyCollapsedSummary strategy={active} className="flex-1" />
-        {detailsToggle}
-      </div>
+      {detailsToggle}
     </div>
   ) : (
     <div className="flex items-center gap-2">

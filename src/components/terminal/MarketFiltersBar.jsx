@@ -14,8 +14,8 @@ const filterDefs = [
 /** Figma mobile Copilot — filter row order (1017:24652). */
 const mobileFilterDefs = [
   { id: 'bluechip', label: 'Bluechip', icon: a.pokerChip },
+  { id: 'hip3', label: 'Stocks (HIP-3)', icon: a.hyperliquid },
   { id: 'trending', label: 'Trending', icon: a.trending },
-  { id: 'hip3', label: 'HIP-3', icon: a.hyperliquid },
   { id: 'tradexyz', label: 'Trade[XYZ]', icon: a.spotlight },
 ]
 
@@ -122,8 +122,12 @@ export default function MarketFiltersBar({
 
   return (
     <div className="flex w-full shrink-0 flex-col border-b border-[#242424]">
-      {/* Mobile */}
-      <div className="flex flex-col gap-2.5 px-3 py-2.5 max-tablet:flex tablet:hidden">
+      {/* Mobile — Figma 1017:24652 */}
+      <div className="flex flex-col max-tablet:flex tablet:hidden">
+        <div className="border-b border-[#242424] px-3 py-3">
+          <CopilotPlatformKpis stats={stats} mobile />
+        </div>
+
         {showStrategy ? (
           <CopilotDiscoveryPanel
             strategies={strategies}
@@ -132,22 +136,23 @@ export default function MarketFiltersBar({
             stats={stats}
             mobile
           />
-        ) : (
-          <CopilotPlatformKpis stats={stats} variant="standalone" mobile />
-        )}
-        <MarketsRow
-          defs={mobileFilterDefs}
-          activeFilter={activeFilter}
-          onFilterChange={onFilterChange}
-          mobile
-        />
-        {showUtilities ? (
-          <SuggestionToolbar
-            variant="mobile"
-            expireSeconds={expireSeconds}
-            onRefresh={onRefresh}
-          />
         ) : null}
+
+        <div className="flex flex-col gap-3 px-3 py-3">
+          <MarketsRow
+            defs={mobileFilterDefs}
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+            mobile
+          />
+          {showUtilities ? (
+            <SuggestionToolbar
+              variant="mobile"
+              expireSeconds={expireSeconds}
+              onRefresh={onRefresh}
+            />
+          ) : null}
+        </div>
       </div>
 
       {/* Desktop — performance + strategy side by side */}

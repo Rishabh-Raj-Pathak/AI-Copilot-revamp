@@ -629,7 +629,7 @@ export default function TerminalCopilotPage({
           </div>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div
-              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-4 sm:pb-5"
+              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-20 sm:pb-5 max-tablet:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
               data-tour="copilot-suggestions-list"
             >
               <div className="sticky top-0 z-20 shrink-0 bg-black tablet:hidden">
