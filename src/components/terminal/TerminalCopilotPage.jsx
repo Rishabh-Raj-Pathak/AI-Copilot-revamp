@@ -98,7 +98,10 @@ export default function TerminalCopilotPage({
     return window.matchMedia(NARROW_VIEWPORT_MEDIA).matches;
   });
   const [mobileDetailsSheetDismissed, setMobileDetailsSheetDismissed] =
-    useState(false);
+    useState(() => {
+      if (typeof window === "undefined") return true;
+      return window.matchMedia(NARROW_VIEWPORT_MEDIA).matches;
+    });
   const [copilotView, setCopilotView] = useState("suggestions");
   const [activeFilter, setActiveFilter] = useState("trending");
   const [selectedStrategyId, setSelectedStrategyId] = useState(
@@ -123,7 +126,13 @@ export default function TerminalCopilotPage({
 
   useEffect(() => {
     const mq = window.matchMedia(NARROW_VIEWPORT_MEDIA);
-    const update = () => setIsNarrowViewport(mq.matches);
+    const update = () => {
+      const narrow = mq.matches;
+      setIsNarrowViewport(narrow);
+      if (narrow) {
+        setMobileDetailsSheetDismissed(true);
+      }
+    };
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
@@ -216,6 +225,9 @@ export default function TerminalCopilotPage({
     });
     const timer = window.setTimeout(() => {
       setSelectedId(nextSetups[0]?.id ?? null);
+      if (window.matchMedia(NARROW_VIEWPORT_MEDIA).matches) {
+        setMobileDetailsSheetDismissed(true);
+      }
       setListRefreshing(false);
     }, 280);
     return () => window.clearTimeout(timer);
@@ -620,7 +632,7 @@ export default function TerminalCopilotPage({
               className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-4 sm:pb-5"
               data-tour="copilot-suggestions-list"
             >
-              <div className="tablet:hidden">
+              <div className="sticky top-0 z-20 shrink-0 bg-black tablet:hidden">
                 <MarketFiltersBar
                   activeFilter={activeFilter}
                   onFilterChange={setActiveFilter}

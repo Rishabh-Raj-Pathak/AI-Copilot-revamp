@@ -17,8 +17,8 @@ export default function CopilotDiscoveryPanel({
   stats,
   mobile = false,
 }) {
-  const [detailsOpen, setDetailsOpen] = useState(
-    getInitialCopilotStrategyDetailsOpen,
+  const [detailsOpen, setDetailsOpen] = useState(() =>
+    mobile ? false : getInitialCopilotStrategyDetailsOpen(),
   );
 
   useEffect(() => {
@@ -36,6 +36,7 @@ export default function CopilotDiscoveryPanel({
         <div className="border-b border-[#242424] px-3 py-2.5">
           <CopilotPlatformKpis stats={stats} mobile />
         </div>
+
         <div className="px-3 py-2.5">
           <CopilotStrategySegments
             strategies={strategies}
@@ -43,8 +44,20 @@ export default function CopilotDiscoveryPanel({
             onSelect={onSelect}
             mobile
             embedded
+            detailsOpen={detailsOpen}
+            onDetailsOpenChange={setDetailsOpen}
+            renderDetailsPanel={false}
           />
         </div>
+
+        {detailsOpen && active ? (
+          <div
+            id="copilot-strategy-details"
+            className="border-t border-[#242424] px-3 py-2.5"
+          >
+            <CopilotStrategyDetailStrip strategy={active} compact />
+          </div>
+        ) : null}
       </div>
     );
   }

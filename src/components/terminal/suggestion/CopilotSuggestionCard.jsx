@@ -28,6 +28,7 @@ function MobileCopilotCard({
   selected,
   onSelect,
   onViewThesis,
+  strategyLabel,
 }) {
   const tagChips = setup.chips.filter(
     (c) => c.kind === "side" || c.kind === "win",
@@ -120,6 +121,7 @@ export default function CopilotSuggestionCard({
         selected={selected}
         onSelect={onSelect}
         onViewThesis={onViewThesis}
+        strategyLabel={strategyLabel}
       />
     );
   }

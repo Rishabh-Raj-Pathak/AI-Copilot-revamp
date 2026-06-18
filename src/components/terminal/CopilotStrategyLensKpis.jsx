@@ -53,7 +53,40 @@ export function CopilotPlatformKpis({
 }) {
   if (!stats) return null;
 
-  if (mobile || variant === "strip") {
+  if (mobile) {
+    const rewards = stats.rewards ?? stats.volume * 0.0003;
+
+    return (
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <span className="text-[11px] leading-tight text-[#757575]">
+            Total Volume
+          </span>
+          <span className="truncate text-sm font-semibold text-white">
+            {formatMobileVolumeUsd(stats.volume)}
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <span className="text-[11px] leading-tight text-[#757575]">
+            Trades Executed
+          </span>
+          <span className="truncate text-sm font-semibold text-white">
+            {formatMobileCount(stats.trades)}
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <span className="text-[11px] leading-tight text-[#757575]">
+            Rewards Distributed
+          </span>
+          <span className="truncate text-sm font-semibold text-white">
+            {formatMobileRewardsUsd(rewards)}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "strip") {
     return (
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:gap-x-6 lg:gap-x-10">
         <PlatformKpiMetrics stats={stats} />

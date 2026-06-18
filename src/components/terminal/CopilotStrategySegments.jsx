@@ -3,6 +3,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import CopilotStrategyDetailStrip from "./CopilotStrategyDetailStrip.jsx";
 import {
+  COPILOT_STRATEGY_MOBILE_VISIBLE_LIMIT,
   getInitialCopilotStrategyDetailsOpen,
   markCopilotStrategyDetailsIntroSeen,
   resolveCopilotSegmentStrategies,
@@ -19,7 +20,7 @@ function StrategyCollapsedSummary({ strategy, className = "" }) {
 
   return (
     <p
-      className={`shrink-0 whitespace-nowrap text-[10px] leading-snug text-[#757575] sm:text-[11px] ${className}`}
+      className={`min-w-0 truncate text-[10px] leading-snug text-[#757575] sm:text-[11px] ${className}`}
     >
       {strategy.risk} risk · {strategy.timeframe}
     </p>
@@ -34,7 +35,7 @@ function StrategyDetailsToggle({ open, onToggle, mobile = false }) {
       aria-expanded={open}
       aria-controls="copilot-strategy-details"
       className={`inline-flex shrink-0 items-center gap-1 rounded-md border font-medium transition-colors ${
-        mobile ? "px-2 py-1 text-[10px]" : "px-2 py-1 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px]"
+        mobile ? "min-h-9 px-2.5 py-1.5 text-[11px]" : "px-2 py-1 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px]"
       } ${
         open
           ? "border-[#3e2e00] bg-[#171200] text-[#f2b500]"
@@ -55,7 +56,7 @@ function StrategyDetailsToggle({ open, onToggle, mobile = false }) {
 
 function segmentButtonClass(selected, mobile) {
   return `relative shrink-0 font-medium transition-colors ${
-    mobile ? "min-h-8 px-2.5 py-1.5 text-xs" : "px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs"
+    mobile ? "min-h-9 px-3 py-2 text-xs" : "px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs"
   } ${
     selected
       ? "rounded-md bg-[#3e2e00] text-[#f2b500] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
@@ -83,7 +84,7 @@ function SegmentControl({
       onMouseLeave={() => onStrategyHover?.(null)}
       className={
         mobile
-          ? "minimal-scrollbar min-w-0 flex-1 overflow-x-auto"
+          ? "minimal-scrollbar w-full overflow-x-auto pb-0.5"
           : "min-w-0 shrink-0"
       }
     >
@@ -99,7 +100,20 @@ function SegmentControl({
               role="tab"
               id={`${listId}-${strategy.id}`}
               aria-selected={selected}
-              title={strategy.tagline ?? strategy.name}
+              title={
+                mobile
+                  ? `${strategy.shortLabel ?? strategy.name}${
+                      strategy.tagline ? ` — ${strategy.tagline}` : ""
+                    }`
+                  : (strategy.tagline ?? strategy.name)
+              }
+              aria-label={
+                mobile
+                  ? `${strategy.shortLabel ?? strategy.name}${
+                      strategy.tagline ? `, ${strategy.tagline}` : ""
+                    }`
+                  : undefined
+              }
               onMouseEnter={() => onStrategyHover?.(strategy.id)}
               onClick={() => onSelect(strategy.id)}
               className={`${segmentButtonClass(selected, mobile)} ${
@@ -108,7 +122,9 @@ function SegmentControl({
                   : ""
               }`}
             >
-              {strategy.shortLabel ?? strategy.name}
+              {mobile
+                ? (strategy.letter ?? strategy.shortLabel ?? strategy.name)
+                : (strategy.shortLabel ?? strategy.name)}
             </button>
           );
         })}
@@ -152,6 +168,7 @@ function StrategyOverflowMenu({
   selectedId,
   onSelect,
   onClose,
+  mobile = false,
 }) {
   const menuRef = useRef(null);
   const [pos, setPos] = useState(null);
@@ -164,12 +181,18 @@ function StrategyOverflowMenu({
 
     const update = () => {
       const rect = anchorEl.getBoundingClientRect();
-      const width = Math.min(320, window.innerWidth - 24);
+      const width = Math.min(mobile ? 280 : 320, window.innerWidth - 24);
       const left = Math.min(
-        Math.max(12, rect.left),
+        Math.max(12, rect.left + rect.width / 2 - width / 2),
         window.innerWidth - width - 12,
       );
-      const top = rect.bottom + 6;
+      const maxMenuHeight = Math.min(320, window.innerHeight * 0.5);
+      const belowTop = rect.bottom + 6;
+      const aboveTop = rect.top - maxMenuHeight - 6;
+      const top =
+        belowTop + maxMenuHeight > window.innerHeight - 12 && aboveTop >= 12
+          ? aboveTop
+          : belowTop;
       setPos({ left, top, width });
     };
 
@@ -286,6 +309,7 @@ export default function CopilotStrategySegments({
   layout = "default",
   showDetails = true,
   embedded = false,
+  renderDetailsPanel = true,
   detailsOpen: detailsOpenProp,
   onDetailsOpenChange,
 }) {
@@ -324,6 +348,7 @@ export default function CopilotStrategySegments({
   const { visible, overflow } = resolveCopilotSegmentStrategies(
     strategies,
     active.id,
+    mobile ? COPILOT_STRATEGY_MOBILE_VISIBLE_LIMIT : undefined,
   );
   const overflowSelected = overflow.some((s) => s.id === active.id);
   const hoveredStrategy = hoveredStrategyId
@@ -374,6 +399,25 @@ export default function CopilotStrategySegments({
       />
       {hoverSummary}
       {detailsToggle}
+    </div>
+  ) : mobile ? (
+    <div className="flex min-w-0 flex-col gap-2">
+      <SegmentControl
+        listId={listId}
+        visible={visible}
+        overflow={overflow}
+        active={active}
+        overflowOpen={overflowOpen}
+        overflowSelected={overflowSelected}
+        moreButtonRef={moreButtonRef}
+        onSelect={handleSelect}
+        onToggleOverflow={() => setOverflowOpen((open) => !open)}
+        mobile
+      />
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <StrategyCollapsedSummary strategy={active} className="flex-1" />
+        {detailsToggle}
+      </div>
     </div>
   ) : (
     <div className="flex items-center gap-2">
@@ -426,7 +470,7 @@ export default function CopilotStrategySegments({
           {headerRow}
         </div>
 
-        {showDetails && detailsOpen ? (
+        {showDetails && detailsOpen && renderDetailsPanel ? (
           <div
             id="copilot-strategy-details"
             className={
@@ -446,6 +490,7 @@ export default function CopilotStrategySegments({
           selectedId={active.id}
           onSelect={handleSelect}
           onClose={() => setOverflowOpen(false)}
+          mobile
         />
       </>
     );
@@ -471,7 +516,7 @@ export default function CopilotStrategySegments({
         {headerRow}
       </div>
 
-      {showDetails && detailsOpen ? (
+      {showDetails && detailsOpen && renderDetailsPanel ? (
         <div id="copilot-strategy-details" className="px-3.5 py-3 sm:px-4 sm:py-3.5">
           <CopilotStrategyDetailStrip strategy={active} />
         </div>

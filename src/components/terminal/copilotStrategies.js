@@ -16,6 +16,9 @@ const COPILOT_STRATEGY_IDS = [
 /** Inline segment slots before the "+N more" overflow control. */
 export const COPILOT_STRATEGY_VISIBLE_LIMIT = 4;
 
+/** Fewer inline slots on mobile — keeps touch targets and the details control on-screen. */
+export const COPILOT_STRATEGY_MOBILE_VISIBLE_LIMIT = 3;
+
 export const DEFAULT_COPILOT_STRATEGY_ID = "mean-reversion";
 
 /** Copilot-facing copy — dummy placeholder text per strategy lens. */
@@ -95,8 +98,11 @@ export function getCopilotStrategyById(id) {
  * Which strategies appear as inline segments vs overflow menu.
  * Keeps the selected strategy visible when it lives past the visible limit.
  */
-export function resolveCopilotSegmentStrategies(strategies, selectedId) {
-  const limit = COPILOT_STRATEGY_VISIBLE_LIMIT;
+export function resolveCopilotSegmentStrategies(
+  strategies,
+  selectedId,
+  limit = COPILOT_STRATEGY_VISIBLE_LIMIT,
+) {
   if (!strategies?.length || strategies.length <= limit) {
     return { visible: strategies ?? [], overflow: [] };
   }
