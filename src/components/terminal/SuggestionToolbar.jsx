@@ -1,10 +1,13 @@
 import { Clock, RefreshCw, Share2 } from 'lucide-react'
 import { terminalGradientCta } from '../../design-system/tokens/terminalConnectWallet'
 
-function formatCountdown(totalSec) {
+function formatCountdown(totalSec, mobile = false) {
   const s = Math.max(0, totalSec)
   const m = Math.floor(s / 60)
   const r = s % 60
+  if (mobile) {
+    return `${m.toString().padStart(2, '0')}m ${r.toString().padStart(2, '0')}s`
+  }
   return `${m}m ${r.toString().padStart(2, '0')}s`
 }
 
@@ -33,7 +36,7 @@ export default function SuggestionToolbar({
           compact || showMobile ? "text-sm" : "text-base"
         } ${expired ? "text-[#d53d3d]" : "text-[#269755]"}`}
       >
-        {expired ? "Expired" : formatCountdown(expireSeconds)}
+        {expired ? "Expired" : formatCountdown(expireSeconds, showMobile)}
       </p>
     </div>
   )

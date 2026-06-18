@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import CopilotStrategyDetailStrip from "./CopilotStrategyDetailStrip.jsx";
 import { CopilotPlatformKpis } from "./CopilotStrategyLensKpis.jsx";
 import CopilotStrategySegments from "./CopilotStrategySegments.jsx";
-import {
-  getInitialCopilotStrategyDetailsOpen,
-  markCopilotStrategyDetailsIntroSeen,
-} from "./copilotStrategies.js";
+import { markCopilotStrategyDetailsIntroSeen } from "./copilotStrategies.js";
 
 /**
  * Discovery panel — strategy lens (left) + platform KPIs (right).
@@ -17,9 +15,9 @@ export default function CopilotDiscoveryPanel({
   stats,
   mobile = false,
 }) {
-  const [detailsOpen, setDetailsOpen] = useState(() =>
-    mobile ? false : getInitialCopilotStrategyDetailsOpen(),
-  );
+  const panelRef = useRef(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [lensExpanded, setLensExpanded] = useState(false);
 
   useEffect(() => {
     if (detailsOpen) {
@@ -27,40 +25,82 @@ export default function CopilotDiscoveryPanel({
     }
   }, [detailsOpen]);
 
+  useEffect(() => {
+    if (mobile || !detailsOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      const t = e.target;
+      if (panelRef.current?.contains(t)) return;
+      if (t instanceof Element && t.closest('[aria-label="More AI strategies"]')) {
+        return;
+      }
+      setDetailsOpen(false);
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setDetailsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [detailsOpen, mobile]);
+
   const active =
     strategies?.find((s) => s.id === selectedId) ?? strategies?.[0] ?? null;
 
   if (mobile) {
     return (
-      <div className="border-b border-[#242424] px-3 py-2.5">
-        <div className="mb-2 flex min-w-0 items-baseline justify-between gap-2">
-          <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.35px] text-[#757575]">
-            AI strategy
+      <div className="py-0.5">
+        <button
+          type="button"
+          onClick={() => setLensExpanded((open) => !open)}
+          aria-expanded={lensExpanded}
+          className="flex w-full min-w-0 items-center justify-between gap-2 rounded-md border border-[#242424] px-2.5 py-1.5 text-left"
+        >
+          <span className="min-w-0 truncate text-xs font-medium text-white">
+            {active?.shortLabel ?? active?.name ?? "AI strategy"}
           </span>
-          {active ? (
-            <span className="min-w-0 truncate text-right text-[10px] leading-snug text-[#757575]">
-              {active.shortLabel ?? active.name} · {active.risk} risk
-            </span>
-          ) : null}
-        </div>
+          <span className="flex shrink-0 items-center gap-1.5">
+            {active ? (
+              <span className="text-[10px] text-[#757575]">
+                {active.risk} risk
+              </span>
+            ) : null}
+            <ChevronDown
+              className={`size-3.5 shrink-0 text-[#757575] transition-transform ${
+                lensExpanded ? "rotate-180" : ""
+              }`}
+              strokeWidth={2}
+              aria-hidden
+            />
+          </span>
+        </button>
 
-        <CopilotStrategySegments
-          strategies={strategies}
-          selectedId={selectedId}
-          onSelect={onSelect}
-          mobile
-          embedded
-          detailsOpen={detailsOpen}
-          onDetailsOpenChange={setDetailsOpen}
-          renderDetailsPanel={false}
-        />
+        {lensExpanded ? (
+          <div className="mt-2">
+            <CopilotStrategySegments
+              strategies={strategies}
+              selectedId={selectedId}
+              onSelect={onSelect}
+              mobile
+              embedded
+              detailsOpen={detailsOpen}
+              onDetailsOpenChange={setDetailsOpen}
+              renderDetailsPanel={false}
+            />
 
-        {detailsOpen && active ? (
-          <div
-            id="copilot-strategy-details"
-            className="mt-2.5 border-t border-[#242424] pt-2.5"
-          >
-            <CopilotStrategyDetailStrip strategy={active} compact />
+            {detailsOpen && active ? (
+              <div
+                id="copilot-strategy-details"
+                className="mt-2.5 border-t border-[#242424] pt-2.5"
+              >
+                <CopilotStrategyDetailStrip strategy={active} compact />
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -70,7 +110,10 @@ export default function CopilotDiscoveryPanel({
   if (!strategies?.length) return null;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
+    <div
+      ref={panelRef}
+      className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]"
+    >
       <div
         className={`flex items-center justify-between gap-x-3 px-3 py-2 sm:gap-x-4 sm:px-3.5 sm:py-2.5 ${
           detailsOpen ? "border-b border-[#242424]" : ""

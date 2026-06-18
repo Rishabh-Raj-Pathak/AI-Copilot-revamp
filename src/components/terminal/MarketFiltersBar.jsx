@@ -44,7 +44,9 @@ function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
                 ? mobile
                   ? 'border-transparent bg-[#3e2e00] text-[#f2b500]'
                   : 'border-[#242424] bg-[#3e2e00] text-[#f2b500]'
-                : 'border-[#242424] bg-transparent text-white hover:bg-white/5'
+                : mobile
+                  ? 'border-[#242424] bg-transparent text-white hover:bg-white/5'
+                  : 'border-[#242424] bg-transparent text-white hover:bg-white/5'
             }`}
           >
             {f.icon ? (
@@ -81,7 +83,7 @@ function MarketsRow({
     <div
       className={
         mobile
-          ? 'flex flex-col gap-2'
+          ? 'flex flex-col gap-2.5'
           : 'flex w-full items-center gap-x-3 gap-y-2'
       }
     >
@@ -121,42 +123,43 @@ export default function MarketFiltersBar({
     typeof onStrategySelect === 'function'
 
   return (
-    <div className="flex w-full shrink-0 flex-col border-b border-[#242424]">
+    <div className="flex w-full shrink-0 flex-col">
       {/* Mobile — Figma 1017:24652 */}
       <div className="flex flex-col max-tablet:flex tablet:hidden">
         <div className="border-b border-[#242424] px-3 py-3">
           <CopilotPlatformKpis stats={stats} mobile />
         </div>
 
-        {showStrategy ? (
-          <CopilotDiscoveryPanel
-            strategies={strategies}
-            selectedId={selectedStrategyId}
-            onSelect={onStrategySelect}
-            stats={stats}
-            mobile
-          />
-        ) : null}
-
-        <div className="flex flex-col gap-3 px-3 py-3">
-          <MarketsRow
-            defs={mobileFilterDefs}
-            activeFilter={activeFilter}
-            onFilterChange={onFilterChange}
-            mobile
-          />
-          {showUtilities ? (
-            <SuggestionToolbar
-              variant="mobile"
-              expireSeconds={expireSeconds}
-              onRefresh={onRefresh}
+        <div className="sticky top-0 z-20 border-b border-[#242424] bg-black">
+          <div className="flex flex-col gap-2.5 px-3 py-2.5">
+            {showStrategy ? (
+              <CopilotDiscoveryPanel
+                strategies={strategies}
+                selectedId={selectedStrategyId}
+                onSelect={onStrategySelect}
+                stats={stats}
+                mobile
+              />
+            ) : null}
+            <MarketsRow
+              defs={mobileFilterDefs}
+              activeFilter={activeFilter}
+              onFilterChange={onFilterChange}
+              mobile
             />
-          ) : null}
+            {showUtilities ? (
+              <SuggestionToolbar
+                variant="mobile"
+                expireSeconds={expireSeconds}
+                onRefresh={onRefresh}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
 
       {/* Desktop — performance + strategy side by side */}
-      <div className="hidden flex-col gap-2 px-3 py-2 sm:px-5 sm:py-2.5 tablet:flex">
+      <div className="hidden flex-col gap-2 border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:flex">
         {showStrategy ? (
           <CopilotDiscoveryPanel
             strategies={strategies}

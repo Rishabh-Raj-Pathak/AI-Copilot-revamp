@@ -632,7 +632,7 @@ export default function TerminalCopilotPage({
               className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-20 sm:pb-5 max-tablet:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
               data-tour="copilot-suggestions-list"
             >
-              <div className="sticky top-0 z-20 shrink-0 bg-black tablet:hidden">
+              <div className="max-tablet:flex tablet:hidden">
                 <MarketFiltersBar
                   activeFilter={activeFilter}
                   onFilterChange={setActiveFilter}
@@ -645,7 +645,7 @@ export default function TerminalCopilotPage({
                 />
               </div>
               <div
-                className={`flex flex-col gap-3 px-3 pt-2 transition-opacity duration-300 max-tablet:gap-2.5 sm:px-5 tablet:gap-4 tablet:pt-3 ${
+                className={`flex flex-col gap-2.5 px-3 pt-2.5 transition-opacity duration-300 max-tablet:gap-2 sm:px-5 tablet:gap-4 tablet:pt-3 ${
                   listRefreshing ? "pointer-events-none opacity-40" : "opacity-100"
                 }`}
               >

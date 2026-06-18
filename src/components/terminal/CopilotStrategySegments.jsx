@@ -27,33 +27,6 @@ function StrategyCollapsedSummary({ strategy, className = "" }) {
   );
 }
 
-function StrategyDetailsToggle({ open, onToggle, mobile = false }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={open}
-      aria-controls="copilot-strategy-details"
-      className={`inline-flex shrink-0 items-center gap-1 rounded-md border font-medium transition-colors ${
-        mobile ? "min-h-8 px-2 py-1 text-[11px]" : "px-2 py-1 text-[10px] sm:px-2.5 sm:py-1 sm:text-[11px]"
-      } ${
-        open
-          ? "border-[#3e2e00] bg-[#171200] text-[#f2b500]"
-          : "border-[#242424] text-[#bfbfbf] hover:bg-white/[0.03] hover:text-white"
-      }`}
-    >
-      <span>{open ? "Hide details" : "Details"}</span>
-      <ChevronDown
-        className={`size-3.5 shrink-0 transition-transform ${
-          open ? "rotate-180" : ""
-        }`}
-        strokeWidth={2}
-        aria-hidden
-      />
-    </button>
-  );
-}
-
 function segmentButtonClass(selected, mobile) {
   if (mobile) {
     return `flex shrink-0 items-center border font-medium transition-colors min-h-8 rounded-md px-2.5 py-1 text-xs ${
@@ -63,7 +36,7 @@ function segmentButtonClass(selected, mobile) {
     }`;
   }
 
-  return `relative shrink-0 font-medium transition-colors px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs ${
+  return `relative shrink-0 font-medium transition-colors group/segment inline-flex items-center gap-1 px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs ${
     selected
       ? "rounded-md bg-[#3e2e00] text-[#f2b500] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
       : "rounded-md text-[#bfbfbf] hover:bg-white/[0.03] hover:text-white"
@@ -82,6 +55,7 @@ function SegmentControl({
   onToggleOverflow,
   onStrategyHover,
   mobile,
+  detailsOpen = false,
 }) {
   return (
     <div
@@ -132,9 +106,20 @@ function SegmentControl({
                 !mobile && !selected && !isLast
                   ? "after:absolute after:right-0 after:top-1/2 after:h-3.5 after:w-px after:-translate-y-1/2 after:bg-[#242424]"
                   : ""
-              } ${!mobile && selected ? "relative" : ""}`}
+              }`}
             >
               {strategy.shortLabel ?? strategy.name}
+              {!mobile ? (
+                <ChevronDown
+                  className={`size-3 shrink-0 transition-all ${
+                    selected
+                      ? "opacity-100"
+                      : "opacity-0 group-hover/segment:opacity-100 group-focus-visible/segment:opacity-100"
+                  } ${selected && detailsOpen ? "rotate-180" : ""}`}
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              ) : null}
             </button>
           );
         })}
@@ -380,14 +365,6 @@ export default function CopilotStrategySegments({
     }
   };
 
-  const detailsToggle = showDetails ? (
-    <StrategyDetailsToggle
-      open={detailsOpen}
-      onToggle={() => setDetailsOpen(!detailsOpen)}
-      mobile={mobile}
-    />
-  ) : null;
-
   const isToolbar = layout === "toolbar" && !mobile;
   const isSplit = isToolbar;
 
@@ -410,26 +387,23 @@ export default function CopilotStrategySegments({
         onToggleOverflow={() => setOverflowOpen((open) => !open)}
         onStrategyHover={setHoveredStrategyId}
         mobile={false}
+        detailsOpen={detailsOpen}
       />
       {hoverSummary}
-      {detailsToggle}
     </div>
   ) : mobile ? (
-    <div className="flex min-w-0 items-center gap-2">
-      <SegmentControl
-        listId={listId}
-        visible={visible}
-        overflow={overflow}
-        active={active}
-        overflowOpen={overflowOpen}
-        overflowSelected={overflowSelected}
-        moreButtonRef={moreButtonRef}
-        onSelect={handleSelect}
-        onToggleOverflow={() => setOverflowOpen((open) => !open)}
-        mobile
-      />
-      {detailsToggle}
-    </div>
+    <SegmentControl
+      listId={listId}
+      visible={visible}
+      overflow={overflow}
+      active={active}
+      overflowOpen={overflowOpen}
+      overflowSelected={overflowSelected}
+      moreButtonRef={moreButtonRef}
+      onSelect={handleSelect}
+      onToggleOverflow={() => setOverflowOpen((open) => !open)}
+      mobile
+    />
   ) : (
     <div className="flex items-center gap-2">
       <SegmentControl
@@ -444,9 +418,9 @@ export default function CopilotStrategySegments({
         onToggleOverflow={() => setOverflowOpen((open) => !open)}
         onStrategyHover={mobile ? undefined : setHoveredStrategyId}
         mobile={mobile}
+        detailsOpen={detailsOpen}
       />
       {!mobile ? hoverSummary : null}
-      {detailsToggle}
     </div>
   );
 

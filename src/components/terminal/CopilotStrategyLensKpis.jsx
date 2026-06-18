@@ -62,7 +62,7 @@ export function CopilotPlatformKpis({
           <span className="text-[11px] leading-tight text-[#757575]">
             Total Volume
           </span>
-          <span className="truncate text-sm font-semibold text-white">
+          <span className="truncate text-[15px] font-semibold leading-tight text-white">
             {formatMobileVolumeUsd(stats.volume)}
           </span>
         </div>
@@ -70,7 +70,7 @@ export function CopilotPlatformKpis({
           <span className="text-[11px] leading-tight text-[#757575]">
             Trades Executed
           </span>
-          <span className="truncate text-sm font-semibold text-white">
+          <span className="truncate text-[15px] font-semibold leading-tight text-white">
             {formatMobileCount(stats.trades)}
           </span>
         </div>
@@ -78,7 +78,7 @@ export function CopilotPlatformKpis({
           <span className="text-[11px] leading-tight text-[#757575]">
             Rewards Distributed
           </span>
-          <span className="truncate text-sm font-semibold text-white">
+          <span className="truncate text-[15px] font-semibold leading-tight text-white">
             {formatMobileRewardsUsd(rewards)}
           </span>
         </div>
