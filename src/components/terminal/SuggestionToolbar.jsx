@@ -20,62 +20,85 @@ export default function SuggestionToolbar({
 }) {
   const showMobile = variant === 'both' || variant === 'mobile'
   const showDesktop = variant === 'both' || variant === 'desktop'
+  const showDiscovery = variant === 'discovery'
   const expired = expireSeconds <= 0
+  const useMobileCountdown = compact || showMobile || showDiscovery
 
   const expireBlock = (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 leading-tight sm:items-center sm:whitespace-nowrap">
+    <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight sm:items-center sm:gap-x-2 sm:whitespace-nowrap">
       <p
         className={`${
-          compact || showMobile ? "text-xs text-[#757575]" : "text-sm text-white"
+          useMobileCountdown ? "text-xs text-[#757575]" : "text-sm text-white"
         }`}
       >
-        {compact || showMobile ? "Expires in:" : "Suggestions Expire in:"}
+        {useMobileCountdown ? "Expires in:" : "Suggestions Expire in:"}
       </p>
       <p
         className={`font-semibold ${
-          compact || showMobile ? "text-sm" : "text-base"
+          useMobileCountdown ? "text-sm" : "text-base"
         } ${expired ? "text-[#d53d3d]" : "text-[#269755]"}`}
       >
-        {expired ? "Expired" : formatCountdown(expireSeconds, showMobile)}
+        {expired ? "Expired" : formatCountdown(expireSeconds, useMobileCountdown)}
       </p>
     </div>
   )
 
   const actionButtons = (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
       <button
         type="button"
-        className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-[#242424] font-medium text-white hover:bg-white/5 ${
-          compact
-            ? 'min-h-8 px-2.5 py-1 text-xs'
-            : 'px-3 py-2 text-sm sm:py-1.5'
+        aria-label="Share"
+        className={`flex cursor-pointer items-center justify-center rounded-md border border-[#242424] font-medium text-white hover:bg-white/5 ${
+          compact || showDiscovery
+            ? 'min-h-8 gap-1.5 px-2.5 py-1 text-xs max-sm:size-8 max-sm:p-0'
+            : 'gap-1.5 px-3 py-2 text-sm sm:py-1.5'
         }`}
       >
         <Share2
-          className={`shrink-0 ${compact ? 'size-3.5' : 'size-4'}`}
+          className={`shrink-0 ${compact || showDiscovery ? 'size-3.5' : 'size-4'}`}
           strokeWidth={2}
           aria-hidden
         />
-        Share
+        <span className={compact || showDiscovery ? 'max-sm:sr-only' : undefined}>
+          Share
+        </span>
       </button>
       <button
         type="button"
+        aria-label="Refresh suggestions"
         onClick={onRefresh}
-        className={`${terminalGradientCta.componentClassName} justify-center gap-1.5 font-semibold ${
-          compact
-            ? '!min-h-8 !px-2.5 !py-1 !text-xs'
-            : 'py-2 sm:py-1.5'
+        className={`${terminalGradientCta.componentClassName} justify-center font-semibold ${
+          compact || showDiscovery
+            ? '!min-h-8 gap-1.5 !px-2.5 !py-1 !text-xs max-sm:!size-8 max-sm:!p-0'
+            : 'gap-1.5 py-2 sm:py-1.5'
         }`}
       >
         <RefreshCw
-          className={`shrink-0 ${compact ? 'size-3.5' : 'size-4'}`}
+          className={`shrink-0 ${compact || showDiscovery ? 'size-3.5' : 'size-4'}`}
           strokeWidth={2}
           aria-hidden
         />
-        Refresh
+        <span className={compact || showDiscovery ? 'max-sm:sr-only' : undefined}>
+          Refresh
+        </span>
       </button>
     </div>
   )
+
+  if (showDiscovery) {
+    return (
+      <div className="flex shrink-0 items-center gap-2 max-sm:gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5 max-sm:max-w-[7.5rem]">
+          <Clock
+            className="size-3.5 shrink-0 text-[#757575] max-sm:hidden"
+            aria-hidden
+          />
+          {expireBlock}
+        </div>
+        {actionButtons}
+      </div>
+    )
+  }
 
   return (
     <>
