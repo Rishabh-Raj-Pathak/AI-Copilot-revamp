@@ -1,31 +1,23 @@
 import { CandlestickChart, Gem, Sparkles, TrendingUp } from 'lucide-react'
 import CopilotDiscoveryPanel from './CopilotDiscoveryPanel.jsx'
-import { CopilotPlatformKpis } from './CopilotStrategyLensKpis.jsx'
 import SuggestionToolbar from './SuggestionToolbar.jsx'
 
-const filterDefs = [
-  { id: 'trending', label: 'Trending', icon: TrendingUp },
-  { id: 'hip3', label: 'HIP-3', icon: CandlestickChart },
-  { id: 'bluechip', label: 'Bluechip', icon: Gem },
-  { id: 'spotlight', label: 'Spotlight', icon: Sparkles },
-  { id: 'all', label: 'All Setups', icon: null },
-]
-
-/** Figma mobile Copilot — filter row order (1017:24652). */
-const mobileFilterDefs = [
+const categoryFilterDefs = [
   { id: 'bluechip', label: 'Bluechip', icon: Gem },
   { id: 'hip3', label: 'Stocks (HIP-3)', icon: CandlestickChart },
   { id: 'trending', label: 'Trending', icon: TrendingUp },
   { id: 'tradexyz', label: 'Trade[XYZ]', icon: Sparkles },
 ]
 
-function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
+function FilterPills({ defs, activeFilter, onFilterChange, mobile = false, inline = false }) {
   return (
     <div
       className={
         mobile
-          ? 'minimal-scrollbar flex items-center gap-2 overflow-x-auto pb-0.5'
-          : 'minimal-scrollbar flex min-w-0 flex-1 flex-wrap items-center gap-2 max-tablet:flex-nowrap max-tablet:overflow-x-auto max-tablet:pb-0.5'
+          ? 'minimal-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5'
+          : inline
+            ? 'flex shrink-0 flex-nowrap items-center gap-1.5'
+            : 'minimal-scrollbar flex min-w-0 flex-1 flex-wrap items-center gap-2 max-tablet:flex-nowrap max-tablet:overflow-x-auto max-tablet:pb-0.5'
       }
     >
       {defs.map((f) => {
@@ -68,7 +60,7 @@ function MarketsRow({
       className={
         mobile
           ? 'flex flex-col gap-2.5'
-          : 'flex w-full items-center gap-x-3 gap-y-2'
+          : 'flex w-full items-center justify-between gap-x-3 gap-y-2'
       }
     >
       <FilterPills
@@ -92,7 +84,6 @@ function MarketsRow({
 export default function MarketFiltersBar({
   activeFilter,
   onFilterChange,
-  stats,
   expireSeconds,
   onRefresh,
   strategies,
@@ -118,13 +109,12 @@ export default function MarketFiltersBar({
                   strategies={strategies}
                   selectedId={selectedStrategyId}
                   onSelect={onStrategySelect}
-                  stats={stats}
                   mobile
                 />
               </div>
             ) : null}
             <MarketsRow
-              defs={mobileFilterDefs}
+              defs={categoryFilterDefs}
               activeFilter={activeFilter}
               onFilterChange={onFilterChange}
               mobile
@@ -140,25 +130,41 @@ export default function MarketFiltersBar({
         </div>
       </div>
 
-      {/* Desktop — performance + strategy side by side */}
-      <div className="hidden flex-col gap-3 border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:flex">
+      {/* Desktop — strategy, filters, and utilities in one row */}
+      <div className="hidden border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:block">
         {showStrategy ? (
           <CopilotDiscoveryPanel
             strategies={strategies}
             selectedId={selectedStrategyId}
             onSelect={onStrategySelect}
-            stats={stats}
+            filtersSlot={
+              <FilterPills
+                defs={categoryFilterDefs}
+                activeFilter={activeFilter}
+                onFilterChange={onFilterChange}
+                inline
+              />
+            }
+            utilitiesSlot={
+              showUtilities ? (
+                <SuggestionToolbar
+                  variant="desktop"
+                  compact
+                  expireSeconds={expireSeconds}
+                  onRefresh={onRefresh}
+                />
+              ) : null
+            }
           />
         ) : (
-          <CopilotPlatformKpis stats={stats} variant="standalone" />
+          <MarketsRow
+            defs={categoryFilterDefs}
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+            expireSeconds={expireSeconds}
+            onRefresh={onRefresh}
+          />
         )}
-        <MarketsRow
-          defs={filterDefs}
-          activeFilter={activeFilter}
-          onFilterChange={onFilterChange}
-          expireSeconds={expireSeconds}
-          onRefresh={onRefresh}
-        />
       </div>
     </div>
   )

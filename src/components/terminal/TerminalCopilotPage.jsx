@@ -619,7 +619,6 @@ export default function TerminalCopilotPage({
             <MarketFiltersBar
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
-              stats={stats}
               expireSeconds={expireSec}
               onRefresh={handleRefresh}
               strategies={COPILOT_STRATEGIES}
@@ -636,7 +635,6 @@ export default function TerminalCopilotPage({
                 <MarketFiltersBar
                   activeFilter={activeFilter}
                   onFilterChange={setActiveFilter}
-                  stats={stats}
                   expireSeconds={expireSec}
                   onRefresh={handleRefresh}
                   strategies={COPILOT_STRATEGIES}

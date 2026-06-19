@@ -590,9 +590,15 @@ export default function CopilotStrategySelector({
   return (
     <div
       ref={rootRef}
-      className={`flex min-w-0 flex-col gap-1.5 ${inline ? "w-full shrink-0" : "w-full"}`}
+      className={
+        inline ? "shrink-0" : "flex min-w-0 w-full flex-col gap-1.5"
+      }
     >
-      <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+      <div
+        className={
+          inline ? "contents" : "flex min-w-0 items-center gap-2 sm:gap-2.5"
+        }
+      >
         <button
           ref={triggerRef}
           type="button"
@@ -641,7 +647,7 @@ export default function CopilotStrategySelector({
           />
         </button>
 
-        {!disabled ? (
+        {!disabled && !inline ? (
           <StrategyActiveSummary
             strategy={active}
             onViewDetails={
