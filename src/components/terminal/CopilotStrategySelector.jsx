@@ -51,6 +51,36 @@ function StrategyRiskBadge({ risk }) {
   );
 }
 
+function StrategyActiveSummary({ strategy, onViewDetails }) {
+  if (!strategy) return null;
+
+  const parts = [
+    strategy.risk ? `${strategy.risk} risk` : null,
+    strategy.timeframe ?? null,
+  ].filter(Boolean);
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      {parts.length > 0 ? (
+        <p className="min-w-0 flex-1 truncate text-[10px] leading-snug text-[#757575] sm:text-[11px]">
+          {parts.join(" · ")}
+        </p>
+      ) : (
+        <span className="min-w-0 flex-1" aria-hidden />
+      )}
+      {onViewDetails ? (
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="shrink-0 text-[10px] font-medium uppercase tracking-[0.3px] text-[#f2b500] transition-opacity hover:opacity-90"
+        >
+          Details
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function StrategyDetailBody({ strategy }) {
   if (!strategy) return null;
 
@@ -543,89 +573,82 @@ export default function CopilotStrategySelector({
     closeMobileSheet();
   };
 
+  const triggerWidthClass = inline
+    ? "w-[9.75rem] shrink-0 sm:w-[10.75rem]"
+    : isNarrow
+      ? "w-[9.25rem] shrink-0"
+      : "w-[9.75rem] shrink-0 sm:w-[10.75rem]";
+
   return (
     <div
       ref={rootRef}
-      className={`flex min-w-0 flex-col gap-1.5 ${inline ? "shrink-0" : "w-full"}`}
+      className={`flex min-w-0 flex-col gap-1.5 ${inline ? "w-full shrink-0" : "w-full"}`}
     >
       {isNarrow ? (
         <span className="text-[10px] font-semibold uppercase tracking-[0.35px] text-[#757575]">
           Strategy
         </span>
       ) : null}
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        aria-haspopup={isNarrow ? "dialog" : "listbox"}
-        aria-expanded={isNarrow ? sheetOpen : menuOpen}
-        aria-controls={isNarrow ? undefined : listId}
-        aria-label={
-          isNarrow
-            ? `Change strategy, currently ${active.shortLabel ?? active.name}`
-            : undefined
-        }
-        onClick={handleToggleMenu}
-        onMouseEnter={() => {
-          if (isNarrow || menuOpen) return;
-          openPreview(active, triggerRef.current, false);
-        }}
-        onMouseLeave={() => {
-          if (isNarrow || menuOpen) return;
-          scheduleClosePreview();
-        }}
-        onFocus={() => {
-          if (isNarrow || menuOpen) return;
-          openPreview(active, triggerRef.current, false);
-        }}
-        onBlur={(e) => {
-          if (isNarrow) return;
-          if (rootRef.current?.contains(e.relatedTarget)) return;
-          if (menuRef.current?.contains(e.relatedTarget)) return;
-          if (menuOpen) return;
-          scheduleClosePreview();
-        }}
-        className={`relative flex w-full min-w-0 items-center border bg-[#050505] pl-3 pr-8 text-left text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${
-          inline ? "max-w-[220px]" : ""
-        } ${
-          disabled
-            ? "cursor-default border-[#242424] opacity-60"
-            : "cursor-pointer border-[#242424] hover:border-[#3e2e00] focus-visible:border-[#f2b500]"
-        }`}
-      >
-        <span className="truncate">{active.shortLabel ?? active.name}</span>
-        <ChevronDown
-          className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#757575] transition-transform ${
-            menuOpen || sheetOpen ? "rotate-180" : ""
-          } ${disabled ? "opacity-50" : ""}`}
-          strokeWidth={2}
-          aria-hidden
-        />
-      </button>
+      <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          aria-haspopup={isNarrow ? "dialog" : "listbox"}
+          aria-expanded={isNarrow ? sheetOpen : menuOpen}
+          aria-controls={isNarrow ? undefined : listId}
+          aria-label={
+            isNarrow
+              ? `Change strategy, currently ${active.shortLabel ?? active.name}`
+              : undefined
+          }
+          onClick={handleToggleMenu}
+          onMouseEnter={() => {
+            if (isNarrow || menuOpen) return;
+            openPreview(active, triggerRef.current, false);
+          }}
+          onMouseLeave={() => {
+            if (isNarrow || menuOpen) return;
+            scheduleClosePreview();
+          }}
+          onFocus={() => {
+            if (isNarrow || menuOpen) return;
+            openPreview(active, triggerRef.current, false);
+          }}
+          onBlur={(e) => {
+            if (isNarrow) return;
+            if (rootRef.current?.contains(e.relatedTarget)) return;
+            if (menuRef.current?.contains(e.relatedTarget)) return;
+            if (menuOpen) return;
+            scheduleClosePreview();
+          }}
+          className={`relative flex min-w-0 items-center border bg-[#050505] pl-3 pr-8 text-left text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${triggerWidthClass} ${
+            disabled
+              ? "cursor-default border-[#242424] opacity-60"
+              : "cursor-pointer border-[#242424] hover:border-[#3e2e00] focus-visible:border-[#f2b500]"
+          }`}
+        >
+          <span className="truncate">{active.shortLabel ?? active.name}</span>
+          <ChevronDown
+            className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#757575] transition-transform ${
+              menuOpen || sheetOpen ? "rotate-180" : ""
+            } ${disabled ? "opacity-50" : ""}`}
+            strokeWidth={2}
+            aria-hidden
+          />
+        </button>
 
-      {!disabled && isNarrow && selectedId ? (
-        <div className="rounded-lg border border-[#242424] bg-[#050505] px-3 py-2.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <StrategyRiskBadge risk={active.risk} />
-              </div>
-              <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.45] text-[#757575]">
-                {active.description}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                onViewDetails ? onViewDetails() : openMobileSheet("details")
-              }
-              className="shrink-0 text-[11px] font-medium uppercase tracking-[0.3px] text-[#f2b500] transition-opacity hover:opacity-90"
-            >
-              Details
-            </button>
-          </div>
-        </div>
-      ) : null}
+        {!disabled ? (
+          <StrategyActiveSummary
+            strategy={active}
+            onViewDetails={
+              isNarrow
+                ? (onViewDetails ?? (() => openMobileSheet("details")))
+                : undefined
+            }
+          />
+        ) : null}
+      </div>
 
       {isNarrow ? (
         <CopilotStrategyMobileSheet

@@ -114,7 +114,7 @@ export default function CopilotDiscoveryPanel({
           aria-hidden
         />
 
-        <div className="shrink-0 max-md:w-full max-md:border-t max-md:border-[#242424] max-md:pt-2">
+        <div className="shrink-0">
           <CopilotPlatformKpis stats={stats} variant="rail" />
         </div>
       </div>

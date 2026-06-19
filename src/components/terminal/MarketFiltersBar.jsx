@@ -126,10 +126,6 @@ export default function MarketFiltersBar({
     <div className="flex w-full shrink-0 flex-col">
       {/* Mobile — Figma 1017:24652 */}
       <div className="flex flex-col max-tablet:flex tablet:hidden">
-        <div className="border-b border-[#242424] px-3 py-3">
-          <CopilotPlatformKpis stats={stats} mobile />
-        </div>
-
         <div className="sticky top-0 z-20 border-b border-[#242424] bg-black">
           <div className="flex flex-col gap-2.5 px-3 py-2.5">
             {showStrategy ? (
