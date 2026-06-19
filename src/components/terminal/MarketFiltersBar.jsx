@@ -1,22 +1,22 @@
-import { terminalAssets as a } from '../../figma/terminalAssets.js'
+import { CandlestickChart, Gem, Sparkles, TrendingUp } from 'lucide-react'
 import CopilotDiscoveryPanel from './CopilotDiscoveryPanel.jsx'
 import { CopilotPlatformKpis } from './CopilotStrategyLensKpis.jsx'
 import SuggestionToolbar from './SuggestionToolbar.jsx'
 
 const filterDefs = [
-  { id: 'trending', label: 'Trending', icon: a.trending },
-  { id: 'hip3', label: 'HIP-3', icon: a.hyperliquid },
-  { id: 'bluechip', label: 'Bluechip', icon: a.pokerChip },
-  { id: 'spotlight', label: 'Spotlight', icon: a.spotlight },
+  { id: 'trending', label: 'Trending', icon: TrendingUp },
+  { id: 'hip3', label: 'HIP-3', icon: CandlestickChart },
+  { id: 'bluechip', label: 'Bluechip', icon: Gem },
+  { id: 'spotlight', label: 'Spotlight', icon: Sparkles },
   { id: 'all', label: 'All Setups', icon: null },
 ]
 
 /** Figma mobile Copilot — filter row order (1017:24652). */
 const mobileFilterDefs = [
-  { id: 'bluechip', label: 'Bluechip', icon: a.pokerChip },
-  { id: 'hip3', label: 'Stocks (HIP-3)', icon: a.hyperliquid },
-  { id: 'trending', label: 'Trending', icon: a.trending },
-  { id: 'tradexyz', label: 'Trade[XYZ]', icon: a.spotlight },
+  { id: 'bluechip', label: 'Bluechip', icon: Gem },
+  { id: 'hip3', label: 'Stocks (HIP-3)', icon: CandlestickChart },
+  { id: 'trending', label: 'Trending', icon: TrendingUp },
+  { id: 'tradexyz', label: 'Trade[XYZ]', icon: Sparkles },
 ]
 
 function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
@@ -42,13 +42,7 @@ function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
             }`}
           >
             {f.icon ? (
-              <span className="relative size-3 shrink-0">
-                <img
-                  alt=""
-                  className="absolute inset-0 size-full max-w-none object-contain"
-                  src={f.icon}
-                />
-              </span>
+              <f.icon className="size-3 shrink-0" strokeWidth={2} aria-hidden />
             ) : null}
             {f.label}
           </button>

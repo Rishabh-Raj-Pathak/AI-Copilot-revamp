@@ -573,7 +573,7 @@ export default function CopilotStrategySelector({
     closeMobileSheet();
   };
 
-  const triggerWidthClass = "min-w-[12rem] shrink-0 sm:min-w-[13rem]";
+  const triggerWidthClass = "w-fit max-w-[10.5rem] shrink-0 sm:max-w-[12rem]";
 
   return (
     <div
@@ -613,7 +613,7 @@ export default function CopilotStrategySelector({
             if (menuOpen) return;
             scheduleClosePreview();
           }}
-          className={`relative flex min-w-0 items-center border pl-3 pr-8 text-left text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${triggerWidthClass} ${
+          className={`relative inline-flex max-w-full items-center border pl-3 pr-7 text-left text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${triggerWidthClass} ${
             disabled
               ? "cursor-default border-[#242424] bg-[#050505] text-white opacity-60"
               : "cursor-pointer border-[#3e2e00] bg-[#3e2e00] text-[#f2b500] hover:border-[#f2b500]/50 focus-visible:border-[#f2b500]"
@@ -621,7 +621,7 @@ export default function CopilotStrategySelector({
         >
           <span className="truncate">{active.shortLabel ?? active.name}</span>
           <ChevronDown
-            className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 transition-transform ${
+            className={`pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 transition-transform ${
               disabled ? "text-[#757575] opacity-50" : "text-[#f2b500]"
             } ${menuOpen || sheetOpen ? "rotate-180" : ""}`}
             strokeWidth={2}
