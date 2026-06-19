@@ -43,7 +43,7 @@ export const COPILOT_SETUPS = [
   // — Mean Reversion —
   setup({
     id: "arb-mr-trending",
-    strategyId: "mean-reversion",
+    strategyId: "high-conviction",
     category: "trending",
     tokenIcon: "/copilot-tokens/sui.png",
     symbol: "ARB",
@@ -67,7 +67,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "wld-mr-trending",
-    strategyId: "mean-reversion",
+    strategyId: "high-conviction",
     category: "trending",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "WLD",
@@ -91,7 +91,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "purr-mr-hip3",
-    strategyId: "mean-reversion",
+    strategyId: "high-conviction",
     category: "hip3",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "PURR",
@@ -115,7 +115,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "btc-mr-bluechip",
-    strategyId: "mean-reversion",
+    strategyId: "high-conviction",
     category: "bluechip",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "BTC",
@@ -139,7 +139,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "eth-mr-bluechip",
-    strategyId: "mean-reversion",
+    strategyId: "high-conviction",
     category: "bluechip",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "ETH",
@@ -163,7 +163,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "sol-mr-spotlight",
-    strategyId: "mean-reversion",
+    strategyId: "high-conviction",
     category: "spotlight",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "SOL",
@@ -189,7 +189,7 @@ export const COPILOT_SETUPS = [
   // — Momentum Breakout —
   setup({
     id: "sol-bo-trending",
-    strategyId: "momentum-breakout",
+    strategyId: "momentum-based",
     category: "trending",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "SOL",
@@ -213,7 +213,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "arb-bo-trending",
-    strategyId: "momentum-breakout",
+    strategyId: "momentum-based",
     category: "trending",
     tokenIcon: "/copilot-tokens/sui.png",
     symbol: "ARB",
@@ -237,7 +237,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "hype-bo-hip3",
-    strategyId: "momentum-breakout",
+    strategyId: "momentum-based",
     category: "hip3",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "HYPE",
@@ -261,7 +261,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "avax-bo-spotlight",
-    strategyId: "momentum-breakout",
+    strategyId: "momentum-based",
     category: "spotlight",
     tokenIcon: "/copilot-tokens/sui.png",
     symbol: "AVAX",
@@ -287,7 +287,7 @@ export const COPILOT_SETUPS = [
   // — Trend Following —
   setup({
     id: "wld-tf-trending",
-    strategyId: "trend-following",
+    strategyId: "v3-risk-engine",
     category: "trending",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "WLD",
@@ -311,7 +311,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "doge-tf-trending",
-    strategyId: "trend-following",
+    strategyId: "v3-risk-engine",
     category: "trending",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "DOGE",
@@ -335,7 +335,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "kbonk-tf-hip3",
-    strategyId: "trend-following",
+    strategyId: "v3-risk-engine",
     category: "hip3",
     tokenIcon: "/copilot-tokens/sui.png",
     symbol: "KBONK",
@@ -359,7 +359,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "btc-tf-bluechip",
-    strategyId: "trend-following",
+    strategyId: "v3-risk-engine",
     category: "bluechip",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "BTC",
@@ -383,7 +383,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "eth-tf-bluechip",
-    strategyId: "trend-following",
+    strategyId: "v3-risk-engine",
     category: "bluechip",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "ETH",
@@ -409,7 +409,7 @@ export const COPILOT_SETUPS = [
   // — Funding Capture —
   setup({
     id: "hype-fc-hip3",
-    strategyId: "funding-capture",
+    strategyId: "v3-risk-engine",
     category: "hip3",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "HYPE",
@@ -433,7 +433,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "purr-fc-hip3",
-    strategyId: "funding-capture",
+    strategyId: "v3-risk-engine",
     category: "hip3",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "PURR",
@@ -457,7 +457,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "btc-fc-bluechip",
-    strategyId: "funding-capture",
+    strategyId: "v3-risk-engine",
     category: "bluechip",
     tokenIcon: "/copilot-tokens/sol.png",
     symbol: "BTC",
@@ -481,7 +481,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "eth-fc-bluechip",
-    strategyId: "funding-capture",
+    strategyId: "v3-risk-engine",
     category: "bluechip",
     tokenIcon: "/copilot-tokens/eth.png",
     symbol: "ETH",
@@ -505,7 +505,7 @@ export const COPILOT_SETUPS = [
   }),
   setup({
     id: "arb-fc-trending",
-    strategyId: "funding-capture",
+    strategyId: "v3-risk-engine",
     category: "trending",
     tokenIcon: "/copilot-tokens/sui.png",
     symbol: "ARB",
