@@ -25,7 +25,7 @@ function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
       className={
         mobile
           ? 'minimal-scrollbar flex items-center gap-2 overflow-x-auto pb-0.5'
-          : 'minimal-scrollbar flex min-w-0 flex-1 flex-wrap items-center gap-1.5 max-tablet:flex-nowrap max-tablet:overflow-x-auto max-tablet:pb-0.5 sm:gap-2'
+          : 'minimal-scrollbar flex min-w-0 flex-1 flex-wrap items-center gap-2 max-tablet:flex-nowrap max-tablet:overflow-x-auto max-tablet:pb-0.5'
       }
     >
       {defs.map((f) => {
@@ -35,24 +35,14 @@ function FilterPills({ defs, activeFilter, onFilterChange, mobile = false }) {
             key={f.id}
             type="button"
             onClick={() => onFilterChange(f.id)}
-            className={`flex shrink-0 items-center border font-medium transition-colors ${
-              mobile
-                ? 'min-h-8 gap-1 rounded-md px-2.5 py-1 text-xs'
-                : 'gap-1.5 rounded-full px-3 py-1.5 text-xs max-tablet:min-h-9 max-tablet:px-2.5 max-tablet:py-1.5'
-            } ${
+            className={`flex shrink-0 items-center gap-1 border font-medium transition-colors min-h-8 rounded-md px-2.5 py-1 text-xs ${
               active
-                ? mobile
-                  ? 'border-transparent bg-[#3e2e00] text-[#f2b500]'
-                  : 'border-[#242424] bg-[#3e2e00] text-[#f2b500]'
-                : mobile
-                  ? 'border-[#242424] bg-transparent text-white hover:bg-white/5'
-                  : 'border-[#242424] bg-transparent text-white hover:bg-white/5'
+                ? 'border-[#f2b500] bg-transparent text-[#f2b500]'
+                : 'border-[#242424] bg-transparent text-white hover:bg-white/5'
             }`}
           >
             {f.icon ? (
-              <span
-                className={`relative shrink-0 ${mobile ? 'size-3' : 'size-3.5'}`}
-              >
+              <span className="relative size-3 shrink-0">
                 <img
                   alt=""
                   className="absolute inset-0 size-full max-w-none object-contain"
@@ -129,13 +119,15 @@ export default function MarketFiltersBar({
         <div className="sticky top-0 z-20 border-b border-[#242424] bg-black">
           <div className="flex flex-col gap-2.5 px-3 py-2.5">
             {showStrategy ? (
-              <CopilotDiscoveryPanel
-                strategies={strategies}
-                selectedId={selectedStrategyId}
-                onSelect={onStrategySelect}
-                stats={stats}
-                mobile
-              />
+              <div className="border-b border-[#242424] pb-2.5">
+                <CopilotDiscoveryPanel
+                  strategies={strategies}
+                  selectedId={selectedStrategyId}
+                  onSelect={onStrategySelect}
+                  stats={stats}
+                  mobile
+                />
+              </div>
             ) : null}
             <MarketsRow
               defs={mobileFilterDefs}
@@ -155,7 +147,7 @@ export default function MarketFiltersBar({
       </div>
 
       {/* Desktop — performance + strategy side by side */}
-      <div className="hidden flex-col gap-2 border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:flex">
+      <div className="hidden flex-col gap-3 border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:flex">
         {showStrategy ? (
           <CopilotDiscoveryPanel
             strategies={strategies}

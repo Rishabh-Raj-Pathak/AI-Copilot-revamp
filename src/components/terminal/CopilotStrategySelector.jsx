@@ -62,7 +62,7 @@ function StrategyActiveSummary({ strategy, onViewDetails }) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
       {parts.length > 0 ? (
-        <p className="min-w-0 flex-1 truncate text-[10px] leading-snug text-[#757575] sm:text-[11px]">
+        <p className="min-w-0 flex-1 truncate text-[10px] leading-snug text-[#bfbfbf] sm:text-[11px]">
           {parts.join(" · ")}
         </p>
       ) : (
@@ -421,9 +421,9 @@ export default function CopilotStrategySelector({
   const [sheetHighlightId, setSheetHighlightId] = useState(null);
   const [sheetReturnToPicker, setSheetReturnToPicker] = useState(false);
 
-  const controlHeight = inline ? "h-[34px]" : "h-8";
+  const controlHeight = inline ? "h-10" : isNarrow ? "h-9" : "h-9";
   const controlRadius = inline ? "rounded-md" : "rounded-lg";
-  const menuWidth = inline ? 180 : 200;
+  const menuWidth = inline ? 220 : 200;
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
@@ -573,22 +573,13 @@ export default function CopilotStrategySelector({
     closeMobileSheet();
   };
 
-  const triggerWidthClass = inline
-    ? "w-[9.75rem] shrink-0 sm:w-[10.75rem]"
-    : isNarrow
-      ? "w-[9.25rem] shrink-0"
-      : "w-[9.75rem] shrink-0 sm:w-[10.75rem]";
+  const triggerWidthClass = "min-w-[12rem] shrink-0 sm:min-w-[13rem]";
 
   return (
     <div
       ref={rootRef}
       className={`flex min-w-0 flex-col gap-1.5 ${inline ? "w-full shrink-0" : "w-full"}`}
     >
-      {isNarrow ? (
-        <span className="text-[10px] font-semibold uppercase tracking-[0.35px] text-[#757575]">
-          Strategy
-        </span>
-      ) : null}
       <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
         <button
           ref={triggerRef}
@@ -622,17 +613,17 @@ export default function CopilotStrategySelector({
             if (menuOpen) return;
             scheduleClosePreview();
           }}
-          className={`relative flex min-w-0 items-center border bg-[#050505] pl-3 pr-8 text-left text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${triggerWidthClass} ${
+          className={`relative flex min-w-0 items-center border pl-3 pr-8 text-left text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${triggerWidthClass} ${
             disabled
-              ? "cursor-default border-[#242424] opacity-60"
-              : "cursor-pointer border-[#242424] hover:border-[#3e2e00] focus-visible:border-[#f2b500]"
+              ? "cursor-default border-[#242424] bg-[#050505] text-white opacity-60"
+              : "cursor-pointer border-[#3e2e00] bg-[#3e2e00] text-[#f2b500] hover:border-[#f2b500]/50 focus-visible:border-[#f2b500]"
           }`}
         >
           <span className="truncate">{active.shortLabel ?? active.name}</span>
           <ChevronDown
-            className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#757575] transition-transform ${
-              menuOpen || sheetOpen ? "rotate-180" : ""
-            } ${disabled ? "opacity-50" : ""}`}
+            className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 transition-transform ${
+              disabled ? "text-[#757575] opacity-50" : "text-[#f2b500]"
+            } ${menuOpen || sheetOpen ? "rotate-180" : ""}`}
             strokeWidth={2}
             aria-hidden
           />

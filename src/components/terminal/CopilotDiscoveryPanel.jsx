@@ -23,12 +23,12 @@ export default function CopilotDiscoveryPanel({
   );
 
   if (mobile) {
-    return <div className="py-0.5">{selector}</div>;
+    return <div>{selector}</div>;
   }
 
   return (
     <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
-      <div className="flex items-center justify-between gap-x-3 px-3 py-2 sm:gap-x-4 sm:px-3.5 sm:py-2.5">
+      <div className="flex items-center justify-between gap-x-3 px-3 py-3 sm:gap-x-4 sm:px-3.5">
         <div className="min-w-0 flex-1">{selector}</div>
 
         <div
