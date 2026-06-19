@@ -28,7 +28,7 @@ export default function CopilotDiscoveryPanel({
 
   return (
     <div className="overflow-hidden rounded-lg border border-[#242424] bg-[#0a0a0a]">
-      <div className="flex items-center justify-between gap-x-3 px-3 py-3 sm:gap-x-4 sm:px-3.5">
+      <div className="flex items-center justify-between gap-x-3 px-3 py-2.5 sm:gap-x-4 sm:px-3.5">
         <div className="min-w-0 flex-1">{selector}</div>
 
         <div

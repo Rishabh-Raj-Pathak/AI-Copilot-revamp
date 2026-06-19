@@ -421,9 +421,19 @@ export default function CopilotStrategySelector({
   const [sheetHighlightId, setSheetHighlightId] = useState(null);
   const [sheetReturnToPicker, setSheetReturnToPicker] = useState(false);
 
-  const controlHeight = inline ? "h-10" : isNarrow ? "h-9" : "h-9";
+  const controlHeight = inline ? "h-8" : isNarrow ? "h-9" : "h-9";
   const controlRadius = inline ? "rounded-md" : "rounded-lg";
+  const controlText = inline ? "text-xs font-medium" : "text-sm font-semibold";
+  const controlPadding = inline ? "pl-2.5 pr-6" : "pl-3 pr-7";
   const menuWidth = inline ? 220 : 200;
+
+  const triggerStyle = inline
+    ? disabled
+      ? "cursor-default border-[#242424] bg-transparent text-white opacity-60"
+      : "cursor-pointer border-[#f2b500] bg-transparent text-[#f2b500] hover:bg-[#f2b500]/5 focus-visible:border-[#f2b500]"
+    : disabled
+      ? "cursor-default border-[#242424] bg-[#050505] text-white opacity-60"
+      : "cursor-pointer border-[#3e2e00] bg-[#3e2e00] text-[#f2b500] hover:border-[#f2b500]/50 focus-visible:border-[#f2b500]";
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
@@ -573,7 +583,9 @@ export default function CopilotStrategySelector({
     closeMobileSheet();
   };
 
-  const triggerWidthClass = "w-fit max-w-[10.5rem] shrink-0 sm:max-w-[12rem]";
+  const triggerWidthClass = inline
+    ? "w-fit max-w-[9.5rem] shrink-0 sm:max-w-[11rem]"
+    : "w-fit max-w-[10.5rem] shrink-0 sm:max-w-[12rem]";
 
   return (
     <div
@@ -613,15 +625,15 @@ export default function CopilotStrategySelector({
             if (menuOpen) return;
             scheduleClosePreview();
           }}
-          className={`relative inline-flex max-w-full items-center border pl-3 pr-7 text-left text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${triggerWidthClass} ${
-            disabled
-              ? "cursor-default border-[#242424] bg-[#050505] text-white opacity-60"
-              : "cursor-pointer border-[#3e2e00] bg-[#3e2e00] text-[#f2b500] hover:border-[#f2b500]/50 focus-visible:border-[#f2b500]"
-          }`}
+          className={`relative inline-flex max-w-full items-center border text-left outline-none transition-colors ${controlHeight} ${controlRadius} ${controlText} ${controlPadding} ${triggerWidthClass} ${
+            inline ? "" : "shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          } ${triggerStyle}`}
         >
           <span className="truncate">{active.shortLabel ?? active.name}</span>
           <ChevronDown
-            className={`pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 transition-transform ${
+            className={`pointer-events-none absolute top-1/2 -translate-y-1/2 transition-transform ${
+              inline ? "right-1.5 size-3" : "right-2 size-3.5"
+            } ${
               disabled ? "text-[#757575] opacity-50" : "text-[#f2b500]"
             } ${menuOpen || sheetOpen ? "rotate-180" : ""}`}
             strokeWidth={2}
