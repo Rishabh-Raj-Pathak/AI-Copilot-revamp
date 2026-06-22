@@ -66,6 +66,8 @@ export default function TerminalCopilotPage({
   terminalPlatform: terminalPlatformProp,
   onTerminalPlatformChange,
   onOpenVaults,
+  onOpenDeltaNeutralVaults,
+  onVaultViewChange,
   onOpenVaultTutorial,
   runProductTourOnEnter = false,
   onProductTourEnterConsumed,
@@ -591,6 +593,12 @@ export default function TerminalCopilotPage({
         activeNavItem="AI Copilot"
         copilotView={copilotView}
         onCopilotViewChange={setCopilotView}
+        vaultView="featured"
+        onVaultViewChange={(viewId) => {
+          onVaultViewChange?.(viewId);
+          if (viewId === "delta-neutral") onOpenDeltaNeutralVaults?.();
+          else onOpenVaults?.();
+        }}
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
         }}

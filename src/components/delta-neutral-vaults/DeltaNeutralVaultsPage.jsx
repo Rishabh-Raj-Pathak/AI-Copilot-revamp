@@ -1,0 +1,49 @@
+import "../../design-system/vaults/index.css";
+import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
+import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import { DeltaNeutralVaults3Page } from "../../delta-neutral/pages/DeltaNeutralVaults3Page.tsx";
+
+export default function DeltaNeutralVaultsPage({
+  walletConnected,
+  onWalletConnected,
+  terminalPlatform,
+  onTerminalPlatformChange,
+  onOpenCopilot,
+  onOpenCopilotTutorial,
+  onVaultViewChange,
+  onOpenFeaturedVaults,
+}) {
+  return (
+    <div className="delta-neutral-root flex h-dvh min-h-0 flex-col overflow-hidden bg-[#050505] text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+      <HeaderTerminal
+        activeNavItem="Vaults"
+        vaultView="delta-neutral"
+        onVaultViewChange={onVaultViewChange}
+        onNavItemClick={(label) => {
+          if (label === "AI Copilot") onOpenCopilot?.();
+        }}
+        onCopilotTutorial={onOpenCopilotTutorial}
+        showCopilotTutorial={!!onOpenCopilotTutorial}
+        walletConnected={walletConnected}
+        onWalletConnected={onWalletConnected}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={onTerminalPlatformChange}
+      />
+
+      <div className="delta-neutral-minimal-scrollbar vaults-root min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+        <div className="flex w-full flex-col gap-6 px-5 py-6 pb-16 max-tablet:gap-5 max-tablet:px-4 sm:px-8 md:py-8 lg:px-10 xl:px-12">
+          <DeltaNeutralVaults3Page />
+        </div>
+      </div>
+
+      <CopilotBottomNav
+        activeId="vaults"
+        onNavClick={(id) => {
+          if (id === "copilot") onOpenCopilot?.();
+          if (id === "vaults") onOpenFeaturedVaults?.();
+        }}
+        onCopilotTutorial={onOpenCopilotTutorial}
+      />
+    </div>
+  );
+}

@@ -64,6 +64,7 @@ export default function VaultsPage({
   onTerminalPlatformChange,
   onOpenCopilot,
   onOpenCopilotTutorial,
+  onVaultViewChange,
   runProductTourOnEnter = false,
   onProductTourEnterConsumed,
 }) {
@@ -197,6 +198,8 @@ export default function VaultsPage({
     <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
       <HeaderTerminal
         activeNavItem="Vaults"
+        vaultView="featured"
+        onVaultViewChange={onVaultViewChange}
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
         }}

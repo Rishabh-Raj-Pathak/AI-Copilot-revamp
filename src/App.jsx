@@ -2,6 +2,7 @@ import { useState } from "react";
 import { destroyCopilotProductTourIfStillActive } from "./copilot/copilotTour.js";
 import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
 import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
+import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import TerminalCopilotPage from "./components/terminal/TerminalCopilotPage.jsx";
 import VaultsPage from "./components/vaults/VaultsPage.jsx";
 
@@ -12,29 +13,53 @@ export default function App() {
   const [runCopilotTourOnEnter, setRunCopilotTourOnEnter] = useState(false);
   const [runVaultTourOnEnter, setRunVaultTourOnEnter] = useState(false);
 
+  const handleVaultViewChange = (viewId) => {
+    if (viewId === "delta-neutral") {
+      setPage("delta-neutral-vaults");
+      return;
+    }
+    setPage("vaults");
+  };
+
+  const sharedWalletProps = {
+    walletConnected,
+    onWalletConnected: () => setWalletConnected(true),
+    terminalPlatform,
+    onTerminalPlatformChange: setTerminalPlatform,
+  };
+
   const content =
     page === "vaults" ? (
       <VaultsPage
-        walletConnected={walletConnected}
-        onWalletConnected={() => setWalletConnected(true)}
-        terminalPlatform={terminalPlatform}
-        onTerminalPlatformChange={setTerminalPlatform}
+        {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
           setPage("copilot");
         }}
+        onVaultViewChange={handleVaultViewChange}
         runProductTourOnEnter={runVaultTourOnEnter}
         onProductTourEnterConsumed={() => setRunVaultTourOnEnter(false)}
       />
+    ) : page === "delta-neutral-vaults" ? (
+      <DeltaNeutralVaultsPage
+        {...sharedWalletProps}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenCopilotTutorial={() => {
+          destroyVaultsProductTourIfStillActive();
+          setRunCopilotTourOnEnter(true);
+          setPage("copilot");
+        }}
+        onVaultViewChange={handleVaultViewChange}
+        onOpenFeaturedVaults={() => setPage("vaults")}
+      />
     ) : (
       <TerminalCopilotPage
-        walletConnected={walletConnected}
-        onWalletConnected={() => setWalletConnected(true)}
-        terminalPlatform={terminalPlatform}
-        onTerminalPlatformChange={setTerminalPlatform}
+        {...sharedWalletProps}
         onOpenVaults={() => setPage("vaults")}
+        onOpenDeltaNeutralVaults={() => setPage("delta-neutral-vaults")}
+        onVaultViewChange={handleVaultViewChange}
         onOpenVaultTutorial={() => {
           destroyCopilotProductTourIfStillActive();
           setRunVaultTourOnEnter(true);
