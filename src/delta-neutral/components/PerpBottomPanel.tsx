@@ -6,11 +6,6 @@ import { formatSignedUsd, PnlCompositionCell, pnlTextClass } from './PnlComposit
 import type { ManagedDexId } from './ActiveVaultCard';
 import { WalletAddressLabel } from './WalletAddressLabel';
 import { walletForDex } from '../utils/wallet';
-import {
-  MobileHistoryItem,
-  type HistoryLegFill,
-  type HistoryPairRow,
-} from './MobileHistoryItem';
 
 type BottomTab = 'positions' | 'history';
 
@@ -373,70 +368,6 @@ function MarketCell({
   );
 }
 
-function PositionMobileCard({
-  pair,
-  isV2,
-}: {
-  pair: DeltaNeutralPosition;
-  isV2: boolean;
-}) {
-  const net = pair.long.pnlValue + pair.short.pnlValue;
-  return (
-    <div className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#0c0c0c] p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-[14px] font-semibold text-[#e8d5b5]">{pair.coin}</p>
-          {pair.category ? (
-            <span className="mt-0.5 inline-flex rounded-full border border-[rgba(204,177,127,0.4)] bg-[rgba(204,177,127,0.12)] px-1.5 py-px text-[8px] uppercase text-[#d8bf92]">
-              {pair.category}
-            </span>
-          ) : null}
-        </div>
-        <span className={clsx('shrink-0 text-[13px] font-semibold', pnlTextClass(net))}>
-          {formatSignedUsd(net, 0)}
-        </span>
-      </div>
-      <div className="mt-2 space-y-1.5 border-t border-[rgba(255,255,255,0.06)] pt-2">
-        <div className="flex items-center justify-between gap-2 text-[11px]">
-          <span className="text-[color:var(--vault-leg-long-fg)]">L · {pair.long.dex}</span>
-          <span className="font-mono text-[#c8c9d5]">{pair.long.size}</span>
-        </div>
-        <div className="flex items-center justify-between gap-2 text-[11px]">
-          <span className="text-[color:var(--vault-leg-short-fg)]">S · {pair.short.dex}</span>
-          <span className="font-mono text-[#c8c9d5]">{pair.short.size}</span>
-        </div>
-      </div>
-      <button
-        type="button"
-        className={clsx(
-          'mt-2.5 w-full rounded-[8px] border py-2 text-[10px] font-semibold uppercase tracking-[0.06em]',
-          isV2
-            ? 'border-[#c9a962]/40 text-[#c9a962]'
-            : 'border-[rgba(214,176,106,0.35)] text-[#d6b06a]',
-        )}
-      >
-        Close pair
-      </button>
-    </div>
-  );
-}
-
-function toHistoryPairRow(row: HistoryPair): HistoryPairRow {
-  return {
-    time: row.time,
-    coin: row.coin,
-    event: row.event,
-    long: {
-      ...row.long,
-      action: row.long.action as HistoryLegFill['action'],
-    },
-    short: {
-      ...row.short,
-      action: row.short.action as HistoryLegFill['action'],
-    },
-  };
-}
-
 type PerpPanelVariant = 'default' | 'v2';
 
 export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVariant }) {
@@ -599,7 +530,7 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
             expanded ? 'h-[42vh]' : 'h-[140px] max-tablet:h-[120px]'
           }`}
         >
-          <div className="hidden h-full overflow-x-auto overflow-y-auto [scrollbar-width:none] tablet:block [&::-webkit-scrollbar]:hidden">
+          <div className="h-full overflow-x-auto overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className={minTableWidth}>
               <div
                 className={clsx(
@@ -722,25 +653,6 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                   })}
               </div>
             </div>
-          </div>
-
-          <div className="h-full overflow-y-auto px-3 py-2 max-tablet:block tablet:hidden">
-            {activeTab === 'positions' ? (
-              <div className="flex flex-col gap-2">
-                {POSITION_PAIRS.map(pair => (
-                  <PositionMobileCard key={pair.coin} pair={pair} isV2={isV2} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-0">
-                {HISTORY_PAIRS.map(row => (
-                  <MobileHistoryItem
-                    key={`${row.time}-${row.coin}-${row.event}`}
-                    row={toHistoryPairRow(row)}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </section>
