@@ -13,6 +13,12 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "./ui/dialog";
 import { Checkbox } from "./ui/checkbox";
 import { DexLabel } from "./DexLogo";
 import { formatWalletAddress } from "../utils/wallet";
@@ -191,20 +197,40 @@ function VaultMetricLabel({
   description: string;
   className?: string;
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          className={`cursor-help text-left outline-none transition-colors hover:text-[#d8d9e3] focus-visible:text-[#e8d5b5] ${className}`}
-        >
-          {label}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-[220px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]">
-        {description}
-      </TooltipContent>
-    </Tooltip>
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className={`hidden cursor-help text-left outline-none transition-colors hover:text-[#d8d9e3] focus-visible:text-[#e8d5b5] tablet:inline ${className}`}
+          >
+            {label}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-[220px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]">
+          {description}
+        </TooltipContent>
+      </Tooltip>
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className={`cursor-help text-left outline-none transition-colors hover:text-[#d8d9e3] focus-visible:text-[#e8d5b5] max-tablet:inline tablet:hidden ${className}`}
+      >
+        {label}
+      </button>
+      <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
+        <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-[14px] border border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(12,12,12,0.98)_0%,rgba(6,6,6,0.98)_100%)] p-4 text-[#f5f5f5]">
+          <DialogTitle className="font-['Onest',sans-serif] text-[14px] text-[#e8d5b5]">
+            {label}
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-[12px] text-[#b4b5c2]">
+            {description}
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -291,7 +317,7 @@ function DexPairSetupCard({
     return (
       <div
         className={clsx(
-          "border p-3",
+          "border p-3 max-tablet:p-2.5",
           isV2
             ? "rounded-[10px] border-[#2a2a2a] bg-[#121212]"
             : "rounded-[11px] border-[rgba(255,255,255,0.08)] bg-[rgba(10,10,12,0.84)]",
@@ -339,9 +365,9 @@ function DexPairSetupCard({
         </div>
         <div className="mt-2">
           {connected ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <div className="inline-flex h-[38px] min-w-0 flex-1 items-center justify-between gap-2 rounded-[10px] border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.1)] px-2.5">
+            <div className="flex flex-col gap-2 max-tablet:items-stretch">
+              <div className="flex items-center gap-2 max-tablet:flex-col max-tablet:items-stretch">
+                <div className="inline-flex h-[38px] min-w-0 flex-1 items-center justify-between gap-2 rounded-[10px] border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.1)] px-2.5 max-tablet:w-full">
                   <span className="text-[10px] uppercase tracking-[0.8px] text-[#9de7b5]">
                     Balance
                   </span>
@@ -355,14 +381,14 @@ function DexPairSetupCard({
                   onClick={() => {
                     if (value) onDepositDex(value);
                   }}
-                  className="inline-flex h-[38px] shrink-0 items-center rounded-[10px] border border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(42,34,25,0.98)_0%,rgba(20,16,12,0.99)_100%)] px-3 text-[10px] font-semibold uppercase tracking-[0.7px] text-[#f0ddb9] transition-colors hover:border-[rgba(206,163,95,0.74)]"
+                  className="inline-flex h-[38px] shrink-0 items-center justify-center rounded-[10px] border border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(42,34,25,0.98)_0%,rgba(20,16,12,0.99)_100%)] px-3 text-[10px] font-semibold uppercase tracking-[0.7px] text-[#f0ddb9] transition-colors hover:border-[rgba(206,163,95,0.74)] max-tablet:w-full"
                 >
                   Deposit
                 </button>
               </div>
               <div
                 className={clsx(
-                  "flex items-center gap-3 border-t px-1 pb-1 pt-2.5",
+                  "flex items-center gap-3 border-t px-1 pb-1 pt-2.5 max-tablet:flex-col max-tablet:items-stretch max-tablet:gap-2",
                   isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.06)]",
                 )}
               >
@@ -417,7 +443,7 @@ function DexPairSetupCard({
   return (
     <div
       className={clsx(
-        "relative flex min-h-0 flex-1 flex-col overflow-hidden p-4 max-tablet:p-3 md:p-4",
+        "relative flex min-h-0 flex-1 flex-col overflow-hidden p-4 max-tablet:p-3 tablet:p-4",
         isV2
           ? "rounded-[10px] border border-[#2a2418] bg-[#121212]"
           : "rounded-[14px] bg-[linear-gradient(180deg,rgba(14,13,12,0.9)_0%,rgba(10,10,10,0.96)_100%)] ring-1 ring-[rgba(214,176,106,0.22)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-8px_18px_rgba(0,0,0,0.34)]",
@@ -437,7 +463,7 @@ function DexPairSetupCard({
       >
         Cross-DEX Setup
       </p>
-      <div className="relative z-[1] grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="relative z-[1] grid grid-cols-1 gap-3 tablet:grid-cols-2">
         {renderDexSelector("long", longDex, shortDex, onLongDexChange)}
         {renderDexSelector("short", shortDex, longDex, onShortDexChange)}
       </div>
@@ -973,7 +999,7 @@ export function DeltaVaultBuilder({
   return (
     <section
       className={clsx(
-        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 md:p-4",
+        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 tablet:p-4",
         isV2Shell
           ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none max-tablet:rounded-[14px] max-tablet:p-2.5"
           : clsx(
@@ -1008,7 +1034,7 @@ export function DeltaVaultBuilder({
         )}
       </AnimatePresence>
 
-      <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 lg:grid-cols-[1.55fr_1fr]">
+      <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 tablet:grid-cols-[1.55fr_1fr]">
         <div className="flex flex-col gap-4 max-tablet:gap-3">
           <DexPairSetupCard
               longDex={longDex}
@@ -1079,7 +1105,7 @@ export function DeltaVaultBuilder({
 
           <div
             className={clsx(
-              "flex flex-col gap-3 rounded-[10px] border p-3 max-tablet:p-2.5 sm:flex-row sm:items-center sm:justify-between",
+              "flex flex-col gap-3 rounded-[10px] border p-3 max-tablet:p-2.5 tablet:flex-row tablet:items-center tablet:justify-between",
               isV2Shell
                 ? "border-[#1f1f1f] bg-[#121212]"
                 : "rounded-[11px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
@@ -1105,7 +1131,7 @@ export function DeltaVaultBuilder({
                 {leverageMeta(leverage)?.profile}
               </p>
             </div>
-            <div className="flex items-center gap-2 sm:shrink-0">
+            <div className="flex items-center gap-2 tablet:shrink-0">
               <Select
                 value={leverage}
                 onValueChange={(v) => setLeverage(v as LeverageOption)}
@@ -1355,7 +1381,7 @@ export function DeltaVaultBuilder({
 
         <aside
           className={clsx(
-            "rounded-[12px] border p-4",
+            "rounded-[12px] border p-4 max-tablet:order-last max-tablet:p-3",
             isV2Shell
               ? "border-[#1f1f1f] bg-[#0a0a0a]"
               : "rounded-[16px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(11,11,12,0.92)_0%,rgba(8,8,8,0.96)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.32)]",
@@ -1391,7 +1417,7 @@ export function DeltaVaultBuilder({
               />
               <p
                 className={clsx(
-                  "font-mono text-[16px] font-semibold",
+                  "font-mono text-[16px] font-semibold max-tablet:text-[14px]",
                   isV2Shell ? "text-[#d4af37]" : "text-[#e8d5b5]",
                 )}
               >
@@ -1411,7 +1437,7 @@ export function DeltaVaultBuilder({
                 description="Funding-rate gap between your short side and long side. A bigger positive spread usually means better earning potential."
               />
               <p
-                className={`font-mono text-[16px] font-semibold ${spreadDisplayPct >= 0 ? "text-[color:var(--vault-pnl-positive)]" : "text-[color:var(--vault-pnl-negative)]"}`}
+                className={`font-mono text-[16px] font-semibold max-tablet:text-[14px] ${spreadDisplayPct >= 0 ? "text-[color:var(--vault-pnl-positive)]" : "text-[color:var(--vault-pnl-negative)]"}`}
               >
                 {formatSignedPct(spreadDisplayPct)} / {spreadDisplayHours}h
               </p>
@@ -1428,7 +1454,7 @@ export function DeltaVaultBuilder({
                 label="Max Drawdown (30d)"
                 description="Biggest drop the strategy saw in the last 30 days."
               />
-              <p className="font-mono text-[16px] font-semibold text-[color:var(--vault-pnl-negative)]">
+              <p className="font-mono text-[16px] font-semibold text-[color:var(--vault-pnl-negative)] max-tablet:text-[14px]">
                 {maxDrawdown30d.toFixed(1)}%
               </p>
             </div>
@@ -1437,7 +1463,7 @@ export function DeltaVaultBuilder({
                 label="Hedge Integrity"
                 description="How well long and short positions cancel each other. Closer to 100% is better."
               />
-              <p className="font-mono text-[16px] font-semibold text-[#8e9eb0]">
+              <p className="font-mono text-[16px] font-semibold text-[#8e9eb0] max-tablet:text-[14px]">
                 {hedgeIntegrity.toFixed(1)}%
               </p>
             </div>

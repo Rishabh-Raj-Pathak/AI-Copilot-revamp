@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { clsx } from 'clsx';
 import {
   CartesianGrid,
@@ -79,23 +79,25 @@ function DexFundingChart({
   return (
     <div
       className={clsx(
-        'rounded-[12px] border p-3 md:p-4',
+        'rounded-[12px] border p-3 max-tablet:p-2.5 tablet:p-4',
         isV2 ? 'border-[#2a2418] bg-[#0a0a0a]' : 'border-[rgba(255,255,255,0.1)] bg-[#070707]',
       )}
     >
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <p className="font-['Onest',sans-serif] text-[14px] font-semibold text-[#f5f5f5]">{dex} · {instrumentLabel}</p>
-          <p className="text-[11px] text-[#717182]">Funding trajectory (24h)</p>
+      <div className="mb-2 flex items-center justify-between max-tablet:mb-1.5 tablet:mb-3">
+        <div className="min-w-0">
+          <p className="truncate font-['Onest',sans-serif] text-[13px] font-semibold text-[#f5f5f5] max-tablet:text-[13px] tablet:text-[14px]">
+            {dex} · {instrumentLabel}
+          </p>
+          <p className="text-[10px] text-[#717182] tablet:text-[11px]">Funding trajectory (24h)</p>
         </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase tracking-[0.7px] text-[#9c9cac]">Latest</p>
-          <p className="font-mono text-[13px] font-semibold" style={{ color: tone }}>
+        <div className="shrink-0 text-right">
+          <p className="text-[9px] uppercase tracking-[0.7px] text-[#9c9cac] tablet:text-[10px]">Latest</p>
+          <p className="font-mono text-[12px] font-semibold tablet:text-[13px]" style={{ color: tone }}>
             +{(latest * 100).toFixed(3)}%
           </p>
         </div>
       </div>
-      <div className="h-[220px] w-full min-h-[200px]">
+      <div className="h-[220px] w-full min-h-[200px] max-tablet:h-[160px] max-tablet:min-h-[140px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={rows} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
@@ -139,17 +141,52 @@ export function StrategyDeepDive({
   const dedupedDexes = useMemo(() => {
     return longDex === shortDex ? [longDex] : [longDex, shortDex];
   }, [longDex, shortDex]);
+  const [mobileDex, setMobileDex] = useState<ManagedDexId>(longDex);
+
+  const mobileActiveDex = dedupedDexes.includes(mobileDex) ? mobileDex : dedupedDexes[0];
+
   return (
-    <div className="font-['Onest',sans-serif] mt-4 grid grid-cols-1 gap-5 xl:grid-cols-2">
-      {dedupedDexes.map(dex => (
+    <div className="font-['Onest',sans-serif] mt-4 max-tablet:mt-2">
+      {dedupedDexes.length > 1 ? (
+        <div className="mb-2 flex gap-1.5 max-tablet:flex tablet:hidden">
+          {dedupedDexes.map(dex => (
+            <button
+              key={dex}
+              type="button"
+              onClick={() => setMobileDex(dex)}
+              className={clsx(
+                'h-9 flex-1 rounded-[8px] border px-2 text-[10px] font-semibold uppercase tracking-[0.06em] transition-colors',
+                mobileActiveDex === dex
+                  ? 'border-[rgba(214,176,106,0.42)] bg-[rgba(54,42,28,0.5)] text-[#f0ddb9]'
+                  : 'border-[rgba(255,255,255,0.08)] text-[#9394a1]',
+              )}
+            >
+              {dex}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="hidden grid-cols-1 gap-5 max-tablet:gap-3 tablet:grid xl:grid-cols-2">
+        {dedupedDexes.map(dex => (
+          <DexFundingChart
+            key={`${pairLabel}-${dex}`}
+            dex={dex}
+            pairLabel={pairLabel}
+            tokenLabel={dexTokenLabelMap?.[dex]}
+            variant={variant}
+          />
+        ))}
+      </div>
+
+      <div className="max-tablet:block tablet:hidden">
         <DexFundingChart
-          key={`${pairLabel}-${dex}`}
-          dex={dex}
+          dex={mobileActiveDex}
           pairLabel={pairLabel}
-          tokenLabel={dexTokenLabelMap?.[dex]}
+          tokenLabel={dexTokenLabelMap?.[mobileActiveDex]}
           variant={variant}
         />
-      ))}
+      </div>
     </div>
   );
 }

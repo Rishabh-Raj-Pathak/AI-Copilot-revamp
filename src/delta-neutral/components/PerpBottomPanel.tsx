@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
+import { ChevronDown } from 'lucide-react';
 import { DexLogo } from './DexLogo';
 import { formatSignedUsd, PnlCompositionCell, pnlTextClass } from './PnlCompositionCell';
 import type { ManagedDexId } from './ActiveVaultCard';
 import { WalletAddressLabel } from './WalletAddressLabel';
 import { walletForDex } from '../utils/wallet';
+import {
+  MobileHistoryItem,
+  type HistoryLegFill,
+  type HistoryPairRow,
+} from './MobileHistoryItem';
 
 type BottomTab = 'positions' | 'history';
 
@@ -367,6 +373,70 @@ function MarketCell({
   );
 }
 
+function PositionMobileCard({
+  pair,
+  isV2,
+}: {
+  pair: DeltaNeutralPosition;
+  isV2: boolean;
+}) {
+  const net = pair.long.pnlValue + pair.short.pnlValue;
+  return (
+    <div className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#0c0c0c] p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-[14px] font-semibold text-[#e8d5b5]">{pair.coin}</p>
+          {pair.category ? (
+            <span className="mt-0.5 inline-flex rounded-full border border-[rgba(204,177,127,0.4)] bg-[rgba(204,177,127,0.12)] px-1.5 py-px text-[8px] uppercase text-[#d8bf92]">
+              {pair.category}
+            </span>
+          ) : null}
+        </div>
+        <span className={clsx('shrink-0 text-[13px] font-semibold', pnlTextClass(net))}>
+          {formatSignedUsd(net, 0)}
+        </span>
+      </div>
+      <div className="mt-2 space-y-1.5 border-t border-[rgba(255,255,255,0.06)] pt-2">
+        <div className="flex items-center justify-between gap-2 text-[11px]">
+          <span className="text-[color:var(--vault-leg-long-fg)]">L · {pair.long.dex}</span>
+          <span className="font-mono text-[#c8c9d5]">{pair.long.size}</span>
+        </div>
+        <div className="flex items-center justify-between gap-2 text-[11px]">
+          <span className="text-[color:var(--vault-leg-short-fg)]">S · {pair.short.dex}</span>
+          <span className="font-mono text-[#c8c9d5]">{pair.short.size}</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        className={clsx(
+          'mt-2.5 w-full rounded-[8px] border py-2 text-[10px] font-semibold uppercase tracking-[0.06em]',
+          isV2
+            ? 'border-[#c9a962]/40 text-[#c9a962]'
+            : 'border-[rgba(214,176,106,0.35)] text-[#d6b06a]',
+        )}
+      >
+        Close pair
+      </button>
+    </div>
+  );
+}
+
+function toHistoryPairRow(row: HistoryPair): HistoryPairRow {
+  return {
+    time: row.time,
+    coin: row.coin,
+    event: row.event,
+    long: {
+      ...row.long,
+      action: row.long.action as HistoryLegFill['action'],
+    },
+    short: {
+      ...row.short,
+      action: row.short.action as HistoryLegFill['action'],
+    },
+  };
+}
+
 type PerpPanelVariant = 'default' | 'v2';
 
 export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVariant }) {
@@ -375,6 +445,18 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
   const [expanded, setExpanded] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [hiddenByScroll, setHiddenByScroll] = useState(false);
+  const [isNarrow, setIsNarrow] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 833px)').matches;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 833px)');
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const handleWheel: React.WheelEventHandler<HTMLElement> = event => {
     if (event.deltaY > 8) {
@@ -386,12 +468,20 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
     }
   };
 
+  const handleHeaderToggle = () => {
+    if (isNarrow) setExpanded(prev => !prev);
+  };
+
   useEffect(() => {
-    let lastY = window.scrollY;
+    const scrollEl = document.querySelector('.delta-neutral-minimal-scrollbar');
+    if (!scrollEl) return;
+
+    let lastY = scrollEl.scrollTop;
     let ticking = false;
 
     const onScroll = () => {
-      const currentY = window.scrollY;
+      if (isNarrow) return;
+      const currentY = scrollEl.scrollTop;
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
@@ -406,9 +496,9 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
       });
     };
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    scrollEl.addEventListener('scroll', onScroll, { passive: true });
+    return () => scrollEl.removeEventListener('scroll', onScroll);
+  }, [isNarrow]);
 
   const rowBorder = isV2 ? 'border-[#141414]' : 'border-[rgba(255,255,255,0.05)]';
   const rowText = isV2 ? 'text-[#c8c8c8]' : 'text-[#c8c9d5]';
@@ -424,7 +514,7 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
   return (
     <div
       className={`pointer-events-none fixed inset-x-0 bottom-[var(--delta-neutral-panel-bottom,0px)] z-[70] transition-transform duration-300 ease-out max-tablet:bottom-[var(--delta-neutral-panel-bottom-mobile,calc(4.25rem+env(safe-area-inset-bottom)))] tablet:bottom-[var(--delta-neutral-panel-bottom,0px)] ${
-        hiddenByScroll && !hovered ? 'translate-y-full' : 'translate-y-0'
+        hiddenByScroll && !hovered && !isNarrow ? 'translate-y-full' : 'translate-y-0'
       }`}
     >
       <section
@@ -440,23 +530,33 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
       >
         <div
           className={clsx(
-            'flex items-center justify-between gap-3 border-b px-3 py-2.5 md:px-5',
+            'flex items-center justify-between gap-3 border-b px-3 py-2.5 max-tablet:cursor-pointer tablet:px-5',
             isV2 ? 'border-[#1f1f1f]' : 'border-[rgba(255,255,255,0.08)]',
           )}
+          onClick={handleHeaderToggle}
+          onKeyDown={event => {
+            if (isNarrow && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+              setExpanded(prev => !prev);
+            }
+          }}
+          role={isNarrow ? 'button' : undefined}
+          tabIndex={isNarrow ? 0 : undefined}
+          aria-expanded={isNarrow ? expanded : undefined}
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => setActiveTab('positions')}
               className={clsx(
-                'h-[30px] rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors',
+                'rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors max-tablet:min-h-[44px] max-tablet:px-4',
                 activeTab === 'positions'
                   ? isV2
-                    ? 'border border-[#c9a962] bg-transparent text-[#c9a962]'
-                    : 'bg-[rgba(214,176,106,0.14)] text-[#f0ddb9]'
+                    ? 'h-[30px] border border-[#c9a962] bg-transparent text-[#c9a962]'
+                    : 'h-[30px] bg-[rgba(214,176,106,0.14)] text-[#f0ddb9]'
                   : isV2
-                    ? 'border border-transparent text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]'
-                    : 'text-[#9a9ba8] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#dadbe5]',
+                    ? 'h-[30px] border border-transparent text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]'
+                    : 'h-[30px] text-[#9a9ba8] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#dadbe5]',
               )}
             >
               Positions
@@ -465,32 +565,45 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
               type="button"
               onClick={() => setActiveTab('history')}
               className={clsx(
-                'h-[30px] rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors',
+                'rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors max-tablet:min-h-[44px] max-tablet:px-4',
                 activeTab === 'history'
                   ? isV2
-                    ? 'border border-[#c9a962] bg-transparent text-[#c9a962]'
-                    : 'bg-[rgba(214,176,106,0.14)] text-[#f0ddb9]'
+                    ? 'h-[30px] border border-[#c9a962] bg-transparent text-[#c9a962]'
+                    : 'h-[30px] bg-[rgba(214,176,106,0.14)] text-[#f0ddb9]'
                   : isV2
-                    ? 'border border-transparent text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]'
-                    : 'text-[#9a9ba8] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#dadbe5]',
+                    ? 'h-[30px] border border-transparent text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]'
+                    : 'h-[30px] text-[#9a9ba8] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#dadbe5]',
               )}
             >
               History
             </button>
           </div>
-          <p className={clsx('hidden text-[10px] sm:block', headerText)}>
-            {activeTab === 'positions'
-              ? 'One row per token — long & short legs hedged across DEXs'
-              : 'Paired long + short fills per vault action'}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className={clsx('hidden text-[10px] tablet:block', headerText)}>
+              {activeTab === 'positions'
+                ? 'One row per token — long & short legs hedged across DEXs'
+                : 'Paired long + short fills per vault action'}
+            </p>
+            <ChevronDown
+              className={clsx(
+                'h-4 w-4 text-[#8f90a1] transition-transform max-tablet:block tablet:hidden',
+                expanded && 'rotate-180',
+              )}
+              aria-hidden
+            />
+          </div>
         </div>
 
-        <div className={`transition-[height] duration-300 ease-out ${expanded ? 'h-[42vh]' : 'h-[140px]'}`}>
-          <div className="h-full overflow-x-auto overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          className={`transition-[height] duration-300 ease-out ${
+            expanded ? 'h-[42vh]' : 'h-[140px] max-tablet:h-[120px]'
+          }`}
+        >
+          <div className="hidden h-full overflow-x-auto overflow-y-auto [scrollbar-width:none] tablet:block [&::-webkit-scrollbar]:hidden">
             <div className={minTableWidth}>
               <div
                 className={clsx(
-                  'sticky top-0 z-[2] border-b px-3 py-2.5 md:px-4',
+                  'sticky top-0 z-[2] border-b px-3 py-2.5 tablet:px-4',
                   activeTab === 'positions' ? POSITIONS_GRID : HISTORY_GRID,
                   headerBorder,
                   headerBg,
@@ -507,7 +620,7 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                 ))}
               </div>
 
-              <div className="px-3 py-1.5 md:px-4">
+              <div className="px-3 py-1.5 tablet:px-4">
                 {activeTab === 'positions' &&
                   POSITION_PAIRS.map(pair => {
                     const net = pair.long.pnlValue + pair.short.pnlValue;
@@ -609,6 +722,25 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                   })}
               </div>
             </div>
+          </div>
+
+          <div className="h-full overflow-y-auto px-3 py-2 max-tablet:block tablet:hidden">
+            {activeTab === 'positions' ? (
+              <div className="flex flex-col gap-2">
+                {POSITION_PAIRS.map(pair => (
+                  <PositionMobileCard key={pair.coin} pair={pair} isV2={isV2} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-0">
+                {HISTORY_PAIRS.map(row => (
+                  <MobileHistoryItem
+                    key={`${row.time}-${row.coin}-${row.event}`}
+                    row={toHistoryPairRow(row)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

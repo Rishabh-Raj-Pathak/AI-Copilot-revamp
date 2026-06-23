@@ -138,18 +138,21 @@ function statusToneAndText(syncing: boolean, hedgeHealth: number) {
 function MetricLabel({
   label,
   description,
+  mobileTitle,
 }: {
   label: string;
   description: string;
+  mobileTitle?: string;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const narrowLabel = mobileTitle ?? label;
   return (
     <>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="hidden cursor-help text-left text-[10px] uppercase tracking-[0.9px] text-[#9c9cac] outline-none focus-visible:text-[#e8d5b5] md:inline"
+            className="hidden cursor-help text-left text-[10px] uppercase tracking-[0.9px] text-[#9c9cac] outline-none focus-visible:text-[#e8d5b5] tablet:inline"
           >
             {label}
           </button>
@@ -161,9 +164,10 @@ function MetricLabel({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="cursor-help text-left text-[10px] uppercase tracking-[0.9px] text-[#9c9cac] outline-none focus-visible:text-[#e8d5b5] md:hidden"
+        className="cursor-help text-left text-[10px] uppercase tracking-[0.9px] text-[#9c9cac] outline-none focus-visible:text-[#e8d5b5] max-tablet:inline tablet:hidden"
       >
-        {label}
+        <span className="max-tablet:hidden">{label}</span>
+        <span className="hidden max-tablet:inline">{narrowLabel}</span>
       </button>
       <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
         <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-[14px] border border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(12,12,12,0.98)_0%,rgba(6,6,6,0.98)_100%)] p-4 text-[#f5f5f5]">
@@ -239,7 +243,7 @@ export function ActiveVaultCard({
     <motion.article
       layout
       className={clsx(
-        "font-['Onest',sans-serif] w-full border p-3 transition-colors max-tablet:p-3 md:p-4",
+        "font-['Onest',sans-serif] w-full border p-3 transition-colors max-tablet:p-2.5 tablet:p-4",
         isV2
           ? clsx(
               "rounded-[10px] bg-[#0a0a0a]",
@@ -255,13 +259,13 @@ export function ActiveVaultCard({
             ),
       )}
     >
-      <div className="flex flex-col gap-2.5 max-tablet:gap-2 md:gap-3">
-        <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-col gap-2.5 max-tablet:gap-2 tablet:gap-3">
+        <div className="flex items-start justify-between gap-1.5 max-tablet:gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3
                 className={clsx(
-                  "font-['Onest',sans-serif] text-[18px] font-semibold leading-tight max-tablet:tracking-[-0.01em] md:text-[23px] md:font-medium",
+                  "truncate font-['Onest',sans-serif] text-[18px] font-semibold leading-tight max-tablet:tracking-[-0.01em] tablet:text-[23px] tablet:font-medium",
                   isV2 ? "text-[#E8D5A1]" : "text-[#ecd9b7]",
                 )}
               >
@@ -292,7 +296,7 @@ export function ActiveVaultCard({
             </div>
             <p
               className={clsx(
-                "mt-0.5 text-[10px] max-tablet:leading-snug md:mt-1 md:text-[11px]",
+                "mt-0.5 text-[10px] max-tablet:leading-snug tablet:mt-1 tablet:text-[11px]",
                 isV2 ? "text-[#888888]" : "text-[#9496a2]",
               )}
             >
@@ -302,7 +306,7 @@ export function ActiveVaultCard({
               </span>{" "}
               {vault.shortAccount}
             </p>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 max-tablet:hidden md:mt-1 md:flex">
+            <div className="mt-0.5 hidden flex-wrap items-center gap-x-2 gap-y-0.5 tablet:mt-1 tablet:flex">
               <WalletAddressLabel address={vault.longWallet} />
               <span
                 className={clsx(
@@ -329,12 +333,12 @@ export function ActiveVaultCard({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 max-tablet:gap-2 md:gap-2.5 xl:justify-end">
+        <div className="flex flex-wrap items-center gap-3 max-tablet:gap-2 tablet:gap-2.5 xl:justify-end">
           <button
             type="button"
             onClick={() => setPnlOpen(true)}
             className={clsx(
-              "h-[20px] border-none bg-transparent p-0 text-[9px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 max-tablet:text-[10px] md:tracking-[0.85px]",
+              "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
               isV2
                 ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
                 : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
@@ -346,7 +350,7 @@ export function ActiveVaultCard({
             type="button"
             onClick={() => setMoreInfoOpen(true)}
             className={clsx(
-              "h-[20px] border-none bg-transparent p-0 text-[9px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 max-tablet:text-[10px] md:tracking-[0.85px]",
+              "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
               isV2
                 ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
                 : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
@@ -358,7 +362,7 @@ export function ActiveVaultCard({
 
         <div
           className={clsx(
-            "rounded-[10px] border p-2.5 max-tablet:p-2.5 md:p-3",
+            "rounded-[10px] border p-2.5 max-tablet:p-2.5 tablet:p-3",
             isV2
               ? "border-[#1f1f1f] bg-[#050505]"
               : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.01)]",
@@ -370,26 +374,26 @@ export function ActiveVaultCard({
           />
           <p
             className={clsx(
-              "mt-0.5 font-mono text-[22px] font-semibold leading-none max-tablet:text-[21px] md:mt-1 md:text-[27px]",
+              "mt-0.5 font-mono text-[22px] font-semibold leading-none max-tablet:text-[21px] tablet:mt-1 tablet:text-[27px]",
               isV2 ? "text-white" : "text-[#f2e2c4]",
             )}
           >
             {formatCurrency(nav)}
           </p>
 
-          <div className="mt-2.5 grid grid-cols-3 gap-2 max-tablet:gap-1.5 md:mt-3 md:gap-3">
+          <div className="mt-2.5 grid grid-cols-3 gap-2 max-tablet:gap-1.5 tablet:mt-3 tablet:gap-3">
             <div className="min-w-0">
               <MetricLabel
                 label="Total Return"
                 description="Overall profit or loss since this vault started."
               />
               <p
-                className={`mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] md:mt-1 md:text-[18px] md:leading-none ${primaryReturnTone}`}
+                className={`mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] tablet:mt-1 tablet:text-[18px] tablet:leading-none ${primaryReturnTone}`}
               >
                 {formatSignedCurrency(netPnl)}{" "}
                 <span
                   className={clsx(
-                    "block text-[9px] max-tablet:inline max-tablet:text-[9px] md:text-[10px]",
+                    "block text-[9px] max-tablet:inline tablet:text-[10px]",
                     isV2 ? "text-[#666666]" : "text-[#8f90a1]",
                   )}
                 >
@@ -404,7 +408,7 @@ export function ActiveVaultCard({
               />
               <p
                 className={clsx(
-                  "mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] md:mt-1 md:text-[18px] md:leading-none",
+                  "mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] tablet:mt-1 tablet:text-[18px] tablet:leading-none",
                   todayPnl >= 0
                     ? "text-[color:var(--vault-pnl-positive)]"
                     : "text-[color:var(--vault-pnl-negative)]",
@@ -416,11 +420,12 @@ export function ActiveVaultCard({
             <div className="min-w-0">
               <MetricLabel
                 label="Funding Settlement"
+                mobileTitle="Funding"
                 description="Countdown to the next payout or settlement update."
               />
               <p
                 className={clsx(
-                  "mt-0.5 font-mono text-[14px] font-semibold leading-tight max-tablet:text-[13px] md:mt-1 md:text-[16px] md:leading-none",
+                  "mt-0.5 font-mono text-[14px] font-semibold leading-tight max-tablet:text-[13px] tablet:mt-1 tablet:text-[16px] tablet:leading-none",
                   isV2 ? "text-[#c9a27e]" : "text-[#d6b06a]",
                 )}
               >
@@ -472,40 +477,40 @@ export function ActiveVaultCard({
               </div>
             </div>
           ) : (
-            <div className="mt-2.5 border-t border-[rgba(255,255,255,0.08)] pt-2 max-tablet:mt-2 md:mt-3">
-              <div className="grid grid-cols-3 gap-1.5 max-tablet:gap-1 md:grid-cols-[auto_1fr_1fr_1fr] md:items-center md:gap-x-3 md:gap-y-1">
-                <p className="col-span-3 text-[9px] uppercase tracking-[0.9px] text-[#898a98] max-tablet:mb-0.5 md:col-span-1 md:mb-0 md:text-[10px] md:tracking-[1px]">
+            <div className="mt-2.5 border-t border-[rgba(255,255,255,0.08)] pt-2 max-tablet:mt-2 tablet:mt-3">
+              <div className="grid grid-cols-3 gap-1.5 max-tablet:gap-1 tablet:grid-cols-[auto_1fr_1fr_1fr] tablet:items-center tablet:gap-x-3 tablet:gap-y-1">
+                <p className="col-span-3 text-[9px] uppercase tracking-[0.9px] text-[#898a98] max-tablet:mb-0.5 tablet:col-span-1 tablet:mb-0 tablet:text-[10px] tablet:tracking-[1px]">
                   Risk
                 </p>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start md:flex-row md:items-baseline md:gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2 tablet:border-l tablet:border-[rgba(255,255,255,0.08)] tablet:pl-3">
                   <MetricLabel
                     label="Exposure"
                     description="Remaining directional market exposure after hedging. Closer to 0% means more neutral."
                   />
                   <p
-                    className={`font-mono text-[12px] font-semibold max-tablet:text-[11px] md:text-[13px] md:font-normal ${riskValueTone(exposureTone)}`}
+                    className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(exposureTone)}`}
                   >
                     {formatSignedPercent(exposure, 1)}
                   </p>
                 </div>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start md:flex-row md:items-baseline md:gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2 tablet:border-l tablet:border-[rgba(255,255,255,0.08)] tablet:pl-3">
                   <MetricLabel
                     label="Safety Buffer"
                     description="Distance from liquidation risk. Higher means safer."
                   />
                   <p
-                    className={`font-mono text-[12px] font-semibold max-tablet:text-[11px] md:text-[13px] md:font-normal ${riskValueTone(safetyTone)}`}
+                    className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(safetyTone)}`}
                   >
                     {formatPercent(safetyBuffer, 0)}
                   </p>
                 </div>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start md:flex-row md:items-baseline md:gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2 tablet:border-l tablet:border-[rgba(255,255,255,0.08)] tablet:pl-3">
                   <MetricLabel
                     label="Capital Used"
                     description="Percent of your collateral currently used to maintain the hedge."
                   />
                   <p
-                    className={`font-mono text-[12px] font-semibold max-tablet:text-[11px] md:text-[13px] md:font-normal ${riskValueTone(capitalTone)}`}
+                    className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(capitalTone)}`}
                   >
                     {formatPercent(capitalUsed, 0)}
                   </p>

@@ -193,7 +193,9 @@ export function VaultControls({
     <div
       className={clsx(
         "flex items-center transition-opacity duration-300",
-        stretch ? "w-full gap-4 md:gap-6" : "gap-[21px]",
+        stretch
+          ? "w-full gap-4 max-tablet:flex-col max-tablet:items-stretch tablet:gap-6"
+          : "gap-[21px]",
         "opacity-100",
       )}
     >
@@ -244,8 +246,8 @@ export function VaultControls({
               : "border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(18,18,19,0.98)_0%,rgba(11,11,12,0.99)_100%)]",
             stretch
               ? compactInput
-                ? "w-[200px] md:w-[220px] shrink-0"
-                : "w-[240px] md:w-[280px] shrink-0"
+                ? "w-[200px] max-tablet:w-full tablet:w-[220px] shrink-0"
+                : "w-[240px] max-tablet:w-full tablet:w-[280px] shrink-0"
               : "w-[185px]",
             !disabled && (isV2 ? "hover:border-[#d4af37]/35 focus-within:ring-1 focus-within:ring-[#d4af37]/25" : "hover:border-[rgba(214,176,106,0.3)] focus-within:ring-1 ring-[#ccb17f]/18"),
             disabled && "pointer-events-none opacity-30",

@@ -35,7 +35,7 @@ export default function DeltaNeutralVaultsPage({
       />
 
       <div className="delta-neutral-minimal-scrollbar vaults-root min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="flex w-full flex-col gap-6 px-5 py-6 pb-16 max-tablet:gap-3 max-tablet:px-3 max-tablet:py-4 max-tablet:pb-12 sm:px-8 md:py-8 lg:px-10 xl:px-12">
+        <div className="flex w-full flex-col gap-6 px-5 py-6 pb-16 max-tablet:gap-3 max-tablet:px-4 max-tablet:py-4 max-tablet:pb-0 sm:px-8 tablet:py-8 lg:px-10 xl:px-12">
           <DeltaNeutralVaults3Page />
         </div>
       </div>

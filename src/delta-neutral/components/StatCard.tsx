@@ -46,14 +46,14 @@ export function StatCard({ title, value, subtext, variant = 'default', mobileTit
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] max-tablet:rounded-lg max-tablet:px-2.5 max-tablet:py-2.5"
+        className="w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] max-tablet:rounded-lg max-tablet:px-3 max-tablet:py-2.5"
       >
         <div className="flex flex-col gap-2 max-tablet:gap-1">
-          <p className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.08em] text-[#717182] max-tablet:text-[9px] max-tablet:leading-tight max-tablet:tracking-[0.05em]">
+          <p className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.08em] text-[#717182] max-tablet:text-[10px] max-tablet:leading-tight max-tablet:tracking-[0.06em]">
             <span className="max-tablet:hidden">{title}</span>
             <span className="hidden max-tablet:inline">{narrowTitle}</span>
           </p>
-          <motion.p className="vaults-stat-value-gradient text-[32px] font-bold leading-[35px] max-tablet:text-[1.125rem] max-tablet:leading-tight">
+          <motion.p className="vaults-stat-value-gradient text-[32px] font-bold leading-[35px] max-tablet:text-[1.1875rem] max-tablet:leading-tight">
             {rounded}
           </motion.p>
           <p className="text-[12px] leading-[18px] text-[rgba(255,255,255,0.4)] max-tablet:hidden">

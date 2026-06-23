@@ -276,13 +276,13 @@ export function DeltaNeutralVaults3Page() {
 
   return (
     <>
-      <main className="flex flex-1 mx-auto w-full max-w-[1280px] flex-col gap-5 max-tablet:gap-3.5 md:gap-6 pb-[calc(138px+4.25rem+env(safe-area-inset-bottom))] md:pb-[164px]">
+      <main className="flex flex-1 mx-auto w-full max-w-[1280px] flex-col gap-5 max-tablet:gap-3.5 tablet:gap-6 pb-[calc(120px+env(safe-area-inset-bottom))] tablet:pb-[164px]">
       <section className="flex flex-col gap-4 max-tablet:gap-2.5">
-        <div className="flex flex-col gap-2 max-tablet:gap-1 pr-9 max-tablet:pr-8">
-          <h1 className="vaults-hero-title-gradient w-fit text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.02em] max-tablet:text-[1.5rem] max-tablet:leading-[1.1]">
+        <div className="flex flex-col gap-2 max-tablet:gap-1 pr-8">
+          <h1 className="vaults-hero-title-gradient w-fit text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.02em] max-tablet:text-[clamp(1.625rem,5vw,2rem)] max-tablet:leading-[1.1]">
             Delta Neutral Vaults
           </h1>
-          <p className="max-w-[680px] text-[15px] leading-6 text-white/90 max-tablet:hidden">
+          <p className="max-w-[680px] text-[15px] leading-6 text-white/90 max-tablet:line-clamp-2 max-tablet:text-[13px] max-tablet:leading-5">
             Show the math, hide the mess — delta-neutral funding vaults with live hedge health and proof-of-neutrality.
           </p>
         </div>
@@ -294,7 +294,7 @@ export function DeltaNeutralVaults3Page() {
                 <button
                   type="button"
                   aria-label="Explain platform metrics"
-                  className="hidden h-7 w-7 items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] text-[#8f90a1] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#d6b06a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(214,176,106,0.5)] md:inline-flex"
+                  className="hidden h-7 w-7 items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] text-[#8f90a1] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#d6b06a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(214,176,106,0.5)] tablet:inline-flex"
                 >
                   <CircleAlert className="h-3.5 w-3.5" />
                 </button>
@@ -315,12 +315,12 @@ export function DeltaNeutralVaults3Page() {
               type="button"
               aria-label="Explain platform metrics"
               onClick={() => setPlatformMetricsOpen(true)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] text-[#8f90a1] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#d6b06a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(214,176,106,0.5)] md:hidden"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] text-[#8f90a1] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#d6b06a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(214,176,106,0.5)] tablet:hidden"
             >
               <CircleAlert className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-2 md:gap-4">
+          <div className="grid grid-cols-3 gap-2.5 tablet:gap-4">
             <StatCard variant="vaults" mobileTitle="Volume" title="Total Volume" value="$128.4M" subtext="Capital routed" />
             <StatCard variant="vaults" mobileTitle="Yield" title="Yield Distributed" value="$6.2M" subtext="Paid to users" />
             <StatCard variant="vaults" mobileTitle="Uptime" title="Hedge Uptime" value="99.94%" subtext="Strategy reliability" />
@@ -347,14 +347,21 @@ export function DeltaNeutralVaults3Page() {
       <DeltaVaultBuilder onActivate={handleActivate} />
 
       <section className="flex flex-col gap-3.5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-tablet:flex tablet:hidden">
+          <div className="vaults-section-hairline" />
+          <h2 className="shrink-0 font-['Onest',sans-serif] text-[18px] font-medium leading-[1.35] text-[#e8d5b5]">
+            Active vaults
+          </h2>
+          <div className="vaults-section-hairline" />
+        </div>
+        <div className="hidden items-center gap-3 tablet:flex">
           <span className="whitespace-nowrap font-['Onest',sans-serif] text-[11px] font-semibold uppercase tracking-[1.4px] text-[#888994]">
             Active vaults
           </span>
           <div className="min-w-[40px] flex-1 h-px bg-gradient-to-r from-[rgba(214,176,106,0.25)] to-transparent" />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(10,10,10,0.78)] p-1.5">
+        <div className="flex flex-wrap items-center gap-1 max-tablet:gap-1 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(10,10,10,0.78)] p-1.5">
           {([
             { id: 'all', label: 'All' },
             { id: 'category', label: 'Categories' },
@@ -366,7 +373,7 @@ export function DeltaNeutralVaults3Page() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveVaultTab(tab.id)}
-                className={`h-[31px] rounded-[9px] px-3 text-[10px] font-semibold uppercase tracking-[0.85px] transition-colors ${
+                className={`h-[31px] max-tablet:min-h-[44px] max-tablet:flex-1 rounded-[9px] px-3 text-[10px] font-semibold uppercase tracking-[0.85px] transition-colors ${
                   isActive
                     ? 'border border-[rgba(214,176,106,0.42)] bg-[linear-gradient(180deg,rgba(54,42,28,0.96)_0%,rgba(22,18,13,0.98)_100%)] text-[#f0ddb9]'
                     : 'text-[#9394a1] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d9dae4]'
