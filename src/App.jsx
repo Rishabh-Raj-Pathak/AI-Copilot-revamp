@@ -52,7 +52,6 @@ export default function App() {
           setPage("copilot");
         }}
         onVaultViewChange={handleVaultViewChange}
-        onOpenFeaturedVaults={() => setPage("vaults")}
       />
     ) : (
       <TerminalCopilotPage

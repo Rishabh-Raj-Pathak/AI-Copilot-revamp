@@ -1,6 +1,7 @@
 import "../../design-system/vaults/index.css";
 import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import VaultsMobileNavBar from "../terminal/VaultsMobileNavBar.jsx";
 import { DeltaNeutralVaults3Page } from "../../delta-neutral/pages/DeltaNeutralVaults3Page.tsx";
 
 export default function DeltaNeutralVaultsPage({
@@ -11,10 +12,13 @@ export default function DeltaNeutralVaultsPage({
   onOpenCopilot,
   onOpenCopilotTutorial,
   onVaultViewChange,
-  onOpenFeaturedVaults,
 }) {
   return (
     <div className="delta-neutral-root flex h-dvh min-h-0 flex-col overflow-hidden bg-[#050505] text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+      <VaultsMobileNavBar
+        vaultView="delta-neutral"
+        onVaultViewChange={onVaultViewChange}
+      />
       <HeaderTerminal
         activeNavItem="Vaults"
         vaultView="delta-neutral"
@@ -38,9 +42,10 @@ export default function DeltaNeutralVaultsPage({
 
       <CopilotBottomNav
         activeId="vaults"
+        vaultView="delta-neutral"
+        onVaultViewChange={onVaultViewChange}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
-          if (id === "vaults") onOpenFeaturedVaults?.();
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
       />

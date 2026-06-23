@@ -9,6 +9,7 @@ import {
 import "../../design-system/vaults/index.css";
 import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import VaultsMobileNavBar from "../terminal/VaultsMobileNavBar.jsx";
 import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
 import VaultsHero from "./VaultsHero.jsx";
@@ -196,6 +197,10 @@ export default function VaultsPage({
 
   return (
     <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+      <VaultsMobileNavBar
+        vaultView="featured"
+        onVaultViewChange={onVaultViewChange}
+      />
       <HeaderTerminal
         activeNavItem="Vaults"
         vaultView="featured"
@@ -282,6 +287,8 @@ export default function VaultsPage({
 
       <CopilotBottomNav
         activeId="vaults"
+        vaultView="featured"
+        onVaultViewChange={onVaultViewChange}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
         }}

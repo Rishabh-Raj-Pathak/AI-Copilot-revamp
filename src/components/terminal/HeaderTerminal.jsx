@@ -237,7 +237,6 @@ export default function HeaderTerminal({
                             type="button"
                             onClick={() => {
                               onVaultViewChange(v.id);
-                              onNavItemClick?.(label);
                               setMobileNavOpen(false);
                             }}
                             className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
@@ -337,9 +336,7 @@ export default function HeaderTerminal({
                   activeView={vaultView ?? "featured"}
                   onViewChange={(id) => {
                     onVaultViewChange(id);
-                    onNavItemClick?.(label);
                   }}
-                  variant={active ? "navbar" : "navbar"}
                   navActive={active}
                 />
               );

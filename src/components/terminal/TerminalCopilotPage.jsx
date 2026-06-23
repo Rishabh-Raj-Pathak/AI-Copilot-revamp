@@ -800,6 +800,12 @@ export default function TerminalCopilotPage({
       />
       <CopilotBottomNav
         activeId="copilot"
+        vaultView="featured"
+        onVaultViewChange={(viewId) => {
+          onVaultViewChange?.(viewId);
+          if (viewId === "delta-neutral") onOpenDeltaNeutralVaults?.();
+          else onOpenVaults?.();
+        }}
         onNavClick={(id) => {
           if (id === "vaults") onOpenVaults?.();
         }}

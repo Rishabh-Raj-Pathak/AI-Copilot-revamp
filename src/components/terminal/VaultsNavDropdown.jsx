@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 
 export const VAULT_VIEWS = [
   { id: "featured", label: "Featured Vaults" },
-  { id: "delta-neutral", label: "Delta Neutral Vaults" },
+  { id: "delta-neutral", label: "Delta Neutral Vault" },
 ];
 
 function NavChevron({ className }) {
@@ -33,13 +33,13 @@ export default function VaultsNavDropdown({
   activeView,
   onViewChange,
   navActive = false,
+  menuAlign = "left",
   variant = "navbar",
   className = "",
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const menuId = useId();
-  const currentLabel = getVaultViewLabel(activeView);
   const isActive = navActive || variant === "mobile";
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function VaultsNavDropdown({
         onClick={() => setOpen((o) => !o)}
         className={triggerClass}
       >
-        {currentLabel}
+        Vaults
         <NavChevron
           className={`size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""} ${chevronClass}`}
         />
@@ -94,7 +94,9 @@ export default function VaultsNavDropdown({
           id={menuId}
           role="menu"
           aria-label="Vault type"
-          className="absolute left-0 top-full z-[120] mt-1 min-w-[12.75rem] overflow-hidden rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
+          className={`absolute top-full z-[120] mt-1 min-w-[12.75rem] overflow-hidden rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg ${
+            menuAlign === "right" ? "right-0" : "left-0"
+          }`}
         >
           {VAULT_VIEWS.map((v) => (
             <button
