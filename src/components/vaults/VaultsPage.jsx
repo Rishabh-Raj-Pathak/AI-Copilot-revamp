@@ -218,15 +218,17 @@ export default function VaultsPage({
       />
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="flex w-full flex-col gap-10 px-5 py-8 pb-16 max-tablet:gap-6 max-tablet:px-4 max-tablet:py-6 max-tablet:pb-8 sm:px-8 lg:px-10 xl:px-12">
+        <div className="flex w-full flex-col gap-6 px-5 py-8 pb-16 max-tablet:gap-4 max-tablet:px-4 max-tablet:py-5 max-tablet:pb-4 sm:px-8 lg:px-10 xl:px-12">
           <VaultsHero />
           <VaultsStatsRow />
 
-          <div className="flex w-full flex-col gap-6">
-            <VaultsSectionHeader
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
+          <div className="flex w-full flex-col gap-6 max-tablet:gap-4">
+            <div className="hidden tablet:block">
+              <VaultsSectionHeader
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            </div>
 
             <VaultsDexTabs
               tabs={dexTabs}

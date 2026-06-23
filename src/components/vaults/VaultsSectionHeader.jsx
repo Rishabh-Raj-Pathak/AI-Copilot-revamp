@@ -8,15 +8,6 @@ export default function VaultsSectionHeader({ viewMode, onViewModeChange }) {
 
   return (
     <div className="vaults-root w-full">
-      {/* Mobile: centered title with bilateral hairlines */}
-      <div className="flex items-center gap-3 max-tablet:flex tablet:hidden">
-        <div className="vaults-section-hairline" />
-        <h2 className="shrink-0 text-[20px] font-medium leading-[30px] text-[#e8d5b5]">
-          Vaults
-        </h2>
-        <div className="vaults-section-hairline" />
-      </div>
-
       {/* Desktop: left-aligned title + toggle */}
       <div className="hidden w-full items-center gap-3 tablet:flex">
         <h2 className="shrink-0 text-[20px] font-medium leading-[30px] text-[#e8d5b5]">
