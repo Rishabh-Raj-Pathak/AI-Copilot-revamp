@@ -702,16 +702,6 @@ export default function TerminalCopilotPage({
             </div>
           </div>
         </main>
-        {selectedSetup && mobileDetailsSheetDismissed ? (
-          <button
-            type="button"
-            className="fixed left-1/2 z-40 max-tablet:flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#3e2e00] bg-[#171200] px-4 py-3 text-sm font-semibold text-[#f2b500] shadow-lg max-tablet:bottom-[calc(4.75rem+env(safe-area-inset-bottom))] tablet:hidden tablet:bottom-4"
-            onClick={() => setMobileDetailsSheetDismissed(false)}
-            data-tour="copilot-mobile-details-reopen"
-          >
-            View trade setup — {selectedSetup.symbol}
-          </button>
-        ) : null}
         <div
           className={
             selectedSetup && !mobileDetailsSheetDismissed
