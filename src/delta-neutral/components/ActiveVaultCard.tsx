@@ -239,7 +239,7 @@ export function ActiveVaultCard({
     <motion.article
       layout
       className={clsx(
-        "font-['Onest',sans-serif] w-full border p-3.5 transition-colors md:p-4",
+        "font-['Onest',sans-serif] w-full border p-3 transition-colors max-tablet:p-3 md:p-4",
         isV2
           ? clsx(
               "rounded-[10px] bg-[#0a0a0a]",
@@ -255,114 +255,110 @@ export function ActiveVaultCard({
             ),
       )}
     >
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="flex flex-col gap-3 min-w-0 flex-1">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3
-                  className={clsx(
-                    "font-['Onest',sans-serif] text-[22px] font-medium leading-tight md:text-[23px]",
-                    isV2 ? "text-[#E8D5A1]" : "text-[#ecd9b7]",
-                  )}
-                >
-                  {vault.pair}
-                </h3>
-                {onToggleExpand && (
-                  <button
-                    type="button"
-                    onClick={onToggleExpand}
-                    aria-label={
-                      expanded
-                        ? "Collapse strategy deep dive"
-                        : "Expand strategy deep dive"
-                    }
-                    className={clsx(
-                      "group inline-flex h-[28px] w-[28px] items-center justify-center rounded-[8px] border transition-colors",
-                      isV2
-                        ? "border-[#c9a962]/60 bg-[#0d0d0d] text-[#c9a962] hover:border-[#d4af37] hover:text-[#f0e6c8]"
-                        : "border-[rgba(120,90,40,0.45)] bg-[rgba(0,0,0,0.24)] text-[#ccb17f] hover:border-[rgba(176,132,65,0.65)] hover:text-[#e8d5b5]",
-                    )}
-                  >
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform duration-200 ${expanded ? "rotate-180" : "rotate-0"}`}
-                      aria-hidden
-                    />
-                  </button>
-                )}
-              </div>
-              <p
+      <div className="flex flex-col gap-2.5 max-tablet:gap-2 md:gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3
                 className={clsx(
-                  "mt-1 text-[11px]",
-                  isV2 ? "text-[#888888]" : "text-[#9496a2]",
+                  "font-['Onest',sans-serif] text-[18px] font-semibold leading-tight max-tablet:tracking-[-0.01em] md:text-[23px] md:font-medium",
+                  isV2 ? "text-[#E8D5A1]" : "text-[#ecd9b7]",
                 )}
               >
-                {vault.longAccount}{" "}
-                <span className={isV2 ? "text-[#555]" : "text-[#717182]"}>
-                  ↔
-                </span>{" "}
-                {vault.shortAccount}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <WalletAddressLabel address={vault.longWallet} />
-                <span
+                {vault.pair}
+              </h3>
+              {onToggleExpand && (
+                <button
+                  type="button"
+                  onClick={onToggleExpand}
+                  aria-label={
+                    expanded
+                      ? "Collapse strategy deep dive"
+                      : "Expand strategy deep dive"
+                  }
                   className={clsx(
-                    "text-[9px]",
-                    isV2 ? "text-[#444]" : "text-[#5a5a68]",
+                    "group inline-flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[8px] border transition-colors max-tablet:h-7 max-tablet:w-7",
+                    isV2
+                      ? "border-[#c9a962]/60 bg-[#0d0d0d] text-[#c9a962] hover:border-[#d4af37] hover:text-[#f0e6c8]"
+                      : "border-[rgba(120,90,40,0.45)] bg-[rgba(0,0,0,0.24)] text-[#ccb17f] hover:border-[rgba(176,132,65,0.65)] hover:text-[#e8d5b5]",
                   )}
                 >
-                  ↔
-                </span>
-                <WalletAddressLabel address={vault.shortWallet} />
-              </div>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${expanded ? "rotate-180" : "rotate-0"}`}
+                    aria-hidden
+                  />
+                </button>
+              )}
+            </div>
+            <p
+              className={clsx(
+                "mt-0.5 text-[10px] max-tablet:leading-snug md:mt-1 md:text-[11px]",
+                isV2 ? "text-[#888888]" : "text-[#9496a2]",
+              )}
+            >
+              {vault.longAccount}{" "}
+              <span className={isV2 ? "text-[#555]" : "text-[#717182]"}>
+                ↔
+              </span>{" "}
+              {vault.shortAccount}
+            </p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 max-tablet:hidden md:mt-1 md:flex">
+              <WalletAddressLabel address={vault.longWallet} />
+              <span
+                className={clsx(
+                  "text-[9px]",
+                  isV2 ? "text-[#444]" : "text-[#5a5a68]",
+                )}
+              >
+                ↔
+              </span>
+              <WalletAddressLabel address={vault.shortWallet} />
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 xl:justify-end">
+          {onStop && (
             <button
               type="button"
-              onClick={() => setPnlOpen(true)}
-              className={clsx(
-                "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.85px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1",
-                isV2
-                  ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
-                  : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
-              )}
+              onClick={onStop}
+              aria-label={`Deactivate ${vault.pair} vault`}
+              className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(248,113,113,0.42)] bg-[#0f0f0f] text-[#f87171] transition-colors hover:border-[rgba(248,113,113,0.6)] hover:bg-[rgba(248,113,113,0.08)] tablet:h-[30px] tablet:w-auto tablet:px-3 tablet:text-[10px] tablet:font-semibold tablet:uppercase tablet:tracking-[0.08em]"
             >
-              PnL Breakdown
+              <X className="size-4 tablet:hidden" strokeWidth={2} aria-hidden />
+              <span className="hidden tablet:inline">Deactivate</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setMoreInfoOpen(true)}
-              className={clsx(
-                "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.85px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1",
-                isV2
-                  ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
-                  : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
-              )}
-            >
-              More Info
-            </button>
-            {onStop && (
-              <button
-                type="button"
-                onClick={onStop}
-                className={clsx(
-                  "ml-1 h-[28px] rounded-[8px] border px-3 text-[10px] uppercase tracking-[0.9px] transition-colors",
-                  isV2
-                    ? "border-[#c9a962] bg-transparent text-[#c9a962] hover:bg-[#c9a962]/10"
-                    : "border-[rgba(255,255,255,0.12)] text-[#a7a8b6] hover:border-[rgba(112,82,80,0.45)] hover:text-[color:var(--vault-pnl-negative)]",
-                )}
-              >
-                Close
-              </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 max-tablet:gap-2 md:gap-2.5 xl:justify-end">
+          <button
+            type="button"
+            onClick={() => setPnlOpen(true)}
+            className={clsx(
+              "h-[20px] border-none bg-transparent p-0 text-[9px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 max-tablet:text-[10px] md:tracking-[0.85px]",
+              isV2
+                ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
+                : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
             )}
-          </div>
+          >
+            PnL Breakdown
+          </button>
+          <button
+            type="button"
+            onClick={() => setMoreInfoOpen(true)}
+            className={clsx(
+              "h-[20px] border-none bg-transparent p-0 text-[9px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 max-tablet:text-[10px] md:tracking-[0.85px]",
+              isV2
+                ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
+                : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
+            )}
+          >
+            More Info
+          </button>
         </div>
 
         <div
           className={clsx(
-            "rounded-[10px] border p-3",
+            "rounded-[10px] border p-2.5 max-tablet:p-2.5 md:p-3",
             isV2
               ? "border-[#1f1f1f] bg-[#050505]"
               : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.01)]",
@@ -374,26 +370,26 @@ export function ActiveVaultCard({
           />
           <p
             className={clsx(
-              "mt-1 font-mono text-[27px] font-semibold leading-none",
+              "mt-0.5 font-mono text-[22px] font-semibold leading-none max-tablet:text-[21px] md:mt-1 md:text-[27px]",
               isV2 ? "text-white" : "text-[#f2e2c4]",
             )}
           >
             {formatCurrency(nav)}
           </p>
 
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            <div>
+          <div className="mt-2.5 grid grid-cols-3 gap-2 max-tablet:gap-1.5 md:mt-3 md:gap-3">
+            <div className="min-w-0">
               <MetricLabel
                 label="Total Return"
                 description="Overall profit or loss since this vault started."
               />
               <p
-                className={`mt-1 font-mono text-[18px] font-semibold leading-none ${primaryReturnTone}`}
+                className={`mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] md:mt-1 md:text-[18px] md:leading-none ${primaryReturnTone}`}
               >
                 {formatSignedCurrency(netPnl)}{" "}
                 <span
                   className={clsx(
-                    "text-[10px]",
+                    "block text-[9px] max-tablet:inline max-tablet:text-[9px] md:text-[10px]",
                     isV2 ? "text-[#666666]" : "text-[#8f90a1]",
                   )}
                 >
@@ -401,14 +397,14 @@ export function ActiveVaultCard({
                 </span>
               </p>
             </div>
-            <div>
+            <div className="min-w-0">
               <MetricLabel
                 label="Today"
                 description="Profit or loss generated today."
               />
               <p
                 className={clsx(
-                  "mt-1 font-mono text-[18px] font-semibold leading-none",
+                  "mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] md:mt-1 md:text-[18px] md:leading-none",
                   todayPnl >= 0
                     ? "text-[color:var(--vault-pnl-positive)]"
                     : "text-[color:var(--vault-pnl-negative)]",
@@ -417,14 +413,14 @@ export function ActiveVaultCard({
                 {formatSignedCurrency(todayPnl)}
               </p>
             </div>
-            <div>
+            <div className="min-w-0">
               <MetricLabel
                 label="Funding Settlement"
                 description="Countdown to the next payout or settlement update."
               />
               <p
                 className={clsx(
-                  "mt-1 font-mono text-[16px] font-semibold leading-none",
+                  "mt-0.5 font-mono text-[14px] font-semibold leading-tight max-tablet:text-[13px] md:mt-1 md:text-[16px] md:leading-none",
                   isV2 ? "text-[#c9a27e]" : "text-[#d6b06a]",
                 )}
               >
@@ -476,40 +472,40 @@ export function ActiveVaultCard({
               </div>
             </div>
           ) : (
-            <div className="mt-3 border-t border-[rgba(255,255,255,0.08)] pt-2">
-              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1 md:grid-cols-[auto_1fr_1fr_1fr]">
-                <p className="text-[10px] uppercase tracking-[1px] text-[#898a98]">
+            <div className="mt-2.5 border-t border-[rgba(255,255,255,0.08)] pt-2 max-tablet:mt-2 md:mt-3">
+              <div className="grid grid-cols-3 gap-1.5 max-tablet:gap-1 md:grid-cols-[auto_1fr_1fr_1fr] md:items-center md:gap-x-3 md:gap-y-1">
+                <p className="col-span-3 text-[9px] uppercase tracking-[0.9px] text-[#898a98] max-tablet:mb-0.5 md:col-span-1 md:mb-0 md:text-[10px] md:tracking-[1px]">
                   Risk
                 </p>
-                <div className="flex items-baseline gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start md:flex-row md:items-baseline md:gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
                   <MetricLabel
                     label="Exposure"
                     description="Remaining directional market exposure after hedging. Closer to 0% means more neutral."
                   />
                   <p
-                    className={`font-mono text-[13px] ${riskValueTone(exposureTone)}`}
+                    className={`font-mono text-[12px] font-semibold max-tablet:text-[11px] md:text-[13px] md:font-normal ${riskValueTone(exposureTone)}`}
                   >
                     {formatSignedPercent(exposure, 1)}
                   </p>
                 </div>
-                <div className="flex items-baseline gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start md:flex-row md:items-baseline md:gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
                   <MetricLabel
                     label="Safety Buffer"
                     description="Distance from liquidation risk. Higher means safer."
                   />
                   <p
-                    className={`font-mono text-[13px] ${riskValueTone(safetyTone)}`}
+                    className={`font-mono text-[12px] font-semibold max-tablet:text-[11px] md:text-[13px] md:font-normal ${riskValueTone(safetyTone)}`}
                   >
                     {formatPercent(safetyBuffer, 0)}
                   </p>
                 </div>
-                <div className="flex items-baseline gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start md:flex-row md:items-baseline md:gap-2 md:border-l md:border-[rgba(255,255,255,0.08)] md:pl-3">
                   <MetricLabel
                     label="Capital Used"
                     description="Percent of your collateral currently used to maintain the hedge."
                   />
                   <p
-                    className={`font-mono text-[13px] ${riskValueTone(capitalTone)}`}
+                    className={`font-mono text-[12px] font-semibold max-tablet:text-[11px] md:text-[13px] md:font-normal ${riskValueTone(capitalTone)}`}
                   >
                     {formatPercent(capitalUsed, 0)}
                   </p>

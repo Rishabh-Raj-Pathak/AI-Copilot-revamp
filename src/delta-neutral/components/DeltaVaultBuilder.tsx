@@ -417,7 +417,7 @@ function DexPairSetupCard({
   return (
     <div
       className={clsx(
-        "relative flex min-h-0 flex-1 flex-col overflow-hidden p-4",
+        "relative flex min-h-0 flex-1 flex-col overflow-hidden p-4 max-tablet:p-3 md:p-4",
         isV2
           ? "rounded-[10px] border border-[#2a2418] bg-[#121212]"
           : "rounded-[14px] bg-[linear-gradient(180deg,rgba(14,13,12,0.9)_0%,rgba(10,10,10,0.96)_100%)] ring-1 ring-[rgba(214,176,106,0.22)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-8px_18px_rgba(0,0,0,0.34)]",
@@ -973,14 +973,17 @@ export function DeltaVaultBuilder({
   return (
     <section
       className={clsx(
-        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 max-tablet:rounded-[14px] max-tablet:p-2.5 md:p-4",
+        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 md:p-4",
         isV2Shell
-          ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none"
-          : "rounded-[18px] bg-[linear-gradient(180deg,rgba(13,13,13,0.98)_0%,rgba(8,8,8,0.99)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_44px_rgba(0,0,0,0.38)]",
+          ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none max-tablet:rounded-[14px] max-tablet:p-2.5"
+          : clsx(
+              "rounded-[18px] bg-[linear-gradient(180deg,rgba(13,13,13,0.98)_0%,rgba(8,8,8,0.99)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_44px_rgba(0,0,0,0.38)]",
+              "max-tablet:rounded-none max-tablet:bg-transparent max-tablet:p-0 max-tablet:shadow-none",
+            ),
       )}
     >
       {!isV2Shell && (
-        <div className="pointer-events-none absolute inset-0 rounded-[18px] ring-1 ring-[rgba(214,176,106,0.2)]" />
+        <div className="pointer-events-none absolute inset-0 rounded-[18px] ring-1 ring-[rgba(214,176,106,0.2)] max-tablet:hidden" />
       )}
       {isV2Shell && (
         <div className="pointer-events-none absolute inset-0 rounded-[12px] ring-1 ring-[#c9a962]/20" />
@@ -1006,35 +1009,8 @@ export function DeltaVaultBuilder({
       </AnimatePresence>
 
       <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 lg:grid-cols-[1.55fr_1fr]">
-        <div
-          className={clsx(
-            "rounded-[12px] border p-4 max-tablet:p-3 md:p-5",
-            isV2Shell
-              ? "border-[#1f1f1f] bg-[#0a0a0a]"
-              : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(14,13,12,0.88)_0%,rgba(10,10,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.33)]",
-          )}
-        >
-          <p
-            className={clsx(
-              "mb-1 font-['Onest',sans-serif] text-[12px] uppercase tracking-[1.4px] max-tablet:mb-0.5 max-tablet:text-[10px] max-tablet:tracking-[1.1px]",
-              isV2Shell ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
-            )}
-          >
-            Cross-DEX vault
-          </p>
-          <p
-            className={clsx(
-              "mb-3 text-[11px] leading-relaxed max-tablet:hidden",
-              isV2Shell ? "text-[#888888]" : "text-[#7d7e88]",
-            )}
-          >
-            HyprEarn routes into the highest-volume pair on your two venues to
-            tighten execution and maximize funding capture — you choose
-            infrastructure; the algo handles the book.
-          </p>
-
-          <div className="grid grid-cols-1 gap-4 lg:gap-y-5">
-            <DexPairSetupCard
+        <div className="flex flex-col gap-4 max-tablet:gap-3">
+          <DexPairSetupCard
               longDex={longDex}
               shortDex={shortDex}
               onLongDexChange={setLongDex}
@@ -1069,7 +1045,7 @@ export function DeltaVaultBuilder({
               variant={variant}
             />
 
-            <div
+          <div
               className={clsx(
                 "rounded-[10px] border p-3",
                 isV2Shell
@@ -1093,18 +1069,17 @@ export function DeltaVaultBuilder({
                 onAmountChange={handleAmountChange}
                 onPercentChange={handlePercentChange}
               />
-            </div>
           </div>
 
           {hasBothDexSelected && !dualValid && (
-            <p className="mt-3 font-mono text-[11px] text-[#f87171]">
+            <p className="font-mono text-[11px] text-[#f87171]">
               Select two different DEX sources to unlock cross-venue spread.
             </p>
           )}
 
           <div
             className={clsx(
-              "mt-3 flex flex-col gap-3 rounded-[10px] border p-3 sm:flex-row sm:items-center sm:justify-between",
+              "flex flex-col gap-3 rounded-[10px] border p-3 max-tablet:p-2.5 sm:flex-row sm:items-center sm:justify-between",
               isV2Shell
                 ? "border-[#1f1f1f] bg-[#121212]"
                 : "rounded-[11px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
@@ -1197,7 +1172,7 @@ export function DeltaVaultBuilder({
 
           <div
             className={clsx(
-              "mt-3 rounded-[10px] border p-3",
+              "rounded-[10px] border p-3 max-tablet:p-2.5",
               isV2Shell
                 ? "border-[#2a2418] bg-[#0d0d0d]"
                 : "rounded-[11px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
@@ -1363,7 +1338,7 @@ export function DeltaVaultBuilder({
             disabled={!dualValid || isPreparing}
             onClick={handlePrimaryAction}
             className={clsx(
-              "mt-4 h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all",
+              "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
               isV2Shell
                 ? !dualValid || isPreparing
                   ? "cursor-not-allowed rounded-[10px] border border-[#5c4d38] bg-transparent text-[#c9a962] opacity-95"
