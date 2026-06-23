@@ -10,9 +10,11 @@ interface StatCardProps {
   value: string;
   subtext: string;
   variant?: StatCardVariant;
+  /** Shorter label for narrow mobile layouts */
+  mobileTitle?: string;
 }
 
-export function StatCard({ title, value, subtext, variant = 'default' }: StatCardProps) {
+export function StatCard({ title, value, subtext, variant = 'default', mobileTitle }: StatCardProps) {
   const StatIcon = title === 'Total Volume' ? Coins : title === 'Yield Distributed' ? LineChart : Shield;
   const numericValue = parseFloat(value.replace(/[^0-9.]/g, ''));
   const prefix = value.startsWith('$') ? '$' : '';
@@ -38,21 +40,23 @@ export function StatCard({ title, value, subtext, variant = 'default' }: StatCar
   const isVaults = variant === 'vaults';
 
   if (isVaults) {
+    const narrowTitle = mobileTitle ?? title;
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        className="w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] max-tablet:rounded-lg max-tablet:px-2.5 max-tablet:py-2.5"
       >
-        <div className="flex flex-col gap-2">
-          <p className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.08em] text-[#717182]">
-            {title}
+        <div className="flex flex-col gap-2 max-tablet:gap-1">
+          <p className="text-[12px] font-bold uppercase leading-[18px] tracking-[0.08em] text-[#717182] max-tablet:text-[9px] max-tablet:leading-tight max-tablet:tracking-[0.05em]">
+            <span className="max-tablet:hidden">{title}</span>
+            <span className="hidden max-tablet:inline">{narrowTitle}</span>
           </p>
-          <motion.p className="vaults-stat-value-gradient text-[32px] font-bold leading-[35px]">
+          <motion.p className="vaults-stat-value-gradient text-[32px] font-bold leading-[35px] max-tablet:text-[1.125rem] max-tablet:leading-tight">
             {rounded}
           </motion.p>
-          <p className="text-[12px] leading-[18px] text-[rgba(255,255,255,0.4)]">
+          <p className="text-[12px] leading-[18px] text-[rgba(255,255,255,0.4)] max-tablet:hidden">
             {subtext}
           </p>
         </div>

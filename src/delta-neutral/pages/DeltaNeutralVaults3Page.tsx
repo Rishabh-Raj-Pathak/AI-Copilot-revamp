@@ -276,19 +276,19 @@ export function DeltaNeutralVaults3Page() {
 
   return (
     <>
-      <main className="flex flex-1 mx-auto w-full max-w-[1280px] flex-col gap-5 md:gap-6 pb-[calc(138px+4.25rem+env(safe-area-inset-bottom))] md:pb-[164px]">
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="vaults-hero-title-gradient w-fit text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.02em]">
+      <main className="flex flex-1 mx-auto w-full max-w-[1280px] flex-col gap-5 max-tablet:gap-3.5 md:gap-6 pb-[calc(138px+4.25rem+env(safe-area-inset-bottom))] md:pb-[164px]">
+      <section className="flex flex-col gap-4 max-tablet:gap-2.5">
+        <div className="flex flex-col gap-2 max-tablet:gap-1 pr-9 max-tablet:pr-8">
+          <h1 className="vaults-hero-title-gradient w-fit text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.02em] max-tablet:text-[1.5rem] max-tablet:leading-[1.1]">
             Delta Neutral Vaults
           </h1>
-          <p className="max-w-[680px] text-[15px] leading-6 text-white/90">
+          <p className="max-w-[680px] text-[15px] leading-6 text-white/90 max-tablet:hidden">
             Show the math, hide the mess — delta-neutral funding vaults with live hedge health and proof-of-neutrality.
           </p>
         </div>
 
         <div className="relative">
-          <div className="absolute right-0 top-0 z-10 flex items-center">
+          <div className="absolute right-0 top-0 z-10 flex items-center max-tablet:-top-0.5">
             <Popover>
               <PopoverTrigger asChild>
                 <button
@@ -320,10 +320,10 @@ export function DeltaNeutralVaults3Page() {
               <CircleAlert className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <StatCard variant="vaults" title="Total Volume" value="$128.4M" subtext="Capital routed" />
-            <StatCard variant="vaults" title="Yield Distributed" value="$6.2M" subtext="Paid to users" />
-            <StatCard variant="vaults" title="Hedge Uptime" value="99.94%" subtext="Strategy reliability" />
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <StatCard variant="vaults" mobileTitle="Volume" title="Total Volume" value="$128.4M" subtext="Capital routed" />
+            <StatCard variant="vaults" mobileTitle="Yield" title="Yield Distributed" value="$6.2M" subtext="Paid to users" />
+            <StatCard variant="vaults" mobileTitle="Uptime" title="Hedge Uptime" value="99.94%" subtext="Strategy reliability" />
           </div>
         </div>
         <Dialog open={platformMetricsOpen} onOpenChange={setPlatformMetricsOpen}>

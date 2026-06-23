@@ -973,7 +973,7 @@ export function DeltaVaultBuilder({
   return (
     <section
       className={clsx(
-        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 md:p-4",
+        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 max-tablet:rounded-[14px] max-tablet:p-2.5 md:p-4",
         isV2Shell
           ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none"
           : "rounded-[18px] bg-[linear-gradient(180deg,rgba(13,13,13,0.98)_0%,rgba(8,8,8,0.99)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_44px_rgba(0,0,0,0.38)]",
@@ -1005,10 +1005,10 @@ export function DeltaVaultBuilder({
         )}
       </AnimatePresence>
 
-      <div className="relative z-[1] grid grid-cols-1 gap-4 lg:grid-cols-[1.55fr_1fr]">
+      <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 lg:grid-cols-[1.55fr_1fr]">
         <div
           className={clsx(
-            "rounded-[12px] border p-4 md:p-5",
+            "rounded-[12px] border p-4 max-tablet:p-3 md:p-5",
             isV2Shell
               ? "border-[#1f1f1f] bg-[#0a0a0a]"
               : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(14,13,12,0.88)_0%,rgba(10,10,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.33)]",
@@ -1016,7 +1016,7 @@ export function DeltaVaultBuilder({
         >
           <p
             className={clsx(
-              "mb-1 font-['Onest',sans-serif] text-[12px] uppercase tracking-[1.4px]",
+              "mb-1 font-['Onest',sans-serif] text-[12px] uppercase tracking-[1.4px] max-tablet:mb-0.5 max-tablet:text-[10px] max-tablet:tracking-[1.1px]",
               isV2Shell ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
             )}
           >
@@ -1024,7 +1024,7 @@ export function DeltaVaultBuilder({
           </p>
           <p
             className={clsx(
-              "mb-3 text-[11px] leading-relaxed",
+              "mb-3 text-[11px] leading-relaxed max-tablet:hidden",
               isV2Shell ? "text-[#888888]" : "text-[#7d7e88]",
             )}
           >
