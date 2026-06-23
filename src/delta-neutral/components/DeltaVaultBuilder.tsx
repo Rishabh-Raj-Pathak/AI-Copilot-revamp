@@ -1073,10 +1073,10 @@ export function DeltaVaultBuilder({
 
           <div
               className={clsx(
-                "rounded-[10px] border p-3",
+                "rounded-[11px] border p-3 max-tablet:p-3",
                 isV2Shell
                   ? "border-[#1f1f1f] bg-[#121212]"
-                  : "rounded-[11px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
+                  : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
               )}
             >
               <VaultControls
@@ -1105,13 +1105,13 @@ export function DeltaVaultBuilder({
 
           <div
             className={clsx(
-              "flex flex-col gap-3 rounded-[10px] border p-3 max-tablet:p-2.5 tablet:flex-row tablet:items-center tablet:justify-between",
+              "flex flex-row items-center justify-between gap-3 rounded-[11px] border p-3 max-tablet:p-3",
               isV2Shell
                 ? "border-[#1f1f1f] bg-[#121212]"
-                : "rounded-[11px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
+                : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
             )}
           >
-            <div className="min-w-0">
+            <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0">
               <p
                 className={clsx(
                   "text-[11px] tracking-[0.6px] uppercase",
@@ -1124,14 +1124,14 @@ export function DeltaVaultBuilder({
               </p>
               <p
                 className={clsx(
-                  "mt-0.5 text-[11px]",
+                  "text-[11px]",
                   isV2Shell ? "text-[#6a6a6a]" : "text-[#717182]",
                 )}
               >
                 {leverageMeta(leverage)?.profile}
               </p>
             </div>
-            <div className="flex items-center gap-2 tablet:shrink-0">
+            <div className="flex shrink-0 items-center gap-2">
               <Select
                 value={leverage}
                 onValueChange={(v) => setLeverage(v as LeverageOption)}
@@ -1198,10 +1198,10 @@ export function DeltaVaultBuilder({
 
           <div
             className={clsx(
-              "rounded-[10px] border p-3 max-tablet:p-2.5",
+              "rounded-[11px] border p-3 max-tablet:p-3",
               isV2Shell
-                ? "border-[#2a2418] bg-[#0d0d0d]"
-                : "rounded-[11px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
+                ? "border-[#1f1f1f] bg-[#121212]"
+                : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
             )}
           >
             <p

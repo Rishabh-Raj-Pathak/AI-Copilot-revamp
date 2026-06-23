@@ -192,15 +192,14 @@ export function VaultControls({
   return (
     <div
       className={clsx(
-        "flex items-center transition-opacity duration-300",
+        "flex w-full transition-opacity duration-300 opacity-100",
         stretch
-          ? "w-full gap-4 max-tablet:flex-col max-tablet:items-stretch tablet:gap-6"
-          : "gap-[21px]",
-        "opacity-100",
+          ? "w-full max-tablet:flex-col max-tablet:items-stretch max-tablet:gap-3 tablet:flex-row tablet:items-center tablet:gap-6"
+          : "items-center gap-[21px]",
       )}
     >
         {/* Slider row: info stays interactive when disabled */}
-        <div className={clsx("flex items-center gap-[12px]", stretch && "flex-1 min-w-0")}>
+        <div className={clsx("flex w-full items-center gap-3", stretch && "min-w-0 flex-1")}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

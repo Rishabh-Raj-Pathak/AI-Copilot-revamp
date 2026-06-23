@@ -276,8 +276,8 @@ export function DeltaNeutralVaults3Page() {
 
   return (
     <>
-      <main className="flex flex-1 mx-auto w-full max-w-[1280px] flex-col gap-5 max-tablet:gap-3.5 tablet:gap-6 pb-[calc(120px+env(safe-area-inset-bottom))] tablet:pb-[164px]">
-      <section className="flex flex-col gap-4 max-tablet:gap-2.5">
+      <main className="flex flex-1 mx-auto w-full max-w-[1280px] flex-col gap-5 max-tablet:gap-4 tablet:gap-6 pb-[calc(128px+env(safe-area-inset-bottom))] tablet:pb-[164px]">
+      <section className="flex flex-col gap-4 max-tablet:gap-3">
         <div className="flex flex-col gap-2 max-tablet:gap-1 pr-8">
           <h1 className="vaults-hero-title-gradient w-fit text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.02em] max-tablet:text-[clamp(1.625rem,5vw,2rem)] max-tablet:leading-[1.1]">
             Delta Neutral Vaults
