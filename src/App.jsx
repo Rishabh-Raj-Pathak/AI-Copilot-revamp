@@ -5,6 +5,7 @@ import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import TerminalCopilotPage from "./components/terminal/TerminalCopilotPage.jsx";
 import VaultsPage from "./components/vaults/VaultsPage.jsx";
+import { AgentLogsProvider } from "./components/vaults/agentLogs/AgentLogsContext.jsx";
 
 export default function App() {
   const [page, setPage] = useState("copilot");
@@ -70,9 +71,9 @@ export default function App() {
     );
 
   return (
-    <>
+    <AgentLogsProvider>
       {content}
       <InstallAppPrompt page={page} />
-    </>
+    </AgentLogsProvider>
   );
 }

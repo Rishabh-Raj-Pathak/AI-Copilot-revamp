@@ -1,5 +1,6 @@
 import { Activity, Hexagon, Pencil, X, Zap } from "lucide-react";
 import { formatUsdcAmountDisplay } from "./vaultUiUtils.js";
+import VaultAgentStatus from "./agentLogs/VaultAgentStatus.jsx";
 
 const ICONS = {
   pulse: Activity,
@@ -32,7 +33,15 @@ function TealOverlappingCircles() {
 /**
  * List row for activated allocations — metrics + allocation % + edit/remove.
  */
-export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPatch }) {
+export default function ActivatedVaultRow({
+  vault,
+  ui,
+  isFirst,
+  enterIndex,
+  onPatch,
+  agentHealth,
+  onOpenVaultLogs,
+}) {
   const {
     name,
     strategyLabel,
@@ -93,6 +102,15 @@ export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPa
           </span>
         </div>
 
+        {agentHealth && onOpenVaultLogs ? (
+          <div className="w-full tablet:hidden">
+            <VaultAgentStatus
+              health={agentHealth}
+              onOpenLogs={onOpenVaultLogs}
+            />
+          </div>
+        ) : null}
+
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.06)] tablet:mx-4 tablet:block" />
 
         {/* Mobile: row-pair stats */}
@@ -126,6 +144,14 @@ export default function ActivatedVaultRow({ vault, ui, isFirst, enterIndex, onPa
         <div className="hidden h-8 w-px shrink-0 bg-[rgba(255,255,255,0.06)] lg:mx-2 lg:block" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3 tablet:py-4 lg:min-w-[320px] lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:flex-[1.5]">
+          {agentHealth && onOpenVaultLogs ? (
+            <div className="hidden tablet:block">
+              <VaultAgentStatus
+                health={agentHealth}
+                onOpenLogs={onOpenVaultLogs}
+              />
+            </div>
+          ) : null}
           <div className="flex min-w-0 flex-1 flex-col gap-2 tablet:flex-row tablet:items-center tablet:gap-4">
             <div className="flex min-w-[140px] flex-1 items-center gap-2">
               <div className="relative flex h-[18px] flex-1 items-center px-0.5">

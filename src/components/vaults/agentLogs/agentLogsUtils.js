@@ -105,3 +105,67 @@ export function groupLogsByDay(logs) {
 export function isLogUnread(log) {
   return !log.readAt;
 }
+
+const ISSUE_SEVERITIES = new Set(["critical", "action_required", "warning"]);
+
+/**
+ * Vault health for status chip on activated rows (proto: derived from mock logs).
+ */
+export function getVaultAgentHealth(logs, vaultId, isCategoryVisible = () => true) {
+  const vaultLogs = logs.filter(
+    (log) => log.vaultId === vaultId && isCategoryVisible(log),
+  );
+
+  const openIssues = vaultLogs.filter(
+    (log) => isLogUnread(log) && ISSUE_SEVERITIES.has(log.severity),
+  );
+
+  const critical = openIssues.filter((log) => log.severity === "critical");
+  if (critical.length > 0) {
+    return {
+      status: "critical",
+      issueCount: critical.length,
+      statusLabel: "Action needed",
+      actionLabel: "View issue",
+    };
+  }
+
+  const warnings = openIssues.filter(
+    (log) => log.severity === "warning" || log.severity === "action_required",
+  );
+  if (warnings.length > 0) {
+    return {
+      status: "warning",
+      issueCount: warnings.length,
+      statusLabel:
+        warnings.length === 1 ? "1 warning" : `${warnings.length} warnings`,
+      actionLabel: "View logs",
+    };
+  }
+
+  return {
+    status: "healthy",
+    issueCount: 0,
+    statusLabel: "No issues",
+    actionLabel: "View activity",
+  };
+}
+
+/** Latest account-level blocker for vault page banner (proto). */
+export function getAccountAgentBlocker(logs, isCategoryVisible = () => true) {
+  const blockers = logs
+    .filter(
+      (log) =>
+        !log.vaultId &&
+        isCategoryVisible(log) &&
+        isLogUnread(log) &&
+        (log.severity === "critical" || log.severity === "action_required"),
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.lastOccurredAt).getTime() -
+        new Date(a.lastOccurredAt).getTime(),
+    );
+
+  return blockers[0] ?? null;
+}

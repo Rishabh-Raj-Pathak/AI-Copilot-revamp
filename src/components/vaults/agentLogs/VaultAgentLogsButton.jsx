@@ -1,10 +1,14 @@
 import { Bell } from "lucide-react";
+import { useAgentLogs } from "./AgentLogsContext.jsx";
 
-export default function AgentLogsTrigger({ unreadCount = 0, onClick }) {
+/** Vaults-page entry point — opens the global Agent Logs drawer (all logs). */
+export default function VaultAgentLogsButton() {
+  const { unreadCount, openAgentLogs } = useAgentLogs();
+
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => openAgentLogs()}
       aria-label={
         unreadCount > 0
           ? `Agent logs, ${unreadCount} unread`

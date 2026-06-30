@@ -9,6 +9,13 @@ export const AGENT_LOG_CATEGORIES = [
   { id: "SYSTEM", label: "System & connectivity", defaultEnabled: false },
 ];
 
+/** vaultId keys align with `vaultsMockData.js` row ids. */
+export const VAULT_AGENT_LOG_NAMES = {
+  bluechip: "BlueChip Vault",
+  "hip3-featured": "HIP-3 Vault",
+  trending: "Trending Vault",
+};
+
 const now = Date.now();
 const mins = (m) => new Date(now - m * 60 * 1000).toISOString();
 const hours = (h) => new Date(now - h * 60 * 60 * 1000).toISOString();
@@ -17,6 +24,7 @@ const days = (d) => new Date(now - d * 24 * 60 * 60 * 1000).toISOString();
 export const INITIAL_AGENT_LOGS = [
   {
     id: "log-1",
+    vaultId: "bluechip",
     category: "VAULT_TRADE",
     severity: "critical",
     eventCode: "VAULT_PLACE_TRADE_FAILED",
@@ -33,6 +41,7 @@ export const INITIAL_AGENT_LOGS = [
   },
   {
     id: "log-2",
+    vaultId: null,
     category: "AGENT_SETUP",
     severity: "critical",
     eventCode: "API_WALLET_EXPIRED",
@@ -49,6 +58,7 @@ export const INITIAL_AGENT_LOGS = [
   },
   {
     id: "log-3",
+    vaultId: "trending",
     category: "VAULT_OPS",
     severity: "action_required",
     eventCode: "LOW_EXCHANGE_BALANCE",
@@ -65,22 +75,24 @@ export const INITIAL_AGENT_LOGS = [
   },
   {
     id: "log-4",
+    vaultId: "bluechip",
     category: "ACCOUNT",
     severity: "success",
     eventCode: "VAULT_ACTIVATED",
-    title: "Vault activated — Hyprearn Bluechip Precision Vault",
+    title: "Vault activated",
     body: "Agent is now active and executing strategy as expected.",
     exchange: "hyperliquid",
     symbol: null,
     occurrenceCount: 1,
     firstOccurredAt: hours(3),
     lastOccurredAt: hours(3),
-    readAt: days(0),
+    readAt: new Date().toISOString(),
     cta: { type: "view_vault", label: "View vault" },
     tags: ["HYPERLIQUID", "VAULT ACTIVATION"],
   },
   {
     id: "log-5",
+    vaultId: null,
     category: "PERP_AGENT",
     severity: "info",
     eventCode: "AUTO_REVIEW_ACTION",
@@ -91,12 +103,13 @@ export const INITIAL_AGENT_LOGS = [
     occurrenceCount: 1,
     firstOccurredAt: hours(4),
     lastOccurredAt: hours(4),
-    readAt: days(0),
+    readAt: new Date().toISOString(),
     cta: { type: "view_position", label: "View review" },
     tags: ["HYPERLIQUID", "PERP AGENT"],
   },
   {
     id: "log-6",
+    vaultId: "bluechip",
     category: "VAULT_OPS",
     severity: "warning",
     eventCode: "VAULT_VALIDATION_SKIPPED",
@@ -113,6 +126,7 @@ export const INITIAL_AGENT_LOGS = [
   },
   {
     id: "log-7",
+    vaultId: null,
     category: "SYSTEM",
     severity: "warning",
     eventCode: "VAULT_DEX_API_FAILURE",
@@ -123,12 +137,13 @@ export const INITIAL_AGENT_LOGS = [
     occurrenceCount: 4,
     firstOccurredAt: days(1),
     lastOccurredAt: days(1),
-    readAt: days(0),
+    readAt: new Date().toISOString(),
     cta: null,
     tags: ["HYPERLIQUID", "SYSTEM"],
   },
   {
     id: "log-8",
+    vaultId: null,
     category: "AGENT_SETUP",
     severity: "action_required",
     eventCode: "AGENT_NOT_APPROVED",
@@ -145,6 +160,7 @@ export const INITIAL_AGENT_LOGS = [
   },
   {
     id: "log-9",
+    vaultId: "bluechip",
     category: "VAULT_TRADE",
     severity: "critical",
     eventCode: "VAULT_CLOSE_TRADE_FAILED",
@@ -161,26 +177,27 @@ export const INITIAL_AGENT_LOGS = [
   },
   {
     id: "log-10",
+    vaultId: "trending",
     category: "ACCOUNT",
     severity: "info",
     eventCode: "VAULT_MARGIN_UPDATED",
-    title: "Margin updated — Trending vault",
+    title: "Margin updated",
     body: "Allocation margin changed from 5% to 10%.",
     exchange: "hyperliquid",
     symbol: null,
     occurrenceCount: 1,
     firstOccurredAt: days(2),
     lastOccurredAt: days(2),
-    readAt: days(0),
+    readAt: new Date().toISOString(),
     cta: { type: "view_vault", label: "View vault" },
     tags: ["HYPERLIQUID", "ACCOUNT"],
   },
 ];
 
-/** Extra rows appended on "Load more". */
 export const MORE_AGENT_LOGS = [
   {
     id: "log-11",
+    vaultId: null,
     category: "PERP_AGENT",
     severity: "warning",
     eventCode: "AUTO_REVIEW_FAILED",
@@ -197,6 +214,7 @@ export const MORE_AGENT_LOGS = [
   },
   {
     id: "log-12",
+    vaultId: "hip3-featured",
     category: "VAULT_OPS",
     severity: "critical",
     eventCode: "DELTA_NEUTRAL_LEG_MISMATCH",
@@ -213,10 +231,11 @@ export const MORE_AGENT_LOGS = [
   },
   {
     id: "log-13",
+    vaultId: "hip3-featured",
     category: "ACCOUNT",
     severity: "info",
     eventCode: "VAULT_DEACTIVATED",
-    title: "Vault deactivated — HIP-3",
+    title: "Vault deactivated",
     body: "Automated strategy stopped. Positions remain open until manually closed.",
     exchange: "hyperliquid",
     symbol: null,

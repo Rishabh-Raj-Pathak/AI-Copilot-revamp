@@ -49,6 +49,9 @@ export default function AgentLogsDrawer({
   onToggleCategory,
   hasMore,
   onLoadMore,
+  vaultFilterName,
+  onClearVaultFilter,
+  isVaultScoped = false,
 }) {
   const reduceMotion = useReducedMotion();
   const groups = groupLogsByDay(logs);
@@ -142,6 +145,22 @@ export default function AgentLogsDrawer({
                 </button>
               </div>
             </header>
+
+            {isVaultScoped && vaultFilterName ? (
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(120,90,40,0.08)] px-5 py-2.5">
+                <p className="min-w-0 text-[12px] leading-snug text-[#e8d5b5]">
+                  <span className="text-[#717182]">Showing logs for: </span>
+                  <span className="font-semibold">{vaultFilterName}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={onClearVaultFilter}
+                  className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#ccb17f] underline decoration-[rgba(204,177,127,0.45)] underline-offset-[3px] hover:text-[#e8d5b5]"
+                >
+                  View all
+                </button>
+              </div>
+            ) : null}
 
             {settingsOpen ? (
               <AgentLogSettings
