@@ -32,6 +32,9 @@ import {
   dexTabs,
   featuredVaults,
 } from "./vaultsMockData.js";
+import AgentLogsDrawer from "./agentLogs/AgentLogsDrawer.jsx";
+import AgentLogsTrigger from "./agentLogs/AgentLogsTrigger.jsx";
+import useAgentLogsProto from "./agentLogs/useAgentLogsProto.js";
 
 function buildInitialRowUi() {
   const all = [...featuredVaults, ...availableVaults];
@@ -72,6 +75,7 @@ export default function VaultsPage({
   const [viewMode, setViewMode] = useState("list");
   const [dexId, setDexId] = useState("all");
   const [rowUi, setRowUi] = useState(buildInitialRowUi);
+  const agentLogs = useAgentLogsProto();
 
   const dexIdRef = useRef(dexId);
   dexIdRef.current = dexId;
@@ -219,7 +223,13 @@ export default function VaultsPage({
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div className="flex w-full flex-col gap-6 px-5 py-8 pb-16 max-tablet:gap-4 max-tablet:px-4 max-tablet:py-5 max-tablet:pb-4 sm:px-8 lg:px-10 xl:px-12">
-          <VaultsHero />
+          <div className="flex items-start justify-between gap-4">
+            <VaultsHero />
+            <AgentLogsTrigger
+              unreadCount={agentLogs.unreadCount}
+              onClick={agentLogs.openDrawer}
+            />
+          </div>
           <VaultsStatsRow />
 
           <div className="flex w-full flex-col gap-6 max-tablet:gap-4">
@@ -296,6 +306,28 @@ export default function VaultsPage({
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
         onVaultTutorial={runVaultsProductTour}
+      />
+
+      <AgentLogsDrawer
+        open={agentLogs.drawerOpen}
+        onClose={agentLogs.closeDrawer}
+        logs={agentLogs.logs}
+        unreadCount={agentLogs.unreadCount}
+        settingsOpen={agentLogs.settingsOpen}
+        onToggleSettings={agentLogs.toggleSettings}
+        filterTabs={agentLogs.filterTabs}
+        activeFilter={agentLogs.activeFilter}
+        filterCounts={agentLogs.filterCounts}
+        searchQuery={agentLogs.searchQuery}
+        onFilterChange={agentLogs.setActiveFilter}
+        onSearchChange={agentLogs.setSearchQuery}
+        onMarkAllRead={agentLogs.markAllRead}
+        onMarkRead={agentLogs.markRead}
+        categories={agentLogs.categories}
+        disabledCategories={agentLogs.disabledCategories}
+        onToggleCategory={agentLogs.toggleCategory}
+        hasMore={agentLogs.hasMore}
+        onLoadMore={agentLogs.loadMore}
       />
     </div>
   );

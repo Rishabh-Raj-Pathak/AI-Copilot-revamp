@@ -101,22 +101,19 @@ function renderDiscoveryPanel({
   showUtilities,
   expireSeconds,
   onRefresh,
-  mobile = false,
 }) {
-  const renderFilters = (placement) => (
+  const renderFilters = () => (
     <FilterPills
       defs={categoryFilterDefs}
       activeFilter={activeFilter}
       onFilterChange={onFilterChange}
-      inline={placement === 'desktop'}
-      scrollable={placement === 'mobile'}
     />
   )
 
   const utilitiesSlot = showUtilities ? (
     <SuggestionToolbar
-      variant={mobile ? 'discovery' : 'desktop'}
-      compact={!mobile}
+      variant="discovery"
+      compact
       expireSeconds={expireSeconds}
       onRefresh={onRefresh}
     />
@@ -167,7 +164,7 @@ export default function MarketFiltersBar({
         <div className="sticky top-0 z-20 border-b border-[#242424] bg-black">
           <div className="px-3 py-2.5">
             {showStrategy ? (
-              renderDiscoveryPanel({ ...panelProps, mobile: true })
+              renderDiscoveryPanel(panelProps)
             ) : (
               <MarketsRow
                 defs={categoryFilterDefs}
@@ -184,7 +181,7 @@ export default function MarketFiltersBar({
       {/* Desktop */}
       <div className="hidden border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:block">
         {showStrategy ? (
-          renderDiscoveryPanel({ ...panelProps, mobile: false })
+          renderDiscoveryPanel(panelProps)
         ) : (
           <MarketsRow
             defs={categoryFilterDefs}
