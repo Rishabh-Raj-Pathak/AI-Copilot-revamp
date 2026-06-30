@@ -1,12 +1,31 @@
+import { useEffect, useRef } from "react";
 import {
   SEVERITY_CONFIG,
   VAULT_LOG_ROW_GRADIENT,
+  formatLogContextLabel,
   formatRelativeTime,
 } from "./agentLogsUtils.js";
 
-export default function AgentLogRow({ log, onMarkRead, onCtaClick }) {
+export default function AgentLogRow({
+  log,
+  onMarkRead,
+  onCtaClick,
+  vaultName,
+  affectedVaultCount = 0,
+  showContext = true,
+  isHighlighted = false,
+}) {
   const severity = SEVERITY_CONFIG[log.severity] ?? SEVERITY_CONFIG.info;
   const unread = !log.readAt;
+  const contextLabel = showContext
+    ? formatLogContextLabel(log, vaultName)
+    : null;
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    if (!isHighlighted || !rowRef.current) return;
+    rowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [isHighlighted]);
 
   const handleClick = () => {
     if (unread) onMarkRead?.(log.id);
@@ -14,6 +33,7 @@ export default function AgentLogRow({ log, onMarkRead, onCtaClick }) {
 
   return (
     <article
+      ref={rowRef}
       role="button"
       tabIndex={0}
       onClick={handleClick}
@@ -23,8 +43,13 @@ export default function AgentLogRow({ log, onMarkRead, onCtaClick }) {
           handleClick();
         }
       }}
-      className="vaults-root relative overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.05)] shadow-[0_4px_20px_-5px_rgba(0,0,0,0.45)] transition-[border-color] hover:border-[rgba(120,90,40,0.22)]"
+      className={`vaults-root relative overflow-hidden rounded-[14px] border shadow-[0_4px_20px_-5px_rgba(0,0,0,0.45)] transition-[border-color,box-shadow] hover:border-[rgba(120,90,40,0.22)] ${
+        isHighlighted
+          ? "vaults-agent-log-highlight border-[rgba(204,177,127,0.55)]"
+          : "border-[rgba(255,255,255,0.05)]"
+      }`}
       style={{ backgroundImage: VAULT_LOG_ROW_GRADIENT }}
+      data-log-id={log.id}
     >
       <div className="px-4 py-3.5">
         <div className="flex items-start justify-between gap-3">
@@ -48,6 +73,19 @@ export default function AgentLogRow({ log, onMarkRead, onCtaClick }) {
             {formatRelativeTime(log.lastOccurredAt)}
           </time>
         </div>
+
+        {contextLabel ? (
+          <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.04em] text-[#717182]">
+            {contextLabel}
+          </p>
+        ) : null}
+
+        {!log.vaultId && affectedVaultCount > 0 ? (
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.04em] text-[#717182]">
+            Affects {affectedVaultCount}{" "}
+            {affectedVaultCount === 1 ? "vault" : "vaults"}
+          </p>
+        ) : null}
 
         <h3 className="mt-2.5 text-[14px] font-semibold leading-snug text-[#e8d5b5]">
           {log.title}

@@ -2,7 +2,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import AgentLogsDrawer from "./AgentLogsDrawer.jsx";
@@ -13,10 +15,17 @@ import {
   VAULT_AGENT_LOG_NAMES,
 } from "./agentLogsMockData.js";
 import {
+  availableVaults,
+  featuredVaults,
+} from "../vaultsMockData.js";
+import {
+  filterLogsForVaultScope,
   getAccountAgentBlocker,
   getVaultAgentHealth,
   isLogUnread,
 } from "./agentLogsUtils.js";
+
+const ALL_VAULTS = [...featuredVaults, ...availableVaults];
 
 const FILTER_TABS = [
   { id: "all", label: "All" },
@@ -44,7 +53,10 @@ export function AgentLogsProvider({ children }) {
   const [hasLoadedMore, setHasLoadedMore] = useState(false);
   const [vaultFilterId, setVaultFilterId] = useState(null);
   const [vaultFilterName, setVaultFilterName] = useState(null);
+  const [vaultFilterVenues, setVaultFilterVenues] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState(null);
+  const [highlightLogId, setHighlightLogId] = useState(null);
+  const highlightTimerRef = useRef(null);
 
   const isCategoryVisible = useCallback(
     (log) => {
@@ -58,16 +70,33 @@ export function AgentLogsProvider({ children }) {
     const {
       vaultId = null,
       vaultName = null,
+      vaultVenues = null,
       severityFilter = null,
       categoryFilter: nextCategoryFilter = null,
       activeFilter: nextActiveFilter = null,
+      highlightLogId: nextHighlightLogId = null,
     } = options;
+
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = null;
+    }
 
     setVaultFilterId(vaultId);
     setVaultFilterName(
       vaultName ?? (vaultId ? VAULT_AGENT_LOG_NAMES[vaultId] : null) ?? null,
     );
+    setVaultFilterVenues(vaultId ? (vaultVenues ?? []) : null);
     setCategoryFilter(nextCategoryFilter);
+    setSearchQuery("");
+    setHighlightLogId(nextHighlightLogId);
+
+    if (nextHighlightLogId) {
+      highlightTimerRef.current = setTimeout(() => {
+        setHighlightLogId(null);
+        highlightTimerRef.current = null;
+      }, 2000);
+    }
 
     if (severityFilter) {
       setActiveFilter(severityFilter);
@@ -82,16 +111,34 @@ export function AgentLogsProvider({ children }) {
   }, []);
 
   const closeDrawer = useCallback(() => {
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = null;
+    }
+    setHighlightLogId(null);
     setDrawerOpen(false);
     setSettingsOpen(false);
   }, []);
 
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    },
+    [],
+  );
+
   const clearVaultFilter = useCallback(() => {
     setVaultFilterId(null);
     setVaultFilterName(null);
+    setVaultFilterVenues(null);
     setCategoryFilter(null);
     setActiveFilter("all");
   }, []);
+
+  const clearAllFilters = useCallback(() => {
+    clearVaultFilter();
+    setSearchQuery("");
+  }, [clearVaultFilter]);
 
   const toggleSettings = useCallback(() => setSettingsOpen((o) => !o), []);
 
@@ -103,13 +150,17 @@ export function AgentLogsProvider({ children }) {
   const scopedLogs = useMemo(() => {
     let list = baseVisibleLogs;
     if (vaultFilterId) {
-      list = list.filter((log) => log.vaultId === vaultFilterId);
+      list = filterLogsForVaultScope(
+        list,
+        vaultFilterId,
+        vaultFilterVenues ?? [],
+      );
     }
     if (categoryFilter) {
       list = list.filter((log) => log.category === categoryFilter);
     }
     return list;
-  }, [baseVisibleLogs, vaultFilterId, categoryFilter]);
+  }, [baseVisibleLogs, vaultFilterId, vaultFilterVenues, categoryFilter]);
 
   const filteredLogs = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -185,7 +236,13 @@ export function AgentLogsProvider({ children }) {
   }, [hasLoadedMore]);
 
   const getVaultHealthSync = useCallback(
-    (vaultId) => getVaultAgentHealth(logs, vaultId, isCategoryVisible),
+    (vault) =>
+      getVaultAgentHealth(
+        logs,
+        vault.id,
+        vault.venues ?? [],
+        isCategoryVisible,
+      ),
     [logs, isCategoryVisible],
   );
 
@@ -240,7 +297,11 @@ export function AgentLogsProvider({ children }) {
         onLoadMore={loadMore}
         vaultFilterName={vaultFilterName}
         onClearVaultFilter={clearVaultFilter}
+        onClearAllFilters={clearAllFilters}
         isVaultScoped={Boolean(vaultFilterId)}
+        vaultNamesMap={VAULT_AGENT_LOG_NAMES}
+        allVaults={ALL_VAULTS}
+        highlightLogId={highlightLogId}
       />
     </AgentLogsContext.Provider>
   );

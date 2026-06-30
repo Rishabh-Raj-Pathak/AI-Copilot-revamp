@@ -1,19 +1,6 @@
 import ActivatedVaultRow from "./ActivatedVaultRow.jsx";
 import { useAgentLogs } from "./agentLogs/AgentLogsContext.jsx";
-import { VAULT_AGENT_LOG_NAMES } from "./agentLogs/agentLogsMockData.js";
-
-function openVaultAgentLogs(openAgentLogs, vault, health) {
-  const options = {
-    vaultId: vault.id,
-    vaultName: VAULT_AGENT_LOG_NAMES[vault.id] ?? vault.name,
-  };
-  if (health.status === "critical") {
-    options.activeFilter = "critical";
-  } else if (health.status === "warning") {
-    options.activeFilter = "unread";
-  }
-  openAgentLogs(options);
-}
+import { openVaultAgentLogs } from "./agentLogs/agentLogsOpenUtils.js";
 
 /**
  * Activated allocations — above Featured; uses `vaults-section-hairline` + enter motion.
@@ -41,7 +28,7 @@ export default function VaultsActivatedSection({ vaults, rowUi, onPatch }) {
       </div>
       <div className="flex w-full flex-col gap-3 max-tablet:gap-3 tablet:overflow-hidden tablet:rounded-[14px] tablet:border tablet:border-[rgba(120,90,40,0.22)] tablet:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.55)]">
         {vaults.map((v, i) => {
-          const health = getVaultHealthSync(v.id);
+          const health = getVaultHealthSync(v);
           return (
             <ActivatedVaultRow
               key={v.id}

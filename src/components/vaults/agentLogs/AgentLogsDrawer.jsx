@@ -7,6 +7,7 @@ import AgentLogRow from "./AgentLogRow.jsx";
 import AgentLogSettings from "./AgentLogSettings.jsx";
 import {
   VAULT_LOG_PANEL_GRADIENT,
+  getVaultsAffectedByLog,
   groupLogsByDay,
 } from "./agentLogsUtils.js";
 
@@ -51,7 +52,11 @@ export default function AgentLogsDrawer({
   onLoadMore,
   vaultFilterName,
   onClearVaultFilter,
+  onClearAllFilters,
   isVaultScoped = false,
+  vaultNamesMap = {},
+  allVaults = [],
+  highlightLogId = null,
 }) {
   const reduceMotion = useReducedMotion();
   const groups = groupLogsByDay(logs);
@@ -189,8 +194,7 @@ export default function AgentLogsDrawer({
                   <button
                     type="button"
                     onClick={() => {
-                      onFilterChange("all");
-                      onSearchChange("");
+                      onClearAllFilters?.();
                     }}
                     className="mt-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#ccb17f] underline decoration-[rgba(204,177,127,0.45)] underline-offset-[3px] hover:text-[#e8d5b5]"
                   >
@@ -203,15 +207,28 @@ export default function AgentLogsDrawer({
                     <section key={group.label}>
                       <DaySectionHeader label={group.label} />
                       <ul className="space-y-2.5">
-                        {group.logs.map((log) => (
-                          <li key={log.id}>
-                            <AgentLogRow
-                              log={log}
-                              onMarkRead={onMarkRead}
-                              onCtaClick={handleCtaClick}
-                            />
-                          </li>
-                        ))}
+                        {group.logs.map((log) => {
+                          const vaultName = log.vaultId
+                            ? (vaultNamesMap[log.vaultId] ?? log.vaultId)
+                            : null;
+                          const affectedVaultCount = log.vaultId
+                            ? 0
+                            : getVaultsAffectedByLog(log, allVaults).length;
+
+                          return (
+                            <li key={log.id}>
+                              <AgentLogRow
+                                log={log}
+                                onMarkRead={onMarkRead}
+                                onCtaClick={handleCtaClick}
+                                vaultName={vaultName}
+                                affectedVaultCount={affectedVaultCount}
+                                showContext
+                                isHighlighted={highlightLogId === log.id}
+                              />
+                            </li>
+                          );
+                        })}
                       </ul>
                     </section>
                   ))}

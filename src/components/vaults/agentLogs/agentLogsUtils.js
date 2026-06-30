@@ -108,46 +108,146 @@ export function isLogUnread(log) {
 
 const ISSUE_SEVERITIES = new Set(["critical", "action_required", "warning"]);
 
+const SEVERITY_RANK = {
+  critical: 0,
+  action_required: 1,
+  warning: 2,
+};
+
+export function formatExchangeLabel(exchange) {
+  if (!exchange) return "";
+  return exchange.charAt(0).toUpperCase() + exchange.slice(1);
+}
+
+export function formatVaultIssueSummary(log) {
+  if (!log) return null;
+  if (log.eventCode === "API_WALLET_EXPIRED") {
+    return "Trades blocked — renew API wallet";
+  }
+  if (log.cta?.label) {
+    return `${log.title} — ${log.cta.label.toLowerCase()}`;
+  }
+  return log.title;
+}
+
+export function getOpenIssuesForVault(
+  logs,
+  vaultId,
+  vaultVenues = [],
+  isCategoryVisible = () => true,
+) {
+  const venues = new Set(vaultVenues ?? []);
+
+  return logs.filter((log) => {
+    if (!isCategoryVisible(log)) return false;
+    if (!isLogUnread(log) || !ISSUE_SEVERITIES.has(log.severity)) return false;
+
+    if (log.vaultId === vaultId) return true;
+    if (!log.vaultId && log.exchange && venues.has(log.exchange)) return true;
+
+    return false;
+  });
+}
+
+export function pickTopIssue(issues) {
+  if (!issues?.length) return null;
+
+  return [...issues].sort((a, b) => {
+    const rankDiff =
+      (SEVERITY_RANK[a.severity] ?? 99) - (SEVERITY_RANK[b.severity] ?? 99);
+    if (rankDiff !== 0) return rankDiff;
+    return (
+      new Date(b.lastOccurredAt).getTime() -
+      new Date(a.lastOccurredAt).getTime()
+    );
+  })[0];
+}
+
+export function filterLogsForVaultScope(logs, vaultId, vaultVenues = []) {
+  const venues = new Set(vaultVenues ?? []);
+
+  return logs.filter((log) => {
+    if (log.vaultId === vaultId) return true;
+    if (!log.vaultId && log.exchange && venues.has(log.exchange)) return true;
+    return false;
+  });
+}
+
+export function getVaultsAffectedByLog(log, allVaults) {
+  if (log.vaultId || !log.exchange) return [];
+  return (allVaults ?? []).filter((vault) =>
+    vault.venues?.includes(log.exchange),
+  );
+}
+
+export function formatLogContextLabel(log, vaultName) {
+  const exchangeLabel = formatExchangeLabel(log.exchange);
+  const severityLabel =
+    SEVERITY_CONFIG[log.severity]?.label ?? log.severity;
+
+  if (log.vaultId && vaultName) {
+    const parts = [severityLabel, vaultName];
+    if (exchangeLabel) parts.push(exchangeLabel);
+    return parts.join(" · ");
+  }
+
+  const parts = ["Account-level"];
+  if (exchangeLabel) parts.push(exchangeLabel);
+  return parts.join(" · ");
+}
+
 /**
  * Vault health for status chip on activated rows (proto: derived from mock logs).
  */
-export function getVaultAgentHealth(logs, vaultId, isCategoryVisible = () => true) {
-  const vaultLogs = logs.filter(
-    (log) => log.vaultId === vaultId && isCategoryVisible(log),
+export function getVaultAgentHealth(
+  logs,
+  vaultId,
+  vaultVenues = [],
+  isCategoryVisible = () => true,
+) {
+  const openIssues = getOpenIssuesForVault(
+    logs,
+    vaultId,
+    vaultVenues,
+    isCategoryVisible,
   );
+  const topIssue = pickTopIssue(openIssues);
 
-  const openIssues = vaultLogs.filter(
-    (log) => isLogUnread(log) && ISSUE_SEVERITIES.has(log.severity),
-  );
+  if (!topIssue) {
+    return {
+      status: "healthy",
+      issueCount: 0,
+      statusLabel: "No issues",
+      actionLabel: "View activity",
+      issueSummary: null,
+      topIssue: null,
+    };
+  }
 
-  const critical = openIssues.filter((log) => log.severity === "critical");
-  if (critical.length > 0) {
+  if (topIssue.severity === "critical") {
     return {
       status: "critical",
-      issueCount: critical.length,
+      issueCount: openIssues.filter((log) => log.severity === "critical").length,
       statusLabel: "Action needed",
       actionLabel: "View issue",
+      issueSummary: formatVaultIssueSummary(topIssue),
+      topIssue,
     };
   }
 
-  const warnings = openIssues.filter(
-    (log) => log.severity === "warning" || log.severity === "action_required",
-  );
-  if (warnings.length > 0) {
-    return {
-      status: "warning",
-      issueCount: warnings.length,
-      statusLabel:
-        warnings.length === 1 ? "1 warning" : `${warnings.length} warnings`,
-      actionLabel: "View logs",
-    };
-  }
+  const warningCount = openIssues.filter(
+    (log) =>
+      log.severity === "warning" || log.severity === "action_required",
+  ).length;
 
   return {
-    status: "healthy",
-    issueCount: 0,
-    statusLabel: "No issues",
-    actionLabel: "View activity",
+    status: "warning",
+    issueCount: warningCount,
+    statusLabel:
+      warningCount === 1 ? "1 warning" : `${warningCount} warnings`,
+    actionLabel: "View logs",
+    issueSummary: formatVaultIssueSummary(topIssue),
+    topIssue,
   };
 }
 

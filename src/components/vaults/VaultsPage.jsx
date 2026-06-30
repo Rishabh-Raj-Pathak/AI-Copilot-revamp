@@ -35,6 +35,7 @@ import {
 import { useAgentLogs } from "./agentLogs/AgentLogsContext.jsx";
 import VaultAgentLogsBanner from "./agentLogs/VaultAgentLogsBanner.jsx";
 import VaultAgentLogsButton from "./agentLogs/VaultAgentLogsButton.jsx";
+import { openVaultAgentLogs } from "./agentLogs/agentLogsOpenUtils.js";
 
 function buildInitialRowUi() {
   const all = [...featuredVaults, ...availableVaults];
@@ -76,7 +77,8 @@ export default function VaultsPage({
   const [dexId, setDexId] = useState("all");
   const [rowUi, setRowUi] = useState(buildInitialRowUi);
   const [dismissedBlockerId, setDismissedBlockerId] = useState(null);
-  const { getAccountBlockerSync, openAgentLogs } = useAgentLogs();
+  const { getAccountBlockerSync, getVaultHealthSync, openAgentLogs } =
+    useAgentLogs();
   const accountBlocker = getAccountBlockerSync();
   const showAccountBanner =
     accountBlocker && accountBlocker.id !== dismissedBlockerId;
@@ -293,14 +295,23 @@ export default function VaultsPage({
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {gridVaults.map((v) => (
-                  <VaultGridCard
-                    key={`grid-${v.id}`}
-                    vault={v}
-                    ui={rowUi[v.id]}
-                    onPatch={patchRow}
-                  />
-                ))}
+                {gridVaults.map((v) => {
+                  const health = getVaultHealthSync(v);
+                  return (
+                    <VaultGridCard
+                      key={`grid-${v.id}`}
+                      vault={v}
+                      ui={rowUi[v.id]}
+                      onPatch={patchRow}
+                      agentHealth={rowUi[v.id]?.activated ? health : null}
+                      onOpenVaultLogs={
+                        rowUi[v.id]?.activated
+                          ? () => openVaultAgentLogs(openAgentLogs, v, health)
+                          : null
+                      }
+                    />
+                  );
+                })}
               </div>
             )}
 
