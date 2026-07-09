@@ -30,7 +30,7 @@ export default function TradeMarketBar({ coin, onCoinChange }) {
     <div className="flex shrink-0 flex-wrap items-stretch gap-3 px-4 py-3 max-tablet:gap-2 sm:gap-4 sm:px-5">
       <TradeMarketSelect coin={coin} onCoinChange={onCoinChange} />
 
-      <div className="minimal-scrollbar flex min-w-0 flex-1 items-stretch overflow-x-auto rounded-[10px] border border-[#242424] bg-black max-tablet:grid max-tablet:grid-cols-2 max-tablet:gap-x-4 max-tablet:gap-y-2 max-tablet:overflow-visible max-tablet:p-3">
+      <div className="minimal-scrollbar flex min-w-0 flex-1 items-stretch overflow-x-auto rounded-[10px] border border-[#242424] bg-[#121212] max-tablet:grid max-tablet:grid-cols-2 max-tablet:gap-x-4 max-tablet:gap-y-2 max-tablet:overflow-visible max-tablet:p-3">
         <StatCell label="Mark">{formatPx(m.markPx, m.pxDecimals)}</StatCell>
         <StatCell label="Oracle">{formatPx(m.oraclePx, m.pxDecimals)}</StatCell>
         <StatCell label="24h Change">
