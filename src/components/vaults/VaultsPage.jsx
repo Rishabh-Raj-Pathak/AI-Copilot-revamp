@@ -33,7 +33,6 @@ import {
   featuredVaults,
 } from "./vaultsMockData.js";
 import { useAgentLogs } from "./agentLogs/AgentLogsContext.jsx";
-import VaultAgentLogsBanner from "./agentLogs/VaultAgentLogsBanner.jsx";
 import VaultAgentLogsButton from "./agentLogs/VaultAgentLogsButton.jsx";
 import { openVaultAgentLogs } from "./agentLogs/agentLogsOpenUtils.js";
 
@@ -68,6 +67,7 @@ export default function VaultsPage({
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
+  onOpenTrade,
   onOpenCopilotTutorial,
   onVaultViewChange,
   runProductTourOnEnter = false,
@@ -76,12 +76,7 @@ export default function VaultsPage({
   const [viewMode, setViewMode] = useState("list");
   const [dexId, setDexId] = useState("all");
   const [rowUi, setRowUi] = useState(buildInitialRowUi);
-  const [dismissedBlockerId, setDismissedBlockerId] = useState(null);
-  const { getAccountBlockerSync, getVaultHealthSync, openAgentLogs } =
-    useAgentLogs();
-  const accountBlocker = getAccountBlockerSync();
-  const showAccountBanner =
-    accountBlocker && accountBlocker.id !== dismissedBlockerId;
+  const { getVaultHealthSync, openAgentLogs } = useAgentLogs();
 
   const dexIdRef = useRef(dexId);
   dexIdRef.current = dexId;
@@ -217,6 +212,7 @@ export default function VaultsPage({
         onVaultViewChange={onVaultViewChange}
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
+          if (label === "Trade") onOpenTrade?.();
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
         onVaultTutorial={runVaultsProductTour}
@@ -233,21 +229,6 @@ export default function VaultsPage({
             <VaultsHero />
             <VaultAgentLogsButton />
           </div>
-          {showAccountBanner ? (
-            <VaultAgentLogsBanner
-              blocker={accountBlocker}
-              onDismiss={() => setDismissedBlockerId(accountBlocker.id)}
-              onViewLogs={() =>
-                openAgentLogs({
-                  categoryFilter: accountBlocker.category,
-                  severityFilter:
-                    accountBlocker.severity === "critical"
-                      ? "critical"
-                      : accountBlocker.severity,
-                })
-              }
-            />
-          ) : null}
           <VaultsStatsRow />
 
           <div className="flex w-full flex-col gap-6 max-tablet:gap-4">

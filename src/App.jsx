@@ -4,6 +4,7 @@ import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
 import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import TerminalCopilotPage from "./components/terminal/TerminalCopilotPage.jsx";
+import TradePage from "./components/trade/TradePage.jsx";
 import VaultsPage from "./components/vaults/VaultsPage.jsx";
 import { AgentLogsProvider } from "./components/vaults/agentLogs/AgentLogsContext.jsx";
 
@@ -29,11 +30,24 @@ export default function App() {
     onTerminalPlatformChange: setTerminalPlatform,
   };
 
+  const openTrade = () => setPage("trade");
+
   const content =
-    page === "vaults" ? (
+    page === "trade" ? (
+      <TradePage
+        {...sharedWalletProps}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenCopilotTutorial={() => {
+          setRunCopilotTourOnEnter(true);
+          setPage("copilot");
+        }}
+        onVaultViewChange={handleVaultViewChange}
+      />
+    ) : page === "vaults" ? (
       <VaultsPage
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
@@ -47,6 +61,7 @@ export default function App() {
       <DeltaNeutralVaultsPage
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
@@ -58,6 +73,7 @@ export default function App() {
       <TerminalCopilotPage
         {...sharedWalletProps}
         onOpenVaults={() => setPage("vaults")}
+        onOpenTrade={openTrade}
         onOpenDeltaNeutralVaults={() => setPage("delta-neutral-vaults")}
         onVaultViewChange={handleVaultViewChange}
         onOpenVaultTutorial={() => {

@@ -66,6 +66,7 @@ export default function TerminalCopilotPage({
   terminalPlatform: terminalPlatformProp,
   onTerminalPlatformChange,
   onOpenVaults,
+  onOpenTrade,
   onOpenDeltaNeutralVaults,
   onVaultViewChange,
   onOpenVaultTutorial,
@@ -601,6 +602,7 @@ export default function TerminalCopilotPage({
         }}
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
+          if (label === "Trade") onOpenTrade?.();
         }}
         showCopilotTutorial
         highlightMoreForTutorial={highlightMoreForTutorial}
