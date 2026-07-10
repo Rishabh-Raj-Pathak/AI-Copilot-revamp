@@ -6,7 +6,7 @@ import { useProfile } from "./ProfileContext.jsx";
 
 /** Identity strip: who you are, how far along, what you've earned. */
 export default function ProfileHeaderCard() {
-  const { address, social, progress } = useProfile();
+  const { address, socials, social, progress } = useProfile();
   const displayName = social?.name ?? truncateAddress(address);
 
   return (
@@ -25,18 +25,14 @@ export default function ProfileHeaderCard() {
           {displayName}
         </h2>
         {social ? (
+          /* One glyph per linked account, then the handle they're known by. */
           <span className="flex items-center gap-1.5 text-sm text-[#929292]">
-            {social.provider === "x" ? (
-              <XGlyph className="size-3" />
-            ) : (
-              <TelegramGlyph className="size-3.5" />
-            )}
+            {socials.x ? <XGlyph className="size-3" /> : null}
+            {socials.telegram ? <TelegramGlyph className="size-3.5" /> : null}
             <span className="truncate">{social.handle}</span>
           </span>
         ) : (
-          <span className="text-sm text-[#757575]">
-            No social connected yet
-          </span>
+          <span className="text-sm text-[#757575]">No account linked yet</span>
         )}
       </div>
 

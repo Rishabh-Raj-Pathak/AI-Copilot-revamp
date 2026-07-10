@@ -78,7 +78,7 @@ export default function TerminalCopilotPage({
   runProductTourOnEnter = false,
   onProductTourEnterConsumed,
 }) {
-  const { social } = useProfile();
+  const { socials } = useProfile();
   const [localWallet, setLocalWallet] = useState(false);
   const [localPlatform, setLocalPlatform] = useState("hyperliquid");
   const walletConnected = walletConnectedProp ?? localWallet;
@@ -580,9 +580,9 @@ export default function TerminalCopilotPage({
   /** With X linked the composer opens; without it, the ask is what's missing. */
   const handleShareSetup = useCallback(() => {
     dismissTradeSuccessModal();
-    if (social?.provider === "x") openSetupShare({ coin: selectedSetup?.symbol });
+    if (socials.x) openSetupShare({ coin: selectedSetup?.symbol });
     else onOpenProfile?.();
-  }, [dismissTradeSuccessModal, social, selectedSetup, onOpenProfile]);
+  }, [dismissTradeSuccessModal, socials, selectedSetup, onOpenProfile]);
 
   /**
    * The tour owns the screen while it runs, and it auto-starts on the first

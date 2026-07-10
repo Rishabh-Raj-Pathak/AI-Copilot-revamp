@@ -4,7 +4,9 @@ import {
   terminalPlatformSelect as s,
   terminalPlatforms,
 } from "../../design-system/tokens/terminalPlatformSelect";
-import { terminalAssets as a } from "../../figma/terminalAssets.js";
+import hyperliquidLogo from "@/assets/hyperliquid-logo.png";
+import nadoLogo from "@/assets/nado-logo.png";
+import pacificaLogo from "@/assets/pacifica-logo.png";
 
 function NavChevron({ className, open }) {
   return (
@@ -29,49 +31,18 @@ function NavChevron({ className, open }) {
   );
 }
 
-/** Venue marks for non-Figma platforms — simple geometric marks, mint-forward palette. */
+const VENUE_LOGO_SRC = {
+  hyperliquid: hyperliquidLogo,
+  nado: nadoLogo,
+  pacifica: pacificaLogo,
+};
+
+/** Venue marks. Paradex has no brand asset yet, so it falls back to a geometric mark. */
 function PlatformMark({ id }) {
-  if (id === "hyperliquid") {
+  const logo = VENUE_LOGO_SRC[id];
+  if (logo) {
     return (
-      <img
-        alt=""
-        className="size-[18px] max-w-none object-contain"
-        src={a.hyperliquid}
-      />
-    );
-  }
-  if (id === "nado") {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        className="size-[18px] text-[#5eead4]"
-        aria-hidden
-      >
-        <path
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          d="M6 8h12M6 12h12M6 16h9"
-        />
-      </svg>
-    );
-  }
-  if (id === "pacifica") {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        className="size-[18px] text-[#38bdf8]"
-        aria-hidden
-      >
-        <path
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          d="M4 14c3-4 9-4 16 0M6 17c2.5-2 6.5-2 12 0"
-        />
-      </svg>
+      <img alt="" className="size-[18px] max-w-none object-contain" src={logo} />
     );
   }
   if (id === "paradex") {

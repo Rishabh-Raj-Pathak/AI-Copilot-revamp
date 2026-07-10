@@ -8,12 +8,15 @@ const DECK_OFFSET_PX = 7;
 const MAX_DECK_LAYERS = 2;
 /** Extra px below the peek so the expand strip is a usable click/tap target. */
 const PEEK_HIT_PADDING_PX = 8;
+/** Offsets each expanded row's sheen so the stack glints as a wave, not in unison. */
+const SHEEN_STAGGER_S = 0.45;
 
-function AlertRow({ alert, onAction, onDismiss }) {
+function AlertRow({ alert, onAction, onDismiss, index = 0 }) {
   return (
     <div
       role="status"
-      className="flex items-center justify-between gap-3 rounded-[10px] border border-[#3e2e00] bg-[#171200] px-3.5 py-2"
+      className="trade-alert-row flex items-center justify-between gap-3 rounded-[10px] border border-[#3e2e00] bg-[#171200] px-3.5 py-2"
+      style={{ animationDelay: `${index * SHEEN_STAGGER_S}s` }}
     >
       <div className="flex min-w-0 items-center gap-3">
         <AlertTriangle
@@ -81,10 +84,11 @@ export default function TradeAlertsBar({ alerts = TRADE_ALERTS, onAction }) {
     >
       {isExpanded ? (
         <>
-          {visible.map((alert) => (
+          {visible.map((alert, i) => (
             <AlertRow
               key={alert.id}
               alert={alert}
+              index={i}
               onAction={onAction}
               onDismiss={() => dismiss(alert.id)}
             />

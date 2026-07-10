@@ -790,3 +790,50 @@ body.driver-active .hyprearn-trade-success-modal-root * {
     background-color: #3e2e00;
   }
 }
+
+/**
+ * Trade alerts band — a slow left-to-right sheen so an account blocker pulls the
+ * eye without nagging. The band is parked fully offscreen for the 51%→100% dwell,
+ * so it reads as a repeating glint rather than a treadmill. Keep the sweep itself
+ * at ~1.5s (duration × 51%) when retuning; shorten the dwell to make it recur.
+ * -110%/210% are the positions at which a 50%-wide band fully clears each edge.
+ */
+@keyframes trade-alert-row-sheen {
+  0% {
+    background-position: -110% 0;
+  }
+
+  51% {
+    background-position: 210% 0;
+  }
+
+  100% {
+    background-position: 210% 0;
+  }
+}
+
+.trade-alert-row {
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 38%,
+    rgb(255 248 220 / 0.05) 46%,
+    rgb(242 181 0 / 0.14) 50%,
+    rgb(255 248 220 / 0.05) 54%,
+    transparent 62%,
+    transparent 100%
+  );
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  /* Matches keyframe 0% so a staggered row stays dark until its delay elapses. */
+  background-position: -110% 0;
+  animation: trade-alert-row-sheen 3s linear infinite;
+  box-shadow: 0 0 18px rgb(242 181 0 / 0.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trade-alert-row {
+    animation: none;
+    background-image: none;
+  }
+}

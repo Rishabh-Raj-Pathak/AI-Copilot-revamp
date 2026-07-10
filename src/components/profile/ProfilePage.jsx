@@ -16,7 +16,6 @@ import ProfileAvatar from "./ProfileAvatar.jsx";
 import ProfileChecklistCard from "./ProfileChecklistCard.jsx";
 import ProfileCompleteModal from "./ProfileCompleteModal.jsx";
 import ProfileHeaderCard from "./ProfileHeaderCard.jsx";
-import TradingPreferencesCard from "./TradingPreferencesCard.jsx";
 import { useProfile } from "./ProfileContext.jsx";
 
 const FEEDBACK_MS = 2000;
@@ -171,14 +170,9 @@ export default function ProfilePage({
             </div>
           </section>
 
-          {/* Until the checklist is done it already hosts these two steps inline;
-              showing the cards as well would duplicate the same controls. */}
-          {progress.isComplete ? (
-            <>
-              <ConnectionsCard onNotify={notify} />
-              <TradingPreferencesCard onNotify={notify} />
-            </>
-          ) : null}
+          {/* Until the checklist is done it hosts the connect step inline;
+              showing the card as well would duplicate the same controls. */}
+          {progress.isComplete ? <ConnectionsCard onNotify={notify} /> : null}
         </div>
       </main>
 

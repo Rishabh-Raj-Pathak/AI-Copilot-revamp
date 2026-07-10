@@ -84,7 +84,7 @@ export default function ProfileCompleteModal({ onDone }) {
             <span className="bg-linear-to-r from-[#f7bb08] to-[#2fffce] bg-clip-text font-semibold text-transparent">
               {progress.points} HyprEarn Points
             </span>
-            . Copilot now tunes every setup to your risk, market, and leverage.
+            . They're live on your balance — Copilot is ready when you are.
           </p>
 
           <button

@@ -1,0 +1,10 @@
+<svg viewBox="0 0 15 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M0 18.3378C0 19.8632 1.84925 20.58 2.84324 19.4399L9.2086 12.1389C9.7566 11.5104 9.7566 10.5632 9.2086 9.9347L2.84324 2.63376C1.84924 1.49366 0 2.21048 0 3.73588V18.3378Z" fill="url(#hyprearn-mark)"/>
+  <path d="M15 16.2641V1.66224C15 0.136848 13.1508 -0.579971 12.1568 0.560124L5.7914 7.86106C5.2434 8.4896 5.2434 9.43676 5.7914 10.0653L12.1568 17.3662C13.1508 18.5063 15 17.7895 15 16.2641Z" fill="url(#hyprearn-mark)"/>
+  <defs>
+    <linearGradient id="hyprearn-mark" x1="0" y1="19.5833" x2="19.9253" y2="10.9483" gradientUnits="userSpaceOnUse">
+      <stop offset="0.254832" stop-color="#F7BB08"/>
+      <stop offset="1" stop-color="#2FFFCE"/>
+    </linearGradient>
+  </defs>
+</svg>

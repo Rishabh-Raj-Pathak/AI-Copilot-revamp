@@ -25,12 +25,12 @@ export default function TradePage({
 }) {
   const [coin, setCoin] = useState(DEFAULT_COIN);
   const [successOpen, setSuccessOpen] = useState(false);
-  const { social } = useProfile();
+  const { socials } = useProfile();
 
   /** With X linked the composer opens; without it, the ask is what's missing. */
   const handleShareSetup = () => {
     setSuccessOpen(false);
-    if (social?.provider === "x") openSetupShare({ coin });
+    if (socials.x) openSetupShare({ coin });
     else onOpenProfile?.();
   };
 

@@ -12,8 +12,12 @@
 
 export const X_AUTHORIZE_MS = 1100;
 export const TELEGRAM_PAIRING_MS = 2200;
+export const X_FOLLOW_CHECK_MS = 1400;
 
 export const TELEGRAM_BOT_URL = "https://t.me/hyprearn_bot";
+
+export const X_HANDLE = "@hyprearn";
+export const X_PROFILE_URL = "https://x.com/hyprearn";
 
 /** The account the fake OAuth consent screen hands back. */
 const MOCK_X_ACCOUNT = {
@@ -74,20 +78,38 @@ export function startTelegramPairing(onPaired) {
   return () => window.clearTimeout(id);
 }
 
+/**
+ * Confirm the follow landed. A real build asks X for the relationship after the
+ * tab comes back; here the answer is always yes, one timer later.
+ *
+ * The wait is the honest part of the fake — the follow happens on x.com, not in
+ * this tab, so the step can't credit itself the instant the button is pressed.
+ *
+ * @param {() => void} onFollowed
+ * @returns {() => void} cancel
+ */
+export function startXFollowCheck(onFollowed) {
+  const id = window.setTimeout(onFollowed, X_FOLLOW_CHECK_MS);
+  return () => window.clearTimeout(id);
+}
+
 export const SOCIAL_PROVIDERS = {
   x: {
     id: "x",
     name: "X",
-    connectLabel: "Connect with X",
+    connectLabel: "Connect X",
+    /** Shown once the *other* provider is already linked. */
+    addLabel: "Add X",
     pendingLabel: "Authorizing on X…",
     /** Why a trader would hand this over. */
-    benefit: "Share your setups in one tap and claim your referral link.",
+    benefit: "Share setups in one tap and claim your referral link.",
   },
   telegram: {
     id: "telegram",
     name: "Telegram",
     connectLabel: "Connect Telegram",
+    addLabel: "Add Telegram",
     pendingLabel: "Waiting for Telegram…",
-    benefit: "Get liquidation and agent alerts pushed to your phone.",
+    benefit: "Liquidation and agent alerts, pushed to your phone.",
   },
 };

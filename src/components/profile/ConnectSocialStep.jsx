@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, ExternalLink, Loader2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, Plus } from "lucide-react";
 import { copyText } from "../../lib/clipboard.js";
 import { TelegramGlyph, XGlyph } from "./SocialGlyphs.jsx";
 import {
@@ -13,25 +13,28 @@ import {
 const CHOICE_CARD_CLASS =
   "group flex flex-1 flex-col gap-2 rounded-lg border border-[#242424] bg-black p-3.5 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60";
 
+/** X first: it carries the display name the avatar and profile header render. */
+const PROVIDER_ORDER = ["x", "telegram"];
+
+const GLYPHS = {
+  x: <XGlyph className="size-4" />,
+  telegram: <TelegramGlyph className="size-[18px]" />,
+};
+
 /**
- * Step two: link exactly one account.
+ * Step two: link an account. One is enough to earn the step; the other stays on
+ * offer afterwards because the two do different jobs — X shares setups, Telegram
+ * pushes alerts — and a trader who wants both shouldn't have to trade one away.
  *
- * Product decision, enforced here and in the store: X *or* Telegram, never
- * both. Connecting the second one replaces the first, so there is no state in
- * which the step can be credited twice.
+ * There is no unlink. A linked account is a fact the profile only ever adds to,
+ * which is why the connected row has nothing to click.
  *
  * @param {object} props
- * @param {import('../../lib/profileSession.js').ProfileSocial|null} props.social
+ * @param {import('../../lib/profileSession.js').ProfileSocials} props.socials
  * @param {(account: object) => void} props.onConnect
- * @param {() => void} [props.onDisconnect]
  * @param {(message: string, variant?: 'success'|'error') => void} [props.onNotify]
  */
-export default function ConnectSocialStep({
-  social,
-  onConnect,
-  onDisconnect,
-  onNotify,
-}) {
+export default function ConnectSocialStep({ socials, onConnect, onNotify }) {
   /** `null` | `'x'` | `'telegram'` — which connect is mid-flight. */
   const [pending, setPending] = useState(null);
   const [pairingCode, setPairingCode] = useState(null);
@@ -55,22 +58,23 @@ export default function ConnectSocialStep({
     setPairingCode(null);
     onConnect(account);
     onNotify?.(
-      `${SOCIAL_PROVIDERS[account.provider].name} connected as ${account.handle}`,
+      `${SOCIAL_PROVIDERS[account.provider].name} linked as ${account.handle}`,
       "success",
     );
   };
 
-  const beginX = () => {
-    if (pending) return;
-    setPending("x");
-    cancelRef.current = startXAuthorization(settle);
-  };
-
-  const beginTelegram = () => {
-    if (pending) return;
-    setPending("telegram");
-    setPairingCode(createTelegramPairingCode());
-    cancelRef.current = startTelegramPairing(settle);
+  const begin = {
+    x: () => {
+      if (pending) return;
+      setPending("x");
+      cancelRef.current = startXAuthorization(settle);
+    },
+    telegram: () => {
+      if (pending) return;
+      setPending("telegram");
+      setPairingCode(createTelegramPairingCode());
+      cancelRef.current = startTelegramPairing(settle);
+    },
   };
 
   const cancel = () => {
@@ -88,53 +92,61 @@ export default function ConnectSocialStep({
     copyTimer.current = window.setTimeout(() => setCodeCopied(false), 2000);
   };
 
-  if (social) {
-    return (
-      <ConnectedSocial
-        social={social}
-        pending={pending}
-        onSwitch={social.provider === "x" ? beginTelegram : beginX}
-        onDisconnect={onDisconnect}
-        pairingCode={pairingCode}
-        onCancel={cancel}
-        onCopyCode={copyCode}
-        codeCopied={codeCopied}
-      />
-    );
-  }
+  const pairing = (
+    <TelegramPairing
+      code={pairingCode}
+      onCancel={cancel}
+      onCopyCode={copyCode}
+      copied={codeCopied}
+    />
+  );
 
-  if (pending === "telegram") {
+  const linked = PROVIDER_ORDER.filter((id) => socials[id]);
+  const unlinked = PROVIDER_ORDER.filter((id) => !socials[id]);
+
+  // Nothing linked yet: the two providers get equal billing, benefit and all.
+  if (linked.length === 0) {
+    if (pending === "telegram") return pairing;
     return (
-      <TelegramPairing
-        code={pairingCode}
-        onCancel={cancel}
-        onCopyCode={copyCode}
-        copied={codeCopied}
-      />
+      <div className="flex flex-col gap-2.5 sm:flex-row">
+        {PROVIDER_ORDER.map((id) => (
+          <ChoiceCard
+            key={id}
+            glyph={GLYPHS[id]}
+            provider={SOCIAL_PROVIDERS[id]}
+            pending={pending === id}
+            disabled={Boolean(pending)}
+            onClick={begin[id]}
+          />
+        ))}
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2.5 sm:flex-row">
-        <ChoiceCard
-          glyph={<XGlyph className="size-4" />}
-          provider={SOCIAL_PROVIDERS.x}
-          pending={pending === "x"}
-          disabled={Boolean(pending)}
-          onClick={beginX}
-        />
-        <ChoiceCard
-          glyph={<TelegramGlyph className="size-[18px]" />}
-          provider={SOCIAL_PROVIDERS.telegram}
-          pending={false}
-          disabled={Boolean(pending)}
-          onClick={beginTelegram}
-        />
-      </div>
-      <p className="text-xs text-[#757575]">
-        Pick one — you can switch later.
-      </p>
+    <div className="flex flex-col gap-2">
+      {linked.map((id) => (
+        <LinkedRow key={id} account={socials[id]} />
+      ))}
+
+      {pending === "telegram"
+        ? pairing
+        : unlinked.map((id) => (
+            <AddRow
+              key={id}
+              glyph={GLYPHS[id]}
+              provider={SOCIAL_PROVIDERS[id]}
+              pending={pending === id}
+              disabled={Boolean(pending)}
+              onClick={begin[id]}
+            />
+          ))}
+
+      {unlinked.length === 0 ? (
+        <p className="text-xs text-[#575757]">
+          Both linked — setups and alerts are covered.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -159,6 +171,60 @@ function ChoiceCard({ glyph, provider, pending, disabled, onClick }) {
       <span className="text-xs leading-relaxed text-[#929292]">
         {provider.benefit}
       </span>
+    </button>
+  );
+}
+
+/** Settled state. Nothing to click — the profile never unlinks an account. */
+function LinkedRow({ account }) {
+  const provider = SOCIAL_PROVIDERS[account.provider];
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-[#1e5a3f] bg-[#0d2019] px-3 py-2">
+      <span className="shrink-0 text-white">{GLYPHS[account.provider]}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+        {account.handle}
+      </span>
+      <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#00f3b6]">
+        <Check className="size-3.5" aria-hidden />
+        {provider.name} linked
+      </span>
+    </div>
+  );
+}
+
+/** The optional second link. Dashed, so it never reads as unfinished business. */
+function AddRow({ glyph, provider, pending, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-2.5 rounded-lg border border-dashed border-[#2f2f2f] bg-black px-3 py-2 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#242424] bg-[#0f0f0f] text-white">
+        {glyph}
+      </span>
+
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="text-sm font-semibold text-white">
+          {pending ? provider.pendingLabel : provider.addLabel}
+          <span className="ml-1.5 text-xs font-normal text-[#575757]">
+            optional
+          </span>
+        </span>
+        <span className="truncate text-xs text-[#929292]">
+          {provider.benefit}
+        </span>
+      </span>
+
+      {pending ? (
+        <Loader2
+          className="size-4 shrink-0 animate-spin text-[#00f3b6]"
+          aria-hidden
+        />
+      ) : (
+        <Plus className="size-4 shrink-0 text-[#757575]" aria-hidden />
+      )}
     </button>
   );
 }
@@ -231,81 +297,6 @@ function TelegramPairing({ code, onCancel, onCopyCode, copied }) {
           Cancel
         </button>
       </div>
-    </div>
-  );
-}
-
-/**
- * One compact row. The identity already appears in the profile header and the
- * checklist summary, so repeating an avatar and display name here would be the
- * third time we say the same thing.
- */
-function ConnectedSocial({
-  social,
-  pending,
-  onSwitch,
-  onDisconnect,
-  pairingCode,
-  onCancel,
-  onCopyCode,
-  codeCopied,
-}) {
-  const other = social.provider === "x" ? SOCIAL_PROVIDERS.telegram : SOCIAL_PROVIDERS.x;
-
-  if (pending === "telegram") {
-    return (
-      <TelegramPairing
-        code={pairingCode}
-        onCancel={onCancel}
-        onCopyCode={onCopyCode}
-        copied={codeCopied}
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-[#242424] bg-black px-3 py-2">
-      <span className="shrink-0 text-white">
-        {social.provider === "x" ? (
-          <XGlyph className="size-3.5" />
-        ) : (
-          <TelegramGlyph className="size-4" />
-        )}
-      </span>
-
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
-        {social.handle}
-      </span>
-
-      <Check className="size-4 shrink-0 text-[#00f3b6]" aria-hidden />
-
-      <span className="h-4 w-px shrink-0 bg-[#242424]" aria-hidden />
-
-      <button
-        type="button"
-        onClick={onSwitch}
-        disabled={Boolean(pending)}
-        className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#757575] transition-colors hover:text-white disabled:opacity-60"
-      >
-        {pending === "x" ? (
-          <>
-            <Loader2 className="size-3 animate-spin text-[#00f3b6]" aria-hidden />
-            {SOCIAL_PROVIDERS.x.pendingLabel}
-          </>
-        ) : (
-          <>Use {other.name}</>
-        )}
-      </button>
-
-      {onDisconnect ? (
-        <button
-          type="button"
-          onClick={onDisconnect}
-          className="shrink-0 text-xs font-medium text-[#757575] transition-colors hover:text-[#d53d3d]"
-        >
-          Disconnect
-        </button>
-      ) : null}
     </div>
   );
 }

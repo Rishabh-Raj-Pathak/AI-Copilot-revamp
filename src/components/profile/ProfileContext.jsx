@@ -12,7 +12,7 @@ const ProfileContext = createContext(null);
  * the tour autostart — and is passed in rather than owned here.
  *
  * Nothing survives a refresh (see `profileSession.js`), so the whole flow —
- * wallet, social, trading profile — replays from the top on every reload.
+ * wallet, social, follow — replays from the top on every reload.
  */
 export function ProfileProvider({
   walletConnected = false,
@@ -35,18 +35,26 @@ export function ProfileProvider({
     [address],
   );
 
-  /** Fills the single social slot — connecting the second provider replaces the first. */
+  /**
+   * Fills that provider's slot. Both can be linked at once, and there is no
+   * unlink — a connected account is only ever added to.
+   *
+   * Reads the store rather than the render's `record` so two connects in the
+   * same tick can't drop each other's slot.
+   */
   const connectSocial = useCallback(
-    (account) => patch({ social: account }),
-    [patch],
+    (account) =>
+      patch({
+        socials: {
+          ...readProfile(address).socials,
+          [account.provider]: account,
+        },
+      }),
+    [patch, address],
   );
 
-  const disconnectSocial = useCallback(() => patch({ social: null }), [patch]);
-
-  const saveTrading = useCallback(
-    (trading) => patch({ trading: { ...trading, savedAt: new Date().toISOString() } }),
-    [patch],
-  );
+  /** Latched, like a linked account: the profile never un-follows. */
+  const markFollowedX = useCallback(() => patch({ followedX: true }), [patch]);
 
   const dismissBanner = useCallback(
     () => patch({ bannerDismissedAt: new Date().toISOString() }),
@@ -58,22 +66,30 @@ export function ProfileProvider({
     [patch],
   );
 
+  /**
+   * The step needs one account, not a specific one. `social` is whichever
+   * account speaks for the user's identity — X first, because it carries the
+   * display name the avatar and header render.
+   */
+  const social = record.socials.x ?? record.socials.telegram;
+
   const progress = useMemo(
     () =>
       computeProfileProgress({
         walletConnected,
-        social: record.social,
-        trading: record.trading,
+        hasSocial: Boolean(social),
+        followedX: record.followedX,
       }),
-    [walletConnected, record.social, record.trading],
+    [walletConnected, social, record.followedX],
   );
 
   const value = useMemo(
     () => ({
       address,
       walletConnected,
-      social: record.social,
-      trading: record.trading,
+      socials: record.socials,
+      social,
+      followedX: record.followedX,
       progress,
       /** Banner is a nudge; the checklist and ring stay visible after dismissal. */
       bannerDismissed: Boolean(record.bannerDismissedAt),
@@ -83,22 +99,21 @@ export function ProfileProvider({
        */
       shouldCelebrate: progress.isComplete && !record.completionCelebrated,
       connectSocial,
-      disconnectSocial,
-      saveTrading,
+      markFollowedX,
       dismissBanner,
       markCelebrated,
     }),
     [
       address,
       walletConnected,
-      record.social,
-      record.trading,
+      record.socials,
+      social,
+      record.followedX,
       record.bannerDismissedAt,
       record.completionCelebrated,
       progress,
       connectSocial,
-      disconnectSocial,
-      saveTrading,
+      markFollowedX,
       dismissBanner,
       markCelebrated,
     ],

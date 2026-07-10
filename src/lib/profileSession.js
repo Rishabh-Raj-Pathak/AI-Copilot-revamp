@@ -25,17 +25,15 @@ const normalize = (address) => String(address ?? "").toLowerCase();
  * @property {string} name
  * @property {string} verifiedAt
  *
- * @typedef {object} ProfileTrading
- * @property {string} risk
- * @property {string} market
- * @property {string} maxLeverage
- * @property {string} savedAt
+ * @typedef {object} ProfileSocials
+ * @property {ProfileSocial|null} x
+ * @property {ProfileSocial|null} telegram
  *
  * @typedef {object} ProfileRecord
  * @property {string} address
  * @property {string|null} updatedAt
- * @property {ProfileSocial|null} social  Single slot — X *or* Telegram, never both.
- * @property {ProfileTrading|null} trading
+ * @property {ProfileSocials} socials  One slot per provider; linking both is encouraged.
+ * @property {boolean} followedX  Follows the HyprEarn account on X.
  * @property {string|null} bannerDismissedAt
  * @property {boolean} completionCelebrated
  */
@@ -45,8 +43,8 @@ export function emptyProfile(address) {
   return {
     address: normalize(address),
     updatedAt: null,
-    social: null,
-    trading: null,
+    socials: { x: null, telegram: null },
+    followedX: false,
     bannerDismissedAt: null,
     completionCelebrated: false,
   };
@@ -58,7 +56,8 @@ export function readProfile(address) {
 }
 
 /**
- * Merge `patch` over the current record and keep it for this page load.
+ * Merge `patch` over the current record and keep it for this page load. The
+ * merge is one level deep, so a `socials` patch must carry both slots.
  * @param {string} address
  * @param {Partial<ProfileRecord>} patch
  * @returns {ProfileRecord} the merged record
