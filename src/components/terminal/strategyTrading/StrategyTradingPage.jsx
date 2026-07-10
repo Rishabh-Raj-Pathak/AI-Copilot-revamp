@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { mergeProfileTrading } from "../../profile/profileSteps.js";
+import { readProfile } from "../../../lib/profileSession.js";
+import { MOCK_WALLET_ADDRESS } from "../../../lib/wallet.js";
 import { Toast, ToastViewport } from "../../ui/toast.jsx";
 import { isStrategyCopilotComposerView } from "./CopilotNavDropdown.jsx";
 import { useStrategyCopilot } from "./StrategyCopilotContext.jsx";
@@ -68,7 +71,14 @@ export default function StrategyTradingPage({
   const [marketId, setMarketId] = useState(
     () => defaultTemplate?.marketId ?? "btc",
   );
-  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+  // Seeded from the saved profile, one-way: what the user set in "Complete your
+  // profile" is where Copilot starts. Panel edits from here stay local.
+  const [preferences, setPreferences] = useState(() =>
+    mergeProfileTrading(
+      DEFAULT_PREFERENCES,
+      readProfile(MOCK_WALLET_ADDRESS).trading,
+    ),
+  );
   const [prompt, setPrompt] = useState(() =>
     isComposerStrategyView ? (defaultTemplate?.prompt ?? "") : "",
   );

@@ -64,6 +64,8 @@ function filterByDex(list, dexId) {
 export default function VaultsPage({
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
@@ -219,6 +221,8 @@ export default function VaultsPage({
         showCopilotTutorial={!!onOpenCopilotTutorial}
         walletConnected={walletConnected}
         onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onOpenProfile={onOpenProfile}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />

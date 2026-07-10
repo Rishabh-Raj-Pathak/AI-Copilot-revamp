@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ProfileCompletionBanner from "../profile/ProfileCompletionBanner.jsx";
+import { useProfile } from "../profile/ProfileContext.jsx";
+import { openSetupShare } from "../../lib/share.js";
 import HeaderTerminal from "./HeaderTerminal.jsx";
 import CopilotMobileHeader from "./CopilotMobileHeader.jsx";
 import CopilotBottomNav from "./CopilotBottomNav.jsx";
@@ -63,6 +66,8 @@ function StrategyCopilotViews({ copilotView, terminalPlatform }) {
 export default function TerminalCopilotPage({
   walletConnected: walletConnectedProp,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
   terminalPlatform: terminalPlatformProp,
   onTerminalPlatformChange,
   onOpenVaults,
@@ -73,6 +78,7 @@ export default function TerminalCopilotPage({
   runProductTourOnEnter = false,
   onProductTourEnterConsumed,
 }) {
+  const { social } = useProfile();
   const [localWallet, setLocalWallet] = useState(false);
   const [localPlatform, setLocalPlatform] = useState("hyperliquid");
   const walletConnected = walletConnectedProp ?? localWallet;
@@ -481,6 +487,11 @@ export default function TerminalCopilotPage({
     if (walletConnectedProp === undefined) setLocalWallet(true);
   }, [onWalletConnected, walletConnectedProp]);
 
+  const handleWalletDisconnected = useCallback(() => {
+    onWalletDisconnect?.();
+    if (walletConnectedProp === undefined) setLocalWallet(false);
+  }, [onWalletDisconnect, walletConnectedProp]);
+
   const handleTerminalPlatformChange = useCallback(
     (id) => {
       onTerminalPlatformChange?.(id);
@@ -566,6 +577,24 @@ export default function TerminalCopilotPage({
     setTourFirstTradeDemo(true);
   }, []);
 
+  /** With X linked the composer opens; without it, the ask is what's missing. */
+  const handleShareSetup = useCallback(() => {
+    dismissTradeSuccessModal();
+    if (social?.provider === "x") openSetupShare({ coin: selectedSetup?.symbol });
+    else onOpenProfile?.();
+  }, [dismissTradeSuccessModal, social, selectedSetup, onOpenProfile]);
+
+  /**
+   * The tour owns the screen while it runs, and it auto-starts on the first
+   * connect — so the banner waits for the tour to finish or be skipped rather
+   * than appearing beneath its overlay. `copilotTourStepIndex` is the reactive
+   * signal; `isCopilotProductTourActive()` reads module state and never
+   * re-renders on its own.
+   */
+  const profileBannerSuppressed =
+    copilotTourStepIndex >= 0 ||
+    (walletConnected && shouldAutoStartCopilotTutorial());
+
   const handleRefresh = () => {
     setExpireSec(630);
     setStats((prev) => ({
@@ -583,6 +612,8 @@ export default function TerminalCopilotPage({
       <CopilotMobileHeader
         walletConnected={walletConnected}
         onWalletConnected={handleWalletConnected}
+        onWalletDisconnect={handleWalletDisconnected}
+        onOpenProfile={onOpenProfile}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
         copilotView={copilotView}
@@ -610,9 +641,17 @@ export default function TerminalCopilotPage({
         onDismissMoreTutorialHint={() => setShowMoreTutorialHint(false)}
         walletConnected={walletConnected}
         onWalletConnected={handleWalletConnected}
+        onWalletDisconnect={handleWalletDisconnected}
+        onOpenProfile={onOpenProfile}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
+
+      <ProfileCompletionBanner
+        onOpenProfile={() => onOpenProfile?.()}
+        suppressed={profileBannerSuppressed}
+      />
+
       <StrategyCopilotProvider key={copilotView} copilotView={copilotView}>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <StrategyCopilotViews
@@ -763,7 +802,7 @@ export default function TerminalCopilotPage({
       <TradeSuccessModal
         open={tradeSuccessOpen}
         onViewPortfolio={dismissTradeSuccessModal}
-        onShareSetup={dismissTradeSuccessModal}
+        onShareSetup={handleShareSetup}
       />
       <AiCopilotThesisModal
         open={thesisOpen}

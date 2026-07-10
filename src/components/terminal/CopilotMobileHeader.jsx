@@ -1,4 +1,5 @@
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
+import WalletMenu from "./WalletMenu.jsx";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
 
 function Logo() {
@@ -24,6 +25,8 @@ function Logo() {
 export default function CopilotMobileHeader({
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
 }) {
   return (
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#242424] bg-black px-3 py-3 max-tablet:flex tablet:hidden">
@@ -32,19 +35,11 @@ export default function CopilotMobileHeader({
       </div>
       <div data-tour="wallet-connect" className="shrink-0">
         {walletConnected ? (
-          <button
-            type="button"
-            className="flex max-w-[9.5rem] items-center gap-1.5 rounded-md border border-[#242424] px-2.5 py-2 text-xs font-medium text-white hover:bg-white/5"
-          >
-            <span className="relative size-4 shrink-0">
-              <img
-                alt=""
-                className="absolute inset-0 size-full max-w-none p-[16.67%]"
-                src={a.walletIcon}
-              />
-            </span>
-            <span className="truncate">0xbf4…4eed</span>
-          </button>
+          <WalletMenu
+            variant="mobile"
+            onOpenProfile={onOpenProfile}
+            onDisconnect={onWalletDisconnect}
+          />
         ) : (
           <ConnectWalletButton onConnect={() => onWalletConnected?.()} />
         )}

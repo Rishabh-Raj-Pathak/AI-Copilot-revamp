@@ -13,25 +13,24 @@ function AlertRow({ alert, onAction, onDismiss }) {
   return (
     <div
       role="status"
-      className="flex items-center justify-between gap-3 rounded-[10px] border border-[#3e2e00] bg-[#171200] px-3.5 py-2.5 max-tablet:flex-col max-tablet:items-start"
+      className="flex items-center justify-between gap-3 rounded-[10px] border border-[#3e2e00] bg-[#171200] px-3.5 py-2"
     >
-      <div className="flex min-w-0 items-start gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <AlertTriangle
-          className="mt-0.5 size-4 shrink-0 text-[#f2b500]"
+          className="size-4 shrink-0 text-[#f2b500]"
           strokeWidth={1.75}
           aria-hidden
         />
-        <div className="min-w-0">
-          <p className="text-[13px] font-semibold leading-snug text-white">
+        {/* Truncates rather than wraps, so the band stays exactly one line tall. */}
+        <p className="min-w-0 truncate leading-snug" title={`${alert.title} — ${alert.body}`}>
+          <span className="text-[13px] font-semibold text-white">
             {alert.title}
-          </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-[#bfbfbf]">
-            {alert.body}
-          </p>
-        </div>
+          </span>
+          <span className="ml-2 text-xs text-[#bfbfbf]">{alert.body}</span>
+        </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 max-tablet:w-full max-tablet:justify-end">
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={() => onAction?.(alert.cta.type, alert)}

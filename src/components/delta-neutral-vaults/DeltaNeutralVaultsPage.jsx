@@ -7,6 +7,8 @@ import { DeltaNeutralVaults3Page } from "../../delta-neutral/pages/DeltaNeutralV
 export default function DeltaNeutralVaultsPage({
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
@@ -32,6 +34,8 @@ export default function DeltaNeutralVaultsPage({
         showCopilotTutorial={!!onOpenCopilotTutorial}
         walletConnected={walletConnected}
         onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onOpenProfile={onOpenProfile}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />

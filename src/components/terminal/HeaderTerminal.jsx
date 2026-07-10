@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
 import TerminalPlatformSelect from "./TerminalPlatformSelect.jsx";
+import WalletMenu from "./WalletMenu.jsx";
 import CopilotNavDropdown, {
   COPILOT_VIEWS,
 } from "./strategyTrading/CopilotNavDropdown.jsx";
@@ -67,6 +68,8 @@ export default function HeaderTerminal({
   onDismissMoreTutorialHint,
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
@@ -445,20 +448,10 @@ export default function HeaderTerminal({
             </button>
           ) : null}
           {walletConnected ? (
-            <button
-              type="button"
-              className="flex items-center gap-1.5 rounded-md border border-[#242424] px-3 py-1.5 text-sm font-medium text-white hover:bg-white/5"
-            >
-              <span className="relative size-4 shrink-0">
-                <img
-                  alt=""
-                  className="absolute inset-0 size-full max-w-none p-[16.67%]"
-                  src={a.walletIcon}
-                />
-              </span>
-              0x98...3ee8
-              <NavChevron className="size-4 shrink-0 text-[#757575]" />
-            </button>
+            <WalletMenu
+              onOpenProfile={onOpenProfile}
+              onDisconnect={onWalletDisconnect}
+            />
           ) : (
             <ConnectWalletButton onConnect={() => onWalletConnected?.()} />
           )}

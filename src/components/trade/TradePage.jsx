@@ -1,6 +1,9 @@
 import { useState } from "react";
+import ProfileCompletionBanner from "../profile/ProfileCompletionBanner.jsx";
+import { useProfile } from "../profile/ProfileContext.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import TradeSuccessModal from "../terminal/TradeSuccessModal.jsx";
+import { openSetupShare } from "../../lib/share.js";
 import TradeAlertsBar from "./TradeAlertsBar.jsx";
 import TradeBottomPanel from "./TradeBottomPanel.jsx";
 import TradeChartPanel from "./TradeChartPanel.jsx";
@@ -15,11 +18,21 @@ export default function TradePage({
   onOpenCopilotTutorial,
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
   const [coin, setCoin] = useState(DEFAULT_COIN);
   const [successOpen, setSuccessOpen] = useState(false);
+  const { social } = useProfile();
+
+  /** With X linked the composer opens; without it, the ask is what's missing. */
+  const handleShareSetup = () => {
+    setSuccessOpen(false);
+    if (social?.provider === "x") openSetupShare({ coin });
+    else onOpenProfile?.();
+  };
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
@@ -33,9 +46,13 @@ export default function TradePage({
         showCopilotTutorial={!!onOpenCopilotTutorial}
         walletConnected={walletConnected}
         onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onOpenProfile={onOpenProfile}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />
+
+      <ProfileCompletionBanner onOpenProfile={() => onOpenProfile?.()} />
 
       <TradeAlertsBar />
 
@@ -60,7 +77,7 @@ export default function TradePage({
       <TradeSuccessModal
         open={successOpen}
         onViewPortfolio={() => setSuccessOpen(false)}
-        onShareSetup={() => setSuccessOpen(false)}
+        onShareSetup={handleShareSetup}
       />
     </div>
   );
