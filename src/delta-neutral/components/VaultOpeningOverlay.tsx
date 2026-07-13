@@ -1,17 +1,22 @@
 import React, { useEffect, useId, useState } from "react";
 import { motion } from "motion/react";
-import { Activity } from "lucide-react";
 import { clsx } from "clsx";
+import { DexLogo } from "./DexLogo";
+import type { ManagedDexId } from "./ActiveVaultCard";
 
 type VaultOpeningOverlayProps = {
   /** The two venues the user picked. Sides are not known here, so none are shown. */
-  venueA: string;
-  venueB: string;
+  venueA: ManagedDexId;
+  venueB: ManagedDexId;
   variant?: "default" | "v2";
 };
 
 /** One full breath of the loop: legs leave their venues, meet, and cancel. */
-const CYCLE_S = 1.9;
+const CYCLE_S = 2.1;
+
+/** Ring mask that turns a conic gradient into a hairline arc — the medallion spinner. */
+const RING_MASK =
+  "radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px))";
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -40,61 +45,65 @@ export function VaultOpeningOverlay({
   const isV2 = variant === "v2";
   const uid = useId().replace(/:/g, "");
 
-  const spring = reduced
-    ? { type: "tween" as const, duration: 0.12 }
-    : { type: "spring" as const, stiffness: 380, damping: 28 };
-
   const loop = {
     duration: CYCLE_S,
     repeat: Infinity,
     ease: "easeInOut" as const,
   };
 
-  const renderVenue = (venue: string, position: "left" | "right") => (
+  /** Venue medallion: the real brand mark, a hairline sweep, and a glow that beats. */
+  const renderVenue = (venue: ManagedDexId, position: "left" | "right") => (
     <motion.div
-      className={clsx(
-        "relative flex min-h-[132px] flex-1 flex-col items-center justify-center gap-3 rounded-[14px] border px-3 py-4",
-        isV2
-          ? "border-[#2a2a2a] bg-[#0d0d0d]"
-          : "border-[rgba(255,255,255,0.1)] bg-[rgba(10,10,12,0.85)]",
-      )}
+      className="flex flex-col items-center gap-3"
       initial={
-        reduced
-          ? false
-          : { opacity: 0, x: position === "left" ? -22 : 22, scale: 0.96 }
+        reduced ? false : { opacity: 0, x: position === "left" ? -18 : 18 }
       }
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      transition={
-        position === "left" ? spring : { ...spring, delay: reduced ? 0 : 0.06 }
-      }
+      animate={{ opacity: 1, x: 0 }}
+      transition={{
+        duration: 0.5,
+        ease: [0.22, 1, 0.36, 1],
+        delay: reduced ? 0 : position === "left" ? 0 : 0.08,
+      }}
     >
-      {/* Kicks at the top of each cycle — the venue "firing" its leg down the bridge. */}
-      <motion.div
-        className={clsx(
-          "flex h-11 w-11 items-center justify-center rounded-full border",
-          isV2
-            ? "border-[rgba(255,255,255,0.08)] bg-[#080908]"
-            : "border-[rgba(255,255,255,0.1)] bg-[#0a0a0a]",
-        )}
-        animate={
-          reduced
-            ? {}
-            : {
-                boxShadow: [
-                  "0 0 22px 2px rgba(182,155,106,0.28)",
-                  "0 0 0 0 rgba(182,155,106,0)",
-                  "0 0 0 0 rgba(182,155,106,0)",
-                ],
-                scale: [1.06, 1, 1],
-              }
-        }
-        transition={{ ...loop, times: [0, 0.45, 1] }}
-      >
-        <Activity className="size-5 text-[#b69b6a]" strokeWidth={1.75} aria-hidden />
-      </motion.div>
+      <div className="relative flex h-16 w-16 items-center justify-center">
+        <motion.div
+          className="absolute -inset-1.5 rounded-full blur-md"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(214,176,106,0.30) 0%, transparent 70%)",
+          }}
+          animate={reduced ? { opacity: 0.4 } : { opacity: [0.75, 0.2, 0.2] }}
+          transition={reduced ? { duration: 0 } : { ...loop, times: [0, 0.45, 1] }}
+        />
+
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `conic-gradient(from 0deg, transparent 0deg, transparent 210deg, ${
+              isV2 ? "rgba(201,169,98,0.85)" : "rgba(214,176,106,0.9)"
+            } 350deg, transparent 360deg)`,
+            maskImage: RING_MASK,
+            WebkitMaskImage: RING_MASK,
+          }}
+          animate={reduced ? {} : { rotate: 360 }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: "linear" }}
+        />
+
+        <div
+          className={clsx(
+            "absolute inset-[3px] flex items-center justify-center rounded-full border shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+            isV2
+              ? "border-[#242424] bg-[#0a0a0a]"
+              : "border-[rgba(255,255,255,0.09)] bg-[#080808]",
+          )}
+        >
+          <DexLogo dex={venue} className="size-7" />
+        </div>
+      </div>
+
       <span
         className={clsx(
-          "line-clamp-2 text-center font-mono text-[12px] leading-tight",
+          "font-['Onest',sans-serif] text-[14px] font-medium leading-5 tracking-[0.01em]",
           isV2 ? "text-[#E8E2D2]" : "text-[#e8d5b5]",
         )}
       >
@@ -109,167 +118,162 @@ export function VaultOpeningOverlay({
       aria-live="polite"
       aria-atomic="true"
       className={clsx(
-        "flex h-full min-h-[280px] w-full flex-col items-center justify-center overflow-hidden px-4 py-8 backdrop-blur-md md:px-8",
+        "relative flex h-full min-h-[320px] w-full flex-col items-center justify-center overflow-hidden px-5 py-8 backdrop-blur-md md:px-8",
         isV2
-          ? "rounded-[12px] bg-[radial-gradient(ellipse_at_50%_0%,rgba(201,169,98,0.12)_0%,rgba(0,0,0,0.92)_55%,rgba(0,0,0,0.96)_100%)]"
-          : "rounded-[18px] bg-[radial-gradient(ellipse_at_50%_0%,rgba(214,176,106,0.14)_0%,rgba(0,0,0,0.88)_55%,rgba(0,0,0,0.94)_100%)]",
+          ? "rounded-[12px] bg-[radial-gradient(ellipse_at_50%_40%,rgba(201,169,98,0.10)_0%,rgba(0,0,0,0.94)_58%,rgba(0,0,0,0.97)_100%)]"
+          : "rounded-[18px] bg-[radial-gradient(ellipse_at_50%_40%,rgba(214,176,106,0.12)_0%,rgba(0,0,0,0.92)_58%,rgba(0,0,0,0.96)_100%)]",
       )}
     >
       {!reduced && (
         <motion.div
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
+          className="pointer-events-none absolute inset-0 opacity-[0.3]"
           style={{
             background:
-              "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(182,155,106,0.06) 90deg, transparent 180deg)",
+              "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(182,155,106,0.05) 90deg, transparent 180deg)",
           }}
           animate={{ rotate: [0, 360] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 34, repeat: Infinity, ease: "linear" }}
         />
       )}
 
       <motion.div
-        className="relative z-[2] flex w-full max-w-[440px] flex-col items-center"
-        initial={{ opacity: 0, y: 14 }}
+        className="relative z-[2] flex w-full max-w-[420px] flex-col items-center"
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={spring}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="mb-6 flex flex-col items-center gap-1.5 text-center">
-          <p
-            className={clsx(
-              "font-['Onest',sans-serif] text-[15px] font-semibold tracking-[0.18em] md:text-[16px]",
-              isV2 ? "text-[#E8E2D2]" : "text-[#f5ecd8]",
-            )}
-          >
-            Opening vault
-          </p>
-          <p
-            className={clsx(
-              "max-w-[340px] font-mono text-[11px] leading-relaxed md:text-[12px]",
-              isV2 ? "text-[#888888]" : "text-[#9c9cac]",
-            )}
-          >
-            Balancing your exposure across {venueA} and {venueB}
-          </p>
-        </div>
+        <p
+          className={clsx(
+            "font-['Onest',sans-serif] text-[14px] font-semibold uppercase tracking-[0.2em]",
+            isV2 ? "text-[#c9a962]" : "text-[#d6b06a]",
+          )}
+        >
+          Opening vault
+        </p>
+        <p
+          className={clsx(
+            "mt-2.5 max-w-[360px] text-center font-['Onest',sans-serif] text-[15px] leading-[1.5]",
+            isV2 ? "text-[#c4c4c4]" : "text-[#c9cad4]",
+          )}
+        >
+          Balancing exposure across {venueA} and {venueB}
+        </p>
 
-        <div className="flex w-full max-w-[400px] items-center justify-center gap-1 md:gap-2">
+        <div className="mt-8 flex items-start justify-center gap-3 md:gap-4">
           {renderVenue(venueA, "left")}
 
-          <div className="relative mx-0.5 flex h-[132px] w-[72px] shrink-0 items-center justify-center md:mx-1 md:w-[88px]">
-            <svg
-              className="absolute inset-x-0 top-1/2 h-8 w-full -translate-y-1/2 overflow-visible"
-              viewBox="0 0 88 32"
-              fill="none"
-              aria-hidden
-            >
-              <motion.path
-                d="M 4 16 L 84 16"
-                stroke={`url(#vaultBridge-${uid})`}
-                strokeWidth="2"
-                strokeLinecap="round"
-                initial={{ pathLength: reduced ? 1 : 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{
-                  duration: reduced ? 0.05 : 0.85,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              />
-              <defs>
-                <linearGradient
-                  id={`vaultBridge-${uid}`}
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="0%"
-                >
-                  <stop offset="0%" stopColor="var(--vault-bridge-start)" />
-                  <stop offset="50%" stopColor="var(--vault-bridge-mid)" />
-                  <stop offset="100%" stopColor="var(--vault-bridge-end)" />
-                </linearGradient>
-              </defs>
-            </svg>
-
-            {/* The neutral point the two legs cancel at — always present, quietly. */}
-            <div
-              className={clsx(
-                "absolute top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border",
-                isV2
-                  ? "border-[#c9a962]/60 bg-[#0a0a0a]"
-                  : "border-[#d6b06a]/60 bg-[#050505]",
-              )}
-              aria-hidden
-            />
-
-            {!reduced && (
-              <>
-                {/* Equal and opposite: each leg runs in from its own venue... */}
-                {(["left", "right"] as const).map(from => (
-                  <motion.div
-                    key={from}
-                    className={clsx(
-                      "pointer-events-none absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full",
-                      isV2
-                        ? "bg-[#b89a6e] shadow-[0_0_16px_rgba(184,154,110,0.55)]"
-                        : "bg-[#c4a574] shadow-[0_0_16px_rgba(196,165,116,0.5)]",
-                    )}
-                    style={{ x: "-50%" }}
-                    animate={{
-                      left:
-                        from === "left"
-                          ? ["4%", "50%", "50%"]
-                          : ["96%", "50%", "50%"],
-                      opacity: [0, 1, 0],
-                      scale: [0.7, 1, 0.4],
-                    }}
-                    transition={{ ...loop, times: [0, 0.5, 0.62] }}
-                  />
-                ))}
-
-                {/* ...and where they meet, they cancel — the ring is the hedge going neutral. */}
-                <motion.div
-                  className={clsx(
-                    "pointer-events-none absolute top-1/2 h-8 w-8 -translate-y-1/2 rounded-full border",
-                    isV2 ? "border-[#c9a962]" : "border-[#d6b06a]",
-                  )}
-                  style={{ left: "50%", x: "-50%" }}
-                  animate={{
-                    scale: [0.15, 0.15, 1.5, 1.5],
-                    opacity: [0, 0.75, 0, 0],
-                  }}
+          {/* The bridge sits at medallion height; the spacer keeps it off the name row. */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative flex h-16 w-[84px] items-center justify-center md:w-[104px]">
+              <svg
+                className="absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 overflow-visible"
+                viewBox="0 0 104 24"
+                preserveAspectRatio="none"
+                fill="none"
+                aria-hidden
+              >
+                <motion.path
+                  d="M 2 12 L 102 12"
+                  stroke={`url(#vaultBridge-${uid})`}
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  initial={{ pathLength: reduced ? 1 : 0 }}
+                  animate={{ pathLength: 1 }}
                   transition={{
-                    duration: CYCLE_S,
-                    repeat: Infinity,
-                    ease: "easeOut",
-                    times: [0, 0.52, 0.92, 1],
+                    duration: reduced ? 0.05 : 0.7,
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                 />
-              </>
-            )}
+                <defs>
+                  <linearGradient
+                    id={`vaultBridge-${uid}`}
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
+                    <stop offset="0%" stopColor="rgba(214,176,106,0.05)" />
+                    <stop offset="50%" stopColor="rgba(214,176,106,0.55)" />
+                    <stop offset="100%" stopColor="rgba(214,176,106,0.05)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* The neutral point the two legs cancel at — always present, quietly. */}
+              <div
+                className={clsx(
+                  "absolute left-1/2 top-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rotate-45 border",
+                  isV2
+                    ? "border-[#c9a962]/70 bg-[#0a0a0a]"
+                    : "border-[#d6b06a]/70 bg-[#050505]",
+                )}
+                aria-hidden
+              />
+
+              {!reduced && (
+                <>
+                  {/* Equal and opposite: each leg runs in from its own venue... */}
+                  {(["left", "right"] as const).map(from => (
+                    <motion.div
+                      key={from}
+                      className={clsx(
+                        "pointer-events-none absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full",
+                        isV2
+                          ? "bg-[#e0c68d] shadow-[0_0_10px_rgba(224,198,141,0.85)]"
+                          : "bg-[#f0dcae] shadow-[0_0_10px_rgba(240,220,174,0.8)]",
+                      )}
+                      style={{ x: "-50%" }}
+                      animate={{
+                        left:
+                          from === "left"
+                            ? ["0%", "50%", "50%"]
+                            : ["100%", "50%", "50%"],
+                        opacity: [0, 1, 0],
+                        scale: [0.6, 1, 0.3],
+                      }}
+                      transition={{ ...loop, times: [0, 0.5, 0.62] }}
+                    />
+                  ))}
+
+                  {/* ...and where they meet, they cancel — the ring is the hedge going neutral. */}
+                  <motion.div
+                    className={clsx(
+                      "pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border",
+                      isV2 ? "border-[#c9a962]" : "border-[#d6b06a]",
+                    )}
+                    animate={{
+                      scale: [0.2, 0.2, 1.6, 1.6],
+                      opacity: [0, 0.7, 0, 0],
+                    }}
+                    transition={{
+                      duration: CYCLE_S,
+                      repeat: Infinity,
+                      ease: "easeOut",
+                      times: [0, 0.52, 0.94, 1],
+                    }}
+                  />
+                </>
+              )}
+            </div>
+            <span className="h-4" aria-hidden />
           </div>
 
           {renderVenue(venueB, "right")}
         </div>
 
-        {/* Loading affordance — motion only, nothing to read off it. */}
-        <div
+        {/* Says out loud why no side is shown, so the omission reads as intent. */}
+        <motion.p
           className={clsx(
-            "mt-6 h-[2px] w-full max-w-[220px] overflow-hidden rounded-full",
-            isV2 ? "bg-[#1a1a1a]" : "bg-[rgba(255,255,255,0.06)]",
+            "mt-8 max-w-[400px] text-balance text-center font-['Onest',sans-serif] text-[13px] leading-[1.6]",
+            isV2 ? "text-[#9a9a9a]" : "text-[#9c9cac]",
           )}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: reduced ? 0 : 0.35, duration: 0.4 }}
         >
-          <motion.div
-            className={clsx(
-              "h-full w-1/3 rounded-full bg-gradient-to-r from-transparent",
-              isV2 ? "via-[#c9a962] to-transparent" : "via-[#d6b06a] to-transparent",
-            )}
-            animate={reduced ? { opacity: 0.6 } : { x: ["-100%", "300%"] }}
-            transition={
-              reduced
-                ? { duration: 0 }
-                : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-            }
-          />
-        </div>
+          Legs are assigned at execution. You'll see which venue is long and which is
+          short as soon as your vault is live.
+        </motion.p>
       </motion.div>
     </div>
   );

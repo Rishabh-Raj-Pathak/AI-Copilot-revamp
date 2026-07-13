@@ -426,7 +426,7 @@ function DexPairSetupCard({
             isV2 ? "text-[#666666]" : "text-[#7d7e88]",
           )}
         >
-          Pick the two venues to run the hedge across.
+          Legs are assigned at execution, not at setup.
         </p>
       </div>
       <div className="relative z-[1] grid grid-cols-1 gap-3 tablet:grid-cols-2">
@@ -982,7 +982,7 @@ export function DeltaVaultBuilder({
         <div className="pointer-events-none absolute inset-0 rounded-[12px] ring-1 ring-[#c9a962]/20" />
       )}
       <AnimatePresence>
-        {isPreparing && (
+        {isPreparing && dexA !== "" && dexB !== "" && (
           <motion.div
             key="vault-opening"
             className="absolute inset-0 z-[60]"
