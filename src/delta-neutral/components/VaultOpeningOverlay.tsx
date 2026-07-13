@@ -73,8 +73,10 @@ function usePrefersReducedMotion(): boolean {
 /**
  * Single-beat open-vault motion, built on one idea: two equal and opposite legs leave
  * their venues, meet in the middle, and cancel into neutrality — which is what the vault
- * *is*. Which venue takes which side is not settled at this point, so the two halves are
- * deliberately symmetric: no sides, no rates, no spread, nothing to read.
+ * *is*. Which venue takes which side is settled at execution by the funding rates (short
+ * the venue paying the most, long the one costing the least — the spread is the yield),
+ * so it is genuinely unknown here. The two halves are therefore deliberately symmetric:
+ * no sides, no rates, no spread, nothing to read.
  */
 export function VaultOpeningOverlay({
   venueA,
@@ -108,12 +110,11 @@ export function VaultOpeningOverlay({
         delay: reduced ? 0 : position === "left" ? 0 : 0.08,
       }}
     >
-      <div className="relative flex h-16 w-16 items-center justify-center">
+      <div className="relative flex h-[84px] w-[84px] items-center justify-center">
         <motion.div
-          className="absolute -inset-1.5 rounded-full blur-md"
+          className="absolute -inset-2 rounded-full blur-md"
           style={{
-            background:
-              "radial-gradient(circle, rgba(214,176,106,0.30) 0%, transparent 70%)",
+            background: `radial-gradient(circle, rgba(${gold},0.30) 0%, transparent 70%)`,
           }}
           animate={reduced ? { opacity: 0.4 } : { opacity: [0.75, 0.2, 0.2] }}
           transition={reduced ? { duration: 0 } : { ...loop, times: [0, 0.45, 1] }}
@@ -122,9 +123,7 @@ export function VaultOpeningOverlay({
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: `conic-gradient(from 0deg, transparent 0deg, transparent 210deg, ${
-              isV2 ? "rgba(201,169,98,0.85)" : "rgba(214,176,106,0.9)"
-            } 350deg, transparent 360deg)`,
+            background: `conic-gradient(from 0deg, transparent 0deg, transparent 210deg, rgba(${gold},0.9) 350deg, transparent 360deg)`,
             maskImage: RING_MASK,
             WebkitMaskImage: RING_MASK,
           }}
@@ -140,13 +139,13 @@ export function VaultOpeningOverlay({
               : "border-[rgba(255,255,255,0.09)] bg-[#080808]",
           )}
         >
-          <DexLogo dex={venue} className="size-7" />
+          <DexLogo dex={venue} className="size-9" />
         </div>
       </div>
 
       <span
         className={clsx(
-          "font-['Onest',sans-serif] text-[14px] font-medium leading-5 tracking-[0.01em]",
+          "font-['Onest',sans-serif] text-[15px] font-medium leading-5 tracking-[0.01em]",
           isV2 ? "text-[#E8E2D2]" : "text-[#e8d5b5]",
         )}
       >
@@ -161,8 +160,8 @@ export function VaultOpeningOverlay({
       aria-live="polite"
       aria-atomic="true"
       className={clsx(
-        "relative flex h-full min-h-[320px] w-full flex-col items-center justify-center overflow-hidden px-5 py-8 md:px-8",
-        isV2 ? "rounded-[12px]" : "rounded-[18px]",
+        "relative flex w-full flex-col items-center justify-center overflow-hidden px-6 py-9 shadow-[0_28px_80px_rgba(0,0,0,0.62)] md:px-10",
+        isV2 ? "rounded-[14px]" : "rounded-[20px]",
       )}
       style={{
         // The brand's warm-black card gradient, same axis as the vault cards.
@@ -233,8 +232,8 @@ export function VaultOpeningOverlay({
         className={clsx(
           "pointer-events-none absolute inset-0 ring-1 ring-inset",
           isV2
-            ? "rounded-[12px] ring-[#c9a962]/10"
-            : "rounded-[18px] ring-[#d6b06a]/[0.12]",
+            ? "rounded-[14px] ring-[#c9a962]/20"
+            : "rounded-[20px] ring-[#d6b06a]/25",
         )}
         aria-hidden
       />
@@ -254,14 +253,14 @@ export function VaultOpeningOverlay({
       />
 
       <motion.div
-        className="relative z-[2] flex w-full max-w-[420px] flex-col items-center"
+        className="relative z-[2] flex w-full max-w-[460px] flex-col items-center"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
         <p
           className={clsx(
-            "font-['Onest',sans-serif] text-[14px] font-semibold uppercase tracking-[0.2em]",
+            "font-['Onest',sans-serif] text-center text-[14px] font-semibold uppercase tracking-[0.2em]",
             isV2 ? "text-[#c9a962]" : "text-[#d6b06a]",
           )}
         >
@@ -276,12 +275,12 @@ export function VaultOpeningOverlay({
           Balancing exposure across {venueA} and {venueB}
         </p>
 
-        <div className="mt-8 flex items-start justify-center gap-3 md:gap-4">
+        <div className="mt-9 flex items-start justify-center gap-3 md:gap-4">
           {renderVenue(venueA, "left")}
 
           {/* The bridge sits at medallion height; the spacer keeps it off the name row. */}
           <div className="flex flex-col items-center gap-3">
-            <div className="relative flex h-16 w-[84px] items-center justify-center md:w-[104px]">
+            <div className="relative flex h-[84px] w-[96px] items-center justify-center md:w-[124px]">
               <svg
                 className="absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 overflow-visible"
                 viewBox="0 0 104 24"
@@ -309,9 +308,9 @@ export function VaultOpeningOverlay({
                     x2="100%"
                     y2="0%"
                   >
-                    <stop offset="0%" stopColor="rgba(214,176,106,0.05)" />
-                    <stop offset="50%" stopColor="rgba(214,176,106,0.55)" />
-                    <stop offset="100%" stopColor="rgba(214,176,106,0.05)" />
+                    <stop offset="0%" stopColor={`rgba(${gold},0.05)`} />
+                    <stop offset="50%" stopColor={`rgba(${gold},0.55)`} />
+                    <stop offset="100%" stopColor={`rgba(${gold},0.05)`} />
                   </linearGradient>
                 </defs>
               </svg>
@@ -319,7 +318,7 @@ export function VaultOpeningOverlay({
               {/* The neutral point the two legs cancel at — always present, quietly. */}
               <div
                 className={clsx(
-                  "absolute left-1/2 top-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rotate-45 border",
+                  "absolute left-1/2 top-1/2 h-[6px] w-[6px] -translate-x-1/2 -translate-y-1/2 rotate-45 border",
                   isV2
                     ? "border-[#c9a962]/70 bg-[#0a0a0a]"
                     : "border-[#d6b06a]/70 bg-[#050505]",
@@ -334,10 +333,10 @@ export function VaultOpeningOverlay({
                     <motion.div
                       key={from}
                       className={clsx(
-                        "pointer-events-none absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full",
+                        "pointer-events-none absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full",
                         isV2
-                          ? "bg-[#e0c68d] shadow-[0_0_10px_rgba(224,198,141,0.85)]"
-                          : "bg-[#f0dcae] shadow-[0_0_10px_rgba(240,220,174,0.8)]",
+                          ? "bg-[#e0c68d] shadow-[0_0_12px_rgba(224,198,141,0.85)]"
+                          : "bg-[#f0dcae] shadow-[0_0_12px_rgba(240,220,174,0.8)]",
                       )}
                       style={{ x: "-50%" }}
                       animate={{
@@ -355,7 +354,7 @@ export function VaultOpeningOverlay({
                   {/* ...and where they meet, they cancel — the ring is the hedge going neutral. */}
                   <motion.div
                     className={clsx(
-                      "pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border",
+                      "pointer-events-none absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border",
                       isV2 ? "border-[#c9a962]" : "border-[#d6b06a]",
                     )}
                     animate={{
@@ -378,18 +377,19 @@ export function VaultOpeningOverlay({
           {renderVenue(venueB, "right")}
         </div>
 
-        {/* Says out loud why no side is shown, so the omission reads as intent. */}
+        {/* Says out loud why no side is shown, so the omission reads as intent — and
+            what actually decides it: the funding spread the vault is there to earn. */}
         <motion.p
           className={clsx(
-            "mt-8 max-w-[400px] text-balance text-center font-['Onest',sans-serif] text-[13px] leading-[1.6]",
+            "mt-8 max-w-[420px] text-balance text-center font-['Onest',sans-serif] text-[13px] leading-[1.6]",
             isV2 ? "text-[#9a9a9a]" : "text-[#9c9cac]",
           )}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: reduced ? 0 : 0.35, duration: 0.4 }}
         >
-          Legs are assigned at execution. You'll see which venue is long and which is
-          short as soon as your vault is live.
+          Live funding rates decide the legs. The spread between them is your yield —
+          sides show the moment you're live.
         </motion.p>
       </motion.div>
     </div>

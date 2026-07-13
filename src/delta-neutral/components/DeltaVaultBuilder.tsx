@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "motion/react";
 import { Check, ChevronDown, CircleAlert, Wallet } from "lucide-react";
@@ -981,24 +982,42 @@ export function DeltaVaultBuilder({
       {isV2Shell && (
         <div className="pointer-events-none absolute inset-0 rounded-[12px] ring-1 ring-[#c9a962]/20" />
       )}
-      <AnimatePresence>
-        {isPreparing && dexA !== "" && dexB !== "" && (
-          <motion.div
-            key="vault-opening"
-            className="absolute inset-0 z-[60]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <VaultOpeningOverlay
-              venueA={dexA}
-              venueB={dexB}
-              variant={variant}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Portalled to the body: this section is `overflow-hidden` and sits under
+          transformed ancestors, either of which would trap a fixed child inside the card. */}
+      {createPortal(
+        <AnimatePresence>
+          {isPreparing && dexA !== "" && dexB !== "" && (
+            <motion.div
+              key="vault-opening"
+              className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {/* The page recedes behind the vault while it opens. */}
+              <div
+                className="absolute inset-0 bg-[#050505]/80 backdrop-blur-md"
+                aria-hidden
+              />
+              <motion.div
+                className="relative z-[201] w-full max-w-[520px]"
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <VaultOpeningOverlay
+                  venueA={dexA}
+                  venueB={dexB}
+                  variant={variant}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
 
       <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 tablet:grid-cols-[1.55fr_1fr]">
         <div className="flex flex-col gap-4 max-tablet:gap-3">
