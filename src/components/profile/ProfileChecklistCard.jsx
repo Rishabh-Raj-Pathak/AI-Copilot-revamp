@@ -134,7 +134,7 @@ function StepRow({ index, label, points, done, open, last, panel, onToggle }) {
   const panelId = `profile-step-${index}`;
 
   return (
-    <li className="flex gap-3">
+    <li className="flex gap-2.5 sm:gap-3">
       <div className="flex flex-col items-center">
         <span
           className={`flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-colors ${
@@ -150,7 +150,7 @@ function StepRow({ index, label, points, done, open, last, panel, onToggle }) {
         {last ? null : <span className="my-1 w-px flex-1 bg-[#242424]" aria-hidden />}
       </div>
 
-      <div className={`min-w-0 flex-1 ${last ? "" : "pb-5"}`}>
+      <div className={`min-w-0 flex-1 ${last ? "" : "pb-4 sm:pb-5"}`}>
         {panel ? (
           <button
             type="button"

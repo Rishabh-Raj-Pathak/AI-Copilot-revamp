@@ -184,9 +184,12 @@ function LinkedRow({ account }) {
       <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
         {account.handle}
       </span>
+      {/* The glyph already names the provider, so mobile drops the word for the
+          ~50px the handle needs to stay readable. */}
       <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#00f3b6]">
         <Check className="size-3.5" aria-hidden />
-        {provider.name} linked
+        <span className="hidden sm:inline">{provider.name} </span>
+        linked
       </span>
     </div>
   );
@@ -212,7 +215,9 @@ function AddRow({ glyph, provider, pending, disabled, onClick }) {
             optional
           </span>
         </span>
-        <span className="truncate text-xs text-[#929292]">
+        {/* One line on desktop keeps the row compact; on mobile that line is
+            ~150px wide, so it wraps rather than ellipsing mid-sentence. */}
+        <span className="text-xs leading-snug text-[#929292] max-sm:line-clamp-2 sm:truncate">
           {provider.benefit}
         </span>
       </span>
@@ -231,9 +236,9 @@ function AddRow({ glyph, provider, pending, disabled, onClick }) {
 
 function TelegramPairing({ code, onCancel, onCopyCode, copied }) {
   return (
-    <div className="flex flex-col gap-3.5 rounded-lg border border-[#242424] bg-black p-4">
+    <div className="flex flex-col gap-3.5 rounded-lg border border-[#242424] bg-black p-3.5 sm:p-4">
       <div className="flex items-center gap-2 text-sm font-semibold text-white">
-        <TelegramGlyph className="size-[18px]" />
+        <TelegramGlyph className="size-[18px] shrink-0" />
         Connect Telegram
       </div>
 
@@ -253,7 +258,7 @@ function TelegramPairing({ code, onCancel, onCopyCode, copied }) {
 
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <div className="flex items-center justify-between gap-3 rounded-md border border-[#242424] bg-[#0f0f0f] px-3 py-2">
-          <span className="font-mono text-base tracking-[0.35em] text-white">
+          <span className="font-mono text-sm tracking-[0.3em] text-white sm:text-base sm:tracking-[0.35em]">
             {code}
           </span>
           <button
@@ -281,18 +286,21 @@ function TelegramPairing({ code, onCancel, onCopyCode, copied }) {
         </a>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-[#242424] pt-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-[#242424] pt-3">
         <span
-          className="flex items-center gap-2 text-xs text-[#929292]"
+          className="flex min-w-0 items-center gap-2 text-xs text-[#929292]"
           role="status"
         >
-          <Loader2 className="size-3.5 animate-spin text-[#00f3b6]" aria-hidden />
+          <Loader2
+            className="size-3.5 shrink-0 animate-spin text-[#00f3b6]"
+            aria-hidden
+          />
           Waiting for you to tap Start…
         </span>
         <button
           type="button"
           onClick={onCancel}
-          className="text-xs font-medium text-[#bfbfbf] transition-colors hover:text-white"
+          className="ml-auto shrink-0 text-xs font-medium text-[#bfbfbf] transition-colors hover:text-white"
         >
           Cancel
         </button>

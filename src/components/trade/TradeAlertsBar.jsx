@@ -11,33 +11,40 @@ const PEEK_HIT_PADDING_PX = 8;
 /** Offsets each expanded row's sheen so the stack glints as a wave, not in unison. */
 const SHEEN_STAGGER_S = 0.45;
 
+/**
+ * One line tall from `sm` up, where the title and body share a truncating line.
+ * Narrower than that the two would fight over ~90px, so the row becomes a small
+ * stack: text on top, action beneath it and indented to the text's left edge.
+ */
 function AlertRow({ alert, onAction, onDismiss, index = 0 }) {
   return (
     <div
       role="status"
-      className="trade-alert-row flex items-center justify-between gap-3 rounded-[10px] border border-[#3e2e00] bg-[#171200] px-3.5 py-2"
+      className="trade-alert-row flex flex-col gap-2 rounded-[10px] border border-[#3e2e00] bg-[#171200] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-3.5 sm:py-2"
       style={{ animationDelay: `${index * SHEEN_STAGGER_S}s` }}
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3">
         <AlertTriangle
-          className="size-4 shrink-0 text-[#f2b500]"
+          className="mt-0.5 size-4 shrink-0 text-[#f2b500] sm:mt-0"
           strokeWidth={1.75}
           aria-hidden
         />
-        {/* Truncates rather than wraps, so the band stays exactly one line tall. */}
-        <p className="min-w-0 truncate leading-snug" title={`${alert.title} — ${alert.body}`}>
+        <p className="min-w-0 leading-snug sm:truncate" title={`${alert.title} — ${alert.body}`}>
           <span className="text-[13px] font-semibold text-white">
             {alert.title}
           </span>
-          <span className="ml-2 text-xs text-[#bfbfbf]">{alert.body}</span>
+          <span className="text-xs text-[#bfbfbf] max-sm:mt-0.5 max-sm:line-clamp-2 sm:ml-2">
+            {alert.body}
+          </span>
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      {/* `pl-[26px]` on mobile = icon width + gap, so the button starts under the title. */}
+      <div className="flex shrink-0 items-center gap-2 max-sm:pl-[26px]">
         <button
           type="button"
           onClick={() => onAction?.(alert.cta.type, alert)}
-          className="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-[#f2b500] px-3.5 text-xs font-semibold text-[#171200] transition-[filter] hover:brightness-110 focus-visible:shadow-ds-ring focus-visible:outline-none active:brightness-95"
+          className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg bg-[#f2b500] px-3.5 text-xs font-semibold text-[#171200] transition-[filter] hover:brightness-110 focus-visible:shadow-ds-ring focus-visible:outline-none active:brightness-95 max-sm:flex-1 sm:shrink-0"
         >
           {alert.cta.label}
         </button>
@@ -45,7 +52,7 @@ function AlertRow({ alert, onAction, onDismiss, index = 0 }) {
           type="button"
           onClick={onDismiss}
           aria-label={`Dismiss alert: ${alert.title}`}
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#787878] transition-colors hover:bg-white/5 hover:text-white focus-visible:shadow-ds-ring focus-visible:outline-none"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[#787878] transition-colors hover:bg-white/5 hover:text-white focus-visible:shadow-ds-ring focus-visible:outline-none sm:size-7"
         >
           <X className="size-4" strokeWidth={1.75} aria-hidden />
         </button>
@@ -80,7 +87,7 @@ export default function TradeAlertsBar({ alerts = TRADE_ALERTS, onAction }) {
     <div
       role="region"
       aria-label="Trade alerts"
-      className="flex shrink-0 flex-col gap-2 border-b border-[#242424] bg-black px-4 py-2 sm:px-5"
+      className="flex shrink-0 flex-col gap-2 border-b border-[#242424] bg-black px-3 py-2 sm:px-5"
     >
       {isExpanded ? (
         <>

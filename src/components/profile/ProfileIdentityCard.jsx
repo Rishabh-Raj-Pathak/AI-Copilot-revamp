@@ -48,53 +48,72 @@ export default function ProfileIdentityCard({ onNotify }) {
 
   return (
     <section className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4 sm:p-5">
-      <div className="flex flex-wrap items-center gap-4">
-        <ProfileProgressRing percent={progress.percent} size={68} strokeWidth={2.5}>
+      <div className="flex items-center gap-3 sm:gap-4">
+        <ProfileProgressRing
+          percent={progress.percent}
+          size={68}
+          strokeWidth={2.5}
+          className="max-sm:size-[60px]"
+        >
           <ProfileAvatar
             name={social?.name}
             handle={social?.handle}
             seed={address}
             size="lg"
+            className="max-sm:size-12 max-sm:text-base"
           />
         </ProfileProgressRing>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="truncate text-lg font-semibold text-white">
+          <h2 className="truncate text-base font-semibold text-white sm:text-lg">
             {displayName}
           </h2>
           {social ? (
             /* One glyph per linked account, then the handle they're known by. */
             <span className="flex items-center gap-1.5 text-sm text-[#929292]">
-              {socials.x ? <XGlyph className="size-3" /> : null}
-              {socials.telegram ? <TelegramGlyph className="size-3.5" /> : null}
+              {socials.x ? <XGlyph className="size-3 shrink-0" /> : null}
+              {socials.telegram ? (
+                <TelegramGlyph className="size-3.5 shrink-0" />
+              ) : null}
               <span className="truncate">{social.handle}</span>
             </span>
           ) : (
-            <span className="text-sm text-[#757575]">No account linked yet</span>
+            /* Wraps rather than truncates — it's a sentence, not an identifier. */
+            <span className="text-sm leading-snug text-[#757575]">
+              No account linked yet
+            </span>
           )}
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="bg-linear-to-r from-[#f7bb08] to-[#2fffce] bg-clip-text text-xl font-semibold text-transparent">
+          <span className="bg-linear-to-r from-[#f7bb08] to-[#2fffce] bg-clip-text text-lg font-semibold text-transparent sm:text-xl">
             {progress.points}
           </span>
-          <span className="text-xs text-[#757575]">
-            of {progress.pointsTotal} points
+          {/* `pts` at 320px: the 15px it saves is what keeps an unlinked profile's
+              headline (a truncated address) from truncating a second time. */}
+          <span className="whitespace-nowrap text-[11px] text-[#757575] sm:text-xs">
+            of {progress.pointsTotal}
+            <span className="sm:hidden"> pts</span>
+            <span className="hidden sm:inline"> points</span>
           </span>
         </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2 border-t border-[#242424] pt-3.5">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-[#757575]">
+        {/* Dropped on mobile: a `0x…` in mono next to a chain badge needs no caption,
+            and its 46px is the difference between one line and two. */}
+        <span className="hidden text-[10px] font-medium uppercase tracking-wide text-[#757575] sm:inline">
           Wallet
         </span>
 
-        <span className="font-mono text-sm text-white">
-          <span className="hidden sm:inline">{address}</span>
-          <span className="sm:hidden">{truncateAddress(address)}</span>
+        {/* Full address at `md`, not `sm`: at 640px it and the explorer label
+            together push the action group onto a second line. */}
+        <span className="min-w-0 font-mono text-sm text-white">
+          <span className="hidden md:inline">{address}</span>
+          <span className="md:hidden">{truncateAddress(address)}</span>
         </span>
 
-        <span className="shrink-0 rounded-full border border-[#454545] px-2.5 py-0.5 text-xs text-[#bfbfbf]">
+        <span className="shrink-0 rounded-full border border-[#454545] px-2 py-0.5 text-xs text-[#bfbfbf] sm:px-2.5">
           {WALLET_CHAIN.label}
         </span>
 
@@ -118,9 +137,9 @@ export default function ProfileIdentityCard({ onNotify }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View on ${WALLET_CHAIN.explorerName}`}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white"
+            className="flex size-8 items-center justify-center rounded-md text-xs font-medium text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white md:size-auto md:gap-1.5 md:px-2 md:py-1.5"
           >
-            <span className="hidden sm:inline">
+            <span className="hidden md:inline">
               View on {WALLET_CHAIN.explorerName}
             </span>
             <ExternalLink className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />

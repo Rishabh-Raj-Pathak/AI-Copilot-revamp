@@ -22,11 +22,17 @@ import {
 import { Checkbox } from "./ui/checkbox";
 import { DexLabel } from "./DexLogo";
 import { formatWalletAddress } from "../utils/wallet";
+import {
+  DEX_FUNDING_INTERVAL_HOURS,
+  DEX_PROFILES,
+  resolveLegs,
+  type DexSelection,
+  type ManagedDexId,
+} from "../utils/legs";
 
-const PREPARE_MS = 2200;
+const PREPARE_MS = 5000;
 
-export type ManagedDexId = "Hyperliquid" | "Nado" | "Pacifica";
-type DexSelection = ManagedDexId | "";
+export type { ManagedDexId };
 type MarketMode = "themes" | "tokens";
 type ThemeOption =
   | "Bluechip"
@@ -45,54 +51,6 @@ type MarketSelection = {
   mode: MarketMode;
   themes: ThemeOption[];
   token: TokenOption;
-};
-
-type DexProfile = {
-  id: ManagedDexId;
-  /** 8h funding rate, percent (e.g. 0.021 = 0.021%) */
-  funding8hPct: number;
-  spark: number[];
-  tvl: string;
-  feeRoundTripPct: string;
-};
-
-const DEX_PROFILES: Record<ManagedDexId, DexProfile> = {
-  Hyperliquid: {
-    id: "Hyperliquid",
-    funding8hPct: 0.021,
-    spark: [
-      0.018, 0.021, 0.019, 0.022, 0.024, 0.023, 0.025, 0.024, 0.026, 0.024,
-      0.023, 0.024,
-    ],
-    tvl: "$1.2B",
-    feeRoundTripPct: "0.035",
-  },
-  Nado: {
-    id: "Nado",
-    funding8hPct: 0.0185,
-    spark: [
-      0.014, 0.016, 0.015, 0.017, 0.019, 0.018, 0.02, 0.019, 0.021, 0.019,
-      0.018, 0.019,
-    ],
-    tvl: "$420M",
-    feeRoundTripPct: "0.048",
-  },
-  Pacifica: {
-    id: "Pacifica",
-    funding8hPct: 0.028,
-    spark: [
-      0.022, 0.025, 0.028, 0.03, 0.031, 0.029, 0.032, 0.031, 0.033, 0.031, 0.03,
-      0.031,
-    ],
-    tvl: "$890M",
-    feeRoundTripPct: "0.042",
-  },
-};
-
-const DEX_FUNDING_INTERVAL_HOURS: Record<ManagedDexId, number> = {
-  Pacifica: 1,
-  Hyperliquid: 4,
-  Nado: 8,
 };
 
 const MAX_NOTIONAL = 10000;
@@ -259,10 +217,10 @@ function leverageMeta(option: LeverageOption) {
 type BuilderUiVariant = "default" | "v2";
 
 type DexPairSetupCardProps = {
-  longDex: DexSelection;
-  shortDex: DexSelection;
-  onLongDexChange: (v: DexSelection) => void;
-  onShortDexChange: (v: DexSelection) => void;
+  dexA: DexSelection;
+  dexB: DexSelection;
+  onDexAChange: (v: DexSelection) => void;
+  onDexBChange: (v: DexSelection) => void;
   onConnectDex: (dex: ManagedDexId) => void;
   onDepositDex: (dex: ManagedDexId) => void;
   onChangeWalletDex: (dex: ManagedDexId) => void;
@@ -277,10 +235,10 @@ type DexPairSetupCardProps = {
 };
 
 function DexPairSetupCard({
-  longDex,
-  shortDex,
-  onLongDexChange,
-  onShortDexChange,
+  dexA,
+  dexB,
+  onDexAChange,
+  onDexBChange,
   onConnectDex,
   onDepositDex,
   onChangeWalletDex,
@@ -305,10 +263,10 @@ function DexPairSetupCard({
       ? "border-[#3d3428] bg-[#0d0d0d] text-[#E8E2D2]"
       : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(25,22,18,0.98)_0%,rgba(14,12,10,0.99)_100%)] text-[#f1dfbf]",
   );
-  const marketDisabled = longDex === "" || shortDex === "";
+  const marketDisabled = dexA === "" || dexB === "";
 
   const renderDexSelector = (
-    leg: "long" | "short",
+    slot: "a" | "b",
     value: DexSelection,
     excludeDex: DexSelection,
     onChange: (v: DexSelection) => void,
@@ -326,12 +284,10 @@ function DexPairSetupCard({
         <p
           className={clsx(
             "mb-2 font-['Onest',sans-serif] text-[10px] font-semibold uppercase tracking-[1.2px]",
-            leg === "long"
-              ? "text-[color:var(--vault-leg-long-fg)]"
-              : "text-[color:var(--vault-leg-short-fg)]",
+            isV2 ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
           )}
         >
-          {leg === "long" ? "Select DEX 1" : "Select DEX 2"}
+          {slot === "a" ? "Select DEX A" : "Select DEX B"}
         </p>
         <div className="min-w-0">
           <Select
@@ -349,7 +305,7 @@ function DexPairSetupCard({
             <SelectContent className={selectContentClass}>
               {(Object.keys(DEX_PROFILES) as ManagedDexId[]).map((id) => (
                 <SelectItem
-                  key={`${leg}-${id}`}
+                  key={`${slot}-${id}`}
                   value={id}
                   disabled={excludeDex !== "" && id === excludeDex}
                   className="pl-3 text-[14px] text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)] data-[disabled]:pointer-events-none data-[disabled]:opacity-40"
@@ -455,18 +411,29 @@ function DexPairSetupCard({
       {isV2 && (
         <div className="pointer-events-none absolute inset-0 rounded-[10px] bg-[radial-gradient(circle_at_12%_0%,rgba(212,175,55,0.06),transparent_55%)]" />
       )}
-      <p
-        className={clsx(
-          "relative z-[1] mb-3 font-['Onest',sans-serif] text-[11px] font-semibold uppercase tracking-[1.3px]",
-          isV2 ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
-        )}
-      >
-        Cross-DEX Setup
-      </p>
-      <div className="relative z-[1] grid grid-cols-1 gap-3 tablet:grid-cols-2">
-        {renderDexSelector("long", longDex, shortDex, onLongDexChange)}
-        {renderDexSelector("short", shortDex, longDex, onShortDexChange)}
+      <div className="relative z-[1] mb-3 flex items-baseline justify-between gap-3">
+        <p
+          className={clsx(
+            "font-['Onest',sans-serif] text-[11px] font-semibold uppercase tracking-[1.3px]",
+            isV2 ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
+          )}
+        >
+          Cross-DEX Setup
+        </p>
+        <p
+          className={clsx(
+            "text-right text-[10px] leading-tight",
+            isV2 ? "text-[#666666]" : "text-[#7d7e88]",
+          )}
+        >
+          Pick the two venues to run the hedge across.
+        </p>
       </div>
+      <div className="relative z-[1] grid grid-cols-1 gap-3 tablet:grid-cols-2">
+        {renderDexSelector("a", dexA, dexB, onDexAChange)}
+        {renderDexSelector("b", dexB, dexA, onDexBChange)}
+      </div>
+
       {marketDisabled && (
         <p
           className={clsx(
@@ -474,7 +441,7 @@ function DexPairSetupCard({
             isV2 ? "text-[#888888]" : "text-[#7d7e88]",
           )}
         >
-          Select a DEX on both legs to unlock category and token controls.
+          Select a DEX on both venues to unlock category and token controls.
         </p>
       )}
       <div className="relative z-[1] mt-4">
@@ -693,8 +660,8 @@ export function DeltaVaultBuilder({
   variant = "default",
 }: DeltaVaultBuilderProps) {
   const isV2Shell = variant === "v2";
-  const [longDex, setLongDex] = useState<DexSelection>("");
-  const [shortDex, setShortDex] = useState<DexSelection>("");
+  const [dexA, setDexA] = useState<DexSelection>("");
+  const [dexB, setDexB] = useState<DexSelection>("");
   const [market, setMarket] = useState<MarketSelection>({
     mode: "themes",
     themes: [],
@@ -718,9 +685,6 @@ export function DeltaVaultBuilder({
   const [takeProfitWithFundingPct, setTakeProfitWithFundingPct] =
     useState("10");
   const [isPreparing, setIsPreparing] = useState(false);
-  const [prepareStep, setPrepareStep] = useState<
-    "idle" | "long" | "short" | "done"
-  >("idle");
 
   const leverageSelectTriggerClass = clsx(
     "h-[38px] w-full min-w-[108px] max-w-[140px] rounded-[8px] px-3 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:ring-1 [&_svg]:h-3.5 [&_svg]:w-3.5",
@@ -733,6 +697,11 @@ export function DeltaVaultBuilder({
       ? "border-[#3d3428] bg-[#0d0d0d] text-[#E8E2D2]"
       : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(25,22,18,0.98)_0%,rgba(14,12,10,0.99)_100%)] text-[#f1dfbf]",
   );
+
+  /** The user picks two venues; funding — not the pick order — decides which leg is which. */
+  const sides = useMemo(() => resolveLegs(dexA, dexB), [dexA, dexB]);
+  const longDex: DexSelection = sides?.longDex ?? "";
+  const shortDex: DexSelection = sides?.shortDex ?? "";
 
   const longProfile = DEX_PROFILES[longDex || "Hyperliquid"];
   const shortProfile = DEX_PROFILES[shortDex || "Pacifica"];
@@ -748,30 +717,30 @@ export function DeltaVaultBuilder({
     () => Math.abs(longN) + Math.abs(shortN),
     [longN, shortN],
   );
-  const hasBothDexSelected = longDex !== "" && shortDex !== "";
-  const dualValid = hasBothDexSelected && longDex !== shortDex;
+  const hasBothDexSelected = dexA !== "" && dexB !== "";
+  const dualValid = sides !== null;
 
   const deployableMaxUsd = useMemo(() => {
-    if (!dualValid) return MAX_NOTIONAL;
-    return Math.min(dexBalances[longDex], dexBalances[shortDex]);
-  }, [dualValid, longDex, shortDex, dexBalances]);
+    if (!dualValid || dexA === "" || dexB === "") return MAX_NOTIONAL;
+    return Math.min(dexBalances[dexA], dexBalances[dexB]);
+  }, [dualValid, dexA, dexB, dexBalances]);
 
   const vaultMarginTooltip = useMemo(() => {
-    if (!hasBothDexSelected) {
-      return "Pick a long leg and a short leg first. After that, you can set how much amount to deploy for this vault. MAX will match the lower of the two leg balances so that each leg can be funded.";
+    if (!hasBothDexSelected || dexA === "" || dexB === "") {
+      return "Pick both venues first. After that, you can set how much amount to deploy for this vault. MAX will match the lower of the two venue balances so that each leg can be funded.";
     }
     if (!dualValid) {
-      return "Choose two different venues for the long and short legs to unlock cross-venue margin and the balance-based cap.";
+      return "Choose two different venues to unlock cross-venue margin and the balance-based cap.";
     }
-    const longB = dexBalances[longDex];
-    const shortB = dexBalances[shortDex];
-    const max = Math.min(longB, shortB);
+    const balA = dexBalances[dexA];
+    const balB = dexBalances[dexB];
+    const max = Math.min(balA, balB);
     const fmt = (n: number) =>
       `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-    return `Deployable margin is capped at the lower of your two leg balances so both legs can be funded.\n\n${longDex}: ${fmt(longB)} · ${shortDex}: ${fmt(shortB)} → Max deployable: ${fmt(max)}`;
-  }, [hasBothDexSelected, dualValid, longDex, shortDex, dexBalances]);
+    return `Deployable margin is capped at the lower of your two venue balances so both legs can be funded.\n\n${dexA}: ${fmt(balA)} · ${dexB}: ${fmt(balB)} → Max deployable: ${fmt(max)}`;
+  }, [hasBothDexSelected, dualValid, dexA, dexB, dexBalances]);
 
-  const selectedVenues = [longDex, shortDex].filter(
+  const selectedVenues = [dexA, dexB].filter(
     (id): id is ManagedDexId => id !== "",
   );
   const firstDisconnectedVenue = selectedVenues.find((id) => !dexConnected[id]);
@@ -780,10 +749,11 @@ export function DeltaVaultBuilder({
 
   const longRate = longProfile.funding8hPct;
   const shortRate = shortProfile.funding8hPct;
-  /** Cross-venue spread (short − long) — used for projected APY / funding capture */
+  /**
+   * Cross-venue spread (short − long). Non-negative because the short leg is always
+   * assigned to the higher-paying venue — see resolveLegs.
+   */
   const spreadFunding8h = shortRate - longRate;
-  /** Displayed net row: simple sum of both leg rates (matches UI: long + short = net) */
-  const netFundingSum8h = longRate + shortRate;
   const longFundingIntervalHours =
     longDex !== "" ? DEX_FUNDING_INTERVAL_HOURS[longDex] : 8;
   const shortFundingIntervalHours =
@@ -940,12 +910,13 @@ export function DeltaVaultBuilder({
   };
 
   const handleInitialize = () => {
-    if (!dualValid || isPreparing || !allSelectedVenuesConnected) return;
+    if (!sides || isPreparing || !allSelectedVenuesConnected) return;
+    const { longDex: resolvedLong, shortDex: resolvedShort } = sides;
     const payload: DeltaVaultBuilderResult = {
-      longDex,
-      shortDex,
-      longWallet: dexWallets[longDex]!,
-      shortWallet: dexWallets[shortDex]!,
+      longDex: resolvedLong,
+      shortDex: resolvedShort,
+      longWallet: dexWallets[resolvedLong]!,
+      shortWallet: dexWallets[resolvedShort]!,
       pair:
         market.mode === "tokens"
           ? market.token.replace("-", "/")
@@ -966,13 +937,9 @@ export function DeltaVaultBuilder({
       },
     };
     setIsPreparing(true);
-    setPrepareStep("long");
-    window.setTimeout(() => setPrepareStep("short"), 700);
-    window.setTimeout(() => setPrepareStep("done"), 1400);
     window.setTimeout(() => {
       onActivate?.(payload);
       setIsPreparing(false);
-      setPrepareStep("idle");
     }, PREPARE_MS);
   };
 
@@ -990,7 +957,7 @@ export function DeltaVaultBuilder({
       ? `Open ${market.mode === "tokens" ? market.token : "BTC/USDC"} vault`
       : "Connect both DEXs to continue";
 
-  const bridgeKey = `${longDex || "none"}-${shortDex || "none"}`;
+  const bridgeKey = `${dexA || "none"}-${dexB || "none"}`;
   const marketLabel =
     market.mode === "themes"
       ? formatThemesSelection(market.themes)
@@ -1025,9 +992,8 @@ export function DeltaVaultBuilder({
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
             <VaultOpeningOverlay
-              longDex={longDex}
-              shortDex={shortDex}
-              phase={prepareStep}
+              venueA={dexA}
+              venueB={dexB}
               variant={variant}
             />
           </motion.div>
@@ -1037,10 +1003,10 @@ export function DeltaVaultBuilder({
       <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 tablet:grid-cols-[1.55fr_1fr]">
         <div className="flex flex-col gap-4 max-tablet:gap-3">
           <DexPairSetupCard
-              longDex={longDex}
-              shortDex={shortDex}
-              onLongDexChange={setLongDex}
-              onShortDexChange={setShortDex}
+              dexA={dexA}
+              dexB={dexB}
+              onDexAChange={setDexA}
+              onDexBChange={setDexB}
               onConnectDex={(dex) => {
                 setDexConnected((prev) => ({ ...prev, [dex]: true }));
                 setDexWallets((prev) => ({
@@ -1480,8 +1446,7 @@ export function DeltaVaultBuilder({
                 isV2Shell ? "text-[#666666]" : "text-[#717182]",
               )}
             >
-              Spread model · Long {longDex || "—"} vs Short {shortDex || "—"} ·{" "}
-              {marketLabel}
+              Spread model · {dexA || "—"} ⇄ {dexB || "—"} · {marketLabel}
             </motion.p>
           </AnimatePresence>
 
@@ -1491,17 +1456,6 @@ export function DeltaVaultBuilder({
                 Current funding details
               </p>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="Long Leg Funding"
-                    description="Funding rate currently applied to your long side."
-                    className="text-[13px] text-[#8f90a1]"
-                  />
-                  <span className="text-[13px] text-[color:var(--vault-leg-long-fg)]">
-                    {formatSignedPct(longRatePerInterval)} /{" "}
-                    {longFundingIntervalHours}h
-                  </span>
-                </div>
                 <div className="flex items-center justify-between">
                   <VaultMetricLabel
                     label="Short Leg Funding"
@@ -1515,12 +1469,23 @@ export function DeltaVaultBuilder({
                 </div>
                 <div className="flex items-center justify-between">
                   <VaultMetricLabel
+                    label="Long Leg Funding"
+                    description="Funding rate currently applied to your long side."
+                    className="text-[13px] text-[#8f90a1]"
+                  />
+                  <span className="text-[13px] text-[color:var(--vault-leg-long-fg)]">
+                    {formatSignedPct(longRatePerInterval)} /{" "}
+                    {longFundingIntervalHours}h
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <VaultMetricLabel
                     label="Net Capture"
-                    description="Combined funding effect from both sides together."
+                    description="What the vault actually keeps: the short leg's funding minus the long leg's."
                     className="text-[13px] text-[#8f90a1]"
                   />
                   <span className="text-[13px] text-[#e8d5b5]">
-                    {formatSignedPct(netFundingSum8h)}
+                    {formatSignedPct(spreadFunding8h)} / 8h
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

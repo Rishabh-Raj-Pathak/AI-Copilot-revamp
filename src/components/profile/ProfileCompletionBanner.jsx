@@ -26,7 +26,7 @@ export default function ProfileCompletionBanner({ onOpenProfile, suppressed }) {
   const remaining = progress.pointsTotal - progress.points;
 
   return (
-    <div className="flex shrink-0 items-center gap-3 border-b border-[#242424] bg-[#121212] px-3 py-2 sm:px-5">
+    <div className="flex shrink-0 items-center gap-2.5 border-b border-[#242424] bg-[#121212] px-3 py-2 sm:gap-3 sm:px-5">
       <ProfileProgressRing percent={progress.percent} size={22} strokeWidth={2}>
         <span className="text-[9px] font-semibold text-white">
           {progress.completedCount}
@@ -36,15 +36,15 @@ export default function ProfileCompletionBanner({ onOpenProfile, suppressed }) {
       <button
         type="button"
         onClick={onOpenProfile}
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left focus-visible:shadow-ds-ring focus-visible:outline-none"
       >
-        <span className="truncate text-sm font-medium text-white">
+        <span className="truncate text-[13px] font-medium text-white sm:text-sm">
           Finish your profile
         </span>
         <span className="hidden text-xs text-[#757575] sm:inline">
           {progress.completedCount} of {progress.totalCount} done
         </span>
-        <span className="shrink-0 rounded-full border border-[#3e2e00] bg-[#171200] px-2 py-0.5 text-xs font-semibold text-[#f2b500]">
+        <span className="shrink-0 whitespace-nowrap rounded-full border border-[#3e2e00] bg-[#171200] px-1.5 py-0.5 text-[11px] font-semibold text-[#f2b500] sm:px-2 sm:text-xs">
           +{remaining} pts
         </span>
         <ChevronRight className="size-4 shrink-0 text-[#757575]" aria-hidden />
@@ -54,7 +54,7 @@ export default function ProfileCompletionBanner({ onOpenProfile, suppressed }) {
         type="button"
         onClick={dismissBanner}
         aria-label="Dismiss profile reminder"
-        className="flex size-7 shrink-0 items-center justify-center rounded-md text-[#757575] transition-colors hover:bg-white/5 hover:text-white"
+        className="-mr-1 flex size-8 shrink-0 items-center justify-center rounded-md text-[#757575] transition-colors hover:bg-white/5 hover:text-white focus-visible:shadow-ds-ring focus-visible:outline-none sm:mr-0 sm:size-7"
       >
         <X className="size-4" aria-hidden />
       </button>

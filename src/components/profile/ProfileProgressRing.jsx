@@ -7,9 +7,14 @@ import { useId } from "react";
  * linear bar on a different design system, and its Radix dependency isn't in
  * this package's root deps.
  *
+ * The box is sized from a custom property rather than an inline `width`, so a
+ * caller can shrink it at a breakpoint (`max-sm:size-[60px]`) — an inline style
+ * would outrank the utility. The circle geometry lives in the viewBox, so the
+ * stroke scales with the box instead of thickening as the ring shrinks.
+ *
  * @param {object} props
  * @param {number} props.percent 0–100
- * @param {number} [props.size] outer diameter in px
+ * @param {number} [props.size] outer diameter in px, before any class override
  * @param {number} [props.strokeWidth]
  * @param {string} [props.className]
  * @param {import('react').ReactNode} props.children centred inside the ring
@@ -29,13 +34,11 @@ export default function ProfileProgressRing({
 
   return (
     <span
-      className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
-      style={{ width: size, height: size }}
+      className={`relative inline-flex size-[var(--ring-size)] shrink-0 items-center justify-center ${className}`}
+      style={{ "--ring-size": `${size}px` }}
     >
       <svg
-        className="absolute inset-0 -rotate-90"
-        width={size}
-        height={size}
+        className="absolute inset-0 size-full -rotate-90"
         viewBox={`0 0 ${size} ${size}`}
         aria-hidden
       >

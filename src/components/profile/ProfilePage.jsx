@@ -61,22 +61,26 @@ export default function ProfilePage({
         showCopilotTutorial={false}
       />
 
+      {/* The hairline runs full-bleed; only the content inside it is measured,
+          so a 27" monitor gets a readable column rather than a stretched card. */}
       <main className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="flex items-center gap-3 border-b border-[#242424] px-3 py-4 sm:gap-4 sm:px-5">
-          <button
-            type="button"
-            onClick={() => onBack?.()}
-            aria-label="Back"
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white"
-          >
-            <ChevronLeft className="size-6" strokeWidth={2} aria-hidden />
-          </button>
-          <h1 className="text-xl font-semibold text-white sm:text-2xl">
-            My Profile
-          </h1>
+        <div className="border-b border-[#242424]">
+          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-3 py-3.5 sm:gap-4 sm:px-5 sm:py-4">
+            <button
+              type="button"
+              onClick={() => onBack?.()}
+              aria-label="Back"
+              className="-ml-1.5 flex size-10 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white sm:ml-0 sm:size-9"
+            >
+              <ChevronLeft className="size-6" strokeWidth={2} aria-hidden />
+            </button>
+            <h1 className="truncate text-xl font-semibold text-white sm:text-2xl">
+              My Profile
+            </h1>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4 px-3 py-5 sm:px-5">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-3.5 px-3 py-4 sm:gap-4 sm:px-5 sm:py-5">
           <ProfileIdentityCard onNotify={notify} />
           <ProfileChecklistCard onNotify={notify} />
 

@@ -49,7 +49,7 @@ export default function ProfileCompleteModal({ onDone }) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/90 px-5 py-8">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto bg-black/90 px-4 py-8 sm:px-5">
       <button
         type="button"
         className="absolute inset-0 z-0 cursor-default border-0 bg-transparent"
@@ -65,11 +65,15 @@ export default function ProfileCompleteModal({ onDone }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-complete-title"
-        className="relative z-2 w-full max-w-[402px] rounded-xl border border-[#242424] bg-black p-6 text-center shadow-[0_8px_40px_rgba(0,0,0,0.45)]"
+        className="relative z-2 my-auto w-full max-w-[402px] rounded-xl border border-[#242424] bg-black p-5 text-center shadow-[0_8px_40px_rgba(0,0,0,0.45)] sm:p-6"
       >
-        <div className="flex flex-col items-center gap-5">
-          <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f7bb08] to-[#2fffce]">
-            <Check className="size-8 text-black" strokeWidth={2.5} aria-hidden />
+        <div className="flex flex-col items-center gap-4 sm:gap-5">
+          <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f7bb08] to-[#2fffce] sm:size-16">
+            <Check
+              className="size-7 text-black sm:size-8"
+              strokeWidth={2.5}
+              aria-hidden
+            />
           </span>
 
           <h2
@@ -79,7 +83,7 @@ export default function ProfileCompleteModal({ onDone }) {
             Profile complete
           </h2>
 
-          <p className="text-base leading-snug text-[#bfbfbf]">
+          <p className="text-sm leading-snug text-[#bfbfbf] sm:text-base">
             You earned{" "}
             <span className="bg-linear-to-r from-[#f7bb08] to-[#2fffce] bg-clip-text font-semibold text-transparent">
               {progress.points} HyprEarn Points
@@ -90,7 +94,7 @@ export default function ProfileCompleteModal({ onDone }) {
           <button
             type="button"
             onClick={close}
-            className="ds-terminal-gradient-cta w-full rounded-[10px] px-6 py-3 text-lg font-medium"
+            className="ds-terminal-gradient-cta w-full rounded-[10px] px-6 py-3 text-base font-medium sm:text-lg"
           >
             Back to trading
           </button>
