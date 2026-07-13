@@ -10,6 +10,9 @@ type VaultOpeningOverlayProps = {
   variant?: "default" | "v2";
 };
 
+/** One full breath of the loop: legs leave their venues, meet, and cancel. */
+const CYCLE_S = 1.9;
+
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -23,9 +26,10 @@ function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Single-beat open-vault motion. Which venue takes the long leg and which takes the
- * short leg is not settled at this point, so the overlay deliberately shows only the
- * two venues being wired together — no sides, no rates, no spread.
+ * Single-beat open-vault motion, built on one idea: two equal and opposite legs leave
+ * their venues, meet in the middle, and cancel into neutrality — which is what the vault
+ * *is*. Which venue takes which side is not settled at this point, so the two halves are
+ * deliberately symmetric: no sides, no rates, no spread, nothing to read.
  */
 export function VaultOpeningOverlay({
   venueA,
@@ -40,11 +44,11 @@ export function VaultOpeningOverlay({
     ? { type: "tween" as const, duration: 0.12 }
     : { type: "spring" as const, stiffness: 380, damping: 28 };
 
-  const pulseKeyframes = [
-    "0 0 0 0 rgba(182, 155, 106, 0)",
-    "0 0 18px 2px rgba(182, 155, 106, 0.26)",
-    "0 0 0 0 rgba(182, 155, 106, 0)",
-  ];
+  const loop = {
+    duration: CYCLE_S,
+    repeat: Infinity,
+    ease: "easeInOut" as const,
+  };
 
   const renderVenue = (venue: string, position: "left" | "right") => (
     <motion.div
@@ -64,6 +68,7 @@ export function VaultOpeningOverlay({
         position === "left" ? spring : { ...spring, delay: reduced ? 0 : 0.06 }
       }
     >
+      {/* Kicks at the top of each cycle — the venue "firing" its leg down the bridge. */}
       <motion.div
         className={clsx(
           "flex h-11 w-11 items-center justify-center rounded-full border",
@@ -71,8 +76,19 @@ export function VaultOpeningOverlay({
             ? "border-[rgba(255,255,255,0.08)] bg-[#080908]"
             : "border-[rgba(255,255,255,0.1)] bg-[#0a0a0a]",
         )}
-        animate={reduced ? {} : { boxShadow: pulseKeyframes }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+        animate={
+          reduced
+            ? {}
+            : {
+                boxShadow: [
+                  "0 0 22px 2px rgba(182,155,106,0.28)",
+                  "0 0 0 0 rgba(182,155,106,0)",
+                  "0 0 0 0 rgba(182,155,106,0)",
+                ],
+                scale: [1.06, 1, 1],
+              }
+        }
+        transition={{ ...loop, times: [0, 0.45, 1] }}
       >
         <Activity className="size-5 text-[#b69b6a]" strokeWidth={1.75} aria-hidden />
       </motion.div>
@@ -132,7 +148,7 @@ export function VaultOpeningOverlay({
               isV2 ? "text-[#888888]" : "text-[#9c9cac]",
             )}
           >
-            Setting up your hedge across {venueA} and {venueB}
+            Balancing your exposure across {venueA} and {venueB}
           </p>
         </div>
 
@@ -173,22 +189,86 @@ export function VaultOpeningOverlay({
               </defs>
             </svg>
 
+            {/* The neutral point the two legs cancel at — always present, quietly. */}
+            <div
+              className={clsx(
+                "absolute top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border",
+                isV2
+                  ? "border-[#c9a962]/60 bg-[#0a0a0a]"
+                  : "border-[#d6b06a]/60 bg-[#050505]",
+              )}
+              aria-hidden
+            />
+
             {!reduced && (
-              <motion.div
-                className={clsx(
-                  "pointer-events-none absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full",
-                  isV2
-                    ? "bg-[#b89a6e] shadow-[0_0_16px_rgba(184,154,110,0.55)]"
-                    : "bg-[#c4a574] shadow-[0_0_16px_rgba(196,165,116,0.5)]",
-                )}
-                initial={{ left: "8%", x: "-50%" }}
-                animate={{ left: ["8%", "92%", "8%"] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-              />
+              <>
+                {/* Equal and opposite: each leg runs in from its own venue... */}
+                {(["left", "right"] as const).map(from => (
+                  <motion.div
+                    key={from}
+                    className={clsx(
+                      "pointer-events-none absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full",
+                      isV2
+                        ? "bg-[#b89a6e] shadow-[0_0_16px_rgba(184,154,110,0.55)]"
+                        : "bg-[#c4a574] shadow-[0_0_16px_rgba(196,165,116,0.5)]",
+                    )}
+                    style={{ x: "-50%" }}
+                    animate={{
+                      left:
+                        from === "left"
+                          ? ["4%", "50%", "50%"]
+                          : ["96%", "50%", "50%"],
+                      opacity: [0, 1, 0],
+                      scale: [0.7, 1, 0.4],
+                    }}
+                    transition={{ ...loop, times: [0, 0.5, 0.62] }}
+                  />
+                ))}
+
+                {/* ...and where they meet, they cancel — the ring is the hedge going neutral. */}
+                <motion.div
+                  className={clsx(
+                    "pointer-events-none absolute top-1/2 h-8 w-8 -translate-y-1/2 rounded-full border",
+                    isV2 ? "border-[#c9a962]" : "border-[#d6b06a]",
+                  )}
+                  style={{ left: "50%", x: "-50%" }}
+                  animate={{
+                    scale: [0.15, 0.15, 1.5, 1.5],
+                    opacity: [0, 0.75, 0, 0],
+                  }}
+                  transition={{
+                    duration: CYCLE_S,
+                    repeat: Infinity,
+                    ease: "easeOut",
+                    times: [0, 0.52, 0.92, 1],
+                  }}
+                />
+              </>
             )}
           </div>
 
           {renderVenue(venueB, "right")}
+        </div>
+
+        {/* Loading affordance — motion only, nothing to read off it. */}
+        <div
+          className={clsx(
+            "mt-6 h-[2px] w-full max-w-[220px] overflow-hidden rounded-full",
+            isV2 ? "bg-[#1a1a1a]" : "bg-[rgba(255,255,255,0.06)]",
+          )}
+        >
+          <motion.div
+            className={clsx(
+              "h-full w-1/3 rounded-full bg-gradient-to-r from-transparent",
+              isV2 ? "via-[#c9a962] to-transparent" : "via-[#d6b06a] to-transparent",
+            )}
+            animate={reduced ? { opacity: 0.6 } : { x: ["-100%", "300%"] }}
+            transition={
+              reduced
+                ? { duration: 0 }
+                : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+            }
+          />
         </div>
       </motion.div>
     </div>
