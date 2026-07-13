@@ -378,7 +378,7 @@ export function VaultOpeningOverlay({
         </div>
 
         {/* Says out loud why no side is shown, so the omission reads as intent — and
-            what actually decides it: the funding spread the vault is there to earn. */}
+            what actually decides it: live funding rates, at execution. */}
         <motion.p
           className={clsx(
             "mt-8 max-w-[420px] text-balance text-center font-['Onest',sans-serif] text-[13px] leading-[1.6]",
@@ -388,8 +388,8 @@ export function VaultOpeningOverlay({
           animate={{ opacity: 1 }}
           transition={{ delay: reduced ? 0 : 0.35, duration: 0.4 }}
         >
-          Live funding rates decide the legs. The spread between them is your yield —
-          sides show the moment you're live.
+          Legs are set at execution, based on live funding rates across venues and
+          whichever side gives the best overall yield.
         </motion.p>
       </motion.div>
     </div>

@@ -7,6 +7,7 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
+import MoreSheet from "./MoreSheet.jsx";
 import { VAULT_VIEWS } from "./VaultsNavDropdown.jsx";
 
 const NAV_ITEMS = [
@@ -27,30 +28,9 @@ export default function CopilotBottomNav({
 }) {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [vaultMenuOpen, setVaultMenuOpen] = useState(false);
-  const moreRef = useRef(null);
   const vaultRef = useRef(null);
 
-  const hasMoreMenu =
-    typeof onCopilotTutorial === "function" ||
-    typeof onVaultTutorial === "function";
   const hasVaultMenu = typeof onVaultViewChange === "function";
-
-  useEffect(() => {
-    if (!moreMenuOpen) return;
-    const close = (e) => {
-      const el = moreRef.current;
-      if (el && !el.contains(e.target)) setMoreMenuOpen(false);
-    };
-    const onKey = (e) => {
-      if (e.key === "Escape") setMoreMenuOpen(false);
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [moreMenuOpen]);
 
   useEffect(() => {
     if (!vaultMenuOpen) return;
@@ -81,14 +61,12 @@ export default function CopilotBottomNav({
 
         if (isMore) {
           return (
-            <div key={id} className="relative flex min-w-0 flex-1" ref={moreRef}>
+            <div key={id} className="relative flex min-w-0 flex-1">
               <button
                 type="button"
                 aria-expanded={moreMenuOpen}
-                aria-haspopup={hasMoreMenu ? "menu" : undefined}
-                onClick={() => {
-                  if (hasMoreMenu) setMoreMenuOpen((o) => !o);
-                }}
+                aria-haspopup="dialog"
+                onClick={() => setMoreMenuOpen((o) => !o)}
                 className={`flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-colors ${
                   moreMenuOpen
                     ? "bg-[#3e2e00]/40 text-[#f2b500]"
@@ -98,39 +76,12 @@ export default function CopilotBottomNav({
                 <Icon className="size-5 shrink-0" strokeWidth={2} aria-hidden />
                 <span className="text-[10px] font-medium leading-none">{label}</span>
               </button>
-              {moreMenuOpen && hasMoreMenu ? (
-                <div
-                  role="menu"
-                  className="absolute bottom-full left-1/2 z-[60] mb-2 w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-lg border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
-                >
-                  {typeof onCopilotTutorial === "function" ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="block w-full px-3 py-2.5 text-left text-sm text-white hover:bg-white/10"
-                      onClick={() => {
-                        onCopilotTutorial();
-                        setMoreMenuOpen(false);
-                      }}
-                    >
-                      AI Copilot tutorial
-                    </button>
-                  ) : null}
-                  {typeof onVaultTutorial === "function" ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="block w-full px-3 py-2.5 text-left text-sm text-white hover:bg-white/10"
-                      onClick={() => {
-                        onVaultTutorial();
-                        setMoreMenuOpen(false);
-                      }}
-                    >
-                      Vault tutorial
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
+              <MoreSheet
+                open={moreMenuOpen}
+                onClose={() => setMoreMenuOpen(false)}
+                onCopilotTutorial={onCopilotTutorial}
+                onVaultTutorial={onVaultTutorial}
+              />
             </div>
           );
         }
