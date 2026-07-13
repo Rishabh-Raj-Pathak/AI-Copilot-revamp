@@ -18,6 +18,46 @@ const CYCLE_S = 2.1;
 const RING_MASK =
   "radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px))";
 
+/** Lattice cell, in px. The drift below is derived from it, so they stay in step. */
+const LATTICE = 22;
+
+/**
+ * Sliding the lattice this far horizontally advances each 45° hatch by exactly one
+ * cell (LATTICE * √2 * cos45° = LATTICE), so the loop closes with no visible jump.
+ */
+const LATTICE_DRIFT = LATTICE * Math.SQRT2;
+
+/** Holds the texture to the middle, where the venues are, and off the card's edges. */
+const LATTICE_FADE =
+  "radial-gradient(ellipse at 50% 45%, #000 0%, rgba(0,0,0,0.45) 48%, transparent 78%)";
+
+/** One tile of a price walk, on a 0–80 scale about a neutral axis at 40. */
+const TAPE_TILE_W = 600;
+const TAPE_STEP = 50;
+const TAPE_MID = 40;
+/** First and last must match, or the tile seams when it wraps. */
+const TAPE_WALK = [40, 27, 33, 18, 25, 12, 21, 31, 24, 37, 30, 45, 40];
+
+/** Two tiles laid end to end, so translating by exactly one tile loops seamlessly. */
+function tapePath(invert: boolean): string {
+  const points: string[] = [];
+  for (let tile = 0; tile < 2; tile += 1) {
+    // Skip the repeated seam point on the second tile — it duplicates the first's last.
+    const start = tile === 0 ? 0 : 1;
+    for (let i = start; i < TAPE_WALK.length; i += 1) {
+      const x = tile * TAPE_TILE_W + i * TAPE_STEP;
+      const raw = TAPE_WALK[i];
+      const y = invert ? 2 * TAPE_MID - raw : raw;
+      points.push(`${points.length === 0 ? "M" : "L"} ${x} ${y}`);
+    }
+  }
+  return points.join(" ");
+}
+
+/** Keeps the tape off the card's edges and out from under the copy. */
+const TAPE_FADE =
+  "linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%)";
+
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -44,6 +84,9 @@ export function VaultOpeningOverlay({
   const reduced = usePrefersReducedMotion();
   const isV2 = variant === "v2";
   const uid = useId().replace(/:/g, "");
+
+  /** Brand gold as raw channels, so every alpha step below stays on the same hue. */
+  const gold = isV2 ? "201,169,98" : "214,176,106";
 
   const loop = {
     duration: CYCLE_S,
@@ -118,23 +161,97 @@ export function VaultOpeningOverlay({
       aria-live="polite"
       aria-atomic="true"
       className={clsx(
-        "relative flex h-full min-h-[320px] w-full flex-col items-center justify-center overflow-hidden px-5 py-8 backdrop-blur-md md:px-8",
-        isV2
-          ? "rounded-[12px] bg-[radial-gradient(ellipse_at_50%_40%,rgba(201,169,98,0.10)_0%,rgba(0,0,0,0.94)_58%,rgba(0,0,0,0.97)_100%)]"
-          : "rounded-[18px] bg-[radial-gradient(ellipse_at_50%_40%,rgba(214,176,106,0.12)_0%,rgba(0,0,0,0.92)_58%,rgba(0,0,0,0.96)_100%)]",
+        "relative flex h-full min-h-[320px] w-full flex-col items-center justify-center overflow-hidden px-5 py-8 md:px-8",
+        isV2 ? "rounded-[12px]" : "rounded-[18px]",
       )}
+      style={{
+        // The brand's warm-black card gradient, same axis as the vault cards.
+        background: isV2
+          ? "linear-gradient(226.75deg, rgb(16,14,12) 0%, rgb(6,6,5) 100%)"
+          : "linear-gradient(226.75deg, rgb(22,20,18) 0%, rgb(10,9,8) 100%)",
+      }}
     >
-      {!reduced && (
-        <motion.div
-          className="pointer-events-none absolute inset-0 opacity-[0.3]"
+      {/* Diamond lattice: the vault's own motif, tiled and drifting. Transform-only,
+          so the whole texture rides on the compositor and costs nothing per frame. */}
+      <motion.div
+        className="pointer-events-none absolute -inset-[64px]"
+        style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent 0px, transparent ${
+            LATTICE - 1
+          }px, rgba(${gold},0.055) ${LATTICE - 1}px, rgba(${gold},0.055) ${LATTICE}px), repeating-linear-gradient(-45deg, transparent 0px, transparent ${
+            LATTICE - 1
+          }px, rgba(${gold},0.055) ${LATTICE - 1}px, rgba(${gold},0.055) ${LATTICE}px)`,
+          maskImage: LATTICE_FADE,
+          WebkitMaskImage: LATTICE_FADE,
+        }}
+        animate={reduced ? {} : { x: [0, -LATTICE_DRIFT] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        aria-hidden
+      />
+
+      {/* The tape: a long leg and its exact mirror, drifting about a neutral axis.
+          Two equal and opposite price paths that cancel — the strategy, stated quietly
+          in the background. Kept dim; the venues are what the eye should land on. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-1/2 h-[150px] -translate-y-1/2 overflow-hidden"
+        style={{ maskImage: TAPE_FADE, WebkitMaskImage: TAPE_FADE }}
+        aria-hidden
+      >
+        {/* The neutral line the two legs mirror about — what the vault is aiming at. */}
+        <div
+          className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2"
           style={{
-            background:
-              "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(182,155,106,0.05) 90deg, transparent 180deg)",
+            backgroundImage: `repeating-linear-gradient(90deg, rgba(${gold},0.18) 0px, rgba(${gold},0.18) 3px, transparent 3px, transparent 9px)`,
           }}
-          animate={{ rotate: [0, 360] }}
-          transition={{ duration: 34, repeat: Infinity, ease: "linear" }}
         />
-      )}
+        <motion.svg
+          className="absolute left-0 top-0 h-full w-[200%]"
+          viewBox={`0 0 ${TAPE_TILE_W * 2} 80`}
+          preserveAspectRatio="none"
+          fill="none"
+          animate={reduced ? {} : { x: ["0%", "-50%"] }}
+          transition={{ duration: 34, repeat: Infinity, ease: "linear" }}
+        >
+          <path
+            d={tapePath(false)}
+            stroke={`rgba(${gold},0.16)`}
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            d={tapePath(true)}
+            stroke={`rgba(${gold},0.09)`}
+            strokeWidth="1"
+            strokeDasharray="4 5"
+            vectorEffect="non-scaling-stroke"
+          />
+        </motion.svg>
+      </div>
+
+      {/* Hairline frame: the seam of the door. Static, so it costs a single paint. */}
+      <div
+        className={clsx(
+          "pointer-events-none absolute inset-0 ring-1 ring-inset",
+          isV2
+            ? "rounded-[12px] ring-[#c9a962]/10"
+            : "rounded-[18px] ring-[#d6b06a]/[0.12]",
+        )}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-12 top-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, rgba(${gold},0.3), transparent)`,
+        }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-12 bottom-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, rgba(${gold},0.18), transparent)`,
+        }}
+        aria-hidden
+      />
 
       <motion.div
         className="relative z-[2] flex w-full max-w-[420px] flex-col items-center"
@@ -148,7 +265,7 @@ export function VaultOpeningOverlay({
             isV2 ? "text-[#c9a962]" : "text-[#d6b06a]",
           )}
         >
-          Opening vault
+          Opening delta neutral vault
         </p>
         <p
           className={clsx(
