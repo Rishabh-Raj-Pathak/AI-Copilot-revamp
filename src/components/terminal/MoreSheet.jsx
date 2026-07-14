@@ -112,7 +112,7 @@ export default function MoreSheet({
         >
           <motion.div
             key="more-sheet"
-            className="flex max-h-[min(88dvh,36rem)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border-t border-[#242424] bg-[#0f0f0f] shadow-[inset_0_1px_0_rgba(242,181,0,0.22),0_-12px_48px_rgba(0,0,0,0.55)]"
+            className="flex max-h-[min(88dvh,36rem)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border-t border-[#242424] bg-[#0f0f0f] shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="more-sheet-title"
@@ -146,9 +146,9 @@ export default function MoreSheet({
 
             <div className="minimal-scrollbar flex-1 overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
               {tutorials.length ? (
-                <section aria-labelledby="more-sheet-product">
-                  <h3 id="more-sheet-product" className={SECTION_LABEL_CLASS}>
-                    Product
+                <section aria-labelledby="more-sheet-tutorials">
+                  <h3 id="more-sheet-tutorials" className={SECTION_LABEL_CLASS}>
+                    Tutorials
                   </h3>
                   <div className="divide-y divide-[#1c1c1c] border-y border-[#1c1c1c]">
                     {tutorials.map(({ id, label, icon: Icon, run }) => (
