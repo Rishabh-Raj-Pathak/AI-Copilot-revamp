@@ -53,25 +53,38 @@ export default function FollowOnXStep({ followed, onFollowed }) {
   };
 
   return (
-    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs leading-relaxed text-[#929292]">
-        Alpha, agent drops and launch news land on X first.
-      </p>
-
-      <button
-        type="button"
-        onClick={follow}
-        disabled={pending}
-        className="flex shrink-0 items-center justify-center gap-2 rounded-lg border border-[#242424] bg-black px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
-      >
+    /* The row `ConnectSocialStep` uses for an account you haven't linked yet,
+       down to the geometry: glyph, what it gets you, affordance on the right
+       edge. Step two sits directly above this one — the two panels are the same
+       kind of offer, so they're the same shape. Solid border, not dashed: this
+       step is required, where adding a second account isn't. */
+    <button
+      type="button"
+      onClick={follow}
+      disabled={pending}
+      className="flex w-full items-center gap-2.5 rounded-lg border border-[#242424] bg-black px-3 py-2 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#242424] bg-[#0f0f0f] text-white">
         <XGlyph className="size-4" />
-        {pending ? `Confirming follow…` : `Follow ${X_HANDLE}`}
-        {pending ? (
-          <Loader2 className="size-4 animate-spin text-[#00f3b6]" aria-hidden />
-        ) : (
-          <ExternalLink className="size-3.5 text-[#757575]" aria-hidden />
-        )}
-      </button>
-    </div>
+      </span>
+
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="text-sm font-semibold text-white">
+          {pending ? "Confirming follow…" : `Follow ${X_HANDLE}`}
+        </span>
+        <span className="text-xs leading-snug text-[#929292] max-sm:line-clamp-2 sm:truncate">
+          Alpha, agent drops and launch news land on X first.
+        </span>
+      </span>
+
+      {pending ? (
+        <Loader2
+          className="size-4 shrink-0 animate-spin text-[#00f3b6]"
+          aria-hidden
+        />
+      ) : (
+        <ExternalLink className="size-4 shrink-0 text-[#757575]" aria-hidden />
+      )}
+    </button>
   );
 }

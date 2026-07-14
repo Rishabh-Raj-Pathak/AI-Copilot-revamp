@@ -59,7 +59,7 @@ export default function ProfileChecklistCard({ onNotify }) {
     { id: STEP_WALLET, label: "Wallet connected" },
     {
       id: STEP_SOCIAL,
-      label: "Link X or Telegram",
+      label: "Link Telegram or X",
       panel: (
         <>
           <ConnectSocialStep
@@ -90,21 +90,30 @@ export default function ProfileChecklistCard({ onNotify }) {
   const remaining = progress.pointsTotal - progress.points;
 
   return (
+    /* One column system, top to bottom: a header band, then the stepper beneath
+       it at the card's full width. The card is wide because the page is, and the
+       width is spent on a single set of edges — labels start at the marker rail,
+       points land in one column, chevrons sit on the card's right padding, under
+       the header's own right-aligned line. Nothing floats. */
     <section className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4 sm:p-5">
-      <header className="flex items-baseline justify-between gap-3">
+      <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-b border-[#242424] pb-3.5 sm:pb-4">
         <h2 className="text-base font-semibold text-white">
           Complete your profile
         </h2>
-        <span className="shrink-0 text-xs text-[#757575]">
+        <span className="shrink-0 rounded-full border border-[#242424] bg-black px-2 py-0.5 text-[11px] font-medium tabular-nums text-[#929292]">
           {progress.completedCount} of {progress.totalCount}
         </span>
+        {/* Full line of its own on mobile, where right-aligning a sentence under
+            a title reads as a stray fragment. */}
+        <p className="w-full text-xs text-[#757575] sm:ml-auto sm:w-auto">
+          <span className="font-semibold text-[#f2b500]">
+            +{remaining} points
+          </span>{" "}
+          left, including a +{PROFILE_POINTS.completionBonus} finish bonus
+        </p>
       </header>
-      <p className="mt-1 text-xs text-[#757575]">
-        <span className="font-semibold text-[#f2b500]">+{remaining} points</span>{" "}
-        left, including a +{PROFILE_POINTS.completionBonus} finish bonus
-      </p>
 
-      <ol className="mt-4">
+      <ol className="mt-4 sm:mt-5">
         {steps.map((step, i) => (
           <StepRow
             key={step.id}
@@ -129,12 +138,26 @@ export default function ProfileChecklistCard({ onNotify }) {
  * The marker column grows with the row, so the rail closes the gap to the next
  * marker whether the panel is open or shut. A step with no panel isn't a button
  * — nothing to disclose, nothing to press.
+ *
+ * The row is a table row, not a floating group: label from the rail, points in a
+ * fixed column, chevron on the card's edge. The panel opens *under* its own row,
+ * flush with the label, so an open step stays one block instead of a header here
+ * and a detail pane over there.
  */
 function StepRow({ index, label, points, done, open, last, panel, onToggle }) {
   const panelId = `profile-step-${index}`;
 
+  const row = (
+    <>
+      <RowLabel done={done} open={open}>
+        {label}
+      </RowLabel>
+      <RowPoints done={done}>{points}</RowPoints>
+    </>
+  );
+
   return (
-    <li className="flex gap-2.5 sm:gap-3">
+    <li className="flex gap-3">
       <div className="flex flex-col items-center">
         <span
           className={`flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-colors ${
@@ -150,19 +173,16 @@ function StepRow({ index, label, points, done, open, last, panel, onToggle }) {
         {last ? null : <span className="my-1 w-px flex-1 bg-[#242424]" aria-hidden />}
       </div>
 
-      <div className={`min-w-0 flex-1 ${last ? "" : "pb-4 sm:pb-5"}`}>
+      <div className={`min-w-0 flex-1 ${last ? "" : "pb-5"}`}>
         {panel ? (
           <button
             type="button"
             onClick={onToggle}
             aria-expanded={open}
             aria-controls={panelId}
-            className="group flex w-full items-center gap-2 py-0.5 text-left"
+            className="group flex w-full items-center gap-3 py-0.5 text-left"
           >
-            <RowLabel done={done} open={open}>
-              {label}
-            </RowLabel>
-            <RowPoints done={done}>{points}</RowPoints>
+            {row}
             <ChevronDown
               className={`size-4 shrink-0 text-[#575757] transition-transform group-hover:text-[#bfbfbf] ${
                 open ? "rotate-180" : ""
@@ -171,16 +191,18 @@ function StepRow({ index, label, points, done, open, last, panel, onToggle }) {
             />
           </button>
         ) : (
-          <div className="flex w-full items-center gap-2 py-0.5">
-            <RowLabel done={done}>{label}</RowLabel>
-            <RowPoints done={done}>{points}</RowPoints>
-            {/* Stands in for the chevron so points share one column. */}
+          <div className="flex w-full items-center gap-3 py-0.5">
+            {row}
+            {/* Stands in for the chevron so points hold one column. */}
             <span className="size-4 shrink-0" aria-hidden />
           </div>
         )}
 
+        {/* The card is as wide as the page; the panel is as wide as it needs to
+            be. One measure for every step's detail, set here rather than inside
+            each step, so no step invents its own. */}
         {open ? (
-          <div id={panelId} className="mt-3">
+          <div id={panelId} className="mt-3.5 max-w-2xl">
             {panel}
           </div>
         ) : null}
@@ -206,11 +228,16 @@ function RowLabel({ done, open, children }) {
   );
 }
 
+/**
+ * Fixed width, right-aligned: three scores of different lengths, one column.
+ * They're the reason the step exists, so they read at the label's size — dimmer
+ * than the label while unearned, and the brightest thing in the row once won.
+ */
 function RowPoints({ done, children }) {
   return (
     <span
-      className={`shrink-0 text-xs font-semibold ${
-        done ? "text-[#00f3b6]" : "text-[#575757]"
+      className={`w-14 shrink-0 text-right text-sm font-semibold tabular-nums ${
+        done ? "text-[#00f3b6]" : "text-[#929292]"
       }`}
     >
       +{children}

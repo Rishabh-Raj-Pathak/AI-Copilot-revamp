@@ -61,16 +61,17 @@ export default function ProfilePage({
         showCopilotTutorial={false}
       />
 
-      {/* The hairline runs full-bleed; only the content inside it is measured,
-          so a 27" monitor gets a readable column rather than a stretched card. */}
+      {/* Full-bleed, on the gutter scale every other page uses (see `VaultsPage`):
+          16px on mobile, stepping up to 48px on a wide desktop. The title bar
+          shares it, so the back arrow sits on the same line as the card edges. */}
       <main className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div className="border-b border-[#242424]">
-          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-3 py-3.5 sm:gap-4 sm:px-5 sm:py-4">
+          <div className="flex w-full items-center gap-4 px-5 py-4 max-tablet:gap-2 max-tablet:px-4 max-tablet:py-3.5 sm:px-8 lg:px-10 xl:px-12">
             <button
               type="button"
               onClick={() => onBack?.()}
               aria-label="Back"
-              className="-ml-1.5 flex size-10 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white sm:ml-0 sm:size-9"
+              className="-ml-1.5 flex size-10 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white sm:size-9"
             >
               <ChevronLeft className="size-6" strokeWidth={2} aria-hidden />
             </button>
@@ -80,7 +81,7 @@ export default function ProfilePage({
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-3.5 px-3 py-4 sm:gap-4 sm:px-5 sm:py-5">
+        <div className="flex w-full flex-col gap-6 px-5 py-8 pb-16 max-tablet:gap-4 max-tablet:px-4 max-tablet:py-5 max-tablet:pb-4 sm:px-8 lg:px-10 xl:px-12">
           <ProfileIdentityCard onNotify={notify} />
           <ProfileChecklistCard onNotify={notify} />
 

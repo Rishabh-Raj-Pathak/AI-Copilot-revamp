@@ -13,8 +13,12 @@ import {
 const CHOICE_CARD_CLASS =
   "group flex flex-1 flex-col gap-2 rounded-lg border border-[#242424] bg-black p-3.5 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60";
 
-/** X first: it carries the display name the avatar and profile header render. */
-const PROVIDER_ORDER = ["x", "telegram"];
+/**
+ * Telegram first — it's the one we'd rather a trader took, since alerts bring
+ * them back. X still supplies the display name when both are linked; that's
+ * `ProfileContext`'s business, not this list's.
+ */
+const PROVIDER_ORDER = ["telegram", "x"];
 
 const GLYPHS = {
   x: <XGlyph className="size-4" />,
@@ -108,17 +112,32 @@ export default function ConnectSocialStep({ socials, onConnect, onNotify }) {
   if (linked.length === 0) {
     if (pending === "telegram") return pairing;
     return (
-      <div className="flex flex-col gap-2.5 sm:flex-row">
-        {PROVIDER_ORDER.map((id) => (
+      <div className="flex flex-col gap-2.5">
+        <p className="text-xs text-[#757575]">
+          <span className="font-semibold text-[#bfbfbf]">Either one</span> earns
+          the step — add the other whenever you like.
+        </p>
+
+        {/* Equal halves of whatever measure the host gives it, with the `or`
+            between them: two alternatives, and a wider button would read as the
+            recommended one rather than a choice. */}
+        <div className="flex flex-col gap-2.5 sm:flex-row">
           <ChoiceCard
-            key={id}
-            glyph={GLYPHS[id]}
-            provider={SOCIAL_PROVIDERS[id]}
-            pending={pending === id}
+            glyph={GLYPHS[PROVIDER_ORDER[0]]}
+            provider={SOCIAL_PROVIDERS[PROVIDER_ORDER[0]]}
+            pending={pending === PROVIDER_ORDER[0]}
             disabled={Boolean(pending)}
-            onClick={begin[id]}
+            onClick={begin[PROVIDER_ORDER[0]]}
           />
-        ))}
+          <OrDivider />
+          <ChoiceCard
+            glyph={GLYPHS[PROVIDER_ORDER[1]]}
+            provider={SOCIAL_PROVIDERS[PROVIDER_ORDER[1]]}
+            pending={pending === PROVIDER_ORDER[1]}
+            disabled={Boolean(pending)}
+            onClick={begin[PROVIDER_ORDER[1]]}
+          />
+        </div>
       </div>
     );
   }
@@ -148,6 +167,23 @@ export default function ConnectSocialStep({ socials, onConnect, onNotify }) {
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Turns the pair into a choice rather than a to-do list: a rule down the middle
+ * of the row, across it once the cards stack.
+ */
+function OrDivider() {
+  return (
+    <span
+      className="flex items-center justify-center gap-2.5 text-[11px] font-medium uppercase tracking-wide text-[#575757] sm:flex-col sm:gap-2"
+      aria-hidden
+    >
+      <span className="h-px flex-1 bg-[#242424] sm:h-auto sm:w-px sm:flex-1" />
+      or
+      <span className="h-px flex-1 bg-[#242424] sm:h-auto sm:w-px sm:flex-1" />
+    </span>
   );
 }
 
@@ -239,7 +275,7 @@ function TelegramPairing({ code, onCancel, onCopyCode, copied }) {
     <div className="flex flex-col gap-3.5 rounded-lg border border-[#242424] bg-black p-3.5 sm:p-4">
       <div className="flex items-center gap-2 text-sm font-semibold text-white">
         <TelegramGlyph className="size-[18px] shrink-0" />
-        Connect Telegram
+        Join Telegram
       </div>
 
       <ol className="flex flex-col gap-2.5 text-xs text-[#bfbfbf]">

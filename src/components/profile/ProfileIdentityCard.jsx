@@ -47,8 +47,13 @@ export default function ProfileIdentityCard({ onNotify }) {
   const displayName = social?.name ?? truncateAddress(address);
 
   return (
-    <section className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4 sm:p-5">
-      <div className="flex items-center gap-3 sm:gap-4">
+    /* Two clusters, edge to edge: who you are on the left, the wallet you are it
+       *with* on the right. The card is as wide as the page, and on a wide desktop
+       all of that slack falls between the clusters — never inside one, which is
+       what strands a score a foot from the name it belongs to, or a copy button a
+       foot from the address it copies. */
+    <section className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4 sm:p-5 xl:flex xl:items-center xl:gap-8">
+      <div className="flex items-center gap-3 sm:gap-4 xl:min-w-0">
         <ProfileProgressRing
           percent={progress.percent}
           size={68}
@@ -64,7 +69,9 @@ export default function ProfileIdentityCard({ onNotify }) {
           />
         </ProfileProgressRing>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {/* Capped on desktop: past ~15rem a display name is stealing width from
+            the address, not earning it. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-1 xl:max-w-60">
           <h2 className="truncate text-base font-semibold text-white sm:text-lg">
             {displayName}
           </h2>
@@ -85,8 +92,10 @@ export default function ProfileIdentityCard({ onNotify }) {
           )}
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="bg-linear-to-r from-[#f7bb08] to-[#2fffce] bg-clip-text text-lg font-semibold text-transparent sm:text-xl">
+        {/* Its own cell once there's room for the hairline: the score reads as a
+            stat the card reports, not as something that drifted off the name. */}
+        <div className="flex shrink-0 flex-col items-end gap-0.5 xl:items-start xl:border-l xl:border-[#242424] xl:pl-5">
+          <span className="bg-linear-to-r from-[#f7bb08] to-[#2fffce] bg-clip-text text-xl font-semibold tabular-nums text-transparent sm:text-2xl">
             {progress.points}
           </span>
           {/* `pts` at 320px: the 15px it saves is what keeps an unlinked profile's
@@ -99,7 +108,10 @@ export default function ProfileIdentityCard({ onNotify }) {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2 border-t border-[#242424] pt-3.5">
+      {/* Stacked under a hairline until there's room; then it lifts onto the row
+          and sits against the right edge, actions last — the same edge the
+          checklist's chevrons hold, one card down. */}
+      <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2 border-t border-[#242424] pt-3.5 xl:mt-0 xl:ml-auto xl:min-w-0 xl:border-t-0 xl:pt-0">
         {/* Dropped on mobile: a `0x…` in mono next to a chain badge needs no caption,
             and its 46px is the difference between one line and two. */}
         <span className="hidden text-[10px] font-medium uppercase tracking-wide text-[#757575] sm:inline">

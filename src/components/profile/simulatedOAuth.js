@@ -107,8 +107,8 @@ export const SOCIAL_PROVIDERS = {
   telegram: {
     id: "telegram",
     name: "Telegram",
-    connectLabel: "Connect Telegram",
-    addLabel: "Add Telegram",
+    connectLabel: "Join Telegram",
+    addLabel: "Join Telegram",
     pendingLabel: "Waiting for Telegram…",
     benefit: "Liquidation and agent alerts, pushed to your phone.",
   },
