@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { clsx } from "clsx";
 import {
+  ArrowDown,
   Check,
   ClipboardPaste,
   Cookie,
@@ -80,6 +81,15 @@ export function VariationalOnboardingModal({
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Set when the user opens the market tab from step 3; on their return we
+  // scroll the paste field into view + focus it so they land right on it.
+  const [awaitingPaste, setAwaitingPaste] = useState(false);
+  const fieldRef = useRef<HTMLTextAreaElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  // True while the paste field is scrolled out of view below the fold, so we
+  // can surface a "paste below" nudge — otherwise the input is easy to miss.
+  const [scrollHidden, setScrollHidden] = useState(false);
 
   // Escape closes (but not mid-activation — the request is in flight).
   useEffect(() => {
@@ -110,7 +120,61 @@ export function VariationalOnboardingModal({
     setPasteError(null);
     setUploadState("idle");
     setUploadError(null);
+    setAwaitingPaste(false);
   }, [open]);
+
+  // When the user returns from the market tab (step 3), bring the paste field
+  // into view and focus it so they don't have to hunt for where to paste.
+  useEffect(() => {
+    if (!open || !awaitingPaste) return;
+    const onReturn = () => {
+      if (document.visibilityState !== "visible") return;
+      setAwaitingPaste(false);
+      window.setTimeout(() => {
+        fieldRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        fieldRef.current?.focus({ preventScroll: true });
+      }, 180);
+    };
+    window.addEventListener("focus", onReturn);
+    document.addEventListener("visibilitychange", onReturn);
+    return () => {
+      window.removeEventListener("focus", onReturn);
+      document.removeEventListener("visibilitychange", onReturn);
+    };
+  }, [open, awaitingPaste]);
+
+  // Track whether the scroll body has content hidden below the fold. The paste
+  // field lives at the bottom, so when it's out of view we show a cue pointing
+  // down to it. Recomputes on scroll, viewport resize, and content growth
+  // (error rows / parsed state change the body height).
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => {
+      const overflowing = el.scrollHeight - el.clientHeight > 12;
+      const atBottom =
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 28;
+      setScrollHidden(overflowing && !atBottom);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    const ro =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    if (ro) {
+      ro.observe(el);
+      if (contentRef.current) ro.observe(contentRef.current);
+    }
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      ro?.disconnect();
+    };
+  }, [open]);
+
+  const scrollToField = () =>
+    fieldRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
 
   if (!open || typeof document === "undefined") return null;
 
@@ -214,7 +278,12 @@ export function VariationalOnboardingModal({
         </div>
 
         {/* Body */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 max-tablet:px-4">
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={scrollRef}
+            className="h-full overflow-y-auto px-5 py-4 max-tablet:px-4"
+          >
+            <div ref={contentRef}>
           <p className="text-[13px] leading-relaxed text-[#a9aab2]">
             Variational signs in with your browser session, not a wallet
             signature. Watch the short walkthrough, then follow the steps below.
@@ -239,24 +308,59 @@ export function VariationalOnboardingModal({
                 row={row}
                 done={tasks[row.key]}
                 onToggle={() => toggleTask(row.key)}
-                onMark={() => markTask(row.key)}
+                onMark={() => {
+                  markTask(row.key);
+                  // Opening the market means the next thing they do is copy +
+                  // come back to paste — arm the auto-scroll for their return.
+                  if (row.key === "copy") setAwaitingPaste(true);
+                }}
               />
             ))}
           </div>
 
           {/* Paste + activate. */}
-          <p className="mt-4 mb-1.5 text-[10.5px] font-semibold uppercase tracking-[1px] text-[#8a7550]">
-            Paste it here
+          <p className="mt-5 mb-1.5 text-[10.5px] font-semibold uppercase tracking-[1px] text-[#8a7550]">
+            Paste your session here
           </p>
           <PasteField
+            fieldRef={fieldRef}
             value={raw}
             parsed={parsed}
             error={pasteError}
             uploadState={uploadState}
             uploadError={uploadError}
+            /* Copied but nothing pasted yet → draw the eye to the field. */
+            highlight={tasks.copy && !parsed && !pasteError}
             onChange={onPasteChange}
             onClear={() => onPasteChange("")}
           />
+            </div>
+          </div>
+
+          {/* Bottom cue — a soft fade plus a tap-to-jump nudge, shown only while
+              the paste field is scrolled out of view so users know an input
+              waits below. Hides itself the moment the field is on screen. */}
+          <div
+            className={clsx(
+              "pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-3 transition-opacity duration-200",
+              scrollHidden ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-[linear-gradient(180deg,rgba(7,7,7,0)_0%,rgba(7,7,7,0.55)_45%,rgba(7,7,7,0.95)_100%)]" />
+            <button
+              type="button"
+              onClick={scrollToField}
+              className={clsx(
+                "relative inline-flex items-center gap-1.5 rounded-full border border-[rgba(214,176,106,0.5)] bg-[rgba(20,16,11,0.96)] px-3.5 py-1.5 text-[11px] font-semibold text-[#f0ddb9] shadow-[0_8px_22px_rgba(0,0,0,0.55)] backdrop-blur transition-all duration-200 hover:border-[rgba(206,163,95,0.78)]",
+                scrollHidden
+                  ? "pointer-events-auto translate-y-0"
+                  : "pointer-events-none translate-y-1",
+              )}
+            >
+              Paste session below
+              <ArrowDown className="h-3.5 w-3.5 motion-safe:animate-bounce" />
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
@@ -293,7 +397,7 @@ export function VariationalOnboardingModal({
 function VideoFrame() {
   const isVideoFile = /\.(mp4|webm|ogg)(\?.*)?$/i.test(VARIATIONAL_VIDEO_SRC);
   return (
-    <div className="relative mt-3.5 aspect-video w-full overflow-hidden rounded-[12px] border border-[rgba(214,176,106,0.22)] bg-[linear-gradient(135deg,rgba(20,18,15,0.98)_0%,rgba(9,9,9,0.99)_100%)]">
+    <div className="relative mt-3.5 aspect-video max-h-[156px] w-full overflow-hidden rounded-[12px] border border-[rgba(214,176,106,0.22)] bg-[linear-gradient(135deg,rgba(20,18,15,0.98)_0%,rgba(9,9,9,0.99)_100%)]">
       {isVideoFile ? (
         <video
           src={VARIATIONAL_VIDEO_SRC}
@@ -342,7 +446,7 @@ const TASK_ROWS: TaskRowDef[] = [
   {
     key: "copy",
     title: "Copy your session",
-    detail: "On the market page, open the Cookie-Editor extension and hit Copy, then paste it below.",
+    detail: "On the market page, open the Cookie-Editor extension, switch to JSON, and hit Copy. Then paste it below.",
     href: VARIATIONAL_MARKET_URL,
     cta: "Open market",
   },
@@ -413,21 +517,26 @@ function TaskRow({ index, row, done, onToggle, onMark }: TaskRowProps) {
 /* ------------------------------ Paste ---------------------------------- */
 
 type PasteFieldProps = {
+  fieldRef: React.RefObject<HTMLTextAreaElement | null>;
   value: string;
   parsed: ParsedCookieFile | null;
   error: string | null;
   uploadState: UploadState;
   uploadError: string | null;
+  /** Nudge attention to the empty field (they've copied but not pasted yet). */
+  highlight: boolean;
   onChange: (value: string) => void;
   onClear: () => void;
 };
 
 function PasteField({
+  fieldRef,
   value,
   parsed,
   error,
   uploadState,
   uploadError,
+  highlight,
   onChange,
   onClear,
 }: PasteFieldProps) {
@@ -437,38 +546,57 @@ function PasteField({
     <div>
       <div
         className={clsx(
-          "relative rounded-[12px] border transition-colors",
+          "relative rounded-[12px] border-2 transition-colors",
           showError
-            ? "border-[rgba(220,90,90,0.45)] bg-[rgba(220,90,90,0.04)]"
+            ? "border-[rgba(220,90,90,0.5)] bg-[rgba(220,90,90,0.05)]"
             : parsed
-              ? "border-[rgba(34,197,94,0.4)] bg-[rgba(34,197,94,0.03)]"
-              : "border-[rgba(214,176,106,0.3)] bg-[rgba(255,255,255,0.02)] focus-within:border-[rgba(214,176,106,0.55)]",
+              ? "border-[rgba(34,197,94,0.45)] bg-[rgba(34,197,94,0.04)]"
+              : highlight
+                ? "border-[rgba(214,176,106,0.7)] bg-[rgba(214,176,106,0.06)] shadow-[0_0_0_4px_rgba(214,176,106,0.1)]"
+                : "border-[rgba(214,176,106,0.4)] bg-[rgba(255,255,255,0.03)] focus-within:border-[rgba(214,176,106,0.7)]",
         )}
       >
         <textarea
+          ref={fieldRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={4}
           spellCheck={false}
-          placeholder="Paste the copied session here"
           disabled={uploadState === "uploading"}
-          className="w-full resize-none bg-transparent px-3 py-2.5 pr-9 font-mono text-[11.5px] leading-relaxed text-[#e8e9ee] placeholder:font-['Onest',sans-serif] placeholder:text-[#6f7078] focus:outline-none disabled:opacity-60"
+          className="relative z-[1] w-full resize-none bg-transparent px-3 py-2.5 pr-9 font-mono text-[11.5px] leading-relaxed text-[#e8e9ee] focus:outline-none disabled:opacity-60"
         />
         {hasValue && uploadState !== "uploading" && (
           <button
             type="button"
             onClick={onClear}
-            className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-[7px] border border-[rgba(255,255,255,0.08)] text-[#8f9098] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#f1dfbf]"
+            className="absolute right-2 top-2 z-[2] inline-flex h-6 w-6 items-center justify-center rounded-[7px] border border-[rgba(255,255,255,0.08)] text-[#8f9098] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#f1dfbf]"
             aria-label="Clear"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         )}
+        {/* Empty-state prompt — centered so the box unmistakably reads as a
+            paste target, not a label. Sits behind the textarea (which is
+            transparent) and ignores clicks so focus/paste still hit the field. */}
         {!hasValue && (
-          <span className="pointer-events-none absolute bottom-2.5 right-3 inline-flex items-center gap-1 text-[10.5px] text-[#6f7078]">
-            <ClipboardPaste className="h-3 w-3" />
-            paste
-          </span>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-center">
+            <span
+              className={clsx(
+                "inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
+                highlight
+                  ? "border-[rgba(214,176,106,0.6)] bg-[rgba(214,176,106,0.14)] text-[#f1dfbf]"
+                  : "border-[rgba(214,176,106,0.35)] bg-[rgba(214,176,106,0.1)] text-[#d6b06a]",
+              )}
+            >
+              <ClipboardPaste className="h-4 w-4" />
+            </span>
+            <span className="text-[12.5px] font-medium text-[#cfd0d6]">
+              Paste your copied session here
+            </span>
+            <span className="text-[10.5px] text-[#6f7078]">
+              Click the box, then paste (⌘V / Ctrl+V)
+            </span>
+          </div>
         )}
       </div>
 
