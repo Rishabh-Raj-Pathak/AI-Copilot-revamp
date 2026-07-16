@@ -133,7 +133,7 @@ export function VariationalOnboardingModal({
     if (!result) {
       setParsed(null);
       setPasteError(
-        "That doesn't look like a session copy. In Cookie-Editor, use Export → Copy and paste the whole thing.",
+        "That doesn't look like a session copy. In Cookie-Editor, hit Copy, then paste the whole thing here.",
       );
       return;
     }
@@ -216,8 +216,8 @@ export function VariationalOnboardingModal({
         {/* Body */}
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 max-tablet:px-4">
           <p className="text-[13px] leading-relaxed text-[#a9aab2]">
-            Variational signs in with your browser session instead of a wallet
-            signature. Watch the 40 seconds below, then follow along.
+            Variational signs in with your browser session, not a wallet
+            signature. Watch the short walkthrough, then follow the steps below.
           </p>
 
           {/* Walkthrough video — visible up front so the flow is obvious before
@@ -226,7 +226,7 @@ export function VariationalOnboardingModal({
 
           {/* The three things to do on Variational. */}
           <p className="mt-4 mb-1.5 text-[10.5px] font-semibold uppercase tracking-[1px] text-[#8a7550]">
-            Do this on Variational
+            Follow these steps on Variational
             <span className="ml-1.5 font-medium normal-case tracking-normal text-[#6f7078]">
               · then come back here
             </span>
@@ -275,10 +275,10 @@ export function VariationalOnboardingModal({
             {uploadState === "uploading" ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Activating…
+                Connecting…
               </>
             ) : (
-              "Activate vault"
+              "Connect Variational"
             )}
           </button>
         </div>
@@ -328,21 +328,21 @@ const TASK_ROWS: TaskRowDef[] = [
   {
     key: "extension",
     title: "Add Cookie-Editor to your browser",
-    detail: "Free Chrome extension — it grabs your session in one click.",
+    detail: "A free Chrome extension that copies your session in one click.",
     href: COOKIE_EDITOR_URL,
     cta: "Add",
   },
   {
     key: "signin",
     title: "Sign in to Variational",
-    detail: "Connect your wallet the way you normally would.",
+    detail: "Connect your wallet as you normally would.",
     href: VARIATIONAL_URL,
     cta: "Open",
   },
   {
     key: "copy",
     title: "Copy your session",
-    detail: "On the market page, open Cookie-Editor, hit Copy — then paste it below.",
+    detail: "On the market page, open the Cookie-Editor extension and hit Copy, then paste it below.",
     href: VARIATIONAL_MARKET_URL,
     cta: "Open market",
   },
@@ -450,7 +450,7 @@ function PasteField({
           onChange={(e) => onChange(e.target.value)}
           rows={4}
           spellCheck={false}
-          placeholder="Paste the copied session here — it starts with [ and ends with ]"
+          placeholder="Paste the copied session here"
           disabled={uploadState === "uploading"}
           className="w-full resize-none bg-transparent px-3 py-2.5 pr-9 font-mono text-[11.5px] leading-relaxed text-[#e8e9ee] placeholder:font-['Onest',sans-serif] placeholder:text-[#6f7078] focus:outline-none disabled:opacity-60"
         />
