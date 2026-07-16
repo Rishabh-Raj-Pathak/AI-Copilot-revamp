@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEX_PROFILES, resolveLegs, type ManagedDexId } from "./legs";
 
-const VENUES: ManagedDexId[] = ["Hyperliquid", "Nado", "Pacifica"];
+const VENUES: ManagedDexId[] = ["Hyperliquid", "Nado", "Pacifica", "Variational"];
 
 describe("resolveLegs", () => {
   it("shorts the venue paying more funding and longs the cheaper one", () => {

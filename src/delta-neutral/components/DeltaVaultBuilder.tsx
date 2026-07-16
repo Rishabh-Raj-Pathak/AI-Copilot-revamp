@@ -2,9 +2,10 @@ import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronDown, CircleAlert, Wallet } from "lucide-react";
+import { Check, ChevronDown, CircleAlert, Cookie, Wallet } from "lucide-react";
 import { VaultControls } from "./VaultControls";
 import { VaultOpeningOverlay } from "./VaultOpeningOverlay";
+import { VariationalOnboardingModal } from "./VariationalOnboardingModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import {
   Select,
@@ -129,6 +130,7 @@ function createMockWalletAddress(dex: ManagedDexId) {
     Hyperliquid: "0x7a3f84",
     Nado: "0x92bc18",
     Pacifica: "0x4d5e09",
+    Variational: "0x6b1fa7",
   };
   const suffix = Math.random().toString(16).slice(2, 8);
   return `${seed[dex]}${suffix}`;
@@ -644,17 +646,23 @@ const INITIAL_DEX_CONNECTED: Record<ManagedDexId, boolean> = {
   Hyperliquid: true,
   Nado: false,
   Pacifica: false,
+  Variational: false,
 };
 const INITIAL_DEX_BALANCES: Record<ManagedDexId, number> = {
   Hyperliquid: 12430,
   Nado: 0,
   Pacifica: 0,
+  Variational: 0,
 };
 const INITIAL_DEX_WALLETS: Record<ManagedDexId, string | null> = {
   Hyperliquid: "0x7a3f8421c9f2e",
   Nado: null,
   Pacifica: null,
+  Variational: null,
 };
+
+/** Venues that connect via a cookie/session export instead of the mock wallet-connect. */
+const requiresCookieAuth = (dex: ManagedDexId): boolean => dex === "Variational";
 
 export function DeltaVaultBuilder({
   onActivate,
@@ -686,6 +694,11 @@ export function DeltaVaultBuilder({
   const [takeProfitWithFundingPct, setTakeProfitWithFundingPct] =
     useState("10");
   const [isPreparing, setIsPreparing] = useState(false);
+  const [variationalModalOpen, setVariationalModalOpen] = useState(false);
+  const [pendingActivate, setPendingActivate] = useState(false);
+  // True when the modal was opened from the main Activate button (flow into opening
+  // the vault on success); false when opened from a per-DEX Connect (just authenticate).
+  const [activateAfterConnect, setActivateAfterConnect] = useState(false);
 
   const leverageSelectTriggerClass = clsx(
     "h-[38px] w-full min-w-[108px] max-w-[140px] rounded-[8px] px-3 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:ring-1 [&_svg]:h-3.5 [&_svg]:w-3.5",
@@ -947,16 +960,68 @@ export function DeltaVaultBuilder({
   const handlePrimaryAction = () => {
     if (!dualValid || isPreparing || !hasBothDexSelected) return;
     if (firstDisconnectedVenue) {
-      setDexConnected((prev) => ({ ...prev, [firstDisconnectedVenue]: true }));
+      // Cookie-auth venues (Variational) authenticate through the onboarding modal
+      // rather than the instant mock-connect the other venues use.
+      if (requiresCookieAuth(firstDisconnectedVenue)) {
+        setActivateAfterConnect(true);
+        setVariationalModalOpen(true);
+        return;
+      }
+      // Mirror the per-card mock-connect so a connected leg always has a wallet + balance.
+      const venue = firstDisconnectedVenue;
+      setDexConnected((prev) => ({ ...prev, [venue]: true }));
+      setDexWallets((prev) => ({
+        ...prev,
+        [venue]: prev[venue] ?? createMockWalletAddress(venue),
+      }));
+      setDexBalances((prev) => ({
+        ...prev,
+        [venue]: prev[venue] > 0 ? prev[venue] : 500,
+      }));
       return;
     }
     handleInitialize();
   };
 
+  /**
+   * Cookies read + accepted → Variational is authenticated. Mirror the mock-connect
+   * (wallet + seed balance) so the leg is deployable. If the paired venue was already
+   * connected, flow straight into opening the vault.
+   */
+  const handleVariationalConnected = (wallet?: string) => {
+    const nextWallet = wallet ?? createMockWalletAddress("Variational");
+    const otherVenue = selectedVenues.find((id) => id !== "Variational");
+    const otherReady = !!otherVenue && dexConnected[otherVenue];
+    setDexConnected((prev) => ({ ...prev, Variational: true }));
+    setDexWallets((prev) => ({
+      ...prev,
+      Variational: prev.Variational ?? nextWallet,
+    }));
+    setDexBalances((prev) => ({
+      ...prev,
+      Variational: prev.Variational > 0 ? prev.Variational : 500,
+    }));
+    setVariationalModalOpen(false);
+    if (activateAfterConnect && otherReady) setPendingActivate(true);
+    setActivateAfterConnect(false);
+  };
+
+  // Deferred activation: fires once Variational's connection is committed to state
+  // (handleInitialize reads the connected/wallet maps, which update asynchronously).
+  useEffect(() => {
+    if (!pendingActivate) return;
+    if (allSelectedVenuesConnected && !isPreparing) {
+      setPendingActivate(false);
+      handleInitialize();
+    }
+  }, [pendingActivate, allSelectedVenuesConnected, isPreparing]);
+
   const primaryLabel =
     dualValid && allSelectedVenuesConnected
       ? `Open ${market.mode === "tokens" ? market.token : "BTC/USDC"} vault`
-      : "Connect both DEXs to continue";
+      : firstDisconnectedVenue && requiresCookieAuth(firstDisconnectedVenue)
+        ? `Activate ${firstDisconnectedVenue}`
+        : "Connect both DEXs to continue";
 
   const bridgeKey = `${dexA || "none"}-${dexB || "none"}`;
   const marketLabel =
@@ -1019,6 +1084,13 @@ export function DeltaVaultBuilder({
         document.body,
       )}
 
+      <VariationalOnboardingModal
+        open={variationalModalOpen}
+        onOpenChange={setVariationalModalOpen}
+        onConnected={handleVariationalConnected}
+        pairedDex={selectedVenues.find((id) => id !== "Variational")}
+      />
+
       <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 tablet:grid-cols-[1.55fr_1fr]">
         <div className="flex flex-col gap-4 max-tablet:gap-3">
           <DexPairSetupCard
@@ -1027,6 +1099,13 @@ export function DeltaVaultBuilder({
               onDexAChange={setDexA}
               onDexBChange={setDexB}
               onConnectDex={(dex) => {
+                // Variational connects via the cookie onboarding modal, not the instant
+                // mock-connect. Opened from the leg's Connect button → authenticate only.
+                if (requiresCookieAuth(dex)) {
+                  setActivateAfterConnect(false);
+                  setVariationalModalOpen(true);
+                  return;
+                }
                 setDexConnected((prev) => ({ ...prev, [dex]: true }));
                 setDexWallets((prev) => ({
                   ...prev,
@@ -1358,7 +1437,12 @@ export function DeltaVaultBuilder({
             )}
           >
             <span className="inline-flex items-center gap-2">
-              {firstDisconnectedVenue && <Wallet className="h-3.5 w-3.5" />}
+              {firstDisconnectedVenue &&
+                (requiresCookieAuth(firstDisconnectedVenue) ? (
+                  <Cookie className="h-3.5 w-3.5" />
+                ) : (
+                  <Wallet className="h-3.5 w-3.5" />
+                ))}
               {primaryLabel}
             </span>
           </button>

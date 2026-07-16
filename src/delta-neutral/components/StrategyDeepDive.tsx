@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 
-type ManagedDexId = 'Hyperliquid' | 'Pacifica' | 'Nado';
+type ManagedDexId = 'Hyperliquid' | 'Pacifica' | 'Nado' | 'Variational';
 type Point = { t: string; value: number };
 
 const DEX_SERIES: Record<ManagedDexId, Point[]> = {
@@ -41,12 +41,22 @@ const DEX_SERIES: Record<ManagedDexId, Point[]> = {
     { t: '20:00', value: 0.014 },
     { t: '24:00', value: 0.012 },
   ],
+  Variational: [
+    { t: '00:00', value: 0.019 },
+    { t: '04:00', value: 0.021 },
+    { t: '08:00', value: 0.023 },
+    { t: '12:00', value: 0.022 },
+    { t: '16:00', value: 0.025 },
+    { t: '20:00', value: 0.024 },
+    { t: '24:00', value: 0.025 },
+  ],
 };
 
 const DEX_ACCENT: Record<ManagedDexId, string> = {
   Hyperliquid: '#8fa3b8',
   Pacifica: '#b89aa8',
   Nado: '#8f9f91',
+  Variational: '#c7ab74',
 };
 
 type StrategyDeepDiveVariant = 'default' | 'v2';

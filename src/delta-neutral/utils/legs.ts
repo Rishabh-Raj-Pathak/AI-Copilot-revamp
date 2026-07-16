@@ -1,4 +1,4 @@
-export type ManagedDexId = "Hyperliquid" | "Nado" | "Pacifica";
+export type ManagedDexId = "Hyperliquid" | "Nado" | "Pacifica" | "Variational";
 export type DexSelection = ManagedDexId | "";
 
 export type DexProfile = {
@@ -41,12 +41,23 @@ export const DEX_PROFILES: Record<ManagedDexId, DexProfile> = {
     tvl: "$890M",
     feeRoundTripPct: "0.042",
   },
+  Variational: {
+    id: "Variational",
+    funding8hPct: 0.0235,
+    spark: [
+      0.019, 0.021, 0.023, 0.022, 0.025, 0.024, 0.026, 0.025, 0.027, 0.025,
+      0.024, 0.025,
+    ],
+    tvl: "$310M",
+    feeRoundTripPct: "0.040",
+  },
 };
 
 export const DEX_FUNDING_INTERVAL_HOURS: Record<ManagedDexId, number> = {
   Pacifica: 1,
   Hyperliquid: 4,
   Nado: 8,
+  Variational: 1,
 };
 
 export type LegAssignment = {

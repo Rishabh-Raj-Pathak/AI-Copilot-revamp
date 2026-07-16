@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { WalletAddressLabel } from "./WalletAddressLabel";
 
 const FUNDING_EPOCH_MS = 8 * 60 * 60 * 1000;
-export type ManagedDexId = "Hyperliquid" | "Pacifica" | "Nado";
+export type ManagedDexId = "Hyperliquid" | "Pacifica" | "Nado" | "Variational";
 
 export type ActiveVaultCardModel = {
   id: string;
