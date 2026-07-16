@@ -28,7 +28,7 @@ const VARIATIONAL_VIDEO_SRC = "";
 
 /** Cookie-Editor on the Chrome Web Store. */
 const COOKIE_EDITOR_URL =
-  "https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm";
+  "https://chromewebstore.google.com/detail/cookie-editor/ookdjilphngeeeghgngjabigmpepanpl";
 const VARIATIONAL_URL = "https://variational.io/";
 /** The live BTC market — where the session must be active to copy it. */
 const VARIATIONAL_MARKET_URL = "https://omni.variational.io/perpetual/BTC";
