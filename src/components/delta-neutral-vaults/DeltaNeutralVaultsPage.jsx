@@ -9,6 +9,7 @@ export default function DeltaNeutralVaultsPage({
   onWalletConnected,
   onWalletDisconnect,
   onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
@@ -36,6 +37,7 @@ export default function DeltaNeutralVaultsPage({
         onWalletConnected={onWalletConnected}
         onWalletDisconnect={onWalletDisconnect}
         onOpenProfile={onOpenProfile}
+        onOpenSupport={onOpenSupport}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />
@@ -53,6 +55,7 @@ export default function DeltaNeutralVaultsPage({
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
         }}
+        onOpenSupport={onOpenSupport}
         onCopilotTutorial={onOpenCopilotTutorial}
       />
     </div>

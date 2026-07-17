@@ -34,7 +34,6 @@ const DOC_ICONS = {
   "privacy-policy": Lock,
   "terms-of-service": ScrollText,
   "risk-disclosure": TriangleAlert,
-  "help-support": LifeBuoy,
   "account-deletion": Trash2,
   "restricted-regions": Globe,
 };
@@ -51,6 +50,7 @@ const SECTION_LABEL_CLASS =
 export default function MoreSheet({
   open,
   onClose,
+  onOpenSupport,
   onCopilotTutorial,
   onVaultTutorial,
 }) {
@@ -175,6 +175,20 @@ export default function MoreSheet({
                   Legal &amp; Support
                 </h3>
                 <div className="divide-y divide-[#1c1c1c] border-y border-[#1c1c1c]">
+                  {typeof onOpenSupport === "function" ? (
+                    <motion.button
+                      type="button"
+                      className={ROW_CLASS}
+                      onClick={() => {
+                        onClose?.();
+                        onOpenSupport();
+                      }}
+                      {...rowMotion(rowIndex++)}
+                    >
+                      <LifeBuoy className={ROW_ICON_CLASS} aria-hidden />
+                      <span className={ROW_LABEL_CLASS}>Help &amp; Support</span>
+                    </motion.button>
+                  ) : null}
                   {DOC_LINKS.map(({ id, label, href }) => {
                     const Icon = DOC_ICONS[id];
                     return (

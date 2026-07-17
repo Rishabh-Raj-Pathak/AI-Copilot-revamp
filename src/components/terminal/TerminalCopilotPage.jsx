@@ -68,6 +68,7 @@ export default function TerminalCopilotPage({
   onWalletConnected,
   onWalletDisconnect,
   onOpenProfile,
+  onOpenSupport,
   terminalPlatform: terminalPlatformProp,
   onTerminalPlatformChange,
   onOpenVaults,
@@ -643,6 +644,7 @@ export default function TerminalCopilotPage({
         onWalletConnected={handleWalletConnected}
         onWalletDisconnect={handleWalletDisconnected}
         onOpenProfile={onOpenProfile}
+        onOpenSupport={onOpenSupport}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
@@ -840,6 +842,7 @@ export default function TerminalCopilotPage({
         onNavClick={(id) => {
           if (id === "vaults") onOpenVaults?.();
         }}
+        onOpenSupport={onOpenSupport}
         onCopilotTutorial={runCopilotTutorial}
         onVaultTutorial={onOpenVaultTutorial}
       />

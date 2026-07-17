@@ -70,6 +70,7 @@ export default function HeaderTerminal({
   onWalletConnected,
   onWalletDisconnect,
   onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
@@ -82,6 +83,8 @@ export default function HeaderTerminal({
     showCopilotTutorial && typeof onCopilotTutorial === "function";
   const showVaultTutorialItem = typeof onVaultTutorial === "function";
   const moreMenuHasTutorial = showCopilotTutorialItem || showVaultTutorialItem;
+  const showSupportItem = typeof onOpenSupport === "function";
+  const moreMenuHasContent = moreMenuHasTutorial || showSupportItem;
 
   useEffect(() => {
     if (!moreMenuOpen) return;
@@ -364,10 +367,10 @@ export default function HeaderTerminal({
             <button
               type="button"
               data-tutorial-more-trigger
-              aria-expanded={moreMenuHasTutorial ? moreMenuOpen : undefined}
-              aria-haspopup={moreMenuHasTutorial ? "menu" : undefined}
+              aria-expanded={moreMenuHasContent ? moreMenuOpen : undefined}
+              aria-haspopup={moreMenuHasContent ? "menu" : undefined}
               onClick={() => {
-                if (!moreMenuHasTutorial) return;
+                if (!moreMenuHasContent) return;
                 onDismissMoreTutorialHint?.();
                 setMoreMenuOpen((o) => !o);
               }}
@@ -389,7 +392,7 @@ export default function HeaderTerminal({
                 </p>
               </div>
             ) : null}
-            {moreMenuOpen && moreMenuHasTutorial ? (
+            {moreMenuOpen && moreMenuHasContent ? (
               <div
                 className="absolute right-0 top-full z-[120] mt-1 min-w-[12.5rem] rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
                 role="menu"
@@ -422,9 +425,23 @@ export default function HeaderTerminal({
                     Vault tutorial
                   </button>
                 ) : null}
-                <p className="border-t border-[#242424] px-3 pb-2 pt-1.5 text-[10px] leading-snug text-[#757575]">
-                  Product walkthroughs
-                </p>
+                {showSupportItem && moreMenuHasTutorial ? (
+                  <div className="my-1 border-t border-[#242424]" aria-hidden />
+                ) : null}
+                {showSupportItem ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    onClick={() => {
+                      onOpenSupport?.();
+                      setMoreMenuOpen(false);
+                      onDismissMoreTutorialHint?.();
+                    }}
+                  >
+                    Help &amp; Support
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>

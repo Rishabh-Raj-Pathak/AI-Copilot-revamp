@@ -19,6 +19,7 @@ export default function ProfilePage({
   onWalletConnected,
   onWalletDisconnect,
   onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
@@ -42,6 +43,7 @@ export default function ProfilePage({
     onWalletConnected,
     onWalletDisconnect,
     onOpenProfile,
+    onOpenSupport,
     terminalPlatform,
     onTerminalPlatformChange,
   };
@@ -95,6 +97,7 @@ export default function ProfilePage({
         activeId="profile"
         vaultView="featured"
         onVaultViewChange={onVaultViewChange}
+        onOpenSupport={onOpenSupport}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
           if (id === "trade") onOpenTrade?.();

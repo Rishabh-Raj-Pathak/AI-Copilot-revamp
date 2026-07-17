@@ -20,6 +20,7 @@ export default function TradePage({
   onWalletConnected,
   onWalletDisconnect,
   onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
@@ -48,6 +49,7 @@ export default function TradePage({
         onWalletConnected={onWalletConnected}
         onWalletDisconnect={onWalletDisconnect}
         onOpenProfile={onOpenProfile}
+        onOpenSupport={onOpenSupport}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />

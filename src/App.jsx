@@ -5,6 +5,7 @@ import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import ProfilePage from "./components/profile/ProfilePage.jsx";
 import { ProfileProvider } from "./components/profile/ProfileContext.jsx";
+import SupportPage from "./components/support/SupportPage.jsx";
 import TerminalCopilotPage from "./components/terminal/TerminalCopilotPage.jsx";
 import TradePage from "./components/trade/TradePage.jsx";
 import VaultsPage from "./components/vaults/VaultsPage.jsx";
@@ -19,6 +20,8 @@ export default function App() {
   const [runVaultTourOnEnter, setRunVaultTourOnEnter] = useState(false);
   /** Where the back arrow on the profile page returns to. */
   const [profileReturnPage, setProfileReturnPage] = useState("copilot");
+  /** Where the back arrow on the support page returns to. */
+  const [supportReturnPage, setSupportReturnPage] = useState("copilot");
 
   const handleVaultViewChange = (viewId) => {
     if (viewId === "delta-neutral") {
@@ -29,6 +32,7 @@ export default function App() {
   };
 
   const leaveProfile = () => setPage(profileReturnPage);
+  const leaveSupport = () => setPage(supportReturnPage);
 
   const sharedWalletProps = {
     walletConnected,
@@ -46,6 +50,15 @@ export default function App() {
       setProfileReturnPage(page);
       setPage("profile");
     },
+    onOpenSupport: () => {
+      if (page === "support") return;
+      // Same reasoning as profile: neither tour has an anchor on the support
+      // page, so a still-running overlay would strand itself on top of it.
+      destroyCopilotProductTourIfStillActive();
+      destroyVaultsProductTourIfStillActive();
+      setSupportReturnPage(page);
+      setPage("support");
+    },
     terminalPlatform,
     onTerminalPlatformChange: setTerminalPlatform,
   };
@@ -53,7 +66,15 @@ export default function App() {
   const openTrade = () => setPage("trade");
 
   const content =
-    page === "profile" ? (
+    page === "support" ? (
+      <SupportPage
+        {...sharedWalletProps}
+        onBack={leaveSupport}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
+        onVaultViewChange={handleVaultViewChange}
+      />
+    ) : page === "profile" ? (
       <ProfilePage
         {...sharedWalletProps}
         onBack={leaveProfile}

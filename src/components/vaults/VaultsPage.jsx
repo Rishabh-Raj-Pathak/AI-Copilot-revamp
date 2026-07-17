@@ -66,6 +66,7 @@ export default function VaultsPage({
   onWalletConnected,
   onWalletDisconnect,
   onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
@@ -223,6 +224,7 @@ export default function VaultsPage({
         onWalletConnected={onWalletConnected}
         onWalletDisconnect={onWalletDisconnect}
         onOpenProfile={onOpenProfile}
+        onOpenSupport={onOpenSupport}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />
@@ -316,6 +318,7 @@ export default function VaultsPage({
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
         }}
+        onOpenSupport={onOpenSupport}
         onCopilotTutorial={onOpenCopilotTutorial}
         onVaultTutorial={runVaultsProductTour}
       />

@@ -23,6 +23,7 @@ export default function CopilotBottomNav({
   onNavClick,
   vaultView,
   onVaultViewChange,
+  onOpenSupport,
   onCopilotTutorial,
   onVaultTutorial,
 }) {
@@ -79,6 +80,7 @@ export default function CopilotBottomNav({
               <MoreSheet
                 open={moreMenuOpen}
                 onClose={() => setMoreMenuOpen(false)}
+                onOpenSupport={onOpenSupport}
                 onCopilotTutorial={onCopilotTutorial}
                 onVaultTutorial={onVaultTutorial}
               />
