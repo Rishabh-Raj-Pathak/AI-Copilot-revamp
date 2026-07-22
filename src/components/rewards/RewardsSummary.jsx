@@ -155,9 +155,15 @@ function TierProgressCard({ variant }) {
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-sm text-[#bfbfbf]">Progress to {progress.nextMilestone}</p>
-            <p className="text-sm font-semibold tabular-nums text-white">
-              {Math.round(pct)}%
-            </p>
+            <div className="flex shrink-0 items-center gap-2">
+              <p className="text-xs text-[#8f8f8f]">
+                {formatCompactVolume(remainingVolume)} more to unlock
+              </p>
+              <span className="h-3 w-px bg-[#3a3a3a]" aria-hidden />
+              <p className="text-sm font-semibold tabular-nums text-white">
+                {Math.round(pct)}%
+              </p>
+            </div>
           </div>
           <div
             className="h-2.5 w-full overflow-hidden rounded-full bg-[#242424]"
@@ -172,9 +178,6 @@ function TierProgressCard({ variant }) {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="mt-2 text-right text-xs text-[#8f8f8f]">
-            {formatCompactVolume(remainingVolume)} more to unlock
-          </p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 divide-x divide-[#2f2f2f] rounded-lg border border-[#2f2f2f] bg-[#101010] py-3">

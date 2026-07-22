@@ -38,6 +38,17 @@ const renderComplete = () => {
   return render();
 };
 
+/** Seed the linked accounts while leaving the first closed-trade share due. */
+const renderReadyToShare = () => {
+  writeProfile(ADDRESS, {
+    socials: {
+      x: { provider: "x", handle: "@0xleverage", verifiedAt: AT },
+      telegram: { provider: "telegram", handle: "@0xleverage", verifiedAt: AT },
+    },
+  });
+  return render();
+};
+
 afterEach(() => clearProfile(ADDRESS));
 
 /**
@@ -106,5 +117,17 @@ describe("the finished card is the same ledger, not a receipt for one number", (
     }
     expect(html).toContain("Profile complete");
     expect(html).toContain("of 3");
+  });
+});
+
+describe("the closed-trade share action", () => {
+  it("uses the closed trade as context instead of rendering a sample preview", () => {
+    const html = renderReadyToShare();
+
+    expect(html).toContain("Share this trade’s PnL");
+    expect(html).toContain("Share on X as @0xleverage");
+    expect(html).not.toContain("ETH · Long 5x");
+    expect(html).not.toContain("+34.2%");
+    expect(html).not.toContain("+$1,284");
   });
 });

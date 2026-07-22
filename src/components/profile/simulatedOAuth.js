@@ -94,12 +94,11 @@ export function startTelegramPairing(onPaired) {
 }
 
 /**
- * The position the profile's sample card is cut from.
+ * The closed position used by the prototype share action.
  *
- * A first card has to be posted before the user has a position worth posting,
- * so the step shows what one looks like rather than asking them to imagine it.
- * The real step would read the user's best closed trade; this is the shape that
- * read returns.
+ * Production supplies these values only after a position has been opened and
+ * closed. The fixture keeps the share intent functional without rendering a
+ * made-up trade preview in the profile checklist.
  */
 export const SAMPLE_PNL_CARD = {
   coin: "ETH",
@@ -135,7 +134,7 @@ export const SOCIAL_PROVIDERS = {
      * truncation on a narrow row, so it names the payoff and leaves the detail
      * to `perk` below.
      */
-    benefit: `Follows ${X_HANDLE} for alpha drops, and unlocks the PnL card below.`,
+    benefit: `Follow ${X_HANDLE} for alpha drops. Share PnL after you close a trade.`,
     /** The settled row's one-word status — "Linked" undersells what happened. */
     settledLabel: "Following",
   },
