@@ -11,13 +11,6 @@ import {
 const SCRIMMED_RAMP =
   "linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.85) 100%), linear-gradient(90deg, #f2b500 0%, #00f3b6 100%)";
 
-function formatCompactVolume(n) {
-  const divisor = n >= 1_000_000 ? 1_000_000 : 1_000;
-  const suffix = n >= 1_000_000 ? "M" : "K";
-  const value = Number((n / divisor).toFixed(1));
-  return `$${value}${suffix}`;
-}
-
 /**
  * The tier ladder at the foot of the page: a segmented path toggle over six
  * volume tiers, each showing that path's revenue share and tier bonus.
@@ -26,10 +19,6 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
   const [pathId, setPathId] = useState(REWARD_PATHS[0].id);
   const isKol = variant === "kol";
   const tiers = isKol ? KOL_MILESTONES : REWARD_TIERS;
-  const remainingVolume = Math.max(
-    0,
-    KOL_CURRENT_MILESTONE.nextTierVolume - KOL_CURRENT_MILESTONE.volume,
-  );
   return (
     <section className="flex flex-col gap-10 rounded-lg border border-[#242424] p-5 max-tablet:gap-6">
       <header className="flex items-start justify-between gap-4 max-tablet:flex-col">
@@ -43,34 +32,7 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
             </p>
           ) : null}
         </div>
-        {isKol ? (
-          /* Reads as a quiet readout, not a callout: the neutral card border, no
-             fill and no flag badge — only the volume line and the unlock stay lit. */
-          <div className="flex items-center gap-3 rounded-[10px] border border-[#242424] px-3.5 py-3 max-tablet:w-full">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-medium uppercase leading-[1.2] tracking-[0.8px] text-white">
-                Your next milestone
-              </p>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <strong className="text-base font-semibold leading-[1.2] text-white">
-                  {KOL_CURRENT_MILESTONE.nextMilestone}
-                </strong>
-                <span className="text-xs leading-[1.2] text-[#f2b500]">
-                  Trade {formatCompactVolume(remainingVolume)} more to reach{" "}
-                  {KOL_CURRENT_MILESTONE.nextMilestone}
-                </span>
-              </div>
-            </div>
-            <div className="shrink-0 border-l border-[#4a3a00] pl-3 text-right">
-              <p className="text-[10px] uppercase leading-[1.2] tracking-[0.8px] text-[#8f8f8f]">
-                Unlock
-              </p>
-              <p className="mt-1 text-sm font-semibold leading-[1.2] text-white">
-                {KOL_CURRENT_MILESTONE.nextTierBonus}
-              </p>
-            </div>
-          </div>
-        ) : (
+        {!isKol ? (
           <div
             role="tablist"
             aria-label="Reward path"
@@ -96,7 +58,7 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
               );
             })}
           </div>
-        )}
+        ) : null}
       </header>
 
       {/* Six across only once the columns can hold a badge plus its label —

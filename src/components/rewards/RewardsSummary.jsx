@@ -64,42 +64,6 @@ const STAT_ART = {
   },
 };
 
-/**
- * Gautam's own art set — a different illustration style from the standard page's,
- * squarer and further off the right edge. Offsets are measured against the campaign
- * artboard's 281×105 tile; the glow copy is dimmer and the sharp copy brighter than
- * the standard set's, and the campaign-ends pair is rotated apart so the blur reads
- * as a second, offset shadow rather than a halo.
- */
-const KOL_STAT_ART = {
-  totalEarned: {
-    src: "/rewards/stats/gautam-total-earned.png",
-    rotate: -14.96,
-    glow: { right: -31.3, top: 5, width: 128, height: 128, blur: 20, opacity: 0.2 },
-    sharp: { right: -31.3, top: 5, width: 128, height: 128, opacity: 0.7 },
-  },
-  feeCashback: {
-    src: "/rewards/stats/gautam-fee-cashback.png",
-    rotate: -8.3,
-    glow: { right: -24.5, top: 12, width: 133.4, height: 133.4, blur: 20, opacity: 0.2 },
-    sharp: { right: -24.5, top: 12, width: 133.4, height: 133.4, opacity: 0.7 },
-  },
-  campaignEnds: {
-    src: "/rewards/stats/gautam-campaign-ends.png",
-    rotate: -11.51,
-    glow: {
-      right: -14.8,
-      top: 9.1,
-      width: 126.4,
-      height: 126.4,
-      blur: 20,
-      opacity: 0.2,
-      rotate: -9.26,
-    },
-    sharp: { right: -12.75, top: 9.2, width: 126.4, height: 126.4, opacity: 0.7 },
-  },
-};
-
 function formatVolume(n) {
   return n.toLocaleString("en-US");
 }
@@ -169,20 +133,26 @@ function TierProgressCard({ variant }) {
       <section className="rounded-lg border border-[#f7bb08] p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
-              Your trading volume
-            </p>
-            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <h2 className="text-2xl font-semibold leading-none text-white">
-                {formatCompactVolume(volume)}
-              </h2>
-              <span className="text-sm text-[#8f8f8f]">
-                of {formatCompactVolume(nextTierVolume)}
-              </span>
-            </div>
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-[#3a3a3a] bg-[#121212] px-2.5 py-1.5 text-xs font-medium text-white">
-              <Medal className="size-3.5 shrink-0 text-[#f2b500]" strokeWidth={2} aria-hidden />
-              You’re at {currentMilestoneLabel}
+            <h2 className="flex items-center gap-2 text-lg font-semibold leading-[1.2] text-white">
+              <Medal
+                className="size-5 shrink-0 text-[#f2b500]"
+                strokeWidth={2.25}
+                aria-hidden
+              />
+              {currentMilestoneLabel}
+            </h2>
+            <div className="mt-4">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <p className="text-2xl font-semibold leading-none text-white">
+                  {formatCompactVolume(volume)}
+                </p>
+                <span className="text-sm text-[#8f8f8f]">
+                  of {formatCompactVolume(nextTierVolume)}
+                </span>
+              </div>
+              <p className="mt-1.5 text-xs text-[#8f8f8f]">
+                Your trading volume
+              </p>
             </div>
           </div>
           <img
@@ -372,7 +342,7 @@ function EnterCodeCard({ onNotify, variant }) {
     <section className={`flex flex-col justify-between gap-5 ${CARD}`}>
       <header className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold leading-[1.2] text-white">
-          {isKol ? `${feeRebate} cashback bonus` : "Enter a Code"}
+          {isKol ? `Get ${feeRebate} fee discount` : "Enter a Code"}
         </h2>
         <p className="text-sm leading-[1.2] text-[#bfbfbf]">
           {isKol ? (
@@ -456,6 +426,7 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
   const claimTile = (
     <StatCard
       key="claim"
+      compact={isKol}
       label={isKol ? "Available to claim" : "Claimable Rewards"}
       value={stats.claimableRewards}
       info={
@@ -482,16 +453,12 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
         }
         className={`inline-flex shrink-0 items-center border border-[#241b00] font-medium leading-[1.2] text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:opacity-40 ${
           isKol
-            ? "h-10 gap-2 rounded-lg px-5 text-base"
+            ? "h-8 gap-1.5 rounded-md px-4 text-sm"
             : "gap-1 rounded px-2 py-1 text-xs"
         }`}
         style={{ backgroundImage: CTA_RAMP }}
       >
-        <Gift
-          className={`${isKol ? "size-5" : "size-4"} shrink-0`}
-          strokeWidth={2}
-          aria-hidden
-        />
+        <Gift className="size-4 shrink-0" strokeWidth={2} aria-hidden />
         {canClaim ? "Claim" : `Unlock at $${KOL_MIN_CLAIM_AMOUNT}`}
       </button>
     </StatCard>
@@ -500,9 +467,10 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
   const feeTile = (
     <StatCard
       key="fees"
+      compact={isKol}
       label={isKol ? "Fee cashback earned" : "From Your Trades"}
       value={stats.fromYourTrades}
-      art={isKol ? KOL_STAT_ART.feeCashback : STAT_ART.fromYourTrades}
+      art={isKol ? undefined : STAT_ART.fromYourTrades}
     />
   );
 
@@ -513,17 +481,19 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
       }`}
     >
       <StatCard
+        compact={isKol}
         label={isKol ? "Total earned" : "Total Rewards"}
         value={stats.totalRewards}
-        art={isKol ? KOL_STAT_ART.totalEarned : STAT_ART.totalRewards}
+        art={isKol ? undefined : STAT_ART.totalRewards}
         accent={isKol}
       />
       {isKol ? feeTile : claimTile}
       {isKol ? claimTile : feeTile}
       <StatCard
+        compact={isKol}
         label={isKol ? "Gautam campaign ends" : "From Referrals"}
         value={isKol ? countdown : stats.fromReferrals}
-        art={isKol ? KOL_STAT_ART.campaignEnds : STAT_ART.fromReferrals}
+        art={isKol ? undefined : STAT_ART.fromReferrals}
       />
       {!isKol ? (
         <StatCard
@@ -536,14 +506,18 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
   );
 }
 
-function StatCard({ label, value, art, children, info, status, accent }) {
+function StatCard({ label, value, art, children, info, status, accent, compact = false }) {
   return (
-    <section className={`@container relative overflow-hidden ${CARD}`}>
+    <section
+      className={`@container relative overflow-hidden rounded-lg border border-[#242424] ${
+        compact ? "p-4" : "p-5"
+      }`}
+    >
       {art ? <StatArt {...art} /> : null}
       {/* Two independent rows rather than a two-column grid: the Claim button is
           much wider than the status pill, and a shared column would squeeze
           `Available to claim` onto two lines. */}
-      <div className="relative flex flex-col gap-2">
+      <div className={`relative flex flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-1.5">
             <p className="text-sm leading-[1.2] text-[#bfbfbf]">{label}</p>
@@ -602,9 +576,6 @@ function StatCard({ label, value, art, children, info, status, accent }) {
  * padding — lower it if you want the art on the mobile grid too.
  */
 function StatArt({ src, rotate, glow, sharp }) {
-  // A layer may carry its own `rotate`/`opacity` — Gautam's campaign-ends art turns
-  // the two copies apart from each other, and its pair sits dimmer/brighter than the
-  // standard set's defaults.
   const layer = (piece, defaultOpacity) => ({
     right: `${piece.right}px`,
     top: `${piece.top}px`,

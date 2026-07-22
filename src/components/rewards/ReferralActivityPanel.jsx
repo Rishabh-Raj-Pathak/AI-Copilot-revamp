@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   CLAIM_HISTORY,
   KOL_CLAIM_HISTORY,
@@ -50,7 +50,7 @@ const KOL_TABS = [
       { key: "wallet", label: "Wallet Address" },
       { key: "volume", label: "Total Volume" },
       { key: "milestone", label: "Milestone" },
-      { key: "claimedReward", label: "Claimed reward" },
+      { key: "claimedReward", label: "Earnings" },
     ],
   },
   {
@@ -75,9 +75,6 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
 
   const tab = tabs.find((t) => t.id === tabId) ?? tabs[0];
   const firstRowNumber = (page - 1) * tab.rows.length;
-  const currentLeaderboardRow = isKol
-    ? KOL_LEADERBOARD.find((row) => row.current)
-    : null;
 
   return (
     <section
@@ -95,21 +92,11 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
               See where you rank in Gautam’s trading community.
             </p>
           </div>
-          {/* Unboxed, like the milestone readout above it — only the rank itself
-              and the movement line carry colour. */}
-          <div className="flex min-w-[190px] items-center gap-3 rounded-xl px-3.5 py-3 max-tablet:w-full">
-            <strong className="flex size-12 shrink-0 items-center justify-center rounded-full border border-[#242424] text-xl font-semibold leading-none text-[#f2b500]">
+          <div className="flex shrink-0 items-baseline justify-end gap-2 max-tablet:w-full max-tablet:justify-start">
+            <strong className="text-2xl font-semibold leading-none text-white">
               {KOL_REWARD_STATS.leaderboardRank}
             </strong>
-            <div>
-              <p className="text-xs text-[#bfbfbf]">Your community rank</p>
-              {currentLeaderboardRow?.movement?.startsWith("+") ? (
-                <p className="mt-1 flex items-center gap-1 text-xs font-medium text-[#52e5c4]">
-                  <TrendingUp className="size-3.5" strokeWidth={2} aria-hidden />
-                  You’re up {currentLeaderboardRow.movement.slice(1)} places
-                </p>
-              ) : null}
-            </div>
+            <p className="text-sm text-[#bfbfbf]">Community rank</p>
           </div>
         </header>
       ) : null}
