@@ -31,7 +31,6 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
     0,
     KOL_CURRENT_MILESTONE.nextTierVolume - KOL_CURRENT_MILESTONE.volume,
   );
-
   return (
     <section className="flex flex-col gap-10 rounded-lg border border-[#242424] p-5 max-tablet:gap-6">
       <header className="flex items-start justify-between gap-4 max-tablet:flex-col">
@@ -148,7 +147,7 @@ function TierCard({ tier, pathId, isKol, isCurrent }) {
         <div className="flex min-w-0 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <h3 className="text-sm font-semibold leading-[1.2] text-white">
-              {tier.name}
+              {isKol ? `Milestone ${tier.name.slice(1)}` : tier.name}
             </h3>
             {isCurrent ? (
               <span className="rounded-full border border-[#705600] bg-[#211a00] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-[#f2b500]">

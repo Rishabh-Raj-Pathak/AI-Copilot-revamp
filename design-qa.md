@@ -1,54 +1,53 @@
-# Design QA — KOL linked referral and Redeem state
+# Design QA — compact KOL milestone progress cards
 
 ## Source visual truth
 
-- Linked-code reference: `/var/folders/0d/zy2r9m5d46qgc62qt0dxbqm40000gn/T/codex-clipboard-03d56fbc-d97a-4675-a349-4298b15c3e69.png`
-- Previous KOL code-entry state: `/var/folders/0d/zy2r9m5d46qgc62qt0dxbqm40000gn/T/codex-clipboard-9f89656c-106c-4565-8dec-379298df28ef.png`
-- User-directed deviation from the linked-code reference: retain GAUTAM and use a Redeem button instead of the verified badge.
+- Reference: `/var/folders/0d/zy2r9m5d46qgc62qt0dxbqm40000gn/T/codex-clipboard-7fd3d9ab-5de9-435e-ae9c-2b4d2561cab1.png`
+- Source pixels: 1156 × 646. The focused card region is 1104 × 562.
+- User-directed change: remove the bottom `Next up / You’ll unlock` panel, retain the `$60` reward message inside the same top-left card near the progress bar, and let the full three-card row become shorter.
 
 ## Implementation evidence
 
-- Desktop: `/private/tmp/kol-rewards-linked-referral-desktop.png`
-- Mobile: `/private/tmp/kol-rewards-linked-referral-mobile.png`
-- Local page: `http://127.0.0.1:5175/`, Rewards > KOL
-- Viewports: 1280 × 720 desktop and 390 × 844 mobile
-- State: dark theme, Gautam KOL view, Linked Referral Code card visible
+- Desktop full view: `/Users/dapplooker/Documents/Codex/2026-07-22/in/work/kol-rewards-desktop-1440x900.png`
+- Desktop focused card: `/Users/dapplooker/Documents/Codex/2026-07-22/in/work/kol-progress-card-desktop-crop.png`
+- Mobile view: `/Users/dapplooker/Documents/Codex/2026-07-22/in/work/kol-rewards-mobile-390x844.png`
+- Local page: `http://localhost:4173/`, Rewards > Gautam Rewards
+- Desktop viewport: 1440 × 900 CSS px at device pixel ratio 1; implementation screenshot is 1440 × 900 px.
+- Mobile viewport: 390 × 844 CSS px at device pixel ratio 1; implementation screenshot is 390 × 844 px.
+- State: dark theme, Gautam KOL rewards, default progress state.
 
 ## Full-view comparison evidence
 
-- The KOL right-hand hero card now uses the reference heading `Linked Referral Code` and status copy `You are getting back 8% of your trading fees`.
-- GAUTAM remains the linked code, matching the KOL campaign rather than the ALFRED placeholder in the generic reference.
-- The former Edit/Save interaction is replaced with the requested one-step Redeem action and existing amber-to-aquamarine CTA treatment.
-- The URL-prefix label is removed from the KOL state to match the simpler linked-code reference. The standard Rewards view still shows Enter a Code, the URL prefix, 4%, and Edit.
-- All other KOL hero, statistics, milestone, claim, timer, and leaderboard content remains unchanged.
+- The entire former bottom summary panel is absent.
+- `You’ll unlock $60` is visible immediately below `Progress to Milestone 3`; `$60` retains the campaign amber emphasis.
+- At 1440 px, all three hero cards measure 435 × 216 px, confirming the neighboring cards collapse to the shorter shared row height.
+- At 390 px, the three cards stack at the full 358 px content width with no horizontal overflow; the progress card is 210 px tall.
 
-## Focused region evidence
+## Focused region comparison evidence
 
-- Desktop capture verifies equal hero-card height, correct copy, GAUTAM field alignment, and the Redeem action without clipping.
-- Mobile capture verifies the Linked Referral Code card stacks cleanly below Your Referral Code and keeps the field/action on one row.
-- Browser measurements confirm a 390 px viewport and 390 px document scroll width.
+- Source card normalized to the implementation width: `/Users/dapplooker/Documents/Codex/2026-07-22/in/work/kol-progress-card-source-normalized.png` (435 × 221 px).
+- Implementation focused card: `/Users/dapplooker/Documents/Codex/2026-07-22/in/work/kol-progress-card-desktop-crop.png` (435 × 216 px).
+- Both focused images were opened together for the final comparison. Typography, badge art, border, progress metrics, gradient rail, and alignment remain consistent; the requested panel is removed and its reward copy is relocated without clipping.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: Passed. Existing Onest hierarchy and amber 8% emphasis align with both references and surrounding cards.
-- Spacing and layout rhythm: Passed. Existing card padding, header/body separation, input height, CTA height, and responsive gaps are preserved.
-- Colors and visual tokens: Passed. Existing black surface, neutral border, white/muted text, amber emphasis, and CTA gradient are reused.
-- Image quality and asset fidelity: Passed. No raster asset was required; the existing Check icon is used in the requested Redeem control.
-- Copy and content: Passed. Linked Referral Code, 8% status, GAUTAM, and Redeem are all present; the old Gautam instruction sentence and Edit label are absent from KOL.
-- Accessibility and behavior: Passed. GAUTAM is exposed as a read-only textbox, Redeem is a semantic button, and activation produces visible confirmation feedback.
-- Responsiveness: Passed at 1280 × 720 and 390 × 844 with no overlap, clipping, or horizontal overflow.
+- Fonts and typography: Passed. Existing Onest hierarchy, weights, line heights, and amber `$60` emphasis remain consistent.
+- Spacing and layout rhythm: Passed. Progress copy fits cleanly above the bar; the hero row is uniformly 216 px tall on desktop.
+- Colors and visual tokens: Passed. Existing black surface, gold border, neutral text, and amber-to-aquamarine progress treatment are preserved.
+- Image quality and asset fidelity: Passed. The existing Scout badge remains sharp, correctly scaled, and uncropped.
+- Copy and content: Passed. `Progress to Milestone 3`, `$115.4K to M3`, `77%`, and `You’ll unlock $60` remain visible; `Next up` is absent.
+- Accessibility and behavior: Passed. The progressbar accessible label names Milestone 3 and the remaining trading volume.
+- Responsiveness: Passed at 1440 × 900 and 390 × 844 with no overlap, clipping, or horizontal overflow.
 
 ## Interactions and diagnostics verified
 
-- Rewards dropdown opens the KOL view on desktop and mobile.
-- Redeem produces `Referral code GAUTAM redeemed — 8% cashback active` feedback.
-- Standard Rewards remains `Enter a Code`, 4%, and Edit.
-- Browser console: no warnings or errors.
-- Automated checks: 44 tests passed, targeted lint passed, and production build passed.
+- Rewards navigation opens the Gautam Rewards state.
+- Browser console: no errors.
+- Automated checks: 46 tests passed, targeted lint passed, and the production build passed.
 
 ## Comparison history
 
-1. Pass 1 compared both user references with desktop and mobile implementation captures in one visual review. No actionable P0, P1, or P2 mismatch was found.
+1. Pass 1 compared the user reference and the rendered desktop/mobile implementation. No actionable P0, P1, or P2 mismatch remained after the scoped panel removal and copy relocation.
 
 ## Findings
 
@@ -56,7 +55,7 @@
 
 ## Follow-up polish
 
-- None required for this scoped state change.
+- None required for this scoped change.
 
 ## Final result
 

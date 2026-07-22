@@ -216,21 +216,22 @@ export const KOL_MILESTONES = [
 ];
 
 export const KOL_LEADERBOARD = [
-  { id: 1, wallet: "0xA7...91F2", volume: "$4,860,200", milestone: "M4", movement: "+1" },
-  { id: 2, wallet: "0xD9...34C9", volume: "$2,760,000", milestone: "M4", movement: "–1" },
-  { id: 3, wallet: "0xE1...C1D4", volume: "$1,240,800", milestone: "M3", movement: "+2" },
-  { id: 4, wallet: "0xF2...9B78", volume: "$890,400", milestone: "M3", movement: "–" },
-  { id: 5, wallet: "0xB7...6D01", volume: "$562,100", milestone: "M3", movement: "+1" },
+  { id: 1, wallet: "0xA7...91F2", volume: "$4,860,200", milestone: "M4", claimedReward: "$300", movement: "+1" },
+  { id: 2, wallet: "0xD9...34C9", volume: "$2,760,000", milestone: "M4", claimedReward: "$300", movement: "–1" },
+  { id: 3, wallet: "0xE1...C1D4", volume: "$1,240,800", milestone: "M3", claimedReward: "$80", movement: "+2" },
+  { id: 4, wallet: "0xF2...9B78", volume: "$890,400", milestone: "M3", claimedReward: "$80", movement: "–" },
+  { id: 5, wallet: "0xB7...6D01", volume: "$562,100", milestone: "M3", claimedReward: "$80", movement: "+1" },
   {
     id: 6,
     wallet: "0x98...3ee8 · You",
     volume: "$384,600",
     milestone: "M2",
+    claimedReward: "$25.32",
     movement: "+2",
     current: true,
   },
-  { id: 7, wallet: "0xC4...18E4", volume: "$276,900", milestone: "M2", movement: "–2" },
-  { id: 8, wallet: "0xB9...4C12", volume: "$148,300", milestone: "M1", movement: "+1" },
+  { id: 7, wallet: "0xC4...18E4", volume: "$276,900", milestone: "M2", claimedReward: "$20", movement: "–2" },
+  { id: 8, wallet: "0xB9...4C12", volume: "$148,300", milestone: "M1", claimedReward: "$5", movement: "+1" },
 ];
 
 export const KOL_CLAIM_HISTORY = [

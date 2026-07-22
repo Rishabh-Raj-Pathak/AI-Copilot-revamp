@@ -123,6 +123,10 @@ function TierProgressCard({ variant }) {
     : REWARD_TIERS.find((item) => item.id === tierId) ?? REWARD_TIERS[0];
   const pct = Math.min(100, Math.round((volume / nextTierVolume) * 1000) / 10);
   const remainingVolume = Math.max(0, nextTierVolume - volume);
+  const currentMilestoneLabel = isKol ? `Milestone ${name.slice(1)}` : name;
+  const nextMilestoneLabel = isKol
+    ? `Milestone ${progress.nextMilestone.slice(1)}`
+    : progress.nextMilestone;
 
   if (isKol) {
     return (
@@ -142,7 +146,7 @@ function TierProgressCard({ variant }) {
             </div>
             <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-[#3a3a3a] bg-[#121212] px-2.5 py-1.5 text-xs font-medium text-white">
               <Medal className="size-3.5 shrink-0 text-[#f2b500]" strokeWidth={2} aria-hidden />
-              You’re at {name}
+              You’re at {currentMilestoneLabel}
             </div>
           </div>
           <img
@@ -154,7 +158,13 @@ function TierProgressCard({ variant }) {
 
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-sm text-[#bfbfbf]">Progress to {progress.nextMilestone}</p>
+            <div className="min-w-0">
+              <p className="text-sm text-[#bfbfbf]">Progress to {nextMilestoneLabel}</p>
+              <p className="mt-1 text-xs text-[#8f8f8f]">
+                You’ll unlock{" "}
+                <span className="font-semibold text-[#f2b500]">{nextTierBonus}</span>
+              </p>
+            </div>
             <div className="flex shrink-0 items-center gap-2">
               <p className="text-xs text-[#8f8f8f]">
                 {formatCompactVolume(remainingVolume)} to {progress.nextMilestone}
@@ -171,31 +181,12 @@ function TierProgressCard({ variant }) {
             aria-valuemin={0}
             aria-valuemax={nextTierVolume}
             aria-valuenow={volume}
-            aria-label={`${Math.round(pct)}% complete toward ${progress.nextMilestone}; ${formatVolume(remainingVolume)} trading volume remaining`}
+            aria-label={`${Math.round(pct)}% complete toward ${nextMilestoneLabel}; ${formatVolume(remainingVolume)} trading volume remaining`}
           >
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#f7bb08] to-[#2fffce]"
               style={{ width: `${pct}%` }}
             />
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 divide-x divide-[#2f2f2f] rounded-lg border border-[#2f2f2f] bg-[#101010] py-3">
-          <div className="px-3">
-            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
-              Next up
-            </p>
-            <p className="mt-1 text-base font-semibold text-white">
-              {progress.nextMilestone}
-            </p>
-          </div>
-          <div className="px-3">
-            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
-              You’ll unlock
-            </p>
-            <p className="mt-1 text-base font-semibold text-[#f2b500]">
-              {nextTierBonus}
-            </p>
           </div>
         </div>
       </section>
@@ -345,13 +336,13 @@ function EnterCodeCard({ onNotify, variant }) {
     <section className={`flex flex-col justify-between gap-5 ${CARD}`}>
       <header className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold leading-[1.2] text-white">
-          {isKol ? `${feeRebate} cashback with Gautam` : "Enter a Code"}
+          {isKol ? `${feeRebate} cashback bonus` : "Enter a Code"}
         </h2>
         <p className="text-sm leading-[1.2] text-[#bfbfbf]">
           {isKol ? (
             <>
-              You’re getting <span className="font-semibold text-[#f2b500]">{feeRebate}</span>{" "}
-              of your trading fees back with code{" "}
+              Get <span className="font-semibold text-[#f2b500]">{feeRebate}</span> of your
+              trading fees back with code{" "}
               <span className="font-semibold text-white">{code}</span>.
             </>
           ) : (
@@ -388,7 +379,7 @@ function EnterCodeCard({ onNotify, variant }) {
         {isKol ? (
           <span className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#146c5b] bg-[#071c18] px-4 text-sm font-medium leading-[1.2] text-[#52e5c4]">
             <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-            Cashback active
+            Bonus active
           </span>
         ) : (
           <button

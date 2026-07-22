@@ -10,13 +10,6 @@ import {
   TOTAL_PAGES,
 } from "./rewardsMockData.js";
 
-function formatRankChange(value) {
-  if (value === "–") return "No change";
-  if (value.startsWith("+")) return `Up ${value.slice(1)}`;
-  if (value.startsWith("–")) return `Down ${value.slice(1)}`;
-  return value;
-}
-
 /**
  * Referred Users / Claim History, the tabbed table in the middle of the page.
  *
@@ -57,7 +50,7 @@ const KOL_TABS = [
       { key: "wallet", label: "Wallet Address" },
       { key: "volume", label: "Total Volume" },
       { key: "milestone", label: "Milestone" },
-      { key: "movement", label: "Rank change" },
+      { key: "claimedReward", label: "Claimed reward" },
     ],
   },
   {
@@ -190,9 +183,7 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
                     key={c.key}
                     className="p-3 text-center text-xs leading-[1.2] text-white"
                   >
-                    {isKol && c.key === "movement"
-                      ? formatRankChange(row[c.key])
-                      : row[c.key]}
+                    {row[c.key]}
                   </td>
                 ))}
               </tr>
@@ -225,9 +216,7 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
                 <div key={c.key} className="flex items-center justify-between gap-3">
                   <dt className="text-[10px] leading-[1.2] text-[#757575]">{c.label}</dt>
                   <dd className="text-xs leading-[1.2] text-white">
-                    {isKol && c.key === "movement"
-                      ? formatRankChange(row[c.key])
-                      : row[c.key]}
+                    {row[c.key]}
                   </dd>
                 </div>
               ))}
