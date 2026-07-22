@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Flag } from "lucide-react";
 import {
   KOL_CURRENT_MILESTONE,
   KOL_MILESTONES,
@@ -45,29 +44,28 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
           ) : null}
         </div>
         {isKol ? (
-          <div className="flex items-center gap-3 rounded-[10px] border border-[#5a4500] bg-[#171300] px-3.5 py-3 max-tablet:w-full">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#5a4500] bg-[#211a00] text-[#f2b500]">
-              <Flag className="size-4" strokeWidth={2} aria-hidden />
-            </span>
+          /* Reads as a quiet readout, not a callout: the neutral card border, no
+             fill and no flag badge — only the volume line and the unlock stay lit. */
+          <div className="flex items-center gap-3 rounded-[10px] border border-[#242424] px-3.5 py-3 max-tablet:w-full">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
+              <p className="text-[10px] font-medium uppercase leading-[1.2] tracking-[0.8px] text-white">
                 Your next milestone
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <strong className="text-base font-semibold leading-none text-white">
+                <strong className="text-base font-semibold leading-[1.2] text-white">
                   {KOL_CURRENT_MILESTONE.nextMilestone}
                 </strong>
-                <span className="text-xs text-[#f2b500]">
+                <span className="text-xs leading-[1.2] text-[#f2b500]">
                   Trade {formatCompactVolume(remainingVolume)} more to reach{" "}
                   {KOL_CURRENT_MILESTONE.nextMilestone}
                 </span>
               </div>
             </div>
             <div className="shrink-0 border-l border-[#4a3a00] pl-3 text-right">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-[#8f8f8f]">
+              <p className="text-[10px] uppercase leading-[1.2] tracking-[0.8px] text-[#8f8f8f]">
                 Unlock
               </p>
-              <p className="mt-1 text-sm font-semibold leading-none text-white">
+              <p className="mt-1 text-sm font-semibold leading-[1.2] text-white">
                 {KOL_CURRENT_MILESTONE.nextTierBonus}
               </p>
             </div>
@@ -145,12 +143,14 @@ function TierCard({ tier, pathId, isKol, isCurrent }) {
           wraps in the narrow columns — the artboard's names all fit on one. */}
       <div className="flex min-h-[86px] items-start justify-between gap-2 tablet:min-h-0 xl:min-h-[86px] 2xl:min-h-0">
         <div className="flex min-w-0 flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
+          {/* The chip sits under the name, not beside it — the artboard stacks them
+              so every card's volume line starts at the same height. */}
+          <div className="flex flex-col items-start gap-1.5">
             <h3 className="text-sm font-semibold leading-[1.2] text-white">
               {isKol ? `Milestone ${tier.name.slice(1)}` : tier.name}
             </h3>
             {isCurrent ? (
-              <span className="rounded-full border border-[#705600] bg-[#211a00] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-[#f2b500]">
+              <span className="rounded-full border border-[#705600] bg-[#211a00] px-[5px] py-0.5 text-[9px] font-semibold uppercase leading-[1.2] text-[#f2b500]">
                 You’re here
               </span>
             ) : null}

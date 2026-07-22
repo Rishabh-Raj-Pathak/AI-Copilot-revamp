@@ -95,8 +95,10 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
               See where you rank in Gautam’s trading community.
             </p>
           </div>
-          <div className="flex min-w-[190px] items-center gap-3 rounded-xl border border-[#514000] bg-[#171300] px-3.5 py-3 max-tablet:w-full">
-            <strong className="flex size-12 shrink-0 items-center justify-center rounded-full border border-[#705600] bg-[#211a00] text-xl font-semibold leading-none text-[#f2b500]">
+          {/* Unboxed, like the milestone readout above it — only the rank itself
+              and the movement line carry colour. */}
+          <div className="flex min-w-[190px] items-center gap-3 rounded-xl px-3.5 py-3 max-tablet:w-full">
+            <strong className="flex size-12 shrink-0 items-center justify-center rounded-full border border-[#242424] text-xl font-semibold leading-none text-[#f2b500]">
               {KOL_REWARD_STATS.leaderboardRank}
             </strong>
             <div>

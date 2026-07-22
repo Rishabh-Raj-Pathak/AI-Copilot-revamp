@@ -64,6 +64,42 @@ const STAT_ART = {
   },
 };
 
+/**
+ * Gautam's own art set — a different illustration style from the standard page's,
+ * squarer and further off the right edge. Offsets are measured against the campaign
+ * artboard's 281×105 tile; the glow copy is dimmer and the sharp copy brighter than
+ * the standard set's, and the campaign-ends pair is rotated apart so the blur reads
+ * as a second, offset shadow rather than a halo.
+ */
+const KOL_STAT_ART = {
+  totalEarned: {
+    src: "/rewards/stats/gautam-total-earned.png",
+    rotate: -14.96,
+    glow: { right: -31.3, top: 5, width: 128, height: 128, blur: 20, opacity: 0.2 },
+    sharp: { right: -31.3, top: 5, width: 128, height: 128, opacity: 0.7 },
+  },
+  feeCashback: {
+    src: "/rewards/stats/gautam-fee-cashback.png",
+    rotate: -8.3,
+    glow: { right: -24.5, top: 12, width: 133.4, height: 133.4, blur: 20, opacity: 0.2 },
+    sharp: { right: -24.5, top: 12, width: 133.4, height: 133.4, opacity: 0.7 },
+  },
+  campaignEnds: {
+    src: "/rewards/stats/gautam-campaign-ends.png",
+    rotate: -11.51,
+    glow: {
+      right: -14.8,
+      top: 9.1,
+      width: 126.4,
+      height: 126.4,
+      blur: 20,
+      opacity: 0.2,
+      rotate: -9.26,
+    },
+    sharp: { right: -12.75, top: 9.2, width: 126.4, height: 126.4, opacity: 0.7 },
+  },
+};
+
 function formatVolume(n) {
   return n.toLocaleString("en-US");
 }
@@ -415,6 +451,61 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
     KOL_MIN_CLAIM_AMOUNT - (Number.isFinite(numericClaimable) ? numericClaimable : 0),
   );
 
+  // Gautam's artboard puts the two earned tiles side by side and pushes the Claim
+  // action third; the standard page keeps Claimable Rewards second.
+  const claimTile = (
+    <StatCard
+      key="claim"
+      label={isKol ? "Available to claim" : "Claimable Rewards"}
+      value={stats.claimableRewards}
+      info={
+        isKol
+          ? `Claim once your balance reaches $${KOL_MIN_CLAIM_AMOUNT}. Your balance includes Gautam milestone rewards and ${KOL_FEE_REBATE} fee cashback.`
+          : undefined
+      }
+      status={
+        isKol
+          ? canClaim
+            ? "Ready to claim"
+            : `$${amountUntilClaim.toFixed(2)} more to claim`
+          : undefined
+      }
+    >
+      <button
+        type="button"
+        onClick={onClaim}
+        disabled={!canClaim}
+        aria-label={
+          canClaim
+            ? `Claim ${stats.claimableRewards}`
+            : `Claim unlocks at $${KOL_MIN_CLAIM_AMOUNT}`
+        }
+        className={`inline-flex shrink-0 items-center border border-[#241b00] font-medium leading-[1.2] text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:opacity-40 ${
+          isKol
+            ? "h-10 gap-2 rounded-lg px-5 text-base"
+            : "gap-1 rounded px-2 py-1 text-xs"
+        }`}
+        style={{ backgroundImage: CTA_RAMP }}
+      >
+        <Gift
+          className={`${isKol ? "size-5" : "size-4"} shrink-0`}
+          strokeWidth={2}
+          aria-hidden
+        />
+        {canClaim ? "Claim" : `Unlock at $${KOL_MIN_CLAIM_AMOUNT}`}
+      </button>
+    </StatCard>
+  );
+
+  const feeTile = (
+    <StatCard
+      key="fees"
+      label={isKol ? "Fee cashback earned" : "From Your Trades"}
+      value={stats.fromYourTrades}
+      art={isKol ? KOL_STAT_ART.feeCashback : STAT_ART.fromYourTrades}
+    />
+  );
+
   return (
     <div
       className={`grid grid-cols-2 gap-4 tablet:gap-5 ${
@@ -424,58 +515,15 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
       <StatCard
         label={isKol ? "Total earned" : "Total Rewards"}
         value={stats.totalRewards}
-        art={STAT_ART.totalRewards}
+        art={isKol ? KOL_STAT_ART.totalEarned : STAT_ART.totalRewards}
+        accent={isKol}
       />
-      {/* The only tile the artboard leaves bare — the Claim button takes the space. */}
-      <StatCard
-        label={isKol ? "Available to claim" : "Claimable Rewards"}
-        value={stats.claimableRewards}
-        info={
-          isKol
-            ? `Claim once your balance reaches $${KOL_MIN_CLAIM_AMOUNT}. Your balance includes Gautam milestone rewards and ${KOL_FEE_REBATE} fee cashback.`
-            : undefined
-        }
-        status={
-          isKol
-            ? canClaim
-              ? "Ready to claim"
-              : `$${amountUntilClaim.toFixed(2)} more to claim`
-            : undefined
-        }
-      >
-        <button
-          type="button"
-          onClick={onClaim}
-          disabled={!canClaim}
-          aria-label={
-            canClaim
-              ? `Claim ${stats.claimableRewards}`
-              : `Claim unlocks at $${KOL_MIN_CLAIM_AMOUNT}`
-          }
-          className={`inline-flex shrink-0 items-center border border-[#241b00] font-medium leading-[1.2] text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:opacity-40 ${
-            isKol
-              ? "h-10 gap-2 rounded-lg px-5 text-base"
-              : "gap-1 rounded px-2 py-1 text-xs"
-          }`}
-          style={{ backgroundImage: CTA_RAMP }}
-        >
-          <Gift
-            className={`${isKol ? "size-5" : "size-4"} shrink-0`}
-            strokeWidth={2}
-            aria-hidden
-          />
-          {canClaim ? (isKol ? "Claim rewards" : "Claim") : `Unlock at $${KOL_MIN_CLAIM_AMOUNT}`}
-        </button>
-      </StatCard>
-      <StatCard
-        label={isKol ? "Fee cashback earned" : "From Your Trades"}
-        value={stats.fromYourTrades}
-        art={STAT_ART.fromYourTrades}
-      />
+      {isKol ? feeTile : claimTile}
+      {isKol ? claimTile : feeTile}
       <StatCard
         label={isKol ? "Gautam campaign ends" : "From Referrals"}
         value={isKol ? countdown : stats.fromReferrals}
-        art={STAT_ART.fromReferrals}
+        art={isKol ? KOL_STAT_ART.campaignEnds : STAT_ART.fromReferrals}
       />
       {!isKol ? (
         <StatCard
@@ -488,46 +536,57 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
   );
 }
 
-function StatCard({ label, value, art, children, info, status }) {
+function StatCard({ label, value, art, children, info, status, accent }) {
   return (
     <section className={`@container relative overflow-hidden ${CARD}`}>
       {art ? <StatArt {...art} /> : null}
-      <div className="relative grid grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <p className="text-sm leading-[1.2] text-[#bfbfbf]">{label}</p>
-          {info ? (
-            <Tooltip content={info} align="end">
-              <button
-                type="button"
-                aria-label="How available rewards are calculated"
-                className="inline-flex size-5 items-center justify-center rounded-full text-[#757575] transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f2b500]"
-              >
-                <Info className="size-3.5" strokeWidth={2} aria-hidden />
-              </button>
-            </Tooltip>
+      {/* Two independent rows rather than a two-column grid: the Claim button is
+          much wider than the status pill, and a shared column would squeeze
+          `Available to claim` onto two lines. */}
+      <div className="relative flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="text-sm leading-[1.2] text-[#bfbfbf]">{label}</p>
+            {info ? (
+              <Tooltip content={info} align="end">
+                <button
+                  type="button"
+                  aria-label="How available rewards are calculated"
+                  className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[#757575] transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f2b500]"
+                >
+                  <Info className="size-3.5" strokeWidth={2} aria-hidden />
+                </button>
+              </Tooltip>
+            ) : null}
+          </div>
+          {status ? (
+            <span
+              className={`hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[10px] font-medium leading-[1.2] @min-[12rem]:inline-flex ${
+                status === "Ready to claim" ? "text-[#4ade80]" : "text-[#8f8f8f]"
+              }`}
+            >
+              <span
+                className={`size-1.5 rounded-full ${
+                  status === "Ready to claim" ? "bg-[#4ade80]" : "bg-[#8f8f8f]"
+                }`}
+                aria-hidden
+              />
+              {status}
+            </span>
           ) : null}
         </div>
-        {status ? (
-          <span
-            className={`col-start-2 row-start-1 hidden shrink-0 items-center justify-self-center gap-1.5 whitespace-nowrap text-[10px] font-medium leading-[1.2] @min-[12rem]:inline-flex ${
-              status === "Ready to claim" ? "text-[#4ade80]" : "text-[#8f8f8f]"
+        <div className="flex items-center justify-between gap-2">
+          {/* Gautam's headline number is painted with the CTA ramp, not white. */}
+          <p
+            className={`text-xl font-semibold leading-[1.2] ${
+              accent ? "bg-clip-text text-transparent" : "text-white"
             }`}
+            style={accent ? { backgroundImage: CTA_RAMP } : undefined}
           >
-            <span
-              className={`size-1.5 rounded-full ${
-                status === "Ready to claim" ? "bg-[#4ade80]" : "bg-[#8f8f8f]"
-              }`}
-              aria-hidden
-            />
-            {status}
-          </span>
-        ) : null}
-        <p className="col-start-1 row-start-2 text-xl font-semibold leading-[1.2] text-white">
-          {value}
-        </p>
-        {children ? (
-          <div className="col-start-2 row-start-2 justify-self-end">{children}</div>
-        ) : null}
+            {value}
+          </p>
+          {children}
+        </div>
       </div>
     </section>
   );
@@ -543,13 +602,17 @@ function StatCard({ label, value, art, children, info, status }) {
  * padding — lower it if you want the art on the mobile grid too.
  */
 function StatArt({ src, rotate, glow, sharp }) {
-  const layer = ({ right, top, width, height, blur }) => ({
-    right: `${right}px`,
-    top: `${top}px`,
-    width: `${width}px`,
-    height: `${height}px`,
-    transform: rotate ? `rotate(${rotate}deg)` : undefined,
-    filter: blur ? `blur(${blur}px)` : undefined,
+  // A layer may carry its own `rotate`/`opacity` — Gautam's campaign-ends art turns
+  // the two copies apart from each other, and its pair sits dimmer/brighter than the
+  // standard set's defaults.
+  const layer = (piece, defaultOpacity) => ({
+    right: `${piece.right}px`,
+    top: `${piece.top}px`,
+    width: `${piece.width}px`,
+    height: `${piece.height}px`,
+    opacity: piece.opacity ?? defaultOpacity,
+    transform: (piece.rotate ?? rotate) ? `rotate(${piece.rotate ?? rotate}deg)` : undefined,
+    filter: piece.blur ? `blur(${piece.blur}px)` : undefined,
   });
 
   return (
@@ -557,14 +620,14 @@ function StatArt({ src, rotate, glow, sharp }) {
       <img
         src={src}
         alt=""
-        className="absolute max-w-none object-contain opacity-50"
-        style={layer(glow)}
+        className="absolute max-w-none object-contain"
+        style={layer(glow, 0.5)}
       />
       <img
         src={src}
         alt=""
-        className="absolute max-w-none object-contain opacity-60"
-        style={layer(sharp)}
+        className="absolute max-w-none object-contain"
+        style={layer(sharp, 0.6)}
       />
     </div>
   );
