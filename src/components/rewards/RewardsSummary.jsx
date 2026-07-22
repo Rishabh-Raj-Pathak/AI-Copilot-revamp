@@ -502,43 +502,42 @@ function StatCard({ label, value, art, children, info, status }) {
   return (
     <section className={`@container relative overflow-hidden ${CARD}`}>
       {art ? <StatArt {...art} /> : null}
-      <div className="relative flex items-center gap-1.5">
-        <p className="text-sm leading-[1.2] text-[#bfbfbf]">{label}</p>
-        {info ? (
-          <Tooltip content={info} align="end">
-            <button
-              type="button"
-              aria-label="How claimable rewards are calculated"
-              className="inline-flex size-5 items-center justify-center rounded-full text-[#757575] transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f2b500]"
-            >
-              <Info className="size-3.5" strokeWidth={2} aria-hidden />
-            </button>
-          </Tooltip>
-        ) : null}
+      <div className="relative grid grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <p className="text-sm leading-[1.2] text-[#bfbfbf]">{label}</p>
+          {info ? (
+            <Tooltip content={info} align="end">
+              <button
+                type="button"
+                aria-label="How claimable rewards are calculated"
+                className="inline-flex size-5 items-center justify-center rounded-full text-[#757575] transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f2b500]"
+              >
+                <Info className="size-3.5" strokeWidth={2} aria-hidden />
+              </button>
+            </Tooltip>
+          ) : null}
+        </div>
         {status ? (
           <span
-            className={`ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[10px] font-medium @min-[12rem]:inline-flex ${
-              status === "Ready to claim" ? "text-[#52e5c4]" : "text-[#8f8f8f]"
+            className={`col-start-2 row-start-1 hidden shrink-0 items-center justify-self-center gap-1.5 whitespace-nowrap text-[10px] font-medium leading-[1.2] @min-[12rem]:inline-flex ${
+              status === "Ready to claim" ? "text-[#4ade80]" : "text-[#8f8f8f]"
             }`}
           >
             <span
               className={`size-1.5 rounded-full ${
-                status === "Ready to claim" ? "bg-[#52e5c4]" : "bg-[#8f8f8f]"
+                status === "Ready to claim" ? "bg-[#4ade80]" : "bg-[#8f8f8f]"
               }`}
               aria-hidden
             />
             {status}
           </span>
         ) : null}
-      </div>
-      {/*
-        The artboard pins a trailing action to the right edge, away from the value.
-        It only fits beside the value on a card near the artboard's 232px; the
-        narrower grids wrap it under rather than let the card clip it.
-      */}
-      <div className="relative mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xl font-semibold leading-[1.2] text-white">{value}</p>
-        {children}
+        <p className="col-start-1 row-start-2 text-xl font-semibold leading-[1.2] text-white">
+          {value}
+        </p>
+        {children ? (
+          <div className="col-start-2 row-start-2 justify-self-end">{children}</div>
+        ) : null}
       </div>
     </section>
   );
