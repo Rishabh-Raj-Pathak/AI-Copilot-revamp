@@ -5,6 +5,7 @@ import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import ProfilePage from "./components/profile/ProfilePage.jsx";
 import { ProfileProvider } from "./components/profile/ProfileContext.jsx";
+import RewardsPage from "./components/rewards/RewardsPage.jsx";
 import SupportPage from "./components/support/SupportPage.jsx";
 import TerminalCopilotPage from "./components/terminal/TerminalCopilotPage.jsx";
 import TradePage from "./components/trade/TradePage.jsx";
@@ -64,6 +65,8 @@ export default function App() {
   };
 
   const openTrade = () => setPage("trade");
+  const openRewards = (viewId = "rewards") =>
+    setPage(viewId === "kol" ? "kol" : "rewards");
 
   const content =
     page === "support" ? (
@@ -72,6 +75,7 @@ export default function App() {
         onBack={leaveSupport}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "profile" ? (
@@ -80,6 +84,26 @@ export default function App() {
         onBack={leaveProfile}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
+        onVaultViewChange={handleVaultViewChange}
+      />
+    ) : page === "rewards" ? (
+      <RewardsPage
+        key="rewards"
+        {...sharedWalletProps}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
+        onVaultViewChange={handleVaultViewChange}
+      />
+    ) : page === "kol" ? (
+      <RewardsPage
+        key="kol"
+        variant="kol"
+        {...sharedWalletProps}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "trade" ? (
@@ -90,6 +114,7 @@ export default function App() {
           setRunCopilotTourOnEnter(true);
           setPage("copilot");
         }}
+        onOpenRewards={openRewards}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "vaults" ? (
@@ -97,6 +122,7 @@ export default function App() {
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
@@ -111,6 +137,7 @@ export default function App() {
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
@@ -124,6 +151,7 @@ export default function App() {
         onOpenVaults={() => setPage("vaults")}
         onOpenTrade={openTrade}
         onOpenDeltaNeutralVaults={() => setPage("delta-neutral-vaults")}
+        onOpenRewards={openRewards}
         onVaultViewChange={handleVaultViewChange}
         onOpenVaultTutorial={() => {
           destroyCopilotProductTourIfStillActive();

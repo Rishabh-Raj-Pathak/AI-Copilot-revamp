@@ -44,6 +44,7 @@ export default function SupportPage({
   onTerminalPlatformChange,
   onOpenCopilot,
   onOpenTrade,
+  onOpenRewards,
   onVaultViewChange,
 }) {
   const walletHeaderProps = {
@@ -67,6 +68,8 @@ export default function SupportPage({
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
           if (label === "Trade") onOpenTrade?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         showCopilotTutorial={false}
       />
@@ -103,6 +106,8 @@ export default function SupportPage({
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
           if (id === "trade") onOpenTrade?.();
+          if (id === "rewards") onOpenRewards?.();
+          if (id === "kol") onOpenRewards?.("kol");
         }}
       />
     </div>

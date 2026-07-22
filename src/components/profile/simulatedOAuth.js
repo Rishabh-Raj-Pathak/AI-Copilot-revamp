@@ -12,7 +12,7 @@
 
 export const X_AUTHORIZE_MS = 1100;
 export const TELEGRAM_PAIRING_MS = 2200;
-export const X_FOLLOW_CHECK_MS = 1400;
+export const X_POST_MS = 1400;
 
 export const TELEGRAM_BOT_URL = "https://t.me/hyprearn_bot";
 
@@ -49,11 +49,21 @@ export function telegramDeepLink(code) {
 }
 
 function stamp(account) {
+  // A link is either made or it isn't — one moment to record, and nothing held
+  // back for a later "activation". The share that follows the X link is a step
+  // of its own with its own timestamp on the record, not a second state of this
+  // one. See `computeProfileProgress`.
   return { ...account, verifiedAt: new Date().toISOString() };
 }
 
 /**
  * Redirect to X, wait for the callback. Here: a timer.
+ *
+ * The authorization is what performs the follow — the scope we ask for includes
+ * it, so there's no second trip to x.com and nothing to confirm afterwards. It
+ * also carries write access, which is what makes the share step one tap instead
+ * of another consent screen.
+ *
  * @param {(account: object) => void} onAuthorized
  * @returns {() => void} cancel
  */
@@ -67,6 +77,11 @@ export function startXAuthorization(onAuthorized) {
 
 /**
  * Poll the backend until the user taps Start in the bot. Here: a timer.
+ *
+ * Joining is the entire Telegram step — the points land on this resolving, with
+ * nothing held back for a first alert. Alerts are the reason to join, not a
+ * second toll on the way in.
+ *
  * @param {(account: object) => void} onPaired
  * @returns {() => void} cancel
  */
@@ -79,17 +94,33 @@ export function startTelegramPairing(onPaired) {
 }
 
 /**
- * Confirm the follow landed. A real build asks X for the relationship after the
- * tab comes back; here the answer is always yes, one timer later.
+ * The position the profile's sample card is cut from.
  *
- * The wait is the honest part of the fake — the follow happens on x.com, not in
- * this tab, so the step can't credit itself the instant the button is pressed.
+ * A first card has to be posted before the user has a position worth posting,
+ * so the step shows what one looks like rather than asking them to imagine it.
+ * The real step would read the user's best closed trade; this is the shape that
+ * read returns.
+ */
+export const SAMPLE_PNL_CARD = {
+  coin: "ETH",
+  side: "Long",
+  leverage: "5x",
+  pnlPercent: "+34.2%",
+  pnl: "+$1,284",
+};
+
+/**
+ * Post the card and wait for X to hand back a post id. Here: a timer.
  *
- * @param {() => void} onFollowed
+ * The authorization from step three already carries write scope, so this needs
+ * no second consent — which is the whole reason the share can be a one-tap step
+ * instead of another round trip.
+ *
+ * @param {() => void} onPosted
  * @returns {() => void} cancel
  */
-export function startXFollowCheck(onFollowed) {
-  const id = window.setTimeout(onFollowed, X_FOLLOW_CHECK_MS);
+export function startPnlCardShare(onPosted) {
+  const id = window.setTimeout(onPosted, X_POST_MS);
   return () => window.clearTimeout(id);
 }
 
@@ -98,18 +129,22 @@ export const SOCIAL_PROVIDERS = {
     id: "x",
     name: "X",
     connectLabel: "Connect X",
-    /** Shown once the *other* provider is already linked. */
-    addLabel: "Add X",
     pendingLabel: "Authorizing on X…",
-    /** Why a trader would hand this over. */
-    benefit: "Share setups in one tap and claim your referral link.",
+    /**
+     * Why a trader would hand this over. One line, and it has to survive
+     * truncation on a narrow row, so it names the payoff and leaves the detail
+     * to `perk` below.
+     */
+    benefit: `Follows ${X_HANDLE} for alpha drops, and unlocks the PnL card below.`,
+    /** The settled row's one-word status — "Linked" undersells what happened. */
+    settledLabel: "Following",
   },
   telegram: {
     id: "telegram",
     name: "Telegram",
     connectLabel: "Join Telegram",
-    addLabel: "Join Telegram",
     pendingLabel: "Waiting for Telegram…",
-    benefit: "Liquidation and agent alerts, pushed to your phone.",
+    benefit: "Get pinged the moment a position is at risk, and when an agent acts.",
+    settledLabel: "Joined",
   },
 };

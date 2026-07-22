@@ -32,8 +32,8 @@ const normalize = (address) => String(address ?? "").toLowerCase();
  * @typedef {object} ProfileRecord
  * @property {string} address
  * @property {string|null} updatedAt
- * @property {ProfileSocials} socials  One slot per provider; linking both is encouraged.
- * @property {boolean} followedX  Follows the HyprEarn account on X.
+ * @property {ProfileSocials} socials  One slot per provider; both are required steps.
+ * @property {string|null} pnlSharedAt  When the first PnL card was posted — the second half of the X step.
  * @property {string|null} bannerDismissedAt
  * @property {boolean} completionCelebrated
  */
@@ -44,7 +44,12 @@ export function emptyProfile(address) {
     address: normalize(address),
     updatedAt: null,
     socials: { x: null, telegram: null },
-    followedX: false,
+    /**
+     * A timestamp rather than a boolean because it's the one thing on the
+     * checklist the user can repeat — every later card is another share, but
+     * only the first one pays, and this is what says the toll has been taken.
+     */
+    pnlSharedAt: null,
     bannerDismissedAt: null,
     completionCelebrated: false,
   };

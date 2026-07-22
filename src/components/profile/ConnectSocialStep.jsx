@@ -1,24 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, ExternalLink, Loader2, Plus } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2 } from "lucide-react";
 import { copyText } from "../../lib/clipboard.js";
 import { TelegramGlyph, XGlyph } from "./SocialGlyphs.jsx";
+import { SOCIAL_POINTS } from "./profileSteps.js";
 import {
   SOCIAL_PROVIDERS,
+  X_HANDLE,
   createTelegramPairingCode,
   startTelegramPairing,
   startXAuthorization,
   telegramDeepLink,
 } from "./simulatedOAuth.js";
-
-const CHOICE_CARD_CLASS =
-  "group flex flex-1 flex-col gap-2 rounded-lg border border-[#242424] bg-black p-3.5 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60";
-
-/**
- * Telegram first — it's the one we'd rather a trader took, since alerts bring
- * them back. X still supplies the display name when both are linked; that's
- * `ProfileContext`'s business, not this list's.
- */
-const PROVIDER_ORDER = ["telegram", "x"];
 
 const GLYPHS = {
   x: <XGlyph className="size-4" />,
@@ -26,21 +18,37 @@ const GLYPHS = {
 };
 
 /**
- * Step two: link an account. One is enough to earn the step; the other stays on
- * offer afterwards because the two do different jobs — X shares setups, Telegram
- * pushes alerts — and a trader who wants both shouldn't have to trade one away.
+ * One provider's link, start to finish: the connect affordance, the flow while
+ * it's in flight, and the settled row afterwards.
+ *
+ * Scoped to a single provider because Telegram and X are separate checklist
+ * steps rather than one either/or choice — the component that used to offer both
+ * side by side had a whole vocabulary (choice cards, an `or` divider, a dashed
+ * "add the other one" row) that only existed to model a decision the checklist
+ * no longer asks the user to make.
+ *
+ * Two states, not three. Both providers pay on the link itself, so the amber
+ * "linked but not yet earning" row this component used to own is gone. The pitch
+ * that used to hang under the X row — what a PnL card is — went with it: posting
+ * the card is the other half of step three and renders directly beneath this row
+ * the moment X settles, so advertising it here would sell the same thing twice.
  *
  * There is no unlink. A linked account is a fact the profile only ever adds to,
- * which is why the connected row has nothing to click.
+ * which is why the settled row has nothing to click.
  *
  * @param {object} props
- * @param {import('../../lib/profileSession.js').ProfileSocials} props.socials
+ * @param {'x'|'telegram'} props.provider
+ * @param {import('../../lib/profileSession.js').ProfileSocial|null} props.account
  * @param {(account: object) => void} props.onConnect
  * @param {(message: string, variant?: 'success'|'error') => void} [props.onNotify]
  */
-export default function ConnectSocialStep({ socials, onConnect, onNotify }) {
-  /** `null` | `'x'` | `'telegram'` — which connect is mid-flight. */
-  const [pending, setPending] = useState(null);
+export default function ConnectSocialStep({
+  provider,
+  account,
+  onConnect,
+  onNotify,
+}) {
+  const [pending, setPending] = useState(false);
   const [pairingCode, setPairingCode] = useState(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const cancelRef = useRef(null);
@@ -56,35 +64,34 @@ export default function ConnectSocialStep({ socials, onConnect, onNotify }) {
     [],
   );
 
-  const settle = (account) => {
+  const settle = (linked) => {
     cancelRef.current = null;
-    setPending(null);
+    setPending(false);
     setPairingCode(null);
-    onConnect(account);
+    onConnect(linked);
     onNotify?.(
-      `${SOCIAL_PROVIDERS[account.provider].name} linked as ${account.handle}`,
+      provider === "x"
+        ? `Now following ${X_HANDLE} — +${SOCIAL_POINTS.x} pts earned`
+        : `Telegram joined as ${linked.handle} — +${SOCIAL_POINTS.telegram} pts earned`,
       "success",
     );
   };
 
-  const begin = {
-    x: () => {
-      if (pending) return;
-      setPending("x");
+  const begin = () => {
+    if (pending) return;
+    setPending(true);
+    if (provider === "x") {
       cancelRef.current = startXAuthorization(settle);
-    },
-    telegram: () => {
-      if (pending) return;
-      setPending("telegram");
-      setPairingCode(createTelegramPairingCode());
-      cancelRef.current = startTelegramPairing(settle);
-    },
+      return;
+    }
+    setPairingCode(createTelegramPairingCode());
+    cancelRef.current = startTelegramPairing(settle);
   };
 
   const cancel = () => {
     cancelRef.current?.();
     cancelRef.current = null;
-    setPending(null);
+    setPending(false);
     setPairingCode(null);
   };
 
@@ -96,165 +103,49 @@ export default function ConnectSocialStep({ socials, onConnect, onNotify }) {
     copyTimer.current = window.setTimeout(() => setCodeCopied(false), 2000);
   };
 
-  const pairing = (
-    <TelegramPairing
-      code={pairingCode}
-      onCancel={cancel}
-      onCopyCode={copyCode}
-      copied={codeCopied}
-    />
-  );
+  if (account) return <SettledRow provider={provider} account={account} />;
 
-  const linked = PROVIDER_ORDER.filter((id) => socials[id]);
-  const unlinked = PROVIDER_ORDER.filter((id) => !socials[id]);
-
-  // Nothing linked yet: the two providers get equal billing, benefit and all.
-  if (linked.length === 0) {
-    if (pending === "telegram") return pairing;
+  // The pairing panel replaces the connect row rather than sitting under it —
+  // there's only ever one thing to do here at a time.
+  if (provider === "telegram" && pending) {
     return (
-      <div className="flex flex-col gap-2.5">
-        <p className="text-xs text-[#757575]">
-          <span className="font-semibold text-[#bfbfbf]">Either one</span> earns
-          the step — add the other whenever you like.
-        </p>
-
-        {/* Equal halves of whatever measure the host gives it, with the `or`
-            between them: two alternatives, and a wider button would read as the
-            recommended one rather than a choice. */}
-        <div className="flex flex-col gap-2.5 sm:flex-row">
-          <ChoiceCard
-            glyph={GLYPHS[PROVIDER_ORDER[0]]}
-            provider={SOCIAL_PROVIDERS[PROVIDER_ORDER[0]]}
-            pending={pending === PROVIDER_ORDER[0]}
-            disabled={Boolean(pending)}
-            onClick={begin[PROVIDER_ORDER[0]]}
-          />
-          <OrDivider />
-          <ChoiceCard
-            glyph={GLYPHS[PROVIDER_ORDER[1]]}
-            provider={SOCIAL_PROVIDERS[PROVIDER_ORDER[1]]}
-            pending={pending === PROVIDER_ORDER[1]}
-            disabled={Boolean(pending)}
-            onClick={begin[PROVIDER_ORDER[1]]}
-          />
-        </div>
-      </div>
+      <TelegramPairing
+        code={pairingCode}
+        onCancel={cancel}
+        onCopyCode={copyCode}
+        copied={codeCopied}
+      />
     );
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      {linked.map((id) => (
-        <LinkedRow key={id} account={socials[id]} />
-      ))}
-
-      {pending === "telegram"
-        ? pairing
-        : unlinked.map((id) => (
-            <AddRow
-              key={id}
-              glyph={GLYPHS[id]}
-              provider={SOCIAL_PROVIDERS[id]}
-              pending={pending === id}
-              disabled={Boolean(pending)}
-              onClick={begin[id]}
-            />
-          ))}
-
-      {unlinked.length === 0 ? (
-        <p className="text-xs text-[#575757]">
-          Both linked — setups and alerts are covered.
-        </p>
-      ) : null}
-    </div>
-  );
+  return <ConnectRow provider={provider} pending={pending} onClick={begin} />;
 }
 
 /**
- * Turns the pair into a choice rather than a to-do list: a rule down the middle
- * of the row, across it once the cards stack.
+ * The unlinked state. Solid border, not dashed — both providers are required
+ * steps now, so neither row is ever an optional extra.
  */
-function OrDivider() {
-  return (
-    <span
-      className="flex items-center justify-center gap-2.5 text-[11px] font-medium uppercase tracking-wide text-[#575757] sm:flex-col sm:gap-2"
-      aria-hidden
-    >
-      <span className="h-px flex-1 bg-[#242424] sm:h-auto sm:w-px sm:flex-1" />
-      or
-      <span className="h-px flex-1 bg-[#242424] sm:h-auto sm:w-px sm:flex-1" />
-    </span>
-  );
-}
-
-function ChoiceCard({ glyph, provider, pending, disabled, onClick }) {
+function ConnectRow({ provider, pending, onClick }) {
+  const meta = SOCIAL_PROVIDERS[provider];
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className={CHOICE_CARD_CLASS}
-    >
-      <span className="flex items-center gap-2 text-sm font-semibold text-white">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#242424] bg-[#0f0f0f] text-white">
-          {glyph}
-        </span>
-        {pending ? provider.pendingLabel : provider.connectLabel}
-        {pending ? (
-          <Loader2 className="size-4 animate-spin text-[#00f3b6]" aria-hidden />
-        ) : null}
-      </span>
-      <span className="text-xs leading-relaxed text-[#929292]">
-        {provider.benefit}
-      </span>
-    </button>
-  );
-}
-
-/** Settled state. Nothing to click — the profile never unlinks an account. */
-function LinkedRow({ account }) {
-  const provider = SOCIAL_PROVIDERS[account.provider];
-  return (
-    <div className="flex items-center gap-2.5 rounded-lg border border-[#1e5a3f] bg-[#0d2019] px-3 py-2">
-      <span className="shrink-0 text-white">{GLYPHS[account.provider]}</span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
-        {account.handle}
-      </span>
-      {/* The glyph already names the provider, so mobile drops the word for the
-          ~50px the handle needs to stay readable. */}
-      <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#00f3b6]">
-        <Check className="size-3.5" aria-hidden />
-        <span className="hidden sm:inline">{provider.name} </span>
-        linked
-      </span>
-    </div>
-  );
-}
-
-/** The optional second link. Dashed, so it never reads as unfinished business. */
-function AddRow({ glyph, provider, pending, disabled, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex items-center gap-2.5 rounded-lg border border-dashed border-[#2f2f2f] bg-black px-3 py-2 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+      disabled={pending}
+      className="flex w-full items-center gap-2.5 rounded-lg border border-[#242424] bg-black px-3 py-2 text-left transition-colors hover:border-[#454545] hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#242424] bg-[#0f0f0f] text-white">
-        {glyph}
+        {GLYPHS[provider]}
       </span>
 
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="text-sm font-semibold text-white">
-          {pending ? provider.pendingLabel : provider.addLabel}
-          <span className="ml-1.5 text-xs font-normal text-[#575757]">
-            optional
-          </span>
+          {pending ? meta.pendingLabel : meta.connectLabel}
         </span>
         {/* One line on desktop keeps the row compact; on mobile that line is
             ~150px wide, so it wraps rather than ellipsing mid-sentence. */}
         <span className="text-xs leading-snug text-[#929292] max-sm:line-clamp-2 sm:truncate">
-          {provider.benefit}
+          {meta.benefit}
         </span>
       </span>
 
@@ -264,9 +155,35 @@ function AddRow({ glyph, provider, pending, disabled, onClick }) {
           aria-hidden
         />
       ) : (
-        <Plus className="size-4 shrink-0 text-[#757575]" aria-hidden />
+        <span className="shrink-0 text-xs font-semibold text-[#f2b500]">
+          +{SOCIAL_POINTS[provider]}
+        </span>
       )}
     </button>
+  );
+}
+
+/**
+ * Fully settled: linked *and* paid. Nothing to click — no unlink.
+ *
+ * No points here, deliberately. This row shows up twice on a finished profile —
+ * inside the checklist step and again in the Connections card — and a `+75`
+ * printed in both places next to the same `+75` in the ledger's column reads as
+ * three separate credits rather than one. The ledger owns the arithmetic; this
+ * row owns the account.
+ */
+function SettledRow({ provider, account }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-[#1e5a3f] bg-[#0d2019] px-3 py-2">
+      <span className="shrink-0 text-white">{GLYPHS[provider]}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+        {account.handle}
+      </span>
+      <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#00f3b6]">
+        <Check className="size-3.5" aria-hidden />
+        {SOCIAL_PROVIDERS[provider].settledLabel}
+      </span>
+    </div>
   );
 }
 

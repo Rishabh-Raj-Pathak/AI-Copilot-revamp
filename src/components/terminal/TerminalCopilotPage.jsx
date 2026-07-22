@@ -72,6 +72,7 @@ export default function TerminalCopilotPage({
   terminalPlatform: terminalPlatformProp,
   onTerminalPlatformChange,
   onOpenVaults,
+  onOpenRewards,
   onOpenTrade,
   onOpenDeltaNeutralVaults,
   onVaultViewChange,
@@ -635,6 +636,8 @@ export default function TerminalCopilotPage({
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
           if (label === "Trade") onOpenTrade?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         showCopilotTutorial
         highlightMoreForTutorial={highlightMoreForTutorial}
@@ -841,6 +844,8 @@ export default function TerminalCopilotPage({
         }}
         onNavClick={(id) => {
           if (id === "vaults") onOpenVaults?.();
+          if (id === "rewards") onOpenRewards?.();
+          if (id === "kol") onOpenRewards?.("kol");
         }}
         onOpenSupport={onOpenSupport}
         onCopilotTutorial={runCopilotTutorial}

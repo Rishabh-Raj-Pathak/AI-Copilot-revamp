@@ -9,6 +9,8 @@ import CopilotNavDropdown, {
 import VaultsNavDropdown, {
   VAULT_VIEWS,
 } from "./VaultsNavDropdown.jsx";
+import RewardsNavDropdown from "./RewardsNavDropdown.jsx";
+import { REWARD_VIEWS } from "./rewardsNavData.js";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
 
 /** Same chevron path as DetailsPanel `CollapseChevron` — simple stroke dropdown. */
@@ -265,6 +267,45 @@ export default function HeaderTerminal({
                   );
                 }
 
+                if (label === "Rewards") {
+                  const rewardsView = activeNavItem === "KOL" ? "kol" : "rewards";
+                  return (
+                    <div
+                      key={label}
+                      className="border-b border-[#242424] px-1 py-1"
+                      role="group"
+                      aria-label="Rewards"
+                    >
+                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                        Rewards
+                      </p>
+                      {REWARD_VIEWS.map((view) => {
+                        const viewActive = rewardsView === view.id;
+                        return (
+                          <button
+                            key={view.id}
+                            type="button"
+                            onClick={() => {
+                              onNavItemClick?.(view.id === "kol" ? "KOL" : "Rewards");
+                              setMobileNavOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                              viewActive
+                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                : "text-white hover:bg-white/10"
+                            }`}
+                          >
+                            <span>{view.label}</span>
+                            {viewActive ? (
+                              <Check className="size-3.5 shrink-0 text-[#f2b500]" aria-hidden />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={label}
@@ -344,6 +385,19 @@ export default function HeaderTerminal({
                     onVaultViewChange(id);
                   }}
                   navActive={active}
+                />
+              );
+            }
+
+            if (label === "Rewards") {
+              return (
+                <RewardsNavDropdown
+                  key={label}
+                  activeView={activeNavItem === "KOL" ? "kol" : "rewards"}
+                  onViewChange={(viewId) => {
+                    onNavItemClick?.(viewId === "kol" ? "KOL" : "Rewards");
+                  }}
+                  navActive={activeNavItem === "Rewards" || activeNavItem === "KOL"}
                 />
               );
             }

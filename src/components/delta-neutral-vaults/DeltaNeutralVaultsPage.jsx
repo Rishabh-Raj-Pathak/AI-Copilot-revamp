@@ -13,6 +13,7 @@ export default function DeltaNeutralVaultsPage({
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
+  onOpenRewards,
   onOpenTrade,
   onOpenCopilotTutorial,
   onVaultViewChange,
@@ -30,6 +31,8 @@ export default function DeltaNeutralVaultsPage({
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
           if (label === "Trade") onOpenTrade?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
         showCopilotTutorial={!!onOpenCopilotTutorial}
@@ -54,6 +57,8 @@ export default function DeltaNeutralVaultsPage({
         onVaultViewChange={onVaultViewChange}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
+          if (id === "rewards") onOpenRewards?.();
+          if (id === "kol") onOpenRewards?.("kol");
         }}
         onOpenSupport={onOpenSupport}
         onCopilotTutorial={onOpenCopilotTutorial}

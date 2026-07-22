@@ -70,6 +70,7 @@ export default function VaultsPage({
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
+  onOpenRewards,
   onOpenTrade,
   onOpenCopilotTutorial,
   onVaultViewChange,
@@ -216,6 +217,8 @@ export default function VaultsPage({
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
           if (label === "Trade") onOpenTrade?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
         onVaultTutorial={runVaultsProductTour}
@@ -317,6 +320,8 @@ export default function VaultsPage({
         onVaultViewChange={onVaultViewChange}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
+          if (id === "rewards") onOpenRewards?.();
+          if (id === "kol") onOpenRewards?.("kol");
         }}
         onOpenSupport={onOpenSupport}
         onCopilotTutorial={onOpenCopilotTutorial}

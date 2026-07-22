@@ -23,7 +23,7 @@ export default function ProfileCompletionBanner({ onOpenProfile, suppressed }) {
     return null;
   }
 
-  const remaining = progress.pointsTotal - progress.points;
+  const remaining = progress.pointsRemaining;
 
   return (
     <div className="flex shrink-0 items-center gap-2.5 border-b border-[#242424] bg-[#121212] px-3 py-2 sm:gap-3 sm:px-5">

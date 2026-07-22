@@ -14,6 +14,7 @@ import { DEFAULT_COIN } from "./tradeMockData.js";
 /** Perps trade terminal — market bar, chart, positions tables, order ticket. */
 export default function TradePage({
   onOpenCopilot,
+  onOpenRewards,
   onVaultViewChange,
   onOpenCopilotTutorial,
   walletConnected,
@@ -41,6 +42,8 @@ export default function TradePage({
         activeNavItem="Trade"
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         onVaultViewChange={onVaultViewChange}
         onCopilotTutorial={onOpenCopilotTutorial}

@@ -12,7 +12,7 @@ const ProfileContext = createContext(null);
  * the tour autostart — and is passed in rather than owned here.
  *
  * Nothing survives a refresh (see `profileSession.js`), so the whole flow —
- * wallet, social, follow — replays from the top on every reload.
+ * wallet, Telegram, X — replays from the top on every reload.
  */
 export function ProfileProvider({
   walletConnected = false,
@@ -53,8 +53,19 @@ export function ProfileProvider({
     [patch, address],
   );
 
-  /** Latched, like a linked account: the profile never un-follows. */
-  const markFollowedX = useCallback(() => patch({ followedX: true }), [patch]);
+  /**
+   * The last thing on the checklist: the first PnL card posted from the linked
+   * X account, which is what finishes the step that linked it.
+   *
+   * Idempotent on the first stamp — the trade surfaces call this every time a
+   * card goes out, and only the first one is a step. Keeping the original
+   * timestamp also keeps `progress` stable, so re-sharing can't re-fire the
+   * completion celebration.
+   */
+  const sharePnl = useCallback(() => {
+    if (readProfile(address).pnlSharedAt) return;
+    patch({ pnlSharedAt: new Date().toISOString() });
+  }, [patch, address]);
 
   const dismissBanner = useCallback(
     () => patch({ bannerDismissedAt: new Date().toISOString() }),
@@ -67,20 +78,23 @@ export function ProfileProvider({
   );
 
   /**
-   * The step needs one account, not a specific one. `social` is whichever
-   * account speaks for the user's identity — X first, because it carries the
-   * display name the avatar and header render.
+   * Whichever account speaks for the user's identity — X first, because it
+   * carries the display name the avatar and header render. Both are required
+   * steps now, but they don't land at the same time, so this still has to cope
+   * with only one of them existing.
    */
   const social = record.socials.x ?? record.socials.telegram;
+
+  const pnlShared = Boolean(record.pnlSharedAt);
 
   const progress = useMemo(
     () =>
       computeProfileProgress({
         walletConnected,
-        hasSocial: Boolean(social),
-        followedX: record.followedX,
+        socials: record.socials,
+        pnlShared,
       }),
-    [walletConnected, social, record.followedX],
+    [walletConnected, record.socials, pnlShared],
   );
 
   const value = useMemo(
@@ -89,7 +103,7 @@ export function ProfileProvider({
       walletConnected,
       socials: record.socials,
       social,
-      followedX: record.followedX,
+      pnlShared,
       progress,
       /** Banner is a nudge; the checklist and ring stay visible after dismissal. */
       bannerDismissed: Boolean(record.bannerDismissedAt),
@@ -99,7 +113,7 @@ export function ProfileProvider({
        */
       shouldCelebrate: progress.isComplete && !record.completionCelebrated,
       connectSocial,
-      markFollowedX,
+      sharePnl,
       dismissBanner,
       markCelebrated,
     }),
@@ -108,12 +122,12 @@ export function ProfileProvider({
       walletConnected,
       record.socials,
       social,
-      record.followedX,
+      pnlShared,
+      sharePnl,
       record.bannerDismissedAt,
       record.completionCelebrated,
       progress,
       connectSocial,
-      markFollowedX,
       dismissBanner,
       markCelebrated,
     ],
