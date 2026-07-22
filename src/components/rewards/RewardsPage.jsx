@@ -74,6 +74,16 @@ export default function RewardsPage({
       <main className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         {/* Same gutter scale as every other page (see `ProfilePage`). */}
         <div className="flex w-full flex-col gap-5 px-5 py-8 pb-16 max-tablet:gap-4 max-tablet:px-4 max-tablet:py-5 max-tablet:pb-4 sm:px-8 lg:px-10 xl:px-12">
+          {isKol ? (
+            <header>
+              <h1 className="text-[32px] font-semibold leading-[1.2] text-white max-tablet:text-2xl">
+                Gautam Community Rewards
+              </h1>
+              <p className="mt-2 text-sm leading-[1.4] text-[#bfbfbf]">
+                Trade, hit milestones, earn rewards, and get 8% fee cashback.
+              </p>
+            </header>
+          ) : null}
           <RewardsHeroRow onNotify={notify} variant={variant} />
           <RewardsStatsRow
             variant={variant}

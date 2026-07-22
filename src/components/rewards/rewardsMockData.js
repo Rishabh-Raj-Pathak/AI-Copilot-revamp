@@ -234,9 +234,9 @@ export const KOL_LEADERBOARD = [
 ];
 
 export const KOL_CLAIM_HISTORY = [
-  { id: 1, date: "20 Jul, 2026", amount: "$17.64", source: "Milestone + cashback", status: "Paid" },
-  { id: 2, date: "18 Jul, 2026", amount: "$5.20", source: "Milestone + cashback", status: "Paid" },
-  { id: 3, date: "16 Jul, 2026", amount: "$2.48", source: "8% fee cashback", status: "Paid" },
+  { id: 1, date: "20 Jul, 2026", amount: "$17.64", source: "Milestone reward + fee cashback", status: "Sent to wallet" },
+  { id: 2, date: "18 Jul, 2026", amount: "$5.20", source: "Milestone reward + fee cashback", status: "Sent to wallet" },
+  { id: 3, date: "16 Jul, 2026", amount: "$2.48", source: "Gautam 8% fee cashback", status: "Sent to wallet" },
 ];
 
 export const KOL_TOTAL_PAGES = 1;

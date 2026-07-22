@@ -37,11 +37,11 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
       <header className="flex items-start justify-between gap-4 max-tablet:flex-col">
         <div>
           <h2 className="text-[32px] font-semibold leading-[1.2] text-white max-tablet:text-2xl">
-            {isKol ? "Milestones" : "Referral Rewards"}
+            {isKol ? "Gautam Milestones" : "Referral Rewards"}
           </h2>
           {isKol ? (
             <p className="mt-2 text-sm leading-[1.4] text-[#bfbfbf]">
-              Gautam&apos;s exclusive $1,200 reward ladder
+              Trade through Gautam&apos;s milestones and unlock up to $1,200.
             </p>
           ) : null}
         </div>
@@ -52,20 +52,21 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
-                Next milestone
+                Your next milestone
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <strong className="text-base font-semibold leading-none text-white">
                   {KOL_CURRENT_MILESTONE.nextMilestone}
                 </strong>
                 <span className="text-xs text-[#f2b500]">
-                  {formatCompactVolume(remainingVolume)} volume left
+                  Trade {formatCompactVolume(remainingVolume)} more to reach{" "}
+                  {KOL_CURRENT_MILESTONE.nextMilestone}
                 </span>
               </div>
             </div>
             <div className="shrink-0 border-l border-[#4a3a00] pl-3 text-right">
               <p className="text-[10px] uppercase tracking-[0.08em] text-[#8f8f8f]">
-                Reward
+                Unlock
               </p>
               <p className="mt-1 text-sm font-semibold leading-none text-white">
                 {KOL_CURRENT_MILESTONE.nextTierBonus}
@@ -151,13 +152,13 @@ function TierCard({ tier, pathId, isKol, isCurrent }) {
             </h3>
             {isCurrent ? (
               <span className="rounded-full border border-[#705600] bg-[#211a00] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-[#f2b500]">
-                Current
+                You’re here
               </span>
             ) : null}
           </div>
           <p className="text-lg font-semibold leading-[1.2] text-white">{tier.volume}</p>
           <p className="text-[10px] leading-[1.2] text-[#bfbfbf] tablet:whitespace-nowrap">
-            Trading Volume
+            {isKol ? "Volume needed" : "Trading Volume"}
           </p>
         </div>
         <img
@@ -170,11 +171,11 @@ function TierCard({ tier, pathId, isKol, isCurrent }) {
       <div className="h-px w-full bg-[#454545]" aria-hidden />
 
       <TierStat
-        label={isKol ? "Reward" : "Revenue Share"}
+        label={isKol ? "Milestone reward" : "Revenue Share"}
         value={isKol ? tier.reward : standardRewards.revenueShare}
       />
       <TierStat
-        label={isKol ? "Cumulative" : "Tier Bonus"}
+        label={isKol ? "Total earned" : "Tier Bonus"}
         value={isKol ? tier.cumulative : standardRewards.tierBonus}
       />
     </article>

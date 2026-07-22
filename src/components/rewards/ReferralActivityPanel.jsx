@@ -10,6 +10,13 @@ import {
   TOTAL_PAGES,
 } from "./rewardsMockData.js";
 
+function formatRankChange(value) {
+  if (value === "–") return "No change";
+  if (value.startsWith("+")) return `Up ${value.slice(1)}`;
+  if (value.startsWith("–")) return `Down ${value.slice(1)}`;
+  return value;
+}
+
 /**
  * Referred Users / Claim History, the tabbed table in the middle of the page.
  *
@@ -50,12 +57,12 @@ const KOL_TABS = [
       { key: "wallet", label: "Wallet Address" },
       { key: "volume", label: "Total Volume" },
       { key: "milestone", label: "Milestone" },
-      { key: "movement", label: "Movement" },
+      { key: "movement", label: "Rank change" },
     ],
   },
   {
     id: "claim-history",
-    label: "Claim History",
+    label: "Your claims",
     rows: KOL_CLAIM_HISTORY,
     columns: [
       { key: "date", label: "Date" },
@@ -89,10 +96,10 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
         <header className="flex items-start justify-between gap-4 max-tablet:flex-col">
           <div>
             <h2 className="text-2xl font-semibold leading-[1.2] text-white">
-              Community leaderboard
+              Gautam Community Leaderboard
             </h2>
             <p className="mt-1.5 text-sm leading-[1.4] text-[#bfbfbf]">
-              See how your trading volume compares with the Gautam community.
+              See where you rank in Gautam’s trading community.
             </p>
           </div>
           <div className="flex min-w-[190px] items-center gap-3 rounded-xl border border-[#514000] bg-[#171300] px-3.5 py-3 max-tablet:w-full">
@@ -100,11 +107,11 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
               {KOL_REWARD_STATS.leaderboardRank}
             </strong>
             <div>
-              <p className="text-xs text-[#bfbfbf]">Your leaderboard rank</p>
+              <p className="text-xs text-[#bfbfbf]">Your community rank</p>
               {currentLeaderboardRow?.movement?.startsWith("+") ? (
                 <p className="mt-1 flex items-center gap-1 text-xs font-medium text-[#52e5c4]">
                   <TrendingUp className="size-3.5" strokeWidth={2} aria-hidden />
-                  Up {currentLeaderboardRow.movement.slice(1)} places
+                  You’re up {currentLeaderboardRow.movement.slice(1)} places
                 </p>
               ) : null}
             </div>
@@ -183,7 +190,9 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
                     key={c.key}
                     className="p-3 text-center text-xs leading-[1.2] text-white"
                   >
-                    {row[c.key]}
+                    {isKol && c.key === "movement"
+                      ? formatRankChange(row[c.key])
+                      : row[c.key]}
                   </td>
                 ))}
               </tr>
@@ -215,7 +224,11 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
               {tab.columns.slice(1).map((c) => (
                 <div key={c.key} className="flex items-center justify-between gap-3">
                   <dt className="text-[10px] leading-[1.2] text-[#757575]">{c.label}</dt>
-                  <dd className="text-xs leading-[1.2] text-white">{row[c.key]}</dd>
+                  <dd className="text-xs leading-[1.2] text-white">
+                    {isKol && c.key === "movement"
+                      ? formatRankChange(row[c.key])
+                      : row[c.key]}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -225,7 +238,9 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs leading-[1.2] text-white">
-          Showing Page {page} of {totalPages}
+          {isKol
+            ? `${tab.rows.length} ${tab.id === "claim-history" ? "claims" : "traders"}`
+            : `Showing Page ${page} of ${totalPages}`}
         </p>
         <div className="flex items-center gap-2">
           <PagerButton

@@ -107,7 +107,7 @@ export function RewardsHeroRow({ onNotify, variant = "rewards" }) {
   return (
     <div className="grid gap-5 tablet:grid-cols-3">
       <TierProgressCard variant={variant} />
-      <ReferralCodeCard onNotify={onNotify} />
+      <ReferralCodeCard variant={variant} onNotify={onNotify} />
       <EnterCodeCard variant={variant} onNotify={onNotify} />
     </div>
   );
@@ -142,7 +142,7 @@ function TierProgressCard({ variant }) {
             </div>
             <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-[#3a3a3a] bg-[#121212] px-2.5 py-1.5 text-xs font-medium text-white">
               <Medal className="size-3.5 shrink-0 text-[#f2b500]" strokeWidth={2} aria-hidden />
-              {name} reached
+              You’re at {name}
             </div>
           </div>
           <img
@@ -157,7 +157,7 @@ function TierProgressCard({ variant }) {
             <p className="text-sm text-[#bfbfbf]">Progress to {progress.nextMilestone}</p>
             <div className="flex shrink-0 items-center gap-2">
               <p className="text-xs text-[#8f8f8f]">
-                {formatCompactVolume(remainingVolume)} more to unlock
+                {formatCompactVolume(remainingVolume)} to {progress.nextMilestone}
               </p>
               <span className="h-3 w-px bg-[#3a3a3a]" aria-hidden />
               <p className="text-sm font-semibold tabular-nums text-white">
@@ -183,7 +183,7 @@ function TierProgressCard({ variant }) {
         <div className="mt-4 grid grid-cols-2 divide-x divide-[#2f2f2f] rounded-lg border border-[#2f2f2f] bg-[#101010] py-3">
           <div className="px-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
-              Next milestone
+              Next up
             </p>
             <p className="mt-1 text-base font-semibold text-white">
               {progress.nextMilestone}
@@ -191,7 +191,7 @@ function TierProgressCard({ variant }) {
           </div>
           <div className="px-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#8f8f8f]">
-              Reward at {progress.nextMilestone}
+              You’ll unlock
             </p>
             <p className="mt-1 text-base font-semibold text-[#f2b500]">
               {nextTierBonus}
@@ -262,7 +262,8 @@ function TierProgressCard({ variant }) {
  * The artboard leaves the body of this card empty; it borrows the field + button
  * pair from its neighbour so the code is actually shareable.
  */
-function ReferralCodeCard({ onNotify }) {
+function ReferralCodeCard({ onNotify, variant }) {
+  const isKol = variant === "kol";
   const [copied, setCopied] = useState(false);
   const code = REFERRAL_CODE;
 
@@ -274,7 +275,7 @@ function ReferralCodeCard({ onNotify }) {
       // Clipboard is best-effort in the prototype — still confirm to the user.
     }
     setCopied(true);
-    onNotify?.("Referral link copied");
+    onNotify?.(isKol ? "Gautam referral link copied" : "Referral link copied");
     window.setTimeout(() => setCopied(false), 2000);
   };
 
@@ -282,14 +283,12 @@ function ReferralCodeCard({ onNotify }) {
     <section className={`flex flex-col justify-between gap-5 ${CARD}`}>
       <header className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold leading-[1.2] text-white">
-          Your Referral Code
+          {isKol ? "Invite friends, earn rewards" : "Your Referral Code"}
         </h2>
         <p className="text-sm leading-[1.2] text-[#bfbfbf]">
-          Share this code with people to earn a{" "}
-          <span className="font-semibold text-[#f2b500]">
-            {REFERRER_REVENUE_SHARE}
-          </span>{" "}
-          Revenue Share
+          {isKol ? "Share your link and earn " : "Share this code with people to earn a "}
+          <span className="font-semibold text-[#f2b500]">{REFERRER_REVENUE_SHARE}</span>{" "}
+          {isKol ? "revenue share when your referrals trade." : "Revenue Share"}
         </p>
       </header>
 
@@ -313,7 +312,7 @@ function ReferralCodeCard({ onNotify }) {
           ) : (
             <Copy className="size-5 shrink-0" strokeWidth={2} aria-hidden />
           )}
-          {copied ? "Copied" : "Copy"}
+          {copied ? "Copied" : isKol ? "Copy link" : "Copy"}
         </button>
       </div>
     </section>
@@ -346,14 +345,14 @@ function EnterCodeCard({ onNotify, variant }) {
     <section className={`flex flex-col justify-between gap-5 ${CARD}`}>
       <header className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold leading-[1.2] text-white">
-          {isKol ? `${feeRebate} Fee Cashback` : "Enter a Code"}
+          {isKol ? `${feeRebate} cashback with Gautam` : "Enter a Code"}
         </h2>
         <p className="text-sm leading-[1.2] text-[#bfbfbf]">
           {isKol ? (
             <>
-              <span className="font-semibold text-white">{code}</span> is active — get{" "}
-              <span className="font-semibold text-[#f2b500]">{feeRebate}</span> of your
-              trading fees back as cashback.
+              You’re getting <span className="font-semibold text-[#f2b500]">{feeRebate}</span>{" "}
+              of your trading fees back with code{" "}
+              <span className="font-semibold text-white">{code}</span>.
             </>
           ) : (
             <>
@@ -389,7 +388,7 @@ function EnterCodeCard({ onNotify, variant }) {
         {isKol ? (
           <span className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#146c5b] bg-[#071c18] px-4 text-sm font-medium leading-[1.2] text-[#52e5c4]">
             <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-            Active
+            Cashback active
           </span>
         ) : (
           <button
@@ -432,17 +431,17 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
       }`}
     >
       <StatCard
-        label="Total Rewards"
+        label={isKol ? "Total earned" : "Total Rewards"}
         value={stats.totalRewards}
         art={STAT_ART.totalRewards}
       />
       {/* The only tile the artboard leaves bare — the Claim button takes the space. */}
       <StatCard
-        label="Claimable Rewards"
+        label={isKol ? "Available to claim" : "Claimable Rewards"}
         value={stats.claimableRewards}
         info={
           isKol
-            ? `Claim when your available rewards reach $${KOL_MIN_CLAIM_AMOUNT}. This balance combines milestone rewards and ${KOL_FEE_REBATE} trading-fee cashback.`
+            ? `Claim once your balance reaches $${KOL_MIN_CLAIM_AMOUNT}. Your balance includes Gautam milestone rewards and ${KOL_FEE_REBATE} fee cashback.`
             : undefined
         }
         status={
@@ -474,16 +473,16 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
             strokeWidth={2}
             aria-hidden
           />
-          {canClaim ? "Claim" : `Unlock at $${KOL_MIN_CLAIM_AMOUNT}`}
+          {canClaim ? (isKol ? "Claim rewards" : "Claim") : `Unlock at $${KOL_MIN_CLAIM_AMOUNT}`}
         </button>
       </StatCard>
       <StatCard
-        label="From Your Trades"
+        label={isKol ? "Fee cashback earned" : "From Your Trades"}
         value={stats.fromYourTrades}
         art={STAT_ART.fromYourTrades}
       />
       <StatCard
-        label={isKol ? "Campaign Ends" : "From Referrals"}
+        label={isKol ? "Gautam campaign ends" : "From Referrals"}
         value={isKol ? countdown : stats.fromReferrals}
         art={STAT_ART.fromReferrals}
       />
@@ -509,7 +508,7 @@ function StatCard({ label, value, art, children, info, status }) {
             <Tooltip content={info} align="end">
               <button
                 type="button"
-                aria-label="How claimable rewards are calculated"
+                aria-label="How available rewards are calculated"
                 className="inline-flex size-5 items-center justify-center rounded-full text-[#757575] transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f2b500]"
               >
                 <Info className="size-3.5" strokeWidth={2} aria-hidden />
