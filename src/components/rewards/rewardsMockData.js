@@ -188,7 +188,7 @@ export const KOL_MILESTONES = [
     name: "M3",
     volume: "$500K",
     badge: `${TIER_BADGE_DIR}/degen.png`,
-    border: "#f2b500",
+    border: "#242424",
     background: "transparent",
     reward: "$60",
     cumulative: "$80",
