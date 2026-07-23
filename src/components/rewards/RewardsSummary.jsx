@@ -468,7 +468,7 @@ export function RewardsStatsRow({ onClaim, variant = "rewards" }) {
     <StatCard
       key="fees"
       compact={isKol}
-      label={isKol ? "Fee cashback earned" : "From Your Trades"}
+      label={isKol ? "Cashback earned" : "From Your Trades"}
       value={stats.fromYourTrades}
       art={isKol ? undefined : STAT_ART.fromYourTrades}
     />

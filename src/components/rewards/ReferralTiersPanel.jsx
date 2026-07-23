@@ -24,11 +24,11 @@ export default function ReferralTiersPanel({ variant = "rewards" }) {
       <header className="flex items-start justify-between gap-4 max-tablet:flex-col">
         <div>
           <h2 className="text-[32px] font-semibold leading-[1.2] text-white max-tablet:text-2xl">
-            {isKol ? "Gautam Milestones" : "Referral Rewards"}
+            {isKol ? "Milestones" : "Referral Rewards"}
           </h2>
           {isKol ? (
             <p className="mt-2 text-sm leading-[1.4] text-[#bfbfbf]">
-              Trade through Gautam&apos;s milestones and unlock up to $1,200.
+              Trade through milestones and unlock up to $1,200.
             </p>
           ) : null}
         </div>

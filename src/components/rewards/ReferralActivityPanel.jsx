@@ -86,7 +86,7 @@ export default function ReferralActivityPanel({ variant = "rewards" }) {
         <header className="flex items-start justify-between gap-4 max-tablet:flex-col">
           <div>
             <h2 className="text-2xl font-semibold leading-[1.2] text-white">
-              Gautam Community Leaderboard
+              Community Leaderboard
             </h2>
             <p className="mt-1.5 text-sm leading-[1.4] text-[#bfbfbf]">
               See where you rank in Gautam’s trading community.
