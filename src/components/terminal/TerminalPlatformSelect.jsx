@@ -4,7 +4,9 @@ import {
   terminalPlatformSelect as s,
   terminalPlatforms,
 } from "../../design-system/tokens/terminalPlatformSelect";
-import { DexIcon } from "./dexIcons.jsx";
+import hyperliquidLogo from "@/assets/hyperliquid-logo.png";
+import nadoLogo from "@/assets/nado-logo.png";
+import pacificaLogo from "@/assets/pacifica-logo.png";
 
 function NavChevron({ className, open }) {
   return (
@@ -29,52 +31,57 @@ function NavChevron({ className, open }) {
   );
 }
 
-function CheckMark({ className }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M5 12.5l4.5 4.5L19 7" />
-    </svg>
-  );
+const VENUE_LOGO_SRC = {
+  hyperliquid: hyperliquidLogo,
+  nado: nadoLogo,
+  pacifica: pacificaLogo,
+};
+
+/** Venue marks. Paradex has no brand asset yet, so it falls back to a geometric mark. */
+function PlatformMark({ id }) {
+  const logo = VENUE_LOGO_SRC[id];
+  if (logo) {
+    return (
+      <img alt="" className="size-[18px] max-w-none object-contain" src={logo} />
+    );
+  }
+  if (id === "paradex") {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className="size-[18px] text-[#c4b5fd]"
+        aria-hidden
+      >
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          d="M12 5l7 7-7 7-7-7 7-7z"
+        />
+      </svg>
+    );
+  }
+  return null;
 }
 
-const DEFAULT_SELECTED = ["hyperliquid"];
-
 /**
- * Navbar venue selector — pill + checklist dropdown (Hyperliquid, Nado,
- * Pacifica, Paradex). Multi-select: `value`/`onChange` carry an array of ids,
- * and every checked dex stays visible in the trade setup panel / position
- * tables that read this selection. At least one dex must stay checked.
+ * Navbar venue selector — pill + dropdown (Hyperliquid, Nado, Pacifica, Paradex).
  * Styling from {@link terminalPlatformSelect}.
  */
 export default function TerminalPlatformSelect({
   value,
   onChange,
   onPlatformChange,
-  defaultValue = DEFAULT_SELECTED,
+  defaultValue = "hyperliquid",
   compact = false,
 }) {
   const isControlled = value !== undefined;
   const [uncontrolled, setUncontrolled] = useState(defaultValue);
   const selected = isControlled ? value : uncontrolled;
-
-  const toggle = (id) => {
-    const isSelected = selected.includes(id);
-    if (isSelected && selected.length === 1) return; // keep at least one checked
-    const next = isSelected
-      ? selected.filter((s2) => s2 !== id)
-      : [...selected, id];
-    if (!isControlled) setUncontrolled(next);
-    onChange?.(next);
-    onPlatformChange?.(id);
+  const setSelected = (id) => {
+    if (!isControlled) setUncontrolled(id);
+    onChange?.(id);
   };
 
   const [open, setOpen] = useState(false);
@@ -82,9 +89,7 @@ export default function TerminalPlatformSelect({
   const listId = useId();
 
   const current =
-    terminalPlatforms.find((p) => p.id === selected[0]) ?? terminalPlatforms[0];
-  const triggerLabel =
-    selected.length === 1 ? current.label : `${selected.length} DEXs`;
+    terminalPlatforms.find((p) => p.id === selected) ?? terminalPlatforms[0];
 
   useEffect(() => {
     if (!open) return;
@@ -120,15 +125,15 @@ export default function TerminalPlatformSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
-        aria-label={compact ? `Platform: ${triggerLabel}` : undefined}
+        aria-label={compact ? `Platform: ${current.label}` : undefined}
         onClick={() => setOpen((o) => !o)}
       >
         <span className={compact ? "flex size-full items-center justify-center" : s.iconFrame}>
-          <DexIcon id={selected[0]} />
+          <PlatformMark id={selected} />
         </span>
         {compact ? null : (
           <>
-            <span className="max-w-38 truncate">{triggerLabel}</span>
+            <span className="max-w-38 truncate">{current.label}</span>
             <NavChevron className={s.chevron} open={open} />
           </>
         )}
@@ -138,12 +143,11 @@ export default function TerminalPlatformSelect({
         <div
           id={listId}
           role="listbox"
-          aria-label="Trading platforms"
-          aria-multiselectable="true"
+          aria-label="Trading platform"
           className={s.menu}
         >
           {terminalPlatforms.map((p) => {
-            const active = selected.includes(p.id);
+            const active = p.id === selected;
             return (
               <button
                 key={p.id}
@@ -151,19 +155,16 @@ export default function TerminalPlatformSelect({
                 role="option"
                 aria-selected={active}
                 className={`${s.menuItem} ${active ? s.menuItemActive : ""}`}
-                onClick={() => toggle(p.id)}
+                onClick={() => {
+                  if (p.id !== selected) {
+                    onPlatformChange?.(p.id);
+                  }
+                  setSelected(p.id);
+                  setOpen(false);
+                }}
               >
-                <span
-                  className={`flex size-4 shrink-0 items-center justify-center rounded-[4px] border ${
-                    active
-                      ? "border-[#f2b500] bg-[#f2b500] text-black"
-                      : "border-[#4a4a4a] text-transparent"
-                  }`}
-                >
-                  <CheckMark className="size-3" />
-                </span>
                 <span className={s.menuItemIconFrame}>
-                  <DexIcon id={p.id} />
+                  <PlatformMark id={p.id} />
                 </span>
                 {p.label}
               </button>

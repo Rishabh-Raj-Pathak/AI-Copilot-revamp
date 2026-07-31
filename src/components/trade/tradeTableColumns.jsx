@@ -17,7 +17,7 @@ const positionsColumns = [
     key: "coin",
     label: "Coin",
     accent: true,
-    render: (r) => <CoinCell coin={r.coin} leverage={r.leverage} dex={r.dex} />,
+    render: (r) => <CoinCell coin={r.coin} leverage={r.leverage} />,
   },
   { key: "size", label: "Size", render: (r) => r.size },
   { key: "positionValue", label: "Position Value", render: (r) => r.positionValue },

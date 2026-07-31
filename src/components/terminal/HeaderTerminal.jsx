@@ -73,8 +73,8 @@ export default function HeaderTerminal({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes,
-  onSelectedDexesChange,
+  terminalPlatform,
+  onTerminalPlatformChange,
 }) {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -503,8 +503,8 @@ export default function HeaderTerminal({
       </div>
       <div className="terminal-header-actions flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto sm:gap-3">
         <TerminalPlatformSelect
-          value={selectedDexes}
-          onChange={onSelectedDexesChange}
+          value={terminalPlatform}
+          onChange={onTerminalPlatformChange}
         />
         <div
           data-tour="wallet-connect"

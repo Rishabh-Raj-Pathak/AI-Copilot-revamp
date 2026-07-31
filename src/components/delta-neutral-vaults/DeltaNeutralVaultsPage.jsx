@@ -10,8 +10,8 @@ export default function DeltaNeutralVaultsPage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes,
-  onSelectedDexesChange,
+  terminalPlatform,
+  onTerminalPlatformChange,
   onOpenCopilot,
   onOpenRewards,
   onOpenTrade,
@@ -41,8 +41,8 @@ export default function DeltaNeutralVaultsPage({
         onWalletDisconnect={onWalletDisconnect}
         onOpenProfile={onOpenProfile}
         onOpenSupport={onOpenSupport}
-        selectedDexes={selectedDexes}
-        onSelectedDexesChange={onSelectedDexesChange}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
       <div className="delta-neutral-minimal-scrollbar vaults-root min-h-0 flex-1 overflow-y-auto overscroll-y-contain">

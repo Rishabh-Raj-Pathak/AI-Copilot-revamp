@@ -67,8 +67,8 @@ export default function VaultsPage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes,
-  onSelectedDexesChange,
+  terminalPlatform,
+  onTerminalPlatformChange,
   onOpenCopilot,
   onOpenRewards,
   onOpenTrade,
@@ -228,8 +228,8 @@ export default function VaultsPage({
         onWalletDisconnect={onWalletDisconnect}
         onOpenProfile={onOpenProfile}
         onOpenSupport={onOpenSupport}
-        selectedDexes={selectedDexes}
-        onSelectedDexesChange={onSelectedDexesChange}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">

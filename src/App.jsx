@@ -16,7 +16,7 @@ import { MOCK_WALLET_ADDRESS } from "./lib/wallet.js";
 export default function App() {
   const [page, setPage] = useState("copilot");
   const [walletConnected, setWalletConnected] = useState(false);
-  const [selectedDexes, setSelectedDexes] = useState(["hyperliquid"]);
+  const [terminalPlatform, setTerminalPlatform] = useState("hyperliquid");
   const [runCopilotTourOnEnter, setRunCopilotTourOnEnter] = useState(false);
   const [runVaultTourOnEnter, setRunVaultTourOnEnter] = useState(false);
   /** Where the back arrow on the profile page returns to. */
@@ -60,9 +60,8 @@ export default function App() {
       setSupportReturnPage(page);
       setPage("support");
     },
-    selectedDexes,
-    onSelectedDexesChange: (next) =>
-      setSelectedDexes(next.length ? next : ["hyperliquid"]),
+    terminalPlatform,
+    onTerminalPlatformChange: setTerminalPlatform,
   };
 
   const openTrade = () => setPage("trade");

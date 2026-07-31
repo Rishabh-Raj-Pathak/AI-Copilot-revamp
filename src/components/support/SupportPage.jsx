@@ -40,8 +40,8 @@ export default function SupportPage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes,
-  onSelectedDexesChange,
+  terminalPlatform,
+  onTerminalPlatformChange,
   onOpenCopilot,
   onOpenTrade,
   onOpenRewards,
@@ -53,8 +53,8 @@ export default function SupportPage({
     onWalletDisconnect,
     onOpenProfile,
     onOpenSupport,
-    selectedDexes,
-    onSelectedDexesChange,
+    terminalPlatform,
+    onTerminalPlatformChange,
   };
 
   return (

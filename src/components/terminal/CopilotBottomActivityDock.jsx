@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DexIcon } from "./dexIcons.jsx";
 
 const GREEN = "#269755";
 const RED = "#d53d3d";
@@ -145,7 +144,6 @@ const WHEEL_STEP = 48;
 
 export default function CopilotBottomActivityDock({
   tourDemoPosition = null,
-  selectedDexes,
   highlightOpenedPositionRow = false,
   compact = false,
 }) {
@@ -157,26 +155,19 @@ export default function CopilotBottomActivityDock({
   const openedPositionRowRef = useRef(null);
   const panelHeightRef = useRef(MIN_H);
 
-  /** Only shown while its dex is checked in the navbar's DEX checklist. */
-  const visibleDemoPosition =
-    tourDemoPosition &&
-    (!selectedDexes || selectedDexes.includes(tourDemoPosition.dex))
-      ? tourDemoPosition
-      : null;
-
   const tabs = useMemo(() => {
     return TABS_BASE.map((t) =>
       t.id === "positions"
-        ? { ...t, count: visibleDemoPosition ? 1 : t.count }
+        ? { ...t, count: tourDemoPosition ? 1 : t.count }
         : t,
     );
-  }, [visibleDemoPosition]);
+  }, [tourDemoPosition]);
 
   useEffect(() => {
-    if (visibleDemoPosition) {
+    if (tourDemoPosition) {
       setActiveTab("positions");
     }
-  }, [visibleDemoPosition]);
+  }, [tourDemoPosition]);
 
   useEffect(() => {
     panelHeightRef.current = panelHeight;
@@ -362,7 +353,7 @@ export default function CopilotBottomActivityDock({
               </div>
             </div>
           </>
-        ) : activeTab === "positions" && visibleDemoPosition ? (
+        ) : activeTab === "positions" && tourDemoPosition ? (
           <>
             <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
               <div className="flex min-h-0 min-w-[560px] flex-1 flex-col">
@@ -394,37 +385,34 @@ export default function CopilotBottomActivityDock({
                     style={{ borderColor: "#1a1a1a" }}
                   >
                     <span className="text-[#bfbfbf]">
-                      {visibleDemoPosition.openedAt}
+                      {tourDemoPosition.openedAt}
                     </span>
                     <span
-                      className="flex items-center gap-1.5 font-semibold"
-                      style={{ color: positionSideColor(visibleDemoPosition.side) }}
+                      className="font-semibold"
+                      style={{ color: positionSideColor(tourDemoPosition.side) }}
                     >
-                      {visibleDemoPosition.dex ? (
-                        <DexIcon id={visibleDemoPosition.dex} className="size-[13px] shrink-0" />
-                      ) : null}
-                      {visibleDemoPosition.symbol}
+                      {tourDemoPosition.symbol}
                     </span>
                     <span
                       className="font-medium"
-                      style={{ color: positionSideColor(visibleDemoPosition.side) }}
+                      style={{ color: positionSideColor(tourDemoPosition.side) }}
                     >
-                      {visibleDemoPosition.side}
+                      {tourDemoPosition.side}
                     </span>
                     <span className="text-right text-[#e5e5e5]">
-                      {visibleDemoPosition.sizeLabel}
+                      {tourDemoPosition.sizeLabel}
                     </span>
                     <span className="text-right text-[#e5e5e5]">
-                      {visibleDemoPosition.entry}
+                      {tourDemoPosition.entry}
                     </span>
                     <span className="text-right text-[#e5e5e5]">
-                      {visibleDemoPosition.mark}
+                      {tourDemoPosition.mark}
                     </span>
                     <span
                       className="text-right font-semibold"
                       style={{ color: GREEN }}
                     >
-                      {visibleDemoPosition.upnl}
+                      {tourDemoPosition.upnl}
                     </span>
                   </div>
                 </div>

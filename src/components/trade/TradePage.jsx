@@ -22,8 +22,8 @@ export default function TradePage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes,
-  onSelectedDexesChange,
+  terminalPlatform,
+  onTerminalPlatformChange,
 }) {
   const [coin, setCoin] = useState(DEFAULT_COIN);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -53,8 +53,8 @@ export default function TradePage({
         onWalletDisconnect={onWalletDisconnect}
         onOpenProfile={onOpenProfile}
         onOpenSupport={onOpenSupport}
-        selectedDexes={selectedDexes}
-        onSelectedDexesChange={onSelectedDexesChange}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
       <ProfileCompletionBanner onOpenProfile={() => onOpenProfile?.()} />
@@ -67,14 +67,13 @@ export default function TradePage({
           <div className="flex min-h-0 flex-1 flex-col max-lg:min-h-[26rem]">
             <TradeChartPanel coin={coin} />
           </div>
-          <TradeBottomPanel selectedDexes={selectedDexes} />
+          <TradeBottomPanel />
         </div>
 
         <div className="flex w-full shrink-0 flex-col lg:h-full lg:w-[420px]">
           <TradeOrderPanel
             key={coin}
             coin={coin}
-            selectedDexes={selectedDexes}
             onSubmit={() => setSuccessOpen(true)}
           />
         </div>

@@ -69,8 +69,8 @@ export default function TerminalCopilotPage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes: selectedDexesProp,
-  onSelectedDexesChange,
+  terminalPlatform: terminalPlatformProp,
+  onTerminalPlatformChange,
   onOpenVaults,
   onOpenRewards,
   onOpenTrade,
@@ -82,13 +82,9 @@ export default function TerminalCopilotPage({
 }) {
   const { socials } = useProfile();
   const [localWallet, setLocalWallet] = useState(false);
-  const [localSelectedDexes, setLocalSelectedDexes] = useState([
-    "hyperliquid",
-  ]);
+  const [localPlatform, setLocalPlatform] = useState("hyperliquid");
   const walletConnected = walletConnectedProp ?? localWallet;
-  const selectedDexes = selectedDexesProp ?? localSelectedDexes;
-  /** Legacy scalar consumers (product tour, strategy drafts) key off the first checked dex. */
-  const terminalPlatform = selectedDexes[0] ?? "hyperliquid";
+  const terminalPlatform = terminalPlatformProp ?? localPlatform;
   const terminalPlatformRef = useRef("hyperliquid");
   const [copilotTourStepIndex, setCopilotTourStepIndex] = useState(-1);
   const [copilotTourVariant, setCopilotTourVariant] = useState(
@@ -380,9 +376,8 @@ export default function TerminalCopilotPage({
       mark: `$${mark.toFixed(2)}`,
       upnl: "+$2.40",
       openedAt: "Just now",
-      dex: terminalPlatform,
     };
-  }, [tourFirstTradeDemo, selectedSetup, visibleSetups, terminalPlatform]);
+  }, [tourFirstTradeDemo, selectedSetup, visibleSetups]);
 
   const handleTourContextChange = useCallback((ctx) => {
     setCopilotTourStepIndex(ctx.stepIndex);
@@ -499,14 +494,14 @@ export default function TerminalCopilotPage({
     if (walletConnectedProp === undefined) setLocalWallet(false);
   }, [onWalletDisconnect, walletConnectedProp]);
 
-  const handleSelectedDexesChange = useCallback(
-    (nextSelected) => {
-      onSelectedDexesChange?.(nextSelected);
-      if (selectedDexesProp === undefined) setLocalSelectedDexes(nextSelected);
-      notifyCopilotTourTerminalPlatformChanged(nextSelected[0]);
+  const handleTerminalPlatformChange = useCallback(
+    (id) => {
+      onTerminalPlatformChange?.(id);
+      if (terminalPlatformProp === undefined) setLocalPlatform(id);
+      notifyCopilotTourTerminalPlatformChanged(id);
       refreshCopilotTourIfActive();
     },
-    [onSelectedDexesChange, selectedDexesProp],
+    [onTerminalPlatformChange, terminalPlatformProp],
   );
 
   useEffect(() => {
@@ -621,8 +616,8 @@ export default function TerminalCopilotPage({
         onWalletConnected={handleWalletConnected}
         onWalletDisconnect={handleWalletDisconnected}
         onOpenProfile={onOpenProfile}
-        selectedDexes={selectedDexes}
-        onSelectedDexesChange={handleSelectedDexesChange}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={handleTerminalPlatformChange}
         copilotView={copilotView}
         onCopilotViewChange={setCopilotView}
       />
@@ -653,8 +648,8 @@ export default function TerminalCopilotPage({
         onWalletDisconnect={handleWalletDisconnected}
         onOpenProfile={onOpenProfile}
         onOpenSupport={onOpenSupport}
-        selectedDexes={selectedDexes}
-        onSelectedDexesChange={handleSelectedDexesChange}
+        terminalPlatform={terminalPlatform}
+        onTerminalPlatformChange={handleTerminalPlatformChange}
       />
 
       <ProfileCompletionBanner
@@ -745,7 +740,6 @@ export default function TerminalCopilotPage({
             <div className="max-tablet:hidden">
             <CopilotBottomActivityDock
               tourDemoPosition={tourDemoPosition}
-              selectedDexes={selectedDexes}
               highlightOpenedPositionRow={highlightOpenedPositionRow}
               compact={
                 !!selectedSetup && !mobileDetailsSheetDismissed

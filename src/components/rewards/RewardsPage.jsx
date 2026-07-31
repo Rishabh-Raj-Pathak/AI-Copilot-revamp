@@ -24,8 +24,8 @@ export default function RewardsPage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  selectedDexes,
-  onSelectedDexesChange,
+  terminalPlatform,
+  onTerminalPlatformChange,
   onOpenCopilot,
   onOpenTrade,
   onOpenRewards,
@@ -50,8 +50,8 @@ export default function RewardsPage({
     onWalletDisconnect,
     onOpenProfile,
     onOpenSupport,
-    selectedDexes,
-    onSelectedDexesChange,
+    terminalPlatform,
+    onTerminalPlatformChange,
   };
 
   return (
