@@ -3,9 +3,16 @@ import TradeDataTable from "./TradeDataTable.jsx";
 import { TRADE_TABS } from "./tradeTableColumns.jsx";
 import { TAB_COUNTS } from "./tradeMockData.js";
 
-export default function TradeBottomPanel() {
+export default function TradeBottomPanel({ selectedDexes }) {
   const [activeId, setActiveId] = useState(TRADE_TABS[0].id);
   const active = TRADE_TABS.find((t) => t.id === activeId) ?? TRADE_TABS[0];
+
+  /** Only the Positions tab carries a `dex` field today, so it's the only one filtered. */
+  const rowsForTab = (tab) =>
+    tab.id === "positions" && selectedDexes
+      ? tab.rows.filter((r) => selectedDexes.includes(r.dex))
+      : tab.rows;
+  const activeRows = rowsForTab(active);
 
   return (
     <section
@@ -42,7 +49,7 @@ export default function TradeBottomPanel() {
                     : "bg-[#1a1a1a] text-[#787878]"
                 }`}
               >
-                {TAB_COUNTS[t.id]}
+                {t.id === "positions" ? rowsForTab(t).length : TAB_COUNTS[t.id]}
               </span>
             </button>
           );
@@ -57,7 +64,7 @@ export default function TradeBottomPanel() {
       >
         <TradeDataTable
           columns={active.columns}
-          rows={active.rows}
+          rows={activeRows}
           empty={active.empty}
         />
       </div>

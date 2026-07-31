@@ -1,5 +1,6 @@
 /** Leaf cell renderers shared by the Trade bottom-panel column definitions. */
 import { CoinAvatar } from "./TradeMarketSelect.jsx";
+import { DexIcon } from "../terminal/dexIcons.jsx";
 
 export function Pnl({ positive, children }) {
   return (
@@ -24,9 +25,15 @@ export function Direction({ value }) {
   );
 }
 
-export function CoinCell({ coin, leverage }) {
+export function CoinCell({ coin, leverage, dex }) {
   return (
     <span className="flex items-center gap-2">
+      {dex ? (
+        <DexIcon
+          id={dex}
+          className="size-[15px] shrink-0"
+        />
+      ) : null}
       <CoinAvatar coin={coin} className="size-5 text-[9px]" />
       <span className="font-semibold text-[#00d492]">
         {coin}

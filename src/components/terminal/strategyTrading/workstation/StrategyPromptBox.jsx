@@ -322,10 +322,13 @@ export default function StrategyPromptBox({
     "focus:outline-none focus-visible:outline-none focus-visible:!border-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!shadow-none";
 
   const textareaScrollClass = theme.isV2 ? "ds-scrollbar-hidden" : "";
+  // `!text-*` / `!placeholder:*` are load-bearing: the Textarea primitive ships
+  // `text-foreground`, which resolves to the light-theme `--foreground` (near-black)
+  // and is emitted after these utilities, so an unprefixed color loses the cascade.
   const textareaClass = isComposer
-    ? `!min-h-6 !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal text-[rgba(255,255,255,0.88)] shadow-none placeholder:text-[#7d8689] ${textareaScrollClass} ${textareaFocusReset}`
+    ? `!min-h-6 !max-h-44 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[16px] leading-[1.5] font-normal !text-white shadow-none placeholder:!text-[#7d8689] ${textareaScrollClass} ${textareaFocusReset}`
     : theme.isV2
-      ? `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed text-[#f4f4f4] shadow-none placeholder:text-[#8a8a8a] ${textareaScrollClass} ${textareaFocusReset}`
+      ? `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-[13px] leading-relaxed !text-[#f4f4f4] shadow-none placeholder:!text-[#8a8a8a] ${textareaScrollClass} ${textareaFocusReset}`
       : `!min-h-[2.75rem] !max-h-36 !resize-none !overflow-y-auto !border-0 !bg-transparent !p-0 text-sm shadow-none ${textareaFocusReset}`;
 
   const iconBtnClass = theme.isV2

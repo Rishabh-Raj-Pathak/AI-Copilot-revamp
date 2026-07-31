@@ -20,8 +20,8 @@ export default function ProfilePage({
   onWalletDisconnect,
   onOpenProfile,
   onOpenSupport,
-  terminalPlatform,
-  onTerminalPlatformChange,
+  selectedDexes,
+  onSelectedDexesChange,
   onOpenCopilot,
   onOpenTrade,
   onOpenRewards,
@@ -45,8 +45,8 @@ export default function ProfilePage({
     onWalletDisconnect,
     onOpenProfile,
     onOpenSupport,
-    terminalPlatform,
-    onTerminalPlatformChange,
+    selectedDexes,
+    onSelectedDexesChange,
   };
 
   return (
