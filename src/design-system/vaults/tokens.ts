@@ -20,7 +20,7 @@ export const vaultsColors = {
   popularText: "#51a2ff",
   popularBorder: "rgba(43,127,255,0.2)",
   popularBg: "rgba(43,127,255,0.1)",
-  activateBorder: "rgba(120,90,40,0.2)",
+  activateBorder: "#785a28",
   bronzeStrip: "#5a431e",
 } as const;
 

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ProfileCompletionBanner from "../profile/ProfileCompletionBanner.jsx";
+import { useProfile } from "../profile/ProfileContext.jsx";
+import { openSetupShare } from "../../lib/share.js";
 import HeaderTerminal from "./HeaderTerminal.jsx";
 import CopilotMobileHeader from "./CopilotMobileHeader.jsx";
 import CopilotBottomNav from "./CopilotBottomNav.jsx";
 import MarketFiltersBar from "./MarketFiltersBar.jsx";
-import SuggestionToolbar from "./SuggestionToolbar.jsx";
+import CopilotSuggestionsEmpty from "./CopilotSuggestionsEmpty.jsx";
 import CopilotSuggestionCard from "./suggestion/CopilotSuggestionCard.jsx";
 import DetailsPanel from "./DetailsPanel.jsx";
 import TradeSuccessModal from "./TradeSuccessModal.jsx";
@@ -21,7 +24,15 @@ import {
   NARROW_VIEWPORT_MEDIA,
   queryVisibleTourTarget,
 } from "../../styles/breakpoints.js";
-import { COPILOT_SETUPS } from "./copilotSetups.js";
+import {
+  COPILOT_SETUPS,
+  getCopilotSetups,
+} from "./copilotSetups.js";
+import {
+  COPILOT_STRATEGIES,
+  DEFAULT_COPILOT_STRATEGY_ID,
+  getCopilotStrategyById,
+} from "./copilotStrategies.js";
 import {
   advanceCopilotTourMoveNextIfActive,
   advanceCopilotTourToPositionsFromOpenTradeClick,
@@ -41,8 +52,6 @@ import {
   startCopilotProductTour,
 } from "../../copilot/copilotTour.js";
 
-const FIRST_SETUP_ID = COPILOT_SETUPS[0]?.id;
-
 function StrategyCopilotViews({ copilotView, terminalPlatform }) {
   if (isStrategyCopilotView(copilotView)) {
     return (
@@ -57,13 +66,21 @@ function StrategyCopilotViews({ copilotView, terminalPlatform }) {
 export default function TerminalCopilotPage({
   walletConnected: walletConnectedProp,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
+  onOpenSupport,
   terminalPlatform: terminalPlatformProp,
   onTerminalPlatformChange,
   onOpenVaults,
+  onOpenRewards,
+  onOpenTrade,
+  onOpenDeltaNeutralVaults,
+  onVaultViewChange,
   onOpenVaultTutorial,
   runProductTourOnEnter = false,
   onProductTourEnterConsumed,
 }) {
+  const { socials } = useProfile();
   const [localWallet, setLocalWallet] = useState(false);
   const [localPlatform, setLocalPlatform] = useState("hyperliquid");
   const walletConnected = walletConnectedProp ?? localWallet;
@@ -92,9 +109,17 @@ export default function TerminalCopilotPage({
     return window.matchMedia(NARROW_VIEWPORT_MEDIA).matches;
   });
   const [mobileDetailsSheetDismissed, setMobileDetailsSheetDismissed] =
-    useState(false);
+    useState(() => {
+      if (typeof window === "undefined") return true;
+      return window.matchMedia(NARROW_VIEWPORT_MEDIA).matches;
+    });
   const [copilotView, setCopilotView] = useState("suggestions");
   const [activeFilter, setActiveFilter] = useState("trending");
+  const [selectedStrategyId, setSelectedStrategyId] = useState(
+    DEFAULT_COPILOT_STRATEGY_ID,
+  );
+  const [listRefreshing, setListRefreshing] = useState(false);
+  const lensChangeRef = useRef(false);
   const [expireSec, setExpireSec] = useState(0);
   const [stats, setStats] = useState({
     volume: 27_960_000,
@@ -112,7 +137,13 @@ export default function TerminalCopilotPage({
 
   useEffect(() => {
     const mq = window.matchMedia(NARROW_VIEWPORT_MEDIA);
-    const update = () => setIsNarrowViewport(mq.matches);
+    const update = () => {
+      const narrow = mq.matches;
+      setIsNarrowViewport(narrow);
+      if (narrow) {
+        setMobileDetailsSheetDismissed(true);
+      }
+    };
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
@@ -161,19 +192,70 @@ export default function TerminalCopilotPage({
     if (!isNarrowViewport) return;
     if (copilotTourVariant !== COPILOT_TOUR_VARIANT_2) return;
     if (copilotTourStepIndex < 4) return;
-    if (!selectedId && FIRST_SETUP_ID) setSelectedId(FIRST_SETUP_ID);
+    const tourSetupId = getCopilotSetups({
+      strategyId: selectedStrategyId,
+      categoryId: activeFilter,
+    })[0]?.id;
+    if (!selectedId && tourSetupId) setSelectedId(tourSetupId);
     setMobileDetailsSheetDismissed(false);
   }, [
     isNarrowViewport,
     copilotTourVariant,
     copilotTourStepIndex,
     selectedId,
+    selectedStrategyId,
+    activeFilter,
   ]);
+
+  const visibleSetups = useMemo(
+    () =>
+      getCopilotSetups({
+        strategyId: selectedStrategyId,
+        categoryId: activeFilter,
+      }),
+    [selectedStrategyId, activeFilter],
+  );
+
+  const firstVisibleSetupId = visibleSetups[0]?.id ?? null;
+
+  const activeStrategy = useMemo(
+    () => getCopilotStrategyById(selectedStrategyId),
+    [selectedStrategyId],
+  );
+
+  useEffect(() => {
+    if (!lensChangeRef.current) {
+      lensChangeRef.current = true;
+      return;
+    }
+    setListRefreshing(true);
+    setExpireSec(630);
+    const nextSetups = getCopilotSetups({
+      strategyId: selectedStrategyId,
+      categoryId: activeFilter,
+    });
+    const timer = window.setTimeout(() => {
+      setSelectedId(nextSetups[0]?.id ?? null);
+      if (window.matchMedia(NARROW_VIEWPORT_MEDIA).matches) {
+        setMobileDetailsSheetDismissed(true);
+      }
+      setListRefreshing(false);
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [selectedStrategyId, activeFilter]);
+
+  const handleCycleStrategy = useCallback(() => {
+    const idx = COPILOT_STRATEGIES.findIndex((s) => s.id === selectedStrategyId);
+    const next =
+      COPILOT_STRATEGIES[(idx + 1) % COPILOT_STRATEGIES.length] ??
+      COPILOT_STRATEGIES[0];
+    if (next) setSelectedStrategyId(next.id);
+  }, [selectedStrategyId]);
 
   const prepareSuggestionTourStep = useCallback(
     () =>
       new Promise((resolve) => {
-        const setupId = FIRST_SETUP_ID ?? null;
+        const setupId = firstVisibleSetupId;
         setSelectedId((id) => id ?? setupId);
         if (isNarrowViewport) {
           setMobileDetailsSheetDismissed(true);
@@ -197,7 +279,7 @@ export default function TerminalCopilotPage({
           });
         });
       }),
-    [isNarrowViewport],
+    [isNarrowViewport, firstVisibleSetupId],
   );
 
   const ensureMobileFeedVisibleForTour = useCallback(
@@ -237,7 +319,7 @@ export default function TerminalCopilotPage({
           resolve();
           return;
         }
-        setSelectedId((id) => id ?? FIRST_SETUP_ID ?? null);
+        setSelectedId((id) => id ?? firstVisibleSetupId ?? null);
         setMobileDetailsSheetDismissed(false);
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -245,16 +327,18 @@ export default function TerminalCopilotPage({
           });
         });
       }),
-    [isNarrowViewport],
+    [isNarrowViewport, firstVisibleSetupId],
   );
 
   const ensureThesisOpenForTour = useCallback(
     () =>
       new Promise((resolve) => {
-        const id = selectedId ?? FIRST_SETUP_ID ?? null;
+        const id = selectedId ?? firstVisibleSetupId ?? null;
         const s = id
-          ? (COPILOT_SETUPS.find((x) => x.id === id) ?? COPILOT_SETUPS[0])
-          : COPILOT_SETUPS[0];
+          ? (COPILOT_SETUPS.find((x) => x.id === id) ??
+            visibleSetups[0] ??
+            COPILOT_SETUPS[0])
+          : (visibleSetups[0] ?? COPILOT_SETUPS[0]);
         if (s) setThesisInstrumentTitle(`${s.symbol}/USDC`);
         setThesisOpen(true);
         requestAnimationFrame(() => {
@@ -263,7 +347,7 @@ export default function TerminalCopilotPage({
           });
         });
       }),
-    [selectedId],
+    [selectedId, firstVisibleSetupId, visibleSetups],
   );
 
   useEffect(() => {
@@ -280,7 +364,7 @@ export default function TerminalCopilotPage({
 
   const tourDemoPosition = useMemo(() => {
     if (!tourFirstTradeDemo) return null;
-    const s = selectedSetup ?? COPILOT_SETUPS[0];
+    const s = selectedSetup ?? visibleSetups[0] ?? COPILOT_SETUPS[0];
     if (!s) return null;
     const entry = Number(s.price);
     const mark = Math.round((entry - 0.02) * 100) / 100;
@@ -293,7 +377,7 @@ export default function TerminalCopilotPage({
       upnl: "+$2.40",
       openedAt: "Just now",
     };
-  }, [tourFirstTradeDemo, selectedSetup]);
+  }, [tourFirstTradeDemo, selectedSetup, visibleSetups]);
 
   const handleTourContextChange = useCallback((ctx) => {
     setCopilotTourStepIndex(ctx.stepIndex);
@@ -405,6 +489,11 @@ export default function TerminalCopilotPage({
     if (walletConnectedProp === undefined) setLocalWallet(true);
   }, [onWalletConnected, walletConnectedProp]);
 
+  const handleWalletDisconnected = useCallback(() => {
+    onWalletDisconnect?.();
+    if (walletConnectedProp === undefined) setLocalWallet(false);
+  }, [onWalletDisconnect, walletConnectedProp]);
+
   const handleTerminalPlatformChange = useCallback(
     (id) => {
       onTerminalPlatformChange?.(id);
@@ -490,6 +579,24 @@ export default function TerminalCopilotPage({
     setTourFirstTradeDemo(true);
   }, []);
 
+  /** With X linked the composer opens; without it, the ask is what's missing. */
+  const handleShareSetup = useCallback(() => {
+    dismissTradeSuccessModal();
+    if (socials.x) openSetupShare({ coin: selectedSetup?.symbol });
+    else onOpenProfile?.();
+  }, [dismissTradeSuccessModal, socials, selectedSetup, onOpenProfile]);
+
+  /**
+   * The tour owns the screen while it runs, and it auto-starts on the first
+   * connect — so the banner waits for the tour to finish or be skipped rather
+   * than appearing beneath its overlay. `copilotTourStepIndex` is the reactive
+   * signal; `isCopilotProductTourActive()` reads module state and never
+   * re-renders on its own.
+   */
+  const profileBannerSuppressed =
+    copilotTourStepIndex >= 0 ||
+    (walletConnected && shouldAutoStartCopilotTutorial());
+
   const handleRefresh = () => {
     setExpireSec(630);
     setStats((prev) => ({
@@ -507,6 +614,8 @@ export default function TerminalCopilotPage({
       <CopilotMobileHeader
         walletConnected={walletConnected}
         onWalletConnected={handleWalletConnected}
+        onWalletDisconnect={handleWalletDisconnected}
+        onOpenProfile={onOpenProfile}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
         copilotView={copilotView}
@@ -518,8 +627,17 @@ export default function TerminalCopilotPage({
         activeNavItem="AI Copilot"
         copilotView={copilotView}
         onCopilotViewChange={setCopilotView}
+        vaultView="featured"
+        onVaultViewChange={(viewId) => {
+          onVaultViewChange?.(viewId);
+          if (viewId === "delta-neutral") onOpenDeltaNeutralVaults?.();
+          else onOpenVaults?.();
+        }}
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
+          if (label === "Trade") onOpenTrade?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         showCopilotTutorial
         highlightMoreForTutorial={highlightMoreForTutorial}
@@ -527,9 +645,18 @@ export default function TerminalCopilotPage({
         onDismissMoreTutorialHint={() => setShowMoreTutorialHint(false)}
         walletConnected={walletConnected}
         onWalletConnected={handleWalletConnected}
+        onWalletDisconnect={handleWalletDisconnected}
+        onOpenProfile={onOpenProfile}
+        onOpenSupport={onOpenSupport}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
+
+      <ProfileCompletionBanner
+        onOpenProfile={() => onOpenProfile?.()}
+        suppressed={profileBannerSuppressed}
+      />
+
       <StrategyCopilotProvider key={copilotView} copilotView={copilotView}>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <StrategyCopilotViews
@@ -546,56 +673,68 @@ export default function TerminalCopilotPage({
             <MarketFiltersBar
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
-              stats={stats}
+              expireSeconds={expireSec}
+              onRefresh={handleRefresh}
+              strategies={COPILOT_STRATEGIES}
+              selectedStrategyId={selectedStrategyId}
+              onStrategySelect={setSelectedStrategyId}
             />
-            <div className="px-3 py-2 sm:px-5 sm:pt-5 sm:pb-5">
-              <SuggestionToolbar
-                variant="desktop"
-                expireSeconds={expireSec}
-                onRefresh={handleRefresh}
-              />
-            </div>
           </div>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div
-              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-4 sm:pb-5"
+              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-20 sm:pb-5 max-tablet:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
               data-tour="copilot-suggestions-list"
             >
-              <div className="tablet:hidden">
+              <div className="max-tablet:flex tablet:hidden">
                 <MarketFiltersBar
                   activeFilter={activeFilter}
                   onFilterChange={setActiveFilter}
-                  stats={stats}
                   expireSeconds={expireSec}
                   onRefresh={handleRefresh}
+                  strategies={COPILOT_STRATEGIES}
+                  selectedStrategyId={selectedStrategyId}
+                  onStrategySelect={setSelectedStrategyId}
                 />
               </div>
-              <div className="flex flex-col gap-3 px-3 max-tablet:gap-2.5 max-tablet:pt-3 sm:px-5 tablet:gap-4">
-                {COPILOT_SETUPS.map((setup) => {
-                  const isSelected = setup.id === selectedId;
-                  return (
-                    <div
-                      key={setup.id}
-                      id={`copilot-setup-${setup.id}`}
-                      className="scroll-mt-4"
-                      data-tour={
-                        isSelected ? "copilot-expanded-suggestion" : undefined
-                      }
-                    >
-                      <CopilotSuggestionCard
-                        setup={setup}
-                        expanded={isSelected && !isNarrowViewport}
-                        selected={isSelected}
-                        mobileFeed={isNarrowViewport}
-                        onSelect={handleSuggestionSelect}
-                        onViewThesis={() => {
-                          setThesisInstrumentTitle(`${setup.symbol}/USDC`);
-                          setThesisOpen(true);
-                        }}
-                      />
-                    </div>
-                  );
-                })}
+              <div
+                className={`flex flex-col gap-2.5 px-3 pt-2.5 transition-opacity duration-300 max-tablet:gap-2 sm:px-5 tablet:gap-4 tablet:pt-3 ${
+                  listRefreshing ? "pointer-events-none opacity-40" : "opacity-100"
+                }`}
+              >
+                {visibleSetups.length === 0 ? (
+                  <CopilotSuggestionsEmpty
+                    strategyName={activeStrategy?.name ?? "AI"}
+                    categoryId={activeFilter}
+                    onSwitchCategory={setActiveFilter}
+                    onSwitchStrategy={handleCycleStrategy}
+                  />
+                ) : (
+                  visibleSetups.map((setup) => {
+                    const isSelected = setup.id === selectedId;
+                    return (
+                      <div
+                        key={setup.id}
+                        id={`copilot-setup-${setup.id}`}
+                        className="scroll-mt-4"
+                        data-tour={
+                          isSelected ? "copilot-expanded-suggestion" : undefined
+                        }
+                      >
+                        <CopilotSuggestionCard
+                          setup={setup}
+                          expanded={isSelected && !isNarrowViewport}
+                          selected={isSelected}
+                          mobileFeed={isNarrowViewport}
+                          onSelect={handleSuggestionSelect}
+                          onViewThesis={() => {
+                            setThesisInstrumentTitle(`${setup.symbol}/USDC`);
+                            setThesisOpen(true);
+                          }}
+                        />
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
             <div className="max-tablet:hidden">
@@ -609,16 +748,6 @@ export default function TerminalCopilotPage({
             </div>
           </div>
         </main>
-        {selectedSetup && mobileDetailsSheetDismissed ? (
-          <button
-            type="button"
-            className="fixed left-1/2 z-40 max-tablet:flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#3e2e00] bg-[#171200] px-4 py-3 text-sm font-semibold text-[#f2b500] shadow-lg max-tablet:bottom-[calc(4.75rem+env(safe-area-inset-bottom))] tablet:hidden tablet:bottom-4"
-            onClick={() => setMobileDetailsSheetDismissed(false)}
-            data-tour="copilot-mobile-details-reopen"
-          >
-            View trade setup — {selectedSetup.symbol}
-          </button>
-        ) : null}
         <div
           className={
             selectedSetup && !mobileDetailsSheetDismissed
@@ -660,7 +789,7 @@ export default function TerminalCopilotPage({
           <DetailsPanel
             setup={selectedSetup}
             onSelectFirstSetup={() => {
-              if (FIRST_SETUP_ID) setSelectedId(FIRST_SETUP_ID);
+              if (firstVisibleSetupId) setSelectedId(firstVisibleSetupId);
             }}
             openTradeCtaLabel={
               copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
@@ -678,7 +807,7 @@ export default function TerminalCopilotPage({
       <TradeSuccessModal
         open={tradeSuccessOpen}
         onViewPortfolio={dismissTradeSuccessModal}
-        onShareSetup={dismissTradeSuccessModal}
+        onShareSetup={handleShareSetup}
       />
       <AiCopilotThesisModal
         open={thesisOpen}
@@ -707,9 +836,18 @@ export default function TerminalCopilotPage({
       />
       <CopilotBottomNav
         activeId="copilot"
+        vaultView="featured"
+        onVaultViewChange={(viewId) => {
+          onVaultViewChange?.(viewId);
+          if (viewId === "delta-neutral") onOpenDeltaNeutralVaults?.();
+          else onOpenVaults?.();
+        }}
         onNavClick={(id) => {
           if (id === "vaults") onOpenVaults?.();
+          if (id === "rewards") onOpenRewards?.();
+          if (id === "kol") onOpenRewards?.("kol");
         }}
+        onOpenSupport={onOpenSupport}
         onCopilotTutorial={runCopilotTutorial}
         onVaultTutorial={onOpenVaultTutorial}
       />

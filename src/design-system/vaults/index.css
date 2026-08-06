@@ -74,6 +74,14 @@
   );
 }
 
+/** Mobile section headers — centered label with bilateral hairlines. */
+.vaults-section-title-centered {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
 /** Figma `4421:6264` row shell — invisible range for hit target over custom track. */
 .vaults-range-input {
   -webkit-appearance: none;
@@ -123,6 +131,13 @@
   border: none;
 }
 
+.vaults-strategy-scroll {
+  scrollbar-width: none;
+}
+.vaults-strategy-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /** Enter motion when a vault moves into “Activated Vaults”. */
 @keyframes vaults-activated-row-in {
   from {
@@ -142,6 +157,42 @@
 @media (prefers-reduced-motion: reduce) {
   .vaults-activated-row-animate {
     animation: none;
+  }
+}
+
+/** Pulse highlight when jumping from vault row → Agent Logs drawer. */
+@keyframes vaults-agent-log-highlight {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 20px -5px rgba(0, 0, 0, 0.45),
+      0 0 0 0 rgba(204, 177, 127, 0);
+  }
+  25%,
+  75% {
+    box-shadow:
+      0 4px 24px -4px rgba(0, 0, 0, 0.5),
+      0 0 0 2px rgba(204, 177, 127, 0.45),
+      0 0 28px 2px rgba(204, 177, 127, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 4px 28px -4px rgba(0, 0, 0, 0.55),
+      0 0 0 3px rgba(204, 177, 127, 0.65),
+      0 0 36px 4px rgba(204, 177, 127, 0.28);
+  }
+}
+
+.vaults-agent-log-highlight {
+  animation: vaults-agent-log-highlight 2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vaults-agent-log-highlight {
+    animation: none;
+    box-shadow:
+      0 4px 20px -5px rgba(0, 0, 0, 0.45),
+      0 0 0 2px rgba(204, 177, 127, 0.55);
   }
 }
 

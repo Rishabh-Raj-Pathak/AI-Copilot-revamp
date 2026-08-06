@@ -2,9 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import ConnectWalletButton from "./ConnectWalletButton.jsx";
 import TerminalPlatformSelect from "./TerminalPlatformSelect.jsx";
+import WalletMenu from "./WalletMenu.jsx";
 import CopilotNavDropdown, {
   COPILOT_VIEWS,
 } from "./strategyTrading/CopilotNavDropdown.jsx";
+import VaultsNavDropdown, {
+  VAULT_VIEWS,
+} from "./VaultsNavDropdown.jsx";
+import RewardsNavDropdown from "./RewardsNavDropdown.jsx";
+import { REWARD_VIEWS } from "./rewardsNavData.js";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
 
 /** Same chevron path as DetailsPanel `CollapseChevron` — simple stroke dropdown. */
@@ -56,12 +62,17 @@ export default function HeaderTerminal({
   onNavItemClick,
   copilotView,
   onCopilotViewChange,
+  vaultView,
+  onVaultViewChange,
   showCopilotTutorial = true,
   highlightMoreForTutorial = false,
   showMoreTutorialHint = false,
   onDismissMoreTutorialHint,
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
 }) {
@@ -74,6 +85,8 @@ export default function HeaderTerminal({
     showCopilotTutorial && typeof onCopilotTutorial === "function";
   const showVaultTutorialItem = typeof onVaultTutorial === "function";
   const moreMenuHasTutorial = showCopilotTutorialItem || showVaultTutorialItem;
+  const showSupportItem = typeof onOpenSupport === "function";
+  const moreMenuHasContent = moreMenuHasTutorial || showSupportItem;
 
   useEffect(() => {
     if (!moreMenuOpen) return;
@@ -210,6 +223,89 @@ export default function HeaderTerminal({
                   );
                 }
 
+                if (
+                  label === "Vaults" &&
+                  typeof onVaultViewChange === "function"
+                ) {
+                  return (
+                    <div
+                      key={label}
+                      className="border-b border-[#242424] px-1 py-1"
+                      role="group"
+                      aria-label="Vaults"
+                    >
+                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                        Vaults
+                      </p>
+                      {VAULT_VIEWS.map((v) => {
+                        const viewActive = vaultView === v.id;
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => {
+                              onVaultViewChange(v.id);
+                              setMobileNavOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                              viewActive
+                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                : "text-white hover:bg-white/10"
+                            }`}
+                          >
+                            <span>{v.label}</span>
+                            {viewActive ? (
+                              <Check
+                                className="size-3.5 shrink-0 text-[#f2b500]"
+                                aria-hidden
+                              />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                if (label === "Rewards") {
+                  const rewardsView = activeNavItem === "KOL" ? "kol" : "rewards";
+                  return (
+                    <div
+                      key={label}
+                      className="border-b border-[#242424] px-1 py-1"
+                      role="group"
+                      aria-label="Rewards"
+                    >
+                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                        Rewards
+                      </p>
+                      {REWARD_VIEWS.map((view) => {
+                        const viewActive = rewardsView === view.id;
+                        return (
+                          <button
+                            key={view.id}
+                            type="button"
+                            onClick={() => {
+                              onNavItemClick?.(view.id === "kol" ? "KOL" : "Rewards");
+                              setMobileNavOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                              viewActive
+                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                : "text-white hover:bg-white/10"
+                            }`}
+                          >
+                            <span>{view.label}</span>
+                            {viewActive ? (
+                              <Check className="size-3.5 shrink-0 text-[#f2b500]" aria-hidden />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={label}
@@ -277,6 +373,35 @@ export default function HeaderTerminal({
               );
             }
 
+            if (
+              label === "Vaults" &&
+              typeof onVaultViewChange === "function"
+            ) {
+              return (
+                <VaultsNavDropdown
+                  key={label}
+                  activeView={vaultView ?? "featured"}
+                  onViewChange={(id) => {
+                    onVaultViewChange(id);
+                  }}
+                  navActive={active}
+                />
+              );
+            }
+
+            if (label === "Rewards") {
+              return (
+                <RewardsNavDropdown
+                  key={label}
+                  activeView={activeNavItem === "KOL" ? "kol" : "rewards"}
+                  onViewChange={(viewId) => {
+                    onNavItemClick?.(viewId === "kol" ? "KOL" : "Rewards");
+                  }}
+                  navActive={activeNavItem === "Rewards" || activeNavItem === "KOL"}
+                />
+              );
+            }
+
             return (
               <button
                 key={label}
@@ -296,10 +421,10 @@ export default function HeaderTerminal({
             <button
               type="button"
               data-tutorial-more-trigger
-              aria-expanded={moreMenuHasTutorial ? moreMenuOpen : undefined}
-              aria-haspopup={moreMenuHasTutorial ? "menu" : undefined}
+              aria-expanded={moreMenuHasContent ? moreMenuOpen : undefined}
+              aria-haspopup={moreMenuHasContent ? "menu" : undefined}
               onClick={() => {
-                if (!moreMenuHasTutorial) return;
+                if (!moreMenuHasContent) return;
                 onDismissMoreTutorialHint?.();
                 setMoreMenuOpen((o) => !o);
               }}
@@ -321,7 +446,7 @@ export default function HeaderTerminal({
                 </p>
               </div>
             ) : null}
-            {moreMenuOpen && moreMenuHasTutorial ? (
+            {moreMenuOpen && moreMenuHasContent ? (
               <div
                 className="absolute right-0 top-full z-[120] mt-1 min-w-[12.5rem] rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
                 role="menu"
@@ -354,9 +479,23 @@ export default function HeaderTerminal({
                     Vault tutorial
                   </button>
                 ) : null}
-                <p className="border-t border-[#242424] px-3 pb-2 pt-1.5 text-[10px] leading-snug text-[#757575]">
-                  Product walkthroughs
-                </p>
+                {showSupportItem && moreMenuHasTutorial ? (
+                  <div className="my-1 border-t border-[#242424]" aria-hidden />
+                ) : null}
+                {showSupportItem ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    onClick={() => {
+                      onOpenSupport?.();
+                      setMoreMenuOpen(false);
+                      onDismissMoreTutorialHint?.();
+                    }}
+                  >
+                    Help &amp; Support
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -380,20 +519,10 @@ export default function HeaderTerminal({
             </button>
           ) : null}
           {walletConnected ? (
-            <button
-              type="button"
-              className="flex items-center gap-1.5 rounded-md border border-[#242424] px-3 py-1.5 text-sm font-medium text-white hover:bg-white/5"
-            >
-              <span className="relative size-4 shrink-0">
-                <img
-                  alt=""
-                  className="absolute inset-0 size-full max-w-none p-[16.67%]"
-                  src={a.walletIcon}
-                />
-              </span>
-              0x98...3ee8
-              <NavChevron className="size-4 shrink-0 text-[#757575]" />
-            </button>
+            <WalletMenu
+              onOpenProfile={onOpenProfile}
+              onDisconnect={onWalletDisconnect}
+            />
           ) : (
             <ConnectWalletButton onConnect={() => onWalletConnected?.()} />
           )}

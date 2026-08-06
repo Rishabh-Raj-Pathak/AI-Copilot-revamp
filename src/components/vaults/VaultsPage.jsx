@@ -7,16 +7,19 @@ import {
   useState,
 } from "react";
 import "../../design-system/vaults/index.css";
+import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import VaultsMobileNavBar from "../terminal/VaultsMobileNavBar.jsx";
+import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
 import VaultsHero from "./VaultsHero.jsx";
 import VaultGridCard from "./VaultGridCard.jsx";
 import VaultsActivatedSection from "./VaultsActivatedSection.jsx";
 import VaultsListSection from "./VaultsListSection.jsx";
 import VaultsSectionHeader from "./VaultsSectionHeader.jsx";
-import VaultsPositionsHistoryTable from "./VaultsPositionsHistoryTable.jsx";
 import VaultsStatsRow from "./VaultsStatsRow.jsx";
 import { DEFAULT_SHARE_PCT } from "./vaultUiUtils.js";
+import { resolveVaultStrategies } from "./vaultStrategiesData.js";
 import {
   advanceVaultsTourAfterFeaturedActivateClick,
   isVaultsTourCompleted,
@@ -29,6 +32,9 @@ import {
   dexTabs,
   featuredVaults,
 } from "./vaultsMockData.js";
+import { useAgentLogs } from "./agentLogs/AgentLogsContext.jsx";
+import VaultAgentLogsButton from "./agentLogs/VaultAgentLogsButton.jsx";
+import { openVaultAgentLogs } from "./agentLogs/agentLogsOpenUtils.js";
 
 function buildInitialRowUi() {
   const all = [...featuredVaults, ...availableVaults];
@@ -40,6 +46,8 @@ function buildInitialRowUi() {
         amountStr: "5",
         activated: false,
         activatedAt: null,
+        selectedStrategyId:
+          resolveVaultStrategies(v)[0]?.id ?? null,
       },
     ]),
   );
@@ -56,16 +64,23 @@ function filterByDex(list, dexId) {
 export default function VaultsPage({
   walletConnected,
   onWalletConnected,
+  onWalletDisconnect,
+  onOpenProfile,
+  onOpenSupport,
   terminalPlatform,
   onTerminalPlatformChange,
   onOpenCopilot,
+  onOpenRewards,
+  onOpenTrade,
   onOpenCopilotTutorial,
+  onVaultViewChange,
   runProductTourOnEnter = false,
   onProductTourEnterConsumed,
 }) {
   const [viewMode, setViewMode] = useState("list");
   const [dexId, setDexId] = useState("all");
   const [rowUi, setRowUi] = useState(buildInitialRowUi);
+  const { getVaultHealthSync, openAgentLogs } = useAgentLogs();
 
   const dexIdRef = useRef(dexId);
   dexIdRef.current = dexId;
@@ -113,6 +128,16 @@ export default function VaultsPage({
     onProductTourEnterConsumed,
     runVaultsProductTour,
   ]);
+
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_VIEWPORT_MEDIA);
+    const sync = () => {
+      if (mq.matches) setViewMode("list");
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const patchRow = useCallback((id, partial) => {
     setRowUi((prev) => {
@@ -180,31 +205,48 @@ export default function VaultsPage({
   );
 
   return (
-    <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
+    <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+      <VaultsMobileNavBar
+        vaultView="featured"
+        onVaultViewChange={onVaultViewChange}
+      />
       <HeaderTerminal
         activeNavItem="Vaults"
+        vaultView="featured"
+        onVaultViewChange={onVaultViewChange}
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
+          if (label === "Trade") onOpenTrade?.();
+          if (label === "Rewards") onOpenRewards?.();
+          if (label === "KOL") onOpenRewards?.("kol");
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
         onVaultTutorial={runVaultsProductTour}
         showCopilotTutorial={!!onOpenCopilotTutorial}
         walletConnected={walletConnected}
         onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onOpenProfile={onOpenProfile}
+        onOpenSupport={onOpenSupport}
         terminalPlatform={terminalPlatform}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
       <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-10 px-5 py-8 pb-16">
-          <VaultsHero />
+        <div className="flex w-full flex-col gap-6 px-5 py-8 pb-16 max-tablet:gap-4 max-tablet:px-4 max-tablet:py-5 max-tablet:pb-4 sm:px-8 lg:px-10 xl:px-12">
+          <div className="flex items-start justify-between gap-4">
+            <VaultsHero />
+            <VaultAgentLogsButton />
+          </div>
           <VaultsStatsRow />
 
-          <div className="flex w-full flex-col gap-6">
-            <VaultsSectionHeader
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
+          <div className="flex w-full flex-col gap-6 max-tablet:gap-4">
+            <div className="hidden tablet:block">
+              <VaultsSectionHeader
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            </div>
 
             <VaultsDexTabs
               tabs={dexTabs}
@@ -227,6 +269,7 @@ export default function VaultsPage({
                 >
                   <VaultsListSection
                     title="Featured Opportunities"
+                    mobileTitle="Featured Vaults"
                     vaults={inactiveFeatured}
                     rowUi={rowUi}
                     onPatch={patchRow}
@@ -242,14 +285,23 @@ export default function VaultsPage({
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {gridVaults.map((v) => (
-                  <VaultGridCard
-                    key={`grid-${v.id}`}
-                    vault={v}
-                    ui={rowUi[v.id]}
-                    onPatch={patchRow}
-                  />
-                ))}
+                {gridVaults.map((v) => {
+                  const health = getVaultHealthSync(v);
+                  return (
+                    <VaultGridCard
+                      key={`grid-${v.id}`}
+                      vault={v}
+                      ui={rowUi[v.id]}
+                      onPatch={patchRow}
+                      agentHealth={rowUi[v.id]?.activated ? health : null}
+                      onOpenVaultLogs={
+                        rowUi[v.id]?.activated
+                          ? () => openVaultAgentLogs(openAgentLogs, v, health)
+                          : null
+                      }
+                    />
+                  );
+                })}
               </div>
             )}
 
@@ -259,10 +311,22 @@ export default function VaultsPage({
               </p>
             ) : null}
           </div>
-
-          <VaultsPositionsHistoryTable />
         </div>
       </div>
+
+      <CopilotBottomNav
+        activeId="vaults"
+        vaultView="featured"
+        onVaultViewChange={onVaultViewChange}
+        onNavClick={(id) => {
+          if (id === "copilot") onOpenCopilot?.();
+          if (id === "rewards") onOpenRewards?.();
+          if (id === "kol") onOpenRewards?.("kol");
+        }}
+        onOpenSupport={onOpenSupport}
+        onCopilotTutorial={onOpenCopilotTutorial}
+        onVaultTutorial={runVaultsProductTour}
+      />
     </div>
   );
 }

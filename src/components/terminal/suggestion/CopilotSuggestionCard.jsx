@@ -1,3 +1,4 @@
+import { getCopilotStrategyById } from "../copilotStrategies.js";
 import SetupChip from "./SetupChip.jsx";
 import SetupRadio from "./SetupRadio.jsx";
 import SuggestionPriceChart from "./SuggestionPriceChart.jsx";
@@ -27,6 +28,7 @@ function MobileCopilotCard({
   selected,
   onSelect,
   onViewThesis,
+  strategyLabel,
 }) {
   const tagChips = setup.chips.filter(
     (c) => c.kind === "side" || c.kind === "win",
@@ -48,7 +50,7 @@ function MobileCopilotCard({
       className={`cursor-pointer rounded-lg border bg-[#0a0a0a] p-3.5 transition-[border-color,box-shadow] ${
         selected
           ? "border-[#f7bb08] shadow-[0_0_0_1px_rgba(247,187,8,0.35)]"
-          : "border-[#242424]"
+          : "border-[#242424] hover:border-[#333333]"
       }`}
     >
       <div className="flex items-center gap-2.5">
@@ -66,8 +68,11 @@ function MobileCopilotCard({
         <ChevronRight className="size-[18px] shrink-0 text-[#757575]" />
       </div>
 
-      {tagChips.length > 0 ? (
+      {tagChips.length > 0 || strategyLabel ? (
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          {strategyLabel ? (
+            <SetupChip chip={{ kind: "muted", label: strategyLabel }} />
+          ) : null}
           {tagChips.map((c, i) => (
             <SetupChip key={`${setup.id}-tag-${i}`} chip={c} />
           ))}
@@ -75,9 +80,13 @@ function MobileCopilotCard({
       ) : null}
 
       {rrChip || rangeChip ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
           {rrChip ? <SetupChip chip={rrChip} /> : null}
-          {rangeChip ? <SetupChip chip={rangeChip} /> : null}
+          {rangeChip ? (
+            <span className="min-w-0 max-w-full truncate">
+              <SetupChip chip={rangeChip} />
+            </span>
+          ) : null}
         </div>
       ) : null}
 
@@ -105,6 +114,10 @@ export default function CopilotSuggestionCard({
   onViewThesis,
   mobileFeed = false,
 }) {
+  const strategyLabel = setup.strategyId
+    ? getCopilotStrategyById(setup.strategyId)?.shortLabel
+    : null;
+
   if (mobileFeed) {
     return (
       <MobileCopilotCard
@@ -112,6 +125,7 @@ export default function CopilotSuggestionCard({
         selected={selected}
         onSelect={onSelect}
         onViewThesis={onViewThesis}
+        strategyLabel={strategyLabel}
       />
     );
   }
@@ -159,6 +173,9 @@ export default function CopilotSuggestionCard({
         </div>
         <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            {strategyLabel ? (
+              <SetupChip chip={{ kind: "muted", label: strategyLabel }} />
+            ) : null}
             {setup.chips.map((c, i) => (
               <SetupChip key={`${setup.id}-${i}-${c.label}`} chip={c} />
             ))}
