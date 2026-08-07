@@ -37,16 +37,12 @@ const PREPARE_MS = 5000;
 export type { ManagedDexId };
 type MarketMode = "themes" | "tokens";
 type ThemeOption =
+  | "Top Picks"
   | "Bluechip"
-  | "Trending"
-  | "HIP-3"
+  | "Stocks"
   | "Commodities"
-  | "Equities"
-  | "Perps"
-  | "Spot"
   | "Meme"
-  | "FX"
-  | "Default";
+  | "FX";
 type TokenOption = "BTC-USDC" | "ETH-USDC" | "SOL-USDC";
 
 type MarketSelection = {
@@ -56,17 +52,37 @@ type MarketSelection = {
 };
 
 const MAX_NOTIONAL = 10000;
-const THEME_OPTIONS: ThemeOption[] = [
-  "Bluechip",
-  "Trending",
-  "HIP-3",
-  "Commodities",
-  "Equities",
-  "Perps",
-  "Spot",
-  "Meme",
-  "FX",
-  "Default",
+/**
+ * Categories carry no live funding/APY readout the way a token pair does, so each one
+ * is described instead — the description is what the user picks on.
+ */
+const THEME_CATALOG: { value: ThemeOption; description: string }[] = [
+  {
+    value: "Top Picks",
+    description: "Best traded tokens globally, based on funding rate and APY.",
+  },
+  {
+    value: "Bluechip",
+    description:
+      "Large, established tokens with the highest market cap and liquidity.",
+  },
+  {
+    value: "Stocks",
+    description:
+      "Perpetual markets tracking real-world stock prices, like NVDA and TSLA.",
+  },
+  {
+    value: "Commodities",
+    description: "Tokenized real-world commodities like gold, oil, and silver.",
+  },
+  {
+    value: "Meme",
+    description: "High-volatility tokens driven by community and social trends.",
+  },
+  {
+    value: "FX",
+    description: "Tokenized foreign exchange pairs, like USD, EUR, and JPY.",
+  },
 ];
 const TOKEN_OPTIONS: TokenOption[] = ["BTC-USDC", "ETH-USDC", "SOL-USDC"];
 
@@ -121,7 +137,7 @@ function formatCompactUsd(value: number) {
 }
 
 function formatThemesSelection(themes: ThemeOption[]): string {
-  if (themes.length === 0) return "Default";
+  if (themes.length === 0) return "Select categories";
   return themes.join(", ");
 }
 
@@ -234,6 +250,17 @@ type DexPairSetupCardProps = {
   onModeChange: (mode: MarketMode) => void;
   onThemesChange: (themes: ThemeOption[]) => void;
   onTokenChange: (token: TokenOption) => void;
+  strategyMetrics: {
+    apy: number;
+    spreadPct: number;
+    spreadHours: number;
+    maxDrawdown30d: number;
+    hedgeIntegrity: number;
+    longFunding: string;
+    shortFunding: string;
+    netCapture: string;
+    fundingSettlement: string;
+  };
   variant?: BuilderUiVariant;
 };
 
@@ -252,21 +279,29 @@ function DexPairSetupCard({
   onModeChange,
   onThemesChange,
   onTokenChange,
+  strategyMetrics,
   variant = "default",
 }: DexPairSetupCardProps) {
   const isV2 = variant === "v2";
-  const selectTriggerClass = clsx(
-    "h-[44px] w-full rounded-[10px] px-3 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:ring-1 [&_svg]:h-3.5 [&_svg]:w-3.5",
+  // Height is kept out of the base so the categories trigger can grow with wrapped
+  // selections instead of fighting a fixed `h-` from the same utility group.
+  const selectTriggerBaseClass = clsx(
+    "w-full rounded-[10px] px-3 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:ring-1 [&_svg]:h-3.5 [&_svg]:w-3.5",
     isV2
       ? "border border-[#2a2a2a] bg-[#0d0d0d] text-[#E8E2D2] hover:bg-[#141414] focus:ring-[#d4af37]/30 [&_svg]:text-[#d4af37]/80"
       : "border border-[rgba(255,255,255,0.09)] bg-[linear-gradient(180deg,rgba(19,19,21,0.96)_0%,rgba(11,11,13,0.98)_100%)] hover:bg-[linear-gradient(180deg,rgba(25,25,28,0.98)_0%,rgba(12,12,15,0.99)_100%)] focus:ring-[rgba(214,176,106,0.24)] [&_svg]:text-[rgba(227,202,157,0.76)]",
   );
+  const selectTriggerClass = clsx("h-[44px]", selectTriggerBaseClass);
   const selectContentClass = clsx(
     isV2
       ? "border-[#3d3428] bg-[#0d0d0d] text-[#E8E2D2]"
       : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(25,22,18,0.98)_0%,rgba(14,12,10,0.99)_100%)] text-[#f1dfbf]",
   );
   const marketDisabled = dexA === "" || dexB === "";
+  // Catalog order, not click order, so the description list doesn't reshuffle.
+  const selectedThemes = THEME_CATALOG.filter((theme) =>
+    market.themes.includes(theme.value),
+  );
 
   const renderDexSelector = (
     slot: "a" | "b",
@@ -456,9 +491,12 @@ function DexPairSetupCard({
         >
           Market
         </label>
+        {/* Row 1 — mode switcher on its own line. */}
         <div
           className={clsx(
-            "inline-flex rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)]",
+            // h-[48px] = 38px pills + 4px padding + 1px borders, matching the selector
+            // row below it and the h-[38px] control height used across this card.
+            "inline-flex h-[48px] rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)]",
             isV2
               ? "border-[#2a2a2a] bg-[#0a0a0a]"
               : "border-[rgba(255,255,255,0.09)] bg-[rgba(10,10,11,0.94)]",
@@ -474,7 +512,7 @@ function DexPairSetupCard({
                 disabled={marketDisabled}
                 onClick={() => onModeChange(mode)}
                 className={clsx(
-                  "h-[26px] rounded-[8px] px-3 text-[11px] font-semibold tracking-[0.3px] transition-all",
+                  "h-[38px] rounded-[8px] px-4 text-[13px] font-semibold tracking-[0.3px] transition-all",
                   active
                     ? isV2
                       ? "border border-[#c9a962] bg-[#141414] text-[#c9a962]"
@@ -489,130 +527,293 @@ function DexPairSetupCard({
             );
           })}
         </div>
-        {market.mode === "themes" ? (
-          <Popover>
-            <PopoverTrigger asChild disabled={marketDisabled}>
-              <button
-                type="button"
-                disabled={marketDisabled}
-                className={clsx(
-                  "mt-2 flex min-h-[42px] w-full items-center justify-between gap-2 rounded-[10px] px-3 py-2.5 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:outline-none focus:ring-1",
-                  selectTriggerClass,
-                  marketDisabled ? "cursor-not-allowed opacity-50" : "",
-                )}
-              >
-                <span className="min-w-0 flex-1 whitespace-normal break-words font-['Onest',sans-serif] text-[14px] leading-snug text-[#ececf3]">
-                  {formatThemesSelection(market.themes)}
-                </span>
-                <ChevronDown
-                  className={clsx(
-                    "h-3.5 w-3.5 shrink-0",
-                    isV2
-                      ? "text-[#d4af37]/80"
-                      : "text-[rgba(227,202,157,0.76)]",
-                  )}
-                  aria-hidden
-                />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              className={clsx(
-                "w-[var(--radix-popover-trigger-width)] p-1.5",
-                selectContentClass,
-              )}
+
+        {/* Row 2 — the market selector, sized to its label, beside its live metrics. */}
+        <div className="mt-2 flex flex-col gap-2 min-[1100px]:flex-row min-[1100px]:items-stretch">
+          {market.mode === "tokens" && (
+            <Select
+              disabled={marketDisabled}
+              value={market.token}
+              onValueChange={(v) => onTokenChange(v as TokenOption)}
             >
-              <p
+              <SelectTrigger
                 className={clsx(
-                  "px-2 pb-1.5 text-[10px] uppercase tracking-[0.8px]",
-                  isV2 ? "text-[#888888]" : "text-[#8f90a1]",
+                  // SelectTrigger ships `data-[size=default]:h-9`; a bare `h-` loses to it
+                  // on specificity, so the height has to be set on the same variant.
+                  "data-[size=default]:h-[48px]",
+                  selectTriggerBaseClass,
+                  // Sized to the pair label, so the metric strip beside it takes the rest
+                  // of the row. With no strip to sit next to, it spans the row.
+                  marketDisabled
+                    ? "cursor-not-allowed opacity-50"
+                    : "shrink-0 min-[1100px]:w-[200px]",
                 )}
               >
-                Select one or more
-              </p>
-              {THEME_OPTIONS.map((themeOption) => {
-                const selected = market.themes.includes(themeOption);
-                const checkboxId = `theme-${themeOption}`;
-                return (
-                  <label
-                    key={themeOption}
-                    htmlFor={checkboxId}
+                <SelectValue className="truncate font-['Onest',sans-serif] text-[14px] text-[#f5f5f5]" />
+              </SelectTrigger>
+              <SelectContent className={selectContentClass}>
+                {TOKEN_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option}
+                    value={option}
                     className={clsx(
-                      "flex cursor-pointer items-center gap-2.5 rounded-[8px] px-2 py-2 text-[13px] transition-colors",
-                      selected
-                        ? isV2
-                          ? "bg-[#1a1a1a] text-[#E8E2D2]"
-                          : "bg-[rgba(120,90,40,0.2)] text-[#f6e5c8]"
-                        : isV2
-                          ? "text-[#E8E2D2] hover:bg-[#141414]"
-                          : "text-[#f1dfbf] hover:bg-[rgba(120,90,40,0.14)]",
+                      "pl-3 text-[14px] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)]",
+                      isV2
+                        ? "text-[#E8E2D2] focus:bg-[#1a1a1a] data-[state=checked]:bg-[#1a1a1a]"
+                        : "text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)]",
                     )}
                   >
-                    <Checkbox
-                      id={checkboxId}
-                      checked={selected}
-                      onCheckedChange={() => {
-                        const has = market.themes.includes(themeOption);
-                        if (has) {
-                          onThemesChange(
-                            market.themes.filter((x) => x !== themeOption),
-                          );
-                        } else {
-                          onThemesChange([...market.themes, themeOption]);
-                        }
-                      }}
-                      className={clsx(
-                        "size-4 rounded-[4px] border",
-                        isV2
-                          ? "border-[#3d3428] data-[state=checked]:border-[#c9a962] data-[state=checked]:bg-[#c9a962] data-[state=checked]:text-[#0d0d0d]"
-                          : "border-[rgba(173,134,73,0.45)] data-[state=checked]:border-[rgba(214,176,106,0.8)] data-[state=checked]:bg-[rgba(214,176,106,0.85)] data-[state=checked]:text-[#1a140c]",
-                      )}
-                    />
-                    <span className="flex-1">{themeOption}</span>
-                    {selected && (
-                      <Check
-                        className={clsx(
-                          "h-3.5 w-3.5 shrink-0",
-                          isV2
-                            ? "text-[#c9a962]"
-                            : "text-[rgba(227,202,157,0.9)]",
-                        )}
-                        aria-hidden
-                      />
-                    )}
-                  </label>
-                );
-              })}
-            </PopoverContent>
-          </Popover>
-        ) : (
-          <Select
-            disabled={marketDisabled}
-            value={market.token}
-            onValueChange={(v) => onTokenChange(v as TokenOption)}
-          >
-            <SelectTrigger
-              className={`mt-2 h-[42px] ${selectTriggerClass} ${marketDisabled ? "cursor-not-allowed opacity-50" : ""}`}
-            >
-              <SelectValue className="truncate font-['Onest',sans-serif] text-[14px] text-[#f5f5f5]" />
-            </SelectTrigger>
-            <SelectContent className={selectContentClass}>
-              {TOKEN_OPTIONS.map((option) => (
-                <SelectItem
-                  key={option}
-                  value={option}
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {market.mode === "tokens" && !marketDisabled && (
+            <div className="relative grid h-[48px] min-w-0 flex-1 grid-cols-3 overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
+              {[
+                {
+                  label: "APY",
+                  value: `${strategyMetrics.apy.toFixed(1)}%`,
+                  tone: "text-[#4ade80]",
+                },
+                {
+                  label: "Current Spread",
+                  value: `${formatSignedPct(strategyMetrics.spreadPct)} / ${strategyMetrics.spreadHours}h`,
+                  tone:
+                    strategyMetrics.spreadPct >= 0
+                      ? "text-[color:var(--vault-pnl-positive)]"
+                      : "text-[color:var(--vault-pnl-negative)]",
+                },
+                {
+                  label: "Max Drawdown (30d)",
+                  value: `${strategyMetrics.maxDrawdown30d.toFixed(1)}%`,
+                  tone: "text-[color:var(--vault-pnl-negative)]",
+                },
+              ].map((metric, index) => (
+                <div
+                  key={metric.label}
                   className={clsx(
-                    "pl-3 text-[14px] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)]",
-                    isV2
-                      ? "text-[#E8E2D2] focus:bg-[#1a1a1a] data-[state=checked]:bg-[#1a1a1a]"
-                      : "text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)]",
+                    "flex min-w-0 flex-col justify-center gap-1 px-3",
+                    index > 0 &&
+                      "border-l border-[rgba(255,255,255,0.07)]",
+                    index === 2 && "pr-9",
                   )}
                 >
-                  {option}
-                </SelectItem>
+                  <p
+                    className="min-w-0 truncate text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] text-[#9b9cad]"
+                    title={metric.label}
+                  >
+                    {metric.label}
+                  </p>
+                  <p
+                    className={clsx(
+                      "min-w-0 truncate font-mono text-[15px] font-semibold leading-[18px]",
+                      metric.tone,
+                    )}
+                  >
+                    {metric.value}
+                  </p>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="View funding details"
+                    className="absolute right-1.5 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-[6px] text-[#9f875c] hover:bg-[rgba(214,176,106,0.1)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#c9a962]"
+                  >
+                    <CircleAlert className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  className="z-[130] w-[280px] border border-[rgba(146,111,56,0.55)] bg-[#090909] p-3 text-[#f5f5f5]"
+                >
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.9px] text-[#c9a962]">
+                    Funding details
+                  </p>
+                  <dl className="space-y-2 font-mono text-[12px]">
+                    {[
+                      [
+                        "Hedge Integrity",
+                        `${strategyMetrics.hedgeIntegrity.toFixed(1)}%`,
+                        "text-[#9babc0]",
+                      ],
+                      [
+                        "Long Leg Funding",
+                        strategyMetrics.longFunding,
+                        "text-[color:var(--vault-leg-long-fg)]",
+                      ],
+                      [
+                        "Short Leg Funding",
+                        strategyMetrics.shortFunding,
+                        "text-[color:var(--vault-leg-short-fg)]",
+                      ],
+                      [
+                        "Net Capture",
+                        strategyMetrics.netCapture,
+                        "text-[#e8d5b5]",
+                      ],
+                      [
+                        "Funding Settlement",
+                        strategyMetrics.fundingSettlement,
+                        "text-[#ccb17f]",
+                      ],
+                    ].map(([label, value, tone]) => (
+                      <div
+                        key={label}
+                        className="flex items-center justify-between gap-4"
+                      >
+                        <dt className="text-[#9c9cac]">{label}</dt>
+                        <dd className={tone}>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          {market.mode === "themes" && (
+            <Popover>
+              <PopoverTrigger asChild disabled={marketDisabled}>
+                <button
+                  type="button"
+                  disabled={marketDisabled}
+                  className={clsx(
+                    "flex min-h-[48px] w-full flex-1 items-center justify-between gap-2 py-2.5 focus:outline-none",
+                    selectTriggerBaseClass,
+                    marketDisabled ? "cursor-not-allowed opacity-50" : "",
+                  )}
+                >
+                  <span className="min-w-0 flex-1 whitespace-normal break-words font-['Onest',sans-serif] text-[14px] leading-snug text-[#ececf3]">
+                    {formatThemesSelection(market.themes)}
+                  </span>
+                  <ChevronDown
+                    className={clsx(
+                      "h-3.5 w-3.5 shrink-0",
+                      isV2
+                        ? "text-[#d4af37]/80"
+                        : "text-[rgba(227,202,157,0.76)]",
+                    )}
+                    aria-hidden
+                  />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className={clsx(
+                  "w-[var(--radix-popover-trigger-width)] p-1.5",
+                  selectContentClass,
+                )}
+              >
+                <p
+                  className={clsx(
+                    "px-2 pb-1.5 text-[10px] uppercase tracking-[0.8px]",
+                    isV2 ? "text-[#888888]" : "text-[#8f90a1]",
+                  )}
+                >
+                  Select one or more
+                </p>
+                {THEME_CATALOG.map(({ value: themeOption, description }) => {
+                  const selected = market.themes.includes(themeOption);
+                  const checkboxId = `theme-${themeOption}`;
+                  return (
+                    <label
+                      key={themeOption}
+                      htmlFor={checkboxId}
+                      className={clsx(
+                        "flex cursor-pointer items-start gap-2.5 rounded-[8px] px-2 py-2 text-[13px] transition-colors",
+                        selected
+                          ? isV2
+                            ? "bg-[#1a1a1a] text-[#E8E2D2]"
+                            : "bg-[rgba(120,90,40,0.2)] text-[#f6e5c8]"
+                          : isV2
+                            ? "text-[#E8E2D2] hover:bg-[#141414]"
+                            : "text-[#f1dfbf] hover:bg-[rgba(120,90,40,0.14)]",
+                      )}
+                    >
+                      <Checkbox
+                        id={checkboxId}
+                        checked={selected}
+                        onCheckedChange={() => {
+                          const has = market.themes.includes(themeOption);
+                          if (has) {
+                            onThemesChange(
+                              market.themes.filter((x) => x !== themeOption),
+                            );
+                          } else {
+                            onThemesChange([...market.themes, themeOption]);
+                          }
+                        }}
+                        className={clsx(
+                          "mt-0.5 size-4 shrink-0 rounded-[4px] border",
+                          isV2
+                            ? "border-[#3d3428] data-[state=checked]:border-[#c9a962] data-[state=checked]:bg-[#c9a962] data-[state=checked]:text-[#0d0d0d]"
+                            : "border-[rgba(173,134,73,0.45)] data-[state=checked]:border-[rgba(214,176,106,0.8)] data-[state=checked]:bg-[rgba(214,176,106,0.85)] data-[state=checked]:text-[#1a140c]",
+                        )}
+                      />
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="leading-tight">{themeOption}</span>
+                        <span
+                          className={clsx(
+                            "text-[11px] leading-snug",
+                            isV2 ? "text-[#888888]" : "text-[#8f90a1]",
+                          )}
+                        >
+                          {description}
+                        </span>
+                      </span>
+                      {selected && (
+                        <Check
+                          className={clsx(
+                            "mt-0.5 h-3.5 w-3.5 shrink-0",
+                            isV2
+                              ? "text-[#c9a962]"
+                              : "text-[rgba(227,202,157,0.9)]",
+                          )}
+                          aria-hidden
+                        />
+                      )}
+                    </label>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+
+        {/* Categories have no live funding readout to sit beside them, so the picked
+            categories explain themselves here instead. */}
+        {market.mode === "themes" && !marketDisabled && selectedThemes.length > 0 && (
+          <ul
+            className={clsx(
+              "mt-2 space-y-1.5 rounded-[10px] border p-2.5",
+              isV2
+                ? "border-[#1f1f1f] bg-[#0a0a0a]"
+                : "border-[rgba(255,255,255,0.06)] bg-[rgba(8,8,9,0.6)]",
+            )}
+          >
+            {selectedThemes.map((theme) => (
+              <li
+                key={theme.value}
+                className="text-[11px] leading-relaxed text-[#8f90a1]"
+              >
+                <span
+                  className={clsx(
+                    "font-medium",
+                    isV2 ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
+                  )}
+                >
+                  {theme.value}
+                </span>
+                <span className="mx-1.5 text-[#5a5b66]">—</span>
+                {theme.description}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
@@ -662,7 +863,8 @@ const INITIAL_DEX_WALLETS: Record<ManagedDexId, string | null> = {
 };
 
 /** Venues that connect via a cookie/session export instead of the mock wallet-connect. */
-const requiresCookieAuth = (dex: ManagedDexId): boolean => dex === "Variational";
+const requiresCookieAuth = (dex: ManagedDexId): boolean =>
+  dex === "Variational";
 
 export function DeltaVaultBuilder({
   onActivate,
@@ -1032,7 +1234,7 @@ export function DeltaVaultBuilder({
   return (
     <section
       className={clsx(
-        "font-['Onest',sans-serif] relative overflow-hidden p-3.5 tablet:p-4",
+        "font-['Onest',sans-serif] relative mx-auto w-full max-w-[850px] overflow-hidden p-3.5 tablet:p-4",
         isV2Shell
           ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none max-tablet:rounded-[14px] max-tablet:p-2.5"
           : clsx(
@@ -1091,74 +1293,85 @@ export function DeltaVaultBuilder({
         pairedDex={selectedVenues.find((id) => id !== "Variational")}
       />
 
-      <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3 tablet:grid-cols-[1.55fr_1fr]">
+      <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3">
         <div className="flex flex-col gap-4 max-tablet:gap-3">
           <DexPairSetupCard
-              dexA={dexA}
-              dexB={dexB}
-              onDexAChange={setDexA}
-              onDexBChange={setDexB}
-              onConnectDex={(dex) => {
-                // Variational connects via the cookie onboarding modal, not the instant
-                // mock-connect. Opened from the leg's Connect button → authenticate only.
-                if (requiresCookieAuth(dex)) {
-                  setActivateAfterConnect(false);
-                  setVariationalModalOpen(true);
-                  return;
-                }
-                setDexConnected((prev) => ({ ...prev, [dex]: true }));
-                setDexWallets((prev) => ({
-                  ...prev,
-                  [dex]: prev[dex] ?? createMockWalletAddress(dex),
-                }));
-                setDexBalances((prev) => ({
-                  ...prev,
-                  [dex]: prev[dex] > 0 ? prev[dex] : 500,
-                }));
-              }}
-              onDepositDex={(dex) =>
-                setDexBalances((prev) => ({ ...prev, [dex]: prev[dex] + 500 }))
+            dexA={dexA}
+            dexB={dexB}
+            onDexAChange={setDexA}
+            onDexBChange={setDexB}
+            onConnectDex={(dex) => {
+              // Variational connects via the cookie onboarding modal, not the instant
+              // mock-connect. Opened from the leg's Connect button → authenticate only.
+              if (requiresCookieAuth(dex)) {
+                setActivateAfterConnect(false);
+                setVariationalModalOpen(true);
+                return;
               }
-              onChangeWalletDex={(dex) => {
-                setDexWallets((prev) => ({
-                  ...prev,
-                  [dex]: createMockWalletAddress(dex),
-                }));
-              }}
-              dexConnectionMap={dexConnected}
-              dexBalanceMap={dexBalances}
-              dexWalletMap={dexWallets}
-              market={market}
-              onModeChange={handleModeChange}
-              onThemesChange={handleThemesChange}
-              onTokenChange={handleTokenChange}
-              variant={variant}
-            />
+              setDexConnected((prev) => ({ ...prev, [dex]: true }));
+              setDexWallets((prev) => ({
+                ...prev,
+                [dex]: prev[dex] ?? createMockWalletAddress(dex),
+              }));
+              setDexBalances((prev) => ({
+                ...prev,
+                [dex]: prev[dex] > 0 ? prev[dex] : 500,
+              }));
+            }}
+            onDepositDex={(dex) =>
+              setDexBalances((prev) => ({ ...prev, [dex]: prev[dex] + 500 }))
+            }
+            onChangeWalletDex={(dex) => {
+              setDexWallets((prev) => ({
+                ...prev,
+                [dex]: createMockWalletAddress(dex),
+              }));
+            }}
+            dexConnectionMap={dexConnected}
+            dexBalanceMap={dexBalances}
+            dexWalletMap={dexWallets}
+            market={market}
+            onModeChange={handleModeChange}
+            onThemesChange={handleThemesChange}
+            onTokenChange={handleTokenChange}
+            strategyMetrics={{
+              apy: crossDexApr,
+              spreadPct: spreadDisplayPct,
+              spreadHours: spreadDisplayHours,
+              maxDrawdown30d,
+              hedgeIntegrity,
+              longFunding: `${formatSignedPct(longRatePerInterval)} / ${longFundingIntervalHours}h`,
+              shortFunding: `${formatSignedPct(shortRatePerInterval)} / ${shortFundingIntervalHours}h`,
+              netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
+              fundingSettlement: formatHms(secondsToRent),
+            }}
+            variant={variant}
+          />
 
           <div
-              className={clsx(
-                "rounded-[11px] border p-3 max-tablet:p-3",
-                isV2Shell
-                  ? "border-[#1f1f1f] bg-[#121212]"
-                  : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
-              )}
-            >
-              <VaultControls
-                disabled={!dualValid}
-                disabledSliderTooltip="Select both the dex before setting the amount"
-                amount={amount}
-                percent={participationRate}
-                maxAmount={deployableMaxUsd}
-                maxSummary={dualValid ? undefined : "—"}
-                inputPlaceholder="Select venues"
-                infoTooltip={vaultMarginTooltip}
-                stretch
-                compactInput
-                largeSlider
-                variant={variant}
-                onAmountChange={handleAmountChange}
-                onPercentChange={handlePercentChange}
-              />
+            className={clsx(
+              "rounded-[11px] border p-3 max-tablet:p-3",
+              isV2Shell
+                ? "border-[#1f1f1f] bg-[#121212]"
+                : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
+            )}
+          >
+            <VaultControls
+              disabled={!dualValid}
+              disabledSliderTooltip="Select both the dex before setting the amount"
+              amount={amount}
+              percent={participationRate}
+              maxAmount={deployableMaxUsd}
+              maxSummary={dualValid ? undefined : "—"}
+              inputPlaceholder="Select venues"
+              infoTooltip={vaultMarginTooltip}
+              stretch
+              compactInput
+              largeSlider
+              variant={variant}
+              onAmountChange={handleAmountChange}
+              onPercentChange={handlePercentChange}
+            />
           </div>
 
           {hasBothDexSelected && !dualValid && (
@@ -1449,6 +1662,7 @@ export function DeltaVaultBuilder({
         </div>
 
         <aside
+          hidden
           className={clsx(
             "rounded-[12px] border p-4 max-tablet:order-last max-tablet:p-3",
             isV2Shell

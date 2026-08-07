@@ -232,7 +232,10 @@ export function DeltaNeutralVaults3Page() {
     if (expandedId === id) setExpandedId(null);
   };
 
+  // Keys the builder can produce, plus the legacy names still carried by the seeded vaults above.
   const categoryDexTokenMapByPair: Record<string, Partial<Record<ActiveVaultCardModel['longAccount'], string>>> = {
+    'Top Picks': { Hyperliquid: 'BTC/USDC', Pacifica: 'BTC/USDC' },
+    Stocks: { Pacifica: 'NVDA/USDC', Hyperliquid: 'NVDA/USDC' },
     Bluechip: { Hyperliquid: 'AAVE/USDC', Pacifica: 'AAVE/USDC' },
     Trending: { Hyperliquid: 'FET/USDC', Nado: 'FET/USDC' },
     'HIP-3': { Hyperliquid: 'INJ/USDC', Pacifica: 'INJ/USDC' },
