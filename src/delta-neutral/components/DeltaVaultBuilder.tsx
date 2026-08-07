@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronDown, CircleAlert, Cookie, Wallet } from "lucide-react";
+import { Check, CircleAlert, Cookie, Wallet } from "lucide-react";
 import { VaultControls } from "./VaultControls";
 import { VaultOpeningOverlay } from "./VaultOpeningOverlay";
 import { VariationalOnboardingModal } from "./VariationalOnboardingModal";
@@ -21,7 +21,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "./ui/dialog";
-import { Checkbox } from "./ui/checkbox";
 import { DexLabel } from "./DexLogo";
 import { formatWalletAddress } from "../utils/wallet";
 import {
@@ -298,11 +297,6 @@ function DexPairSetupCard({
       : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(25,22,18,0.98)_0%,rgba(14,12,10,0.99)_100%)] text-[#f1dfbf]",
   );
   const marketDisabled = dexA === "" || dexB === "";
-  // Catalog order, not click order, so the description list doesn't reshuffle.
-  const selectedThemes = THEME_CATALOG.filter((theme) =>
-    market.themes.includes(theme.value),
-  );
-
   const renderDexSelector = (
     slot: "a" | "b",
     value: DexSelection,
@@ -642,12 +636,12 @@ function DexPairSetupCard({
                         "text-[#9babc0]",
                       ],
                       [
-                        "Long Leg Funding",
+                        "DEX-1 Funding",
                         strategyMetrics.longFunding,
                         "text-[color:var(--vault-leg-long-fg)]",
                       ],
                       [
-                        "Short Leg Funding",
+                        "DEX-2 Funding",
                         strategyMetrics.shortFunding,
                         "text-[color:var(--vault-leg-short-fg)]",
                       ],
@@ -677,70 +671,28 @@ function DexPairSetupCard({
           )}
 
           {market.mode === "themes" && (
-            <Popover>
-              <PopoverTrigger asChild disabled={marketDisabled}>
-                <button
-                  type="button"
-                  disabled={marketDisabled}
-                  className={clsx(
-                    "flex min-h-[48px] w-full flex-1 items-center justify-between gap-2 py-2.5 focus:outline-none",
-                    selectTriggerBaseClass,
-                    marketDisabled ? "cursor-not-allowed opacity-50" : "",
-                  )}
-                >
-                  <span className="min-w-0 flex-1 whitespace-normal break-words font-['Onest',sans-serif] text-[14px] leading-snug text-[#ececf3]">
-                    {formatThemesSelection(market.themes)}
-                  </span>
-                  <ChevronDown
-                    className={clsx(
-                      "h-3.5 w-3.5 shrink-0",
-                      isV2
-                        ? "text-[#d4af37]/80"
-                        : "text-[rgba(227,202,157,0.76)]",
-                    )}
-                    aria-hidden
-                  />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                className={clsx(
-                  "w-[var(--radix-popover-trigger-width)] p-1.5",
-                  selectContentClass,
-                )}
-              >
-                <p
-                  className={clsx(
-                    "px-2 pb-1.5 text-[10px] uppercase tracking-[0.8px]",
-                    isV2 ? "text-[#888888]" : "text-[#8f90a1]",
-                  )}
-                >
-                  Select one or more
-                </p>
-                {THEME_CATALOG.map(({ value: themeOption, description }) => {
-                  const selected = market.themes.includes(themeOption);
-                  const checkboxId = `theme-${themeOption}`;
-                  return (
-                    <label
-                      key={themeOption}
-                      htmlFor={checkboxId}
-                      className={clsx(
-                        "flex cursor-pointer items-start gap-2.5 rounded-[8px] px-2 py-2 text-[13px] transition-colors",
-                        selected
-                          ? isV2
-                            ? "bg-[#1a1a1a] text-[#E8E2D2]"
-                            : "bg-[rgba(120,90,40,0.2)] text-[#f6e5c8]"
-                          : isV2
-                            ? "text-[#E8E2D2] hover:bg-[#141414]"
-                            : "text-[#f1dfbf] hover:bg-[rgba(120,90,40,0.14)]",
-                      )}
-                    >
-                      <Checkbox
-                        id={checkboxId}
-                        checked={selected}
-                        onCheckedChange={() => {
-                          const has = market.themes.includes(themeOption);
-                          if (has) {
+            <div
+              role="group"
+              aria-label="Market categories. Select one or more."
+              className={clsx(
+                "grid w-full grid-cols-2 gap-1 rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)] min-[560px]:grid-cols-3",
+                isV2
+                  ? "border-[#2a2a2a] bg-[#0a0a0a]"
+                  : "border-[rgba(255,255,255,0.09)] bg-[rgba(10,10,11,0.94)]",
+                marketDisabled ? "opacity-50" : "",
+              )}
+            >
+              {THEME_CATALOG.map(({ value: themeOption, description }) => {
+                const selected = market.themes.includes(themeOption);
+                return (
+                  <Tooltip key={themeOption} delayDuration={180}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        disabled={marketDisabled}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          if (selected) {
                             onThemesChange(
                               market.themes.filter((x) => x !== themeOption),
                             );
@@ -749,72 +701,46 @@ function DexPairSetupCard({
                           }
                         }}
                         className={clsx(
-                          "mt-0.5 size-4 shrink-0 rounded-[4px] border",
-                          isV2
-                            ? "border-[#3d3428] data-[state=checked]:border-[#c9a962] data-[state=checked]:bg-[#c9a962] data-[state=checked]:text-[#0d0d0d]"
-                            : "border-[rgba(173,134,73,0.45)] data-[state=checked]:border-[rgba(214,176,106,0.8)] data-[state=checked]:bg-[rgba(214,176,106,0.85)] data-[state=checked]:text-[#1a140c]",
+                          "min-h-[40px] min-w-0 rounded-[8px] border px-2.5 py-2 font-['Onest',sans-serif] text-[12px] font-semibold leading-tight tracking-[0.2px] transition-all focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1",
+                          selected
+                            ? isV2
+                              ? "border-[#c9a962] bg-[#141414] text-[#c9a962] focus-visible:outline-[#c9a962]"
+                              : "border-[rgba(214,176,106,0.62)] bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] focus-visible:outline-[#d6b06a]"
+                            : isV2
+                              ? "border-transparent text-[#888888] hover:border-[#3d3428] hover:bg-[#141414] hover:text-[#c4c4c4] focus-visible:outline-[#c9a962]"
+                              : "border-transparent text-[#9a9ba8] hover:border-[rgba(214,176,106,0.22)] hover:bg-[rgba(120,90,40,0.14)] hover:text-[#f1dfbf] focus-visible:outline-[#d6b06a]",
+                          marketDisabled && "cursor-not-allowed",
                         )}
-                      />
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="leading-tight">{themeOption}</span>
-                        <span
-                          className={clsx(
-                            "text-[11px] leading-snug",
-                            isV2 ? "text-[#888888]" : "text-[#8f90a1]",
+                      >
+                        <span className="flex min-w-0 items-center justify-center gap-1.5">
+                          {selected && (
+                            <Check
+                              className="h-3 w-3 shrink-0"
+                              strokeWidth={2.5}
+                              aria-hidden
+                            />
                           )}
-                        >
-                          {description}
+                          <span className="truncate">{themeOption}</span>
                         </span>
-                      </span>
-                      {selected && (
-                        <Check
-                          className={clsx(
-                            "mt-0.5 h-3.5 w-3.5 shrink-0",
-                            isV2
-                              ? "text-[#c9a962]"
-                              : "text-[rgba(227,202,157,0.9)]",
-                          )}
-                          aria-hidden
-                        />
-                      )}
-                    </label>
-                  );
-                })}
-              </PopoverContent>
-            </Popover>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      sideOffset={6}
+                      className="z-[130] max-w-[240px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]"
+                    >
+                      <p className="mb-0.5 font-semibold text-[#f0ddb9]">
+                        {themeOption}
+                      </p>
+                      <p className="leading-relaxed text-[#a8a8b8]">
+                        {description}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
           )}
         </div>
-
-        {/* Categories have no live funding readout to sit beside them, so the picked
-            categories explain themselves here instead. */}
-        {market.mode === "themes" && !marketDisabled && selectedThemes.length > 0 && (
-          <ul
-            className={clsx(
-              "mt-2 space-y-1.5 rounded-[10px] border p-2.5",
-              isV2
-                ? "border-[#1f1f1f] bg-[#0a0a0a]"
-                : "border-[rgba(255,255,255,0.06)] bg-[rgba(8,8,9,0.6)]",
-            )}
-          >
-            {selectedThemes.map((theme) => (
-              <li
-                key={theme.value}
-                className="text-[11px] leading-relaxed text-[#8f90a1]"
-              >
-                <span
-                  className={clsx(
-                    "font-medium",
-                    isV2 ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
-                  )}
-                >
-                  {theme.value}
-                </span>
-                <span className="mx-1.5 text-[#5a5b66]">—</span>
-                {theme.description}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </div>
   );
@@ -1775,7 +1701,7 @@ export function DeltaVaultBuilder({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <VaultMetricLabel
-                    label="Short Leg Funding"
+                    label="DEX-1 Funding"
                     description="Funding rate currently applied to your short side."
                     className="text-[13px] text-[#8f90a1]"
                   />
@@ -1786,7 +1712,7 @@ export function DeltaVaultBuilder({
                 </div>
                 <div className="flex items-center justify-between">
                   <VaultMetricLabel
-                    label="Long Leg Funding"
+                    label="DEX-2 Funding"
                     description="Funding rate currently applied to your long side."
                     className="text-[13px] text-[#8f90a1]"
                   />
