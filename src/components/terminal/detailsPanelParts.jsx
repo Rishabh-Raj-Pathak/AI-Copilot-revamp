@@ -203,16 +203,36 @@ export function CollapseHeading({ title, open, onToggle }) {
   );
 }
 
+/** `hint` colours — Gain % reads green, Loss % red (order panel parity). */
+const HINT_TONES = {
+  brand: "text-[#f2b500]",
+  gain: "text-[#269755]",
+  loss: "text-[#d53d3d]",
+};
+
 /**
  * `$`-prefixed free-text numeric field (Trade page). Unlike `StepperField`
  * this is an editable input, not a display + arrows.
  */
-export function AmountField({ label, value, onChange, hint, percent = false }) {
+export function AmountField({
+  label,
+  value,
+  onChange,
+  hint,
+  hintTone = "brand",
+  percent = false,
+}) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs text-[#bfbfbf]">{label}</span>
-        {hint ? <span className="text-xs text-[#f2b500]">{hint}</span> : null}
+        {hint ? (
+          <span
+            className={`text-xs font-medium ${HINT_TONES[hintTone] ?? HINT_TONES.brand}`}
+          >
+            {hint}
+          </span>
+        ) : null}
       </div>
       <div className="flex items-center gap-2 rounded-md border border-[#242424] bg-black px-3 py-2 focus-within:border-[#3a3a3a]">
         {percent ? (

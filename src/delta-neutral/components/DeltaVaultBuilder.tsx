@@ -922,9 +922,15 @@ export function DeltaVaultBuilder({
         ? "Medium"
         : "Low";
 
+  /**
+   * Settlement cadence belongs to the venue, not to the leg it was handed. Legs flip
+   * whenever funding crosses (see resolveLegs) but the payout schedule doesn't, so this
+   * reads the two picked venues — which also keeps it right before the legs resolve.
+   * The slower venue governs: the pair isn't settled until both sides have paid.
+   */
   const payoutIntervalHours = Math.max(
-    DEX_FUNDING_INTERVAL_HOURS[longDex] ?? 8,
-    DEX_FUNDING_INTERVAL_HOURS[shortDex] ?? 8,
+    dexA !== "" ? DEX_FUNDING_INTERVAL_HOURS[dexA] : 8,
+    dexB !== "" ? DEX_FUNDING_INTERVAL_HOURS[dexB] : 8,
   );
   const spreadFundingPerPayoutInterval =
     spreadFunding8h * (payoutIntervalHours / 8);

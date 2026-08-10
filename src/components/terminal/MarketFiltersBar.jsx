@@ -20,15 +20,18 @@ function FilterPills({
   onFilterChange,
   inline = false,
   scrollable = false,
+  row = false,
 }) {
   return (
     <div
       className={
         scrollable
           ? 'minimal-scrollbar -mx-3 flex w-full items-center gap-1.5 overflow-x-auto px-3 pb-0.5 sm:-mx-3.5 sm:px-3.5'
-          : inline
-            ? 'flex shrink-0 flex-nowrap items-center gap-1.5'
-            : 'minimal-scrollbar flex min-w-0 flex-1 flex-wrap items-center gap-2 max-tablet:flex-nowrap max-tablet:overflow-x-auto max-tablet:pb-0.5'
+          : row
+            ? 'minimal-scrollbar flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto max-tablet:pb-0.5'
+            : inline
+              ? 'flex shrink-0 flex-nowrap items-center gap-1.5'
+              : 'minimal-scrollbar flex min-w-0 flex-1 flex-wrap items-center gap-2 max-tablet:flex-nowrap max-tablet:overflow-x-auto max-tablet:pb-0.5'
       }
     >
       {defs.map((f) => {
@@ -107,6 +110,7 @@ function renderDiscoveryPanel({
       defs={categoryFilterDefs}
       activeFilter={activeFilter}
       onFilterChange={onFilterChange}
+      row
     />
   )
 

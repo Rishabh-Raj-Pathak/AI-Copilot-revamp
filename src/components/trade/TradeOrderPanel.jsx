@@ -251,6 +251,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
                     onChange={setGainPct}
                     percent
                     hint="$0"
+                    hintTone="gain"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -265,6 +266,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
                     onChange={setLossPct}
                     percent
                     hint="$0"
+                    hintTone="loss"
                   />
                 </div>
               </div>
