@@ -97,7 +97,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
         borrows the body's type scale so it costs a control's worth of height
         rather than a header's.
       */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#242424] px-3 py-2.5 sm:px-5 sm:py-3">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#242424] px-3 py-2.5 sm:px-4">
         <span className="min-w-0 truncate text-anchor text-ink">
           {setup.symbol}
         </span>
@@ -112,8 +112,14 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
         data-tour="copilot-trade-setup"
       >
-        <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4 max-tablet:px-3 max-tablet:py-3 sm:px-5 sm:py-5">
-          <div className="flex flex-col gap-3">
+        {/*
+          Budgeted to clear an 800px viewport without an inner scrollbar:
+          panel height − context strip − padding. Only spacing was compressed —
+          the type scale is fixed (see CLAUDE.md) and the field order is the
+          perp-DEX convention documented below.
+        */}
+        <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 max-tablet:px-3 max-tablet:py-3 sm:px-4 sm:py-3.5">
+          <div className="flex flex-col gap-2.5">
             {/*
               Order mirrors the perp-DEX convention (Hyperliquid / Variational /
               Lighter): sticky account config first, then order type, then the
@@ -151,7 +157,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 type="button"
                 aria-pressed={orderType === "market"}
                 onClick={() => setOrderType("market")}
-                className={`flex-1 py-2.5 text-control ${
+                className={`flex-1 py-2 text-control ${
                   orderType === "market"
                     ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
                     : "text-ink-subtle hover:text-ink"
@@ -163,7 +169,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 type="button"
                 aria-pressed={orderType === "limit"}
                 onClick={() => setOrderType("limit")}
-                className={`flex-1 py-2.5 text-control ${
+                className={`flex-1 py-2 text-control ${
                   orderType === "limit"
                     ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
                     : "text-ink-subtle hover:text-ink"
@@ -172,12 +178,12 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 Limit
               </button>
             </div>
-            <div className="flex rounded-[10px] border border-[#242424] p-1">
+            <div className="flex rounded-[10px] border border-[#242424] p-0.5">
               <button
                 type="button"
                 aria-pressed={direction === "long"}
                 onClick={() => setDirection("long")}
-                className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+                className={`flex-1 rounded-lg py-2 text-control transition-colors ${
                   direction === "long"
                     ? "bg-[#0e381f] font-medium text-ink"
                     : "text-ink-subtle hover:bg-white/5"
@@ -189,7 +195,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 type="button"
                 aria-pressed={direction === "short"}
                 onClick={() => setDirection("short")}
-                className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+                className={`flex-1 rounded-lg py-2 text-control transition-colors ${
                   direction === "short"
                     ? "bg-[#5f1414] font-medium text-ink"
                     : "text-ink-subtle hover:bg-white/5"
@@ -198,7 +204,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 Sell / Short
               </button>
             </div>
-            <div className="flex items-center justify-between gap-3 border-y border-[#242424] py-2.5">
+            <div className="flex items-center justify-between gap-3 border-y border-[#242424] py-2">
               <span className="text-data text-ink-muted">Available Balance</span>
               <div className="flex items-center gap-2">
                 <img alt="" className="size-5 shrink-0" src={a.usdc} />
@@ -207,7 +213,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 </span>
               </div>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <div className="flex flex-col gap-2">
                 {/*
                   Limit differs from Market by exactly one field. Everything
@@ -242,7 +248,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                   />
                 </div>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 <CollapseHeading
                   title="Take Profit/Stop Loss"
                   open={takeProfitOpen}
@@ -341,7 +347,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                   </>
                 ) : null}
               </div>
-              <div className="flex flex-col gap-2.5 border-t border-[#242424] pt-3">
+              <div className="flex flex-col gap-2 border-t border-[#242424] pt-2.5">
                 {/*
                   Snaps Price to the live quote and locks the field — otherwise
                   the checkbox and an edited limit price state two different
@@ -378,7 +384,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
               the CTA. Facts stay neutral; the two copilot-derived edge metrics
               carry the brand accent.
             */}
-            <dl className="flex flex-col gap-2 border-t border-[#242424] pt-3 text-data">
+            <dl className="flex flex-col gap-1.5 border-t border-[#242424] pt-2.5 text-data">
               {[
                 ["Liquidation Price", setup.additional.liquidation, false],
                 ["Asset Size", assetSize, false],

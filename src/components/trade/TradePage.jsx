@@ -78,7 +78,7 @@ export default function TradePage({
           <TradeBottomPanel />
         </div>
 
-        <div className="flex w-full shrink-0 flex-col lg:h-full lg:w-[420px]">
+        <div className="flex w-full shrink-0 flex-col lg:h-full lg:w-80 xl:w-84">
           <TradeOrderPanel
             key={coin}
             coin={coin}

@@ -12,15 +12,19 @@ export default function TradeDataTable({ columns, rows, empty }) {
   return (
     <>
       {/* Desktop */}
-      <div className="minimal-scrollbar hidden min-h-0 flex-1 overflow-auto tablet:block">
-        <table className="w-full min-w-[1200px] border-collapse text-left">
+      {/* `grow`, not `flex-1`: the panel is auto-height now, and a
+          `flex-basis: 0` child there sizes to nothing instead of to its rows. */}
+      <div className="minimal-scrollbar hidden min-h-0 grow overflow-auto tablet:block">
+        {/* `w-max` + `min-w-full`: never squeeze a column into a clip — the
+            wrapper scrolls horizontally instead. */}
+        <table className="w-max min-w-full border-collapse text-left">
           <thead>
             <tr>
               {columns.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
-                  className="sticky top-0 z-10 whitespace-nowrap border-b border-[#242424] bg-black px-4 py-3 text-center text-xs font-normal text-[#bfbfbf] first:text-left"
+                  className="sticky top-0 z-10 whitespace-nowrap border-b border-[#242424] bg-black px-3 py-2 text-center text-xs font-normal text-[#bfbfbf] first:text-left"
                 >
                   {c.label}
                 </th>
@@ -36,7 +40,7 @@ export default function TradeDataTable({ columns, rows, empty }) {
                 {columns.map((c) => (
                   <td
                     key={c.key}
-                    className="whitespace-nowrap px-4 py-3.5 text-center text-sm text-white tabular-nums first:text-left"
+                    className="whitespace-nowrap px-3 py-2.5 text-center text-sm text-white tabular-nums first:text-left"
                   >
                     {c.render(row)}
                   </td>

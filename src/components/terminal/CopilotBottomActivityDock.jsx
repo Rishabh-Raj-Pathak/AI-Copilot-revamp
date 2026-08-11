@@ -138,7 +138,17 @@ function ExternalLinkIcon({ className }) {
   );
 }
 
-const MIN_H = 196;
+/*
+ * Resting cap, and the cap while a setup is selected. Both are caps, not
+ * heights — a tab with one row or an empty state still sizes to its content.
+ *
+ * Budget at an 800px viewport: 65 header + 71 filters leaves 664 for feed +
+ * dock. The dock's own chrome (tabs 39 + column header 32) is 71, so 156 shows
+ * ~2.5 rows and 128 shows ~1.5 — enough to read as a scrollable table without
+ * out-bidding the suggestions feed, which is what the page is for.
+ */
+const REST_H = 156;
+const COMPACT_H = 128;
 const MAX_H = 520;
 const WHEEL_STEP = 48;
 
@@ -147,13 +157,14 @@ export default function CopilotBottomActivityDock({
   highlightOpenedPositionRow = false,
   compact = false,
 }) {
-  const minHeight = compact ? 128 : MIN_H;
+  const minHeight = compact ? COMPACT_H : REST_H;
   const [activeTab, setActiveTab] = useState("tradeHistory");
-  const [panelHeight, setPanelHeight] = useState(MIN_H);
+  const [panelHeight, setPanelHeight] = useState(REST_H);
   const dockRef = useRef(null);
   const bodyRef = useRef(null);
   const openedPositionRowRef = useRef(null);
-  const panelHeightRef = useRef(MIN_H);
+  const panelHeightRef = useRef(REST_H);
+  const restoreRef = useRef(REST_H);
 
   const tabs = useMemo(() => {
     return TABS_BASE.map((t) =>
@@ -173,9 +184,22 @@ export default function CopilotBottomActivityDock({
     panelHeightRef.current = panelHeight;
   }, [panelHeight]);
 
+  /*
+    Selecting a setup has to actually shrink the dock — this used to be
+    `Math.max(minHeight, …)`, which only ever raised, so with the panel at its
+    resting cap and the compact floor below it the clamp was a no-op and
+    `compact` compacted nothing. Clamp down on the way in; restore the
+    pre-compact cap on the way out so a deliberate wheel-resize survives.
+  */
   useEffect(() => {
-    setPanelHeight((h) => Math.max(minHeight, Math.min(MAX_H, h)));
-  }, [minHeight]);
+    setPanelHeight((h) => {
+      if (compact) {
+        restoreRef.current = h;
+        return Math.min(h, COMPACT_H);
+      }
+      return Math.min(MAX_H, Math.max(h, restoreRef.current));
+    });
+  }, [compact]);
 
   useEffect(() => {
     if (!highlightOpenedPositionRow) return;
@@ -233,11 +257,20 @@ export default function CopilotBottomActivityDock({
   }, [onWheel]);
 
   return (
+    /*
+      `panelHeight` is a cap, not a height. A tab holding one row (or an empty
+      state) sizes to that row instead of leaving a black gap under it, and the
+      reclaimed space goes to the suggestions feed above. The vh clamp keeps a
+      wheel-expanded dock from eating the feed's share on a short viewport.
+    */
     <section
       ref={dockRef}
       data-tour="position-tracking"
       className="flex min-h-0 min-w-0 shrink-0 flex-col border-t border-[#242424] bg-black"
-      style={{ height: panelHeight, transition: "height 0.18s ease-out" }}
+      style={{
+        maxHeight: `min(${panelHeight}px, 50vh)`,
+        transition: "max-height 0.18s ease-out",
+      }}
       aria-label="Activity"
     >
       <div className="flex shrink-0 flex-col border-b border-[#1a1a1a] pt-1 pb-0.5">
@@ -276,11 +309,13 @@ export default function CopilotBottomActivityDock({
         </div>
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {/* `grow`, not `flex-1`: with the section on auto height a `flex-basis: 0`
+          child sizes to nothing instead of to its rows. */}
+      <div className="flex min-h-0 min-w-0 grow flex-col overflow-hidden">
         {activeTab === "tradeHistory" ? (
           <>
-            <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
-              <div className="flex min-h-0 min-w-[720px] flex-1 flex-col">
+            <div className="minimal-scrollbar flex min-h-0 min-w-0 grow flex-col overflow-x-auto overflow-y-hidden">
+              <div className="flex min-h-0 min-w-[720px] grow flex-col">
                 <div
                   className="grid shrink-0 grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] ds-eyebrow gap-2 border-b px-3 py-2 text-ink-subtle"
                   style={{ borderColor: BORDER }}
@@ -296,7 +331,7 @@ export default function CopilotBottomActivityDock({
                 </div>
                 <div
                   ref={bodyRef}
-                  className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+                  className="minimal-scrollbar min-h-0 grow overflow-y-auto overscroll-y-contain"
                 >
                   {MOCK_TRADES.map((row, i) => {
                     const dColor = directionColor(row.direction);
@@ -355,8 +390,8 @@ export default function CopilotBottomActivityDock({
           </>
         ) : activeTab === "positions" && tourDemoPosition ? (
           <>
-            <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
-              <div className="flex min-h-0 min-w-[560px] flex-1 flex-col">
+            <div className="minimal-scrollbar flex min-h-0 min-w-0 grow flex-col overflow-x-auto overflow-y-hidden">
+              <div className="flex min-h-0 min-w-[560px] grow flex-col">
                 <div
                   className="grid shrink-0 grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] ds-eyebrow gap-2 border-b px-3 py-2 text-ink-subtle"
                   style={{ borderColor: BORDER }}
@@ -372,7 +407,7 @@ export default function CopilotBottomActivityDock({
                 <div
                   ref={bodyRef}
                   data-tour="copilot-positions-body"
-                  className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+                  className="minimal-scrollbar min-h-0 grow overflow-y-auto overscroll-y-contain"
                 >
                   <div
                     ref={openedPositionRowRef}
@@ -420,7 +455,7 @@ export default function CopilotBottomActivityDock({
             </div>
           </>
         ) : (
-          <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-6 text-center text-data text-ink-subtle">
+          <div className="flex min-h-0 grow items-center justify-center px-4 py-6 text-center text-data text-ink-subtle">
             {tabs.find((t) => t.id === activeTab)?.label} view is a placeholder
             — connect your account data here.
           </div>

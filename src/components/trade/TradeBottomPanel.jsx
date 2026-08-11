@@ -8,8 +8,11 @@ export default function TradeBottomPanel() {
   const active = TRADE_TABS.find((t) => t.id === activeId) ?? TRADE_TABS[0];
 
   return (
+    /* Height tracks the rows on desktop — one position must not leave a black
+       gap under it. Capped at 34vh so a long tab scrolls rather than eating the
+       chart's share of the page. */
     <section
-      className="flex min-h-0 shrink-0 flex-col bg-black max-tablet:min-h-[16rem] tablet:h-[16rem]"
+      className="flex min-h-0 shrink-0 flex-col bg-black max-tablet:min-h-[16rem] tablet:max-h-[34vh]"
       aria-label="Positions and orders"
     >
       <div
@@ -28,7 +31,7 @@ export default function TradeBottomPanel() {
               aria-selected={selected}
               aria-controls={`trade-panel-${t.id}`}
               onClick={() => setActiveId(t.id)}
-              className={`flex shrink-0 items-center gap-2 border-b-[3px] px-2 py-3 text-sm transition-colors sm:px-3 ${
+              className={`flex shrink-0 items-center gap-2 border-b-[3px] px-2 py-2.5 text-sm transition-colors sm:px-3 ${
                 selected
                   ? "border-[#f2b500] font-semibold text-white"
                   : "border-transparent text-[#bfbfbf] hover:text-white"
@@ -53,7 +56,7 @@ export default function TradeBottomPanel() {
         role="tabpanel"
         id={`trade-panel-${active.id}`}
         aria-labelledby={`trade-tab-${active.id}`}
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex min-h-0 grow flex-col"
       >
         <TradeDataTable
           columns={active.columns}

@@ -183,7 +183,7 @@ export default function MarketFiltersBar({
       </div>
 
       {/* Desktop */}
-      <div className="hidden border-b border-[#242424] px-3 py-2 sm:px-5 sm:py-2.5 tablet:block">
+      <div className="hidden border-b border-[#242424] px-3 py-2 sm:px-4 tablet:block">
         {showStrategy ? (
           renderDiscoveryPanel(panelProps)
         ) : (

@@ -144,14 +144,14 @@ export default function CopilotSuggestionCard({
           onSelect?.(setup.id);
         }
       }}
-      className={`cursor-pointer rounded-xl border p-5 transition-[box-shadow,border-color] duration-200 ${
+      className={`cursor-pointer rounded-xl border p-3.5 transition-[box-shadow,border-color] duration-200 ${
         selected
           ? "border-[#f7bb08] shadow-[0_0_0_1px_rgba(247,187,8,0.35),0_0_32px_rgba(247,187,8,0.12)]"
           : "border-[#242424] hover:border-[#333333]"
       }`}
     >
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-start gap-2.5">
           <img
             src={setup.tokenIcon}
             alt=""
@@ -194,7 +194,9 @@ export default function CopilotSuggestionCard({
         </div>
       </div>
 
-      {expanded ? <SuggestionPriceChart active={expanded} delayMs={3} /> : null}
+      {expanded ? (
+        <SuggestionPriceChart setup={setup} active={expanded} delayMs={3} />
+      ) : null}
     </article>
   );
 }

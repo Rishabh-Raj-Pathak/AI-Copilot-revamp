@@ -26,8 +26,13 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
   const [margin, setMargin] = useState("0");
   const [size, setSize] = useState("0");
   const [leverage, setLeverage] = useState(Math.min(33, market.maxLeverage));
-  const [tpslOpen, setTpslOpen] = useState(true);
-  const [additionalOpen, setAdditionalOpen] = useState(true);
+  /*
+   * Both collapsed on load: the ticket has to clear a ~800px laptop viewport
+   * without an inner scrollbar (Variational / Vooi both do). Expanding either
+   * one is what re-introduces the scroll, and that's the user's choice.
+   */
+  const [tpslOpen, setTpslOpen] = useState(false);
+  const [additionalOpen, setAdditionalOpen] = useState(false);
   const [tpPrice, setTpPrice] = useState("0");
   const [gainPct, setGainPct] = useState("0");
   const [slPrice, setSlPrice] = useState("0");
@@ -64,7 +69,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
 
   return (
     <aside className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-black lg:border-l lg:border-[#242424]">
-      <div className="flex shrink-0 flex-col gap-2 border-b border-[#242424] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
+      <div className="flex shrink-0 flex-col gap-1 border-b border-[#242424] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <span className="text-anchor text-ink">{market.symbol}</span>
         <div className="flex flex-wrap items-baseline gap-1.5 whitespace-nowrap">
           <span className="text-data text-ink-muted">Current Price:</span>
@@ -78,11 +83,11 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
         </div>
       </div>
 
-      <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4 sm:px-5 sm:py-5">
-        <div className="flex flex-col gap-3">
+      <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-2.5 sm:px-4">
+        <div className="flex flex-col gap-2">
           <button
             type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-control font-medium text-black transition-[filter] hover:brightness-110"
+            className="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-control font-medium text-black transition-[filter] hover:brightness-110"
             style={{
               backgroundImage: "linear-gradient(90deg, #f2b500, #00f3b6)",
             }}
@@ -91,11 +96,11 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             Optimize Setup
           </button>
 
-          <div className="flex rounded-[10px] border border-[#242424] p-1">
+          <div className="flex rounded-[10px] border border-[#242424] p-0.5">
             <button
               type="button"
               onClick={() => setDirection("long")}
-              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+              className={`flex-1 rounded-lg py-2 text-control transition-colors ${
                 direction === "long"
                   ? "bg-[#0e381f] font-medium text-ink"
                   : "text-ink-subtle hover:bg-white/5"
@@ -106,7 +111,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setDirection("short")}
-              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+              className={`flex-1 rounded-lg py-2 text-control transition-colors ${
                 direction === "short"
                   ? "bg-[#5f1414] font-medium text-ink"
                   : "text-ink-subtle hover:bg-white/5"
@@ -116,11 +121,11 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             </button>
           </div>
 
-          <div className="flex rounded-[10px] border border-[#242424] p-1">
+          <div className="flex rounded-[10px] border border-[#242424] p-0.5">
             <button
               type="button"
               onClick={() => setMarginMode("cross")}
-              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+              className={`flex-1 rounded-lg py-2 text-control transition-colors ${
                 marginMode === "cross"
                   ? "bg-[#242424] font-medium text-ink"
                   : "text-ink-subtle hover:bg-white/5"
@@ -131,7 +136,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setMarginMode("isolated")}
-              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+              className={`flex-1 rounded-lg py-2 text-control transition-colors ${
                 marginMode === "isolated"
                   ? "bg-[#3e2e00] font-medium text-ink"
                   : "text-ink-subtle hover:bg-white/5"
@@ -145,7 +150,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setOrderType("market")}
-              className={`flex-1 py-3 text-control ${
+              className={`flex-1 py-2 text-control ${
                 orderType === "market"
                   ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
                   : "text-ink-subtle hover:text-ink"
@@ -156,7 +161,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setOrderType("limit")}
-              className={`flex-1 py-3 text-control ${
+              className={`flex-1 py-2 text-control ${
                 orderType === "limit"
                   ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
                   : "text-ink-subtle hover:text-ink"
@@ -167,7 +172,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
           </div>
 
           <div
-            className="flex items-center justify-between gap-3 rounded-lg border border-[#f2b500] p-3"
+            className="flex items-center justify-between gap-2 rounded-lg border border-[#f2b500] px-3 py-2"
             style={{
               backgroundImage:
                 "linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.85)), linear-gradient(90deg, #f2b500, #00f3b6)",
@@ -231,7 +236,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             />
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-[#242424] pt-3">
+          <div className="flex flex-col gap-2 border-t border-[#242424] pt-1.5">
             <CollapseHeading
               title="Take Profit/Stop Loss"
               open={tpslOpen}
@@ -273,15 +278,15 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-[#242424] pt-3">
+          <div className="flex flex-col gap-2 border-t border-[#242424] pt-1.5">
             <CollapseHeading
               title="Additional Info"
               open={additionalOpen}
               onToggle={() => setAdditionalOpen((o) => !o)}
             />
             {additionalOpen ? (
-              <div className="rounded-lg border border-[#242424] p-5">
-                <dl className="flex flex-col gap-2 text-data">
+              <div className="rounded-lg border border-[#242424] p-3">
+                <dl className="flex flex-col gap-1.5 text-data">
                   <div className="flex justify-between">
                     <dt className="text-ink-muted">Liquidation Price</dt>
                     <dd className="text-ink">
@@ -313,8 +318,8 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col gap-3 border-t border-[#242424] bg-black px-3 py-4 max-tablet:pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-5">
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 max-tablet:min-h-10">
+      <div className="flex shrink-0 flex-col gap-2 border-t border-[#242424] bg-black px-3 py-2.5 max-tablet:pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4">
+        <label className="flex min-h-9 cursor-pointer items-center gap-2.5 max-tablet:min-h-11">
           <Checkbox checked={openAtMark} onChange={setOpenAtMark} />
           <span className="text-data text-ink">
             Open Position at Current Price

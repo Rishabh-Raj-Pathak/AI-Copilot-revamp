@@ -681,7 +681,7 @@ export default function TerminalCopilotPage({
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:flex-row"
         data-tour="copilot-suggestion-and-setup"
       >
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:h-full tablet:flex-[3_1_0] tablet:basis-0 tablet:border-r tablet:border-[#242424]">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:h-full tablet:border-r tablet:border-[#242424]">
           <div className="hidden shrink-0 flex-col tablet:flex">
             <MarketFiltersBar
               activeFilter={activeFilter}
@@ -695,7 +695,7 @@ export default function TerminalCopilotPage({
           </div>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div
-              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-20 sm:pb-5 max-tablet:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
+              className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-20 sm:pb-3 max-tablet:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
               data-tour="copilot-suggestions-list"
             >
               <div className="max-tablet:flex tablet:hidden">
@@ -710,7 +710,7 @@ export default function TerminalCopilotPage({
                 />
               </div>
               <div
-                className={`flex flex-col gap-2.5 px-3 pt-2.5 transition-opacity duration-300 max-tablet:gap-2 sm:px-5 tablet:gap-4 tablet:pt-3 ${
+                className={`flex flex-col gap-2.5 px-3 pt-2.5 transition-opacity duration-300 max-tablet:gap-2 sm:px-4 tablet:gap-2.5 tablet:pt-2.5 ${
                   listRefreshing ? "pointer-events-none opacity-40" : "opacity-100"
                 }`}
               >
@@ -763,9 +763,12 @@ export default function TerminalCopilotPage({
         </main>
         <div
           className={
+            /* Fixed 320/336px from `tablet` up — ~19% of a 1700px viewport, the
+               same allocation as the Trade page's order ticket. The reclaimed
+               width goes to the feed, which is `flex-1`. */
             selectedSetup && !mobileDetailsSheetDismissed
-              ? "flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black max-tablet:fixed max-tablet:inset-0 max-tablet:z-[55] max-tablet:h-dvh max-tablet:max-h-none max-tablet:border-t-0 tablet:h-full tablet:flex-[1_1_0] tablet:basis-0 tablet:border-t-0 tablet:border-l"
-              : "hidden min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black tablet:flex tablet:h-full tablet:flex-[1_1_0] tablet:basis-0 tablet:border-t-0 tablet:border-l tablet:border-[#242424]"
+              ? "flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black max-tablet:fixed max-tablet:inset-0 max-tablet:z-[55] max-tablet:h-dvh max-tablet:max-h-none max-tablet:border-t-0 tablet:h-full tablet:w-80 tablet:border-t-0 tablet:border-l xl:w-84"
+              : "hidden min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black tablet:flex tablet:h-full tablet:w-80 tablet:border-t-0 tablet:border-l tablet:border-[#242424] xl:w-84"
           }
         >
           {selectedSetup && !mobileDetailsSheetDismissed ? (
