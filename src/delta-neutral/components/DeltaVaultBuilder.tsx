@@ -310,7 +310,7 @@ function StrategyBreakdownPanel({
           type="button"
           aria-haspopup="dialog"
           aria-expanded={open}
-          aria-label="Strategy breakdown — funding and APR for each venue"
+          aria-label="More info — funding and APR for each venue"
           onPointerEnter={handleEnter}
           onPointerLeave={handleLeave}
           onClick={() => {
@@ -326,7 +326,7 @@ function StrategyBreakdownPanel({
               : "text-[#9f875c] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e2c68b]",
           )}
         >
-          Breakdown
+          More info
           <ChevronDown
             className={clsx(
               "h-3 w-3 shrink-0 transition-transform duration-150",
