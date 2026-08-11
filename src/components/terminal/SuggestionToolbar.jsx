@@ -26,17 +26,16 @@ export default function SuggestionToolbar({
 
   const expireBlock = (
     <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight sm:items-center sm:gap-x-2 sm:whitespace-nowrap">
-      <p
-        className={`${
-          useMobileCountdown ? "text-xs text-[#757575]" : "text-sm text-white"
-        }`}
-      >
+      {/*
+        Compact and full differ only in wording now — the type scale is flat, so
+        the size no longer branches on viewport. The countdown stays weight 400:
+        it ticks every second and the green/red already carries the emphasis.
+      */}
+      <p className="text-data text-ink-muted">
         {useMobileCountdown ? "Expires in:" : "Suggestions Expire in:"}
       </p>
       <p
-        className={`font-semibold ${
-          useMobileCountdown ? "text-sm" : "text-base"
-        } ${expired ? "text-[#d53d3d]" : "text-[#269755]"}`}
+        className={`text-control ${expired ? "text-[#d53d3d]" : "text-[#269755]"}`}
       >
         {expired ? "Expired" : formatCountdown(expireSeconds, useMobileCountdown)}
       </p>
@@ -48,10 +47,10 @@ export default function SuggestionToolbar({
       <button
         type="button"
         aria-label="Share"
-        className={`flex cursor-pointer items-center justify-center rounded-md border border-[#242424] font-medium text-white hover:bg-white/5 ${
+        className={`flex cursor-pointer items-center justify-center rounded-md border border-[#242424] text-control text-ink hover:bg-white/5 ${
           compact || showDiscovery
-            ? 'min-h-8 gap-1.5 px-2.5 py-1 text-xs max-sm:size-8 max-sm:p-0'
-            : 'gap-1.5 px-3 py-2 text-sm sm:py-1.5'
+            ? 'min-h-8 gap-1.5 px-2.5 py-1 max-sm:size-8 max-sm:p-0'
+            : 'gap-1.5 px-3 py-2 sm:py-1.5'
         }`}
       >
         <Share2
@@ -67,9 +66,9 @@ export default function SuggestionToolbar({
         type="button"
         aria-label="Refresh suggestions"
         onClick={onRefresh}
-        className={`${terminalGradientCta.componentClassName} justify-center font-semibold ${
+        className={`${terminalGradientCta.componentClassName} justify-center text-control font-medium ${
           compact || showDiscovery
-            ? '!min-h-8 gap-1.5 !px-2.5 !py-1 !text-xs max-sm:!size-8 max-sm:!p-0'
+            ? '!min-h-8 gap-1.5 !px-2.5 !py-1 max-sm:!size-8 max-sm:!p-0'
             : 'gap-1.5 py-2 sm:py-1.5'
         }`}
       >
@@ -90,7 +89,7 @@ export default function SuggestionToolbar({
       <div className="flex shrink-0 items-center gap-2 max-sm:gap-1.5">
         <div className="flex min-w-0 items-center gap-1.5 max-sm:max-w-[7.5rem]">
           <Clock
-            className="size-3.5 shrink-0 text-[#757575] max-sm:hidden"
+            className="size-3.5 shrink-0 text-ink-faint max-sm:hidden"
             aria-hidden
           />
           {expireBlock}
@@ -110,7 +109,7 @@ export default function SuggestionToolbar({
         >
           <div className="flex w-full items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
-              <Clock className="size-4 shrink-0 text-[#757575]" aria-hidden />
+              <Clock className="size-4 shrink-0 text-ink-faint" aria-hidden />
               {expireBlock}
             </div>
             {actionButtons}

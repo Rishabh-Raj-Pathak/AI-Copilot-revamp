@@ -44,7 +44,7 @@ function StrategyRiskBadge({ risk }) {
   const riskClass = RISK_STYLES[risk] ?? RISK_STYLES.Medium;
   return (
     <span
-      className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.35px] ${riskClass}`}
+      className={`ds-eyebrow shrink-0 rounded-full border px-2 py-0.5 ${riskClass}`}
     >
       {risk} risk
     </span>
@@ -62,7 +62,7 @@ function StrategyActiveSummary({ strategy, onViewDetails }) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
       {parts.length > 0 ? (
-        <p className="min-w-0 flex-1 truncate text-[10px] leading-snug text-[#bfbfbf] sm:text-[11px]">
+        <p className="min-w-0 flex-1 truncate text-micro text-ink-muted">
           {parts.join(" · ")}
         </p>
       ) : (
@@ -72,7 +72,7 @@ function StrategyActiveSummary({ strategy, onViewDetails }) {
         <button
           type="button"
           onClick={onViewDetails}
-          className="shrink-0 text-[10px] font-medium uppercase tracking-[0.3px] text-[#f2b500] transition-opacity hover:opacity-90"
+          className="ds-eyebrow shrink-0 text-[#f2b500] transition-opacity hover:opacity-90"
         >
           Details
         </button>
@@ -87,31 +87,31 @@ function StrategyDetailBody({ strategy }) {
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-semibold leading-5 text-white">
+        <p className="text-control font-medium text-ink">
           {strategy.shortLabel ?? strategy.name}
         </p>
         <StrategyRiskBadge risk={strategy.risk} />
       </div>
       {strategy.tagline ? (
-        <p className="mt-1.5 text-xs font-medium leading-snug text-[#bfbfbf]">
+        <p className="mt-1.5 text-data text-ink-muted">
           {strategy.tagline}
         </p>
       ) : null}
-      <p className="mt-2 text-xs leading-[1.55] text-[#999]">
+      <p className="mt-2 text-data text-ink-subtle">
         {strategy.description}
       </p>
-      <dl className="mt-3 flex flex-col gap-2 border-t border-[#242424] pt-3 text-[11px]">
+      <dl className="mt-3 flex flex-col gap-2 border-t border-[#242424] pt-3 text-micro">
         <div className="flex gap-2">
-          <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#757575]">
+          <dt className="ds-eyebrow shrink-0 text-ink-faint">
             Timeframe
           </dt>
-          <dd className="text-[#d4d4d4]">{strategy.timeframe}</dd>
+          <dd className="text-ink-muted">{strategy.timeframe}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="shrink-0 font-medium uppercase tracking-[0.35px] text-[#757575]">
+          <dt className="ds-eyebrow shrink-0 text-ink-faint">
             Best for
           </dt>
-          <dd className="text-[#d4d4d4]">{strategy.bestFor}</dd>
+          <dd className="text-ink-muted">{strategy.bestFor}</dd>
         </div>
       </dl>
     </>
@@ -300,20 +300,20 @@ function CopilotStrategyMobileSheet({
               <button
                 type="button"
                 onClick={onBackToPicker}
-                className="text-sm font-medium text-[#f2b500] transition-opacity hover:opacity-90"
+                className="text-control font-medium text-[#f2b500] transition-opacity hover:opacity-90"
               >
                 ← Back
               </button>
             ) : (
               <span className="size-9" aria-hidden />
             )}
-            <h3 className="text-center text-base font-semibold text-white">
+            <h3 className="text-center text-control font-medium text-ink">
               {isPicker ? "Choose strategy" : "Strategy details"}
             </h3>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] hover:bg-white/5 hover:text-white"
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-muted hover:bg-white/5 hover:text-ink"
               aria-label="Close"
             >
               <X className="size-5" strokeWidth={2} aria-hidden />
@@ -324,7 +324,7 @@ function CopilotStrategyMobileSheet({
         <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {isPicker ? (
             <>
-              <p className="mb-3 text-xs leading-relaxed text-[#757575]">
+              <p className="mb-3 text-data text-ink-faint">
                 Tap a strategy to select it, or open Details to read more first.
               </p>
               <ul
@@ -351,17 +351,17 @@ function CopilotStrategyMobileSheet({
                           className="w-full px-4 pb-3 pt-4 text-left transition-colors active:bg-white/[0.03]"
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <p className="min-w-0 text-sm font-semibold leading-5 text-white">
+                            <p className="min-w-0 text-control font-medium text-ink">
                               {strategy.shortLabel ?? strategy.name}
                             </p>
                             <StrategyRiskBadge risk={strategy.risk} />
                           </div>
                           {strategy.tagline ? (
-                            <p className="mt-1.5 text-xs font-medium leading-snug text-[#bfbfbf]">
+                            <p className="mt-1.5 text-data text-ink-muted">
                               {strategy.tagline}
                             </p>
                           ) : null}
-                          <p className="mt-2 line-clamp-2 text-xs leading-[1.55] text-[#757575]">
+                          <p className="mt-2 line-clamp-2 text-data text-ink-faint">
                             {strategy.description}
                           </p>
                         </button>
@@ -369,7 +369,7 @@ function CopilotStrategyMobileSheet({
                           <button
                             type="button"
                             onClick={() => onViewDetails(strategy.id)}
-                            className="text-[10px] font-medium uppercase tracking-[0.35px] text-[#f2b500] transition-opacity hover:opacity-90"
+                            className="ds-eyebrow text-[#f2b500] transition-opacity hover:opacity-90"
                           >
                             Details
                           </button>
@@ -423,7 +423,7 @@ export default function CopilotStrategySelector({
 
   const controlHeight = inline ? "h-8" : isNarrow ? "h-9" : "h-9";
   const controlRadius = inline ? "rounded-md" : "rounded-lg";
-  const controlText = inline ? "text-xs font-medium" : "text-sm font-semibold";
+  const controlText = "text-control font-medium";
   const controlPadding = inline ? "pl-2.5 pr-6" : "pl-3 pr-7";
   const menuWidth = inline ? 220 : 200;
 
@@ -640,7 +640,7 @@ export default function CopilotStrategySelector({
             className={`pointer-events-none absolute top-1/2 -translate-y-1/2 transition-transform ${
               inline ? "right-1.5 size-3" : "right-2 size-3.5"
             } ${
-              disabled ? "text-[#757575] opacity-50" : "text-[#f2b500]"
+              disabled ? "text-ink-faint opacity-50" : "text-[#f2b500]"
             } ${menuOpen || sheetOpen ? "rotate-180" : ""}`}
             strokeWidth={2}
             aria-hidden
@@ -706,10 +706,10 @@ export default function CopilotStrategySelector({
                       openPreview(strategy, e.currentTarget, true)
                     }
                     onClick={() => handleSelect(strategy)}
-                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium transition-colors ${
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-data transition-colors ${
                       selected
                         ? "bg-[#171200] text-[#f2b500]"
-                        : "text-[#bfbfbf] hover:bg-white/[0.03] hover:text-white"
+                        : "text-ink-muted hover:bg-white/[0.03] hover:text-ink"
                     }`}
                   >
                     <span className="truncate">

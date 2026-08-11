@@ -129,7 +129,7 @@ function buildChartAreaPath(
 function Row({
   label,
   value,
-  valueClass = "font-semibold tabular-nums text-[#F4F4F5]",
+  valueClass = "text-[#F4F4F5]",
 }: {
   label: string;
   value: string;
@@ -181,23 +181,23 @@ function AiCopilotThesisPanel({
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black ring-1 ring-[#584200]`}
           >
-            <span className={`text-sm font-bold text-white ${fontOnest}`}>
+            <span className={`text-control font-medium text-white ${fontOnest}`}>
               D
             </span>
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-[17px] font-bold tracking-tight text-[#F4F4F5]">
+              <h1 className="truncate text-anchor text-[#F4F4F5]">
                 {instrumentTitle}
               </h1>
-              <span className="shrink-0 rounded-full border border-[rgba(24,242,163,0.45)] bg-black px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#18F2A3]">
+              <span className="shrink-0 rounded-full border border-[rgba(24,242,163,0.45)] bg-black px-2 py-0.5 ds-eyebrow text-[#18F2A3]">
                 Long
               </span>
             </div>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-4">
-          <span className="text-[12px] text-[#6C727C]">Just now</span>
+          <span className="text-data text-[#6C727C]">Just now</span>
           <button
             type="button"
             onClick={onClose}
@@ -218,11 +218,11 @@ function AiCopilotThesisPanel({
               key={m.label}
               className={`flex min-w-0 flex-1 flex-col gap-1 px-4 py-3 ${i > 0 ? `border-l ${borderDivider} border-solid` : ""}`}
             >
-              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+              <span className="ds-eyebrow text-white">
                 {m.label}
               </span>
               <span
-                className={`truncate text-[15px] font-semibold tabular-nums ${m.valueClass}`}
+                className={`truncate text-control ${m.valueClass}`}
               >
                 {m.value}
               </span>
@@ -235,11 +235,11 @@ function AiCopilotThesisPanel({
               key={m.label}
               className={`rounded-[16px] border ${borderDivider} border-solid bg-black px-3 py-2.5`}
             >
-              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+              <span className="ds-eyebrow text-white">
                 {m.label}
               </span>
               <div
-                className={`mt-0.5 text-[14px] font-semibold tabular-nums ${m.valueClass}`}
+                className={`mt-0.5 text-control ${m.valueClass}`}
               >
                 {m.value}
               </div>
@@ -247,22 +247,22 @@ function AiCopilotThesisPanel({
           ))}
         </div>
 
-        <p className="text-center text-[11px] leading-relaxed text-[#9CA3AF] sm:text-left">
-          <span className="font-semibold text-[#E04444]">SL</span>{" "}
-          <span className="tabular-nums text-[#D1D5DB]">$0.1048</span>
+        <p className="text-center text-micro leading-relaxed text-[#9CA3AF] sm:text-left">
+          <span className="font-medium text-[#E04444]">SL</span>{" "}
+          <span className="text-[#D1D5DB]">$0.1048</span>
           <span className="mx-2 text-[#4B5563]">·</span>
-          <span className="font-semibold text-white">Entry</span>{" "}
-          <span className="tabular-nums text-[#D1D5DB]">$0.1096–0.1102</span>
+          <span className="font-medium text-white">Entry</span>{" "}
+          <span className="text-[#D1D5DB]">$0.1096–0.1102</span>
           <span className="mx-2 text-[#4B5563]">·</span>
-          <span className="font-semibold text-[#18F2A3]">TP</span>{" "}
-          <span className="tabular-nums text-[#D1D5DB]">$0.1127</span>
+          <span className="font-medium text-[#18F2A3]">TP</span>{" "}
+          <span className="text-[#D1D5DB]">$0.1127</span>
         </p>
 
         <section className={`border-t ${borderDivider} border-solid pt-4`}>
-          <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+          <h2 className="mb-2 ds-eyebrow text-white">
             Winning thesis
           </h2>
-          <p className="text-[13px] leading-relaxed text-[#D1D5DB]">
+          <p className="text-data leading-relaxed text-[#D1D5DB]">
             Strong uptrend with OI growth and positive funding
           </p>
         </section>
@@ -271,7 +271,7 @@ function AiCopilotThesisPanel({
           <div
             className={`rounded-[16px] border ${borderPositiveSubtle} border-solid bg-black px-4 py-3`}
           >
-            <h3 className="mb-3 text-[12px] font-bold text-white">
+            <h3 className="mb-3 text-control font-medium text-white">
               Justification
             </h3>
             <ul className="flex flex-col gap-2.5">
@@ -283,7 +283,7 @@ function AiCopilotThesisPanel({
               ].map((t) => (
                 <li
                   key={t}
-                  className="flex items-start gap-2 text-[12px] leading-snug text-[#bfbfbf]"
+                  className="flex items-start gap-2 text-data leading-snug text-[#bfbfbf]"
                 >
                   <IconJustificationLead />
                   <span className="min-w-0">{t}</span>
@@ -294,7 +294,7 @@ function AiCopilotThesisPanel({
           <div
             className={`rounded-[16px] border ${borderNegativeSubtle} border-solid bg-black px-4 py-3`}
           >
-            <h3 className="mb-3 text-[12px] font-bold text-white">
+            <h3 className="mb-3 text-control font-medium text-white">
               Exit triggers
             </h3>
             <ul className="flex flex-col gap-2.5">
@@ -304,7 +304,7 @@ function AiCopilotThesisPanel({
               ].map((t) => (
                 <li
                   key={t}
-                  className="flex items-start gap-2 text-[12px] leading-snug text-[#bfbfbf]"
+                  className="flex items-start gap-2 text-data leading-snug text-[#bfbfbf]"
                 >
                   <IconExitLead />
                   <span className="min-w-0">{t}</span>
@@ -318,14 +318,14 @@ function AiCopilotThesisPanel({
           <div
             className={`rounded-[16px] border ${borderDivider} border-solid bg-black px-4 py-3`}
           >
-            <h3 className="mb-3 text-[12px] font-bold text-white">
+            <h3 className="mb-3 text-control font-medium text-white">
               Setup details
             </h3>
-            <dl className="flex flex-col gap-2.5 text-[12px]">
+            <dl className="flex flex-col gap-2.5 text-data">
               <Row
                 label="Strategy type"
                 value="Trend continuation"
-                valueClass="font-semibold text-white"
+                valueClass="font-medium text-white"
               />
               <Row label="Timeframe" value="15m" />
               <Row label="Leverage" value="10× Isolated" />
@@ -333,12 +333,12 @@ function AiCopilotThesisPanel({
               <Row
                 label="Take Profit (%)"
                 value="+26.43%"
-                valueClass="tabular-nums text-[#18F2A3]"
+                valueClass="text-[#18F2A3]"
               />
               <Row
                 label="Stop Loss (%)"
                 value="-45.06%"
-                valueClass="tabular-nums text-[#E04444]"
+                valueClass="text-[#E04444]"
               />
               <Row label="Projected R:R" value="1 : 0.55" />
             </dl>
@@ -346,8 +346,8 @@ function AiCopilotThesisPanel({
           <div
             className={`rounded-[16px] border ${borderDivider} border-solid bg-black px-4 py-3`}
           >
-            <h3 className="mb-3 text-[12px] font-bold text-white">Backtest</h3>
-            <dl className="flex flex-col gap-2.5 text-[12px]">
+            <h3 className="mb-3 text-control font-medium text-white">Backtest</h3>
+            <dl className="flex flex-col gap-2.5 text-data">
               <div className="flex items-baseline justify-between gap-3">
                 <dt className="flex items-center gap-2 text-[#8B8F98]">
                   <span className="shrink-0">Win rate</span>
@@ -367,7 +367,7 @@ function AiCopilotThesisPanel({
                           type="button"
                           onClick={() => setWinRateRange(option.key)}
                           aria-label={`Show ${option.label} win rate`}
-                          className={`relative z-10 rounded-full border-none px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                          className={`relative z-10 rounded-full border-none px-2.5 py-1 text-meta transition-colors ${
                             active
                               ? "bg-transparent text-[#f0dfbf]"
                               : "bg-transparent text-[#8f939d] hover:text-[#d4d7df]"
@@ -380,7 +380,7 @@ function AiCopilotThesisPanel({
                   </span>
                 </dt>
                 <div className="flex items-center gap-2">
-                  <dd className="min-w-[58px] text-right tabular-nums text-[#18F2A3]">
+                  <dd className="min-w-[58px] text-right text-[#18F2A3]">
                     {selectedWinRate}
                   </dd>
                 </div>
@@ -389,18 +389,18 @@ function AiCopilotThesisPanel({
               <Row
                 label="Avg realised R:R"
                 value="1 : 0.71"
-                valueClass="tabular-nums text-[#18F2A3]"
+                valueClass="text-[#18F2A3]"
               />
               <Row
                 label="Backtest win rate"
                 value="65.2%"
-                valueClass="tabular-nums text-[#18F2A3]"
+                valueClass="text-[#18F2A3]"
               />
               <Row label="Backtest Sharpe" value="1.62" />
               <Row
                 label="Expected Return / $1000"
                 value="+$3.42"
-                valueClass="tabular-nums text-[#18F2A3]"
+                valueClass="text-[#18F2A3]"
               />
             </dl>
           </div>
@@ -409,18 +409,18 @@ function AiCopilotThesisPanel({
         <div className="bg-black px-0 py-0">
           <div className="mb-3 flex items-start justify-between gap-2 px-1">
             <div>
-              <h3 className="text-[13px] font-bold text-white">
+              <h3 className="text-control font-medium text-white">
                 Win rate · Backtest
               </h3>
-              <p className="text-[11px] text-[#8B8F98]">
+              <p className="text-micro text-[#8B8F98]">
                 Win rate vs. timeframe (weeks)
               </p>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8B8F98]">
+              <span className="ds-eyebrow text-[#8B8F98]">
                 Latest
               </span>
-              <div className="text-[13px] font-semibold tabular-nums text-[#18F2A3]">
+              <div className="text-control text-[#18F2A3]">
                 {selectedWinRate}
               </div>
             </div>
@@ -512,10 +512,10 @@ function AiCopilotThesisPanel({
         </div>
 
         <section className={`border-t ${borderDivider} border-solid pt-4`}>
-          <h3 className="mb-2 text-[12px] font-bold text-white">
+          <h3 className="mb-2 text-control font-medium text-white">
             About strategy
           </h3>
-          <p className="text-[12px] leading-relaxed text-[#bfbfbf]">
+          <p className="text-data leading-relaxed text-[#bfbfbf]">
             {ABOUT_STRATEGY}
           </p>
         </section>

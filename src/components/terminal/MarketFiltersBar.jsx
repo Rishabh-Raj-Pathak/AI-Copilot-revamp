@@ -42,7 +42,7 @@ function FilterPills({
             key={f.id}
             type="button"
             onClick={() => onFilterChange(f.id)}
-            className={`flex shrink-0 items-center gap-1 border font-medium transition-colors min-h-8 rounded-md px-2.5 py-1 text-xs border-[#242424] bg-transparent ${
+            className={`flex shrink-0 items-center gap-1 border font-medium transition-colors min-h-8 rounded-md px-2.5 py-1 text-data border-[#242424] bg-transparent ${
               active
                 ? 'text-[#f2b500]'
                 : 'text-white hover:bg-white/5'

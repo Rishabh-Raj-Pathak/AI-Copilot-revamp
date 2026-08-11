@@ -75,8 +75,19 @@
   --ds-input-border: var(--palette-neutral-10);
   --ds-input-placeholder: var(--palette-neutral-40);
 
-  /* Typography (Figma text styles → semantic roles) */
   --ds-font-sans: "Onest", system-ui, sans-serif;
+
+  /*
+   * LEGACY MARKETING SCALE — FROZEN. Do not use, extend, or change these values.
+   *
+   * `--ds-text-*` / `.ds-text-*` is a marketing-page scale (16px body, 20px h4,
+   * 48px display) consumed ONLY by the `src/components/ui/` primitives, which in
+   * turn are used by Profile, Rewards and the delta-neutral pages. Repointing any
+   * value here silently reflows those pages.
+   *
+   * Trading surfaces (terminal / trade) use the TRADING TYPE SCALE below.
+   * See src/design-system/TYPE-SCALE.md
+   */
   --ds-text-display-size: 3rem;
   --ds-text-display-leading: 1.05;
   --ds-text-display-weight: 600;
@@ -119,6 +130,7 @@
   --ds-text-caption-weight: 400;
   --ds-text-caption-tracking: 0.01em;
 
+  /* Superseded by `ds-eyebrow` on product surfaces; kept because `ui/alert.jsx` uses `.ds-text-label`. */
   --ds-text-label-size: 0.75rem;
   --ds-text-label-leading: 1.25;
   --ds-text-label-weight: 500;
@@ -128,6 +140,59 @@
   --ds-text-button-size: 0.875rem;
   --ds-text-button-leading: 1.25;
   --ds-text-button-weight: 500;
+
+  /*
+   * ── TRADING TYPE SCALE ──────────────────────────────────────────────────
+   * Five sizes for the entire trading surface. Reverse-engineered from the
+   * computed CSS of Hyperliquid, Variational, Lighter and Vooi, which all
+   * converge on: one base size carrying ~90% of the UI, 3–5 sizes total, and
+   * hierarchy built from COLOUR and OPACITY rather than size or weight.
+   *
+   * Weight is capped at 500. There is no 600 or 700 on a trading surface —
+   * none of the four references use one. Emphasis comes from the ink ladder.
+   *
+   * Exposed as Tailwind utilities via `@theme inline` below:
+   *   text-anchor · text-control · text-data · text-micro · text-meta
+   *   ds-eyebrow (compound: @utility, since @theme cannot carry text-transform)
+   *
+   * See src/design-system/TYPE-SCALE.md — and prefer that doc to guessing.
+   */
+  --ds-type-anchor-size: 1.125rem; /* 18px — pair title, exactly once per screen */
+  --ds-type-anchor-leading: 1.35;
+  --ds-type-anchor-weight: 500;
+  --ds-type-anchor-tracking: -0.01em;
+
+  --ds-type-control-size: 0.8125rem; /* 13px — tabs, nav, buttons, primary CTA */
+  --ds-type-control-leading: 1.35;
+  --ds-type-control-weight: 400; /* active state adds `font-medium` */
+
+  --ds-type-data-size: 0.75rem; /* 12px — the workhorse, ~90% of the UI */
+  --ds-type-data-leading: 1.45;
+  --ds-type-data-weight: 400;
+
+  --ds-type-micro-size: 0.6875rem; /* 11px — dense numeric cells; eyebrow base size */
+  --ds-type-micro-leading: 1.3;
+  --ds-type-micro-weight: 400;
+
+  --ds-type-meta-size: 0.625rem; /* 10px — badges, bottom-nav labels, status */
+  --ds-type-meta-leading: 1.3;
+  --ds-type-meta-weight: 400;
+  --ds-type-meta-tracking: 0.01em;
+
+  /* Eyebrow treatment layered on the 11px step — see `@utility ds-eyebrow`. */
+  --ds-type-eyebrow-leading: 1.2;
+  --ds-type-eyebrow-weight: 500;
+  --ds-type-eyebrow-tracking: 0.04em;
+
+  /*
+   * Ink ladder — the emphasis tool that replaces font-weight. Four steps
+   * consolidating the eight greys the terminal had drifted into
+   * (#f4f4f4 #e5e5e5 #bfbfbf #929292 #8c8c8c #8a8a8a #757575 #585858).
+   */
+  --ds-ink: #ffffff; /* primary values, active states */
+  --ds-ink-muted: #bfbfbf; /* field labels, secondary text */
+  --ds-ink-subtle: #8f8f8f; /* tertiary, inactive tabs */
+  --ds-ink-faint: #757575; /* placeholder, disabled */
 
   /*
    * Corner radius — Figma «Corner Radius» (styles canvas): sharp 0, xxxs 2 … 3xl 24, round 9999.
@@ -174,9 +239,10 @@
   --ds-terminal-view-thesis-padding-y: 0.5rem; /* 8px */
   --ds-terminal-view-thesis-padding-x: 1rem; /* 16px */
   --ds-terminal-view-thesis-gap: 0.5rem; /* 8px */
-  --ds-terminal-view-thesis-font-size: 0.75rem; /* 12px */
-  --ds-terminal-view-thesis-line-height: 1.25;
-  --ds-terminal-view-thesis-font-weight: 500;
+  /* Secondary control ("Backtest") — reads off the trading scale, not its own numbers. */
+  --ds-terminal-view-thesis-font-size: var(--ds-type-control-size);
+  --ds-terminal-view-thesis-line-height: var(--ds-type-control-leading);
+  --ds-terminal-view-thesis-font-weight: var(--ds-type-control-weight);
   --ds-terminal-view-thesis-icon-size: 1rem; /* 16px — matches Lucide `size` */
 
   /*
@@ -221,7 +287,7 @@
   --ds-terminal-connect-wallet-fg: var(--palette-neutral-0);
   --ds-terminal-connect-wallet-padding-y: 0.475rem; /* `py-1.5` — same as Deposit / nav */
   --ds-terminal-connect-wallet-padding-x: 0.75rem; /* `px-3` */
-  --ds-terminal-connect-wallet-font-size: 0.875rem;
+  --ds-terminal-connect-wallet-font-size: var(--ds-type-control-size);
   --ds-terminal-connect-wallet-font-weight: 500;
   --ds-terminal-connect-wallet-radius: var(--ds-radius-xs);
   /*
@@ -317,6 +383,66 @@ dialog::backdrop {
   --spacing-btn-sm: var(--ds-height-btn-sm);
   --spacing-btn-md: var(--ds-height-btn-md);
   --spacing-btn-lg: var(--ds-height-btn-lg);
+
+  /*
+   * Trading type scale → `text-*` utilities.
+   *
+   * Names deliberately avoid the stock t-shirt sizes (xs/sm/base/lg/xl), which
+   * stay 100% stock, and avoid every `--color-*` name above so `text-<name>` is
+   * never ambiguous between a size and a colour.
+   *
+   * Tailwind emits these as `line-height: var(--tw-leading, <token>)` etc., so
+   * `leading-*`, `tracking-*` and `font-*` still override — in any class order.
+   */
+  --text-anchor: var(--ds-type-anchor-size);
+  --text-anchor--line-height: var(--ds-type-anchor-leading);
+  --text-anchor--font-weight: var(--ds-type-anchor-weight);
+  --text-anchor--letter-spacing: var(--ds-type-anchor-tracking);
+
+  --text-control: var(--ds-type-control-size);
+  --text-control--line-height: var(--ds-type-control-leading);
+  --text-control--font-weight: var(--ds-type-control-weight);
+
+  --text-data: var(--ds-type-data-size);
+  --text-data--line-height: var(--ds-type-data-leading);
+  --text-data--font-weight: var(--ds-type-data-weight);
+
+  --text-micro: var(--ds-type-micro-size);
+  --text-micro--line-height: var(--ds-type-micro-leading);
+  --text-micro--font-weight: var(--ds-type-micro-weight);
+
+  --text-meta: var(--ds-type-meta-size);
+  --text-meta--line-height: var(--ds-type-meta-leading);
+  --text-meta--font-weight: var(--ds-type-meta-weight);
+  --text-meta--letter-spacing: var(--ds-type-meta-tracking);
+
+  /* Ink ladder → `text-ink*` / `border-ink*` utilities. */
+  --color-ink: var(--ds-ink);
+  --color-ink-muted: var(--ds-ink-muted);
+  --color-ink-subtle: var(--ds-ink-subtle);
+  --color-ink-faint: var(--ds-ink-faint);
+}
+
+/**
+ * Eyebrow / table header — 11px · 500 · +0.04em · UPPERCASE.
+ *
+ * Compound on purpose: the case and the tracking ARE the style, and the
+ * `@theme --text-*` schema has no `text-transform` key. Kept separate from
+ * `text-micro` (same 11px step) because plenty of 11px text is dense numerics
+ * that must NOT pick up uppercase or letter-spacing.
+ *
+ * Replaces six ad-hoc variants that had drifted apart in product code:
+ *   tracking-wide · tracking-[0.3px] · tracking-[0.35px]
+ *   tracking-[0.08em] · tracking-[0.09em] · tracking-[0.1em]
+ *
+ * Do not write `uppercase`, `tracking-*` or `font-*` next to this class.
+ */
+@utility ds-eyebrow {
+  font-size: var(--ds-type-micro-size);
+  line-height: var(--ds-type-eyebrow-leading);
+  font-weight: var(--ds-type-eyebrow-weight);
+  letter-spacing: var(--ds-type-eyebrow-tracking);
+  text-transform: uppercase;
 }
 
 @layer components {
@@ -377,6 +503,12 @@ dialog::backdrop {
     pointer-events: none;
   }
 
+  /*
+   * LEGACY MARKETING SCALE — FROZEN. `src/components/ui/` primitives only.
+   * Never use `.ds-text-*` on a trading surface: it sets font-size in
+   * `@layer components`, which beats any `text-*` utility unconditionally.
+   * Use the trading scale (`text-data`, `text-control`, …) instead.
+   */
   .ds-text-display {
     font-family: var(--ds-font-sans);
     font-size: var(--ds-text-display-size);
@@ -605,9 +737,9 @@ dialog::backdrop {
     flex-shrink: 0;
     white-space: nowrap;
     font-family: var(--ds-font-sans);
-    font-size: var(--ds-text-body-sm-size);
-    line-height: 1.2;
-    font-weight: 500;
+    font-size: var(--ds-type-data-size);
+    line-height: var(--ds-type-data-leading);
+    font-weight: var(--ds-type-data-weight);
     color: var(--ds-foreground);
   }
 
@@ -996,5 +1128,40 @@ dialog::backdrop {
 
   .ds-scrollbar-hidden::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/*
+ * ── TRADING SURFACE SCOPE ────────────────────────────────────────────────
+ * Opted into by setting `document.body.dataset.typeScale = "terminal"` while a
+ * trading page is mounted (see TerminalCopilotPage / TradePage).
+ *
+ * It has to live on <body>, not on the page root: nine components in the
+ * copilot tree render through `createPortal` and would otherwise escape scope.
+ */
+@layer base {
+  /*
+   * `delta-neutral/styles/theme.css` is imported app-wide — not scoped to its
+   * own subtree — and sizes bare button/label/input/h1-h4 at 16-24px in
+   * `@layer base`. Any control that forgets a utility silently renders 16px.
+   * Reset them to the data step rather than trusting ~200 call sites to remember.
+   *
+   * Specificity (0,1,1) beats those element selectors; still loses to any utility.
+   */
+  [data-type-scale="terminal"]
+    :is(button, label, input, select, textarea, h1, h2, h3, h4) {
+    font-size: var(--ds-type-data-size);
+    line-height: var(--ds-type-data-leading);
+    font-weight: var(--ds-type-data-weight);
+  }
+
+  /*
+   * Numerals align by default. `font-variant-numeric` is inherited, so one
+   * declaration covers the whole tree — including portal children and any
+   * number a chart library renders. Opt out with Tailwind's stock
+   * `proportional-nums` on the rare figure that sits inside prose.
+   */
+  [data-type-scale="terminal"] {
+    font-variant-numeric: tabular-nums;
   }
 }

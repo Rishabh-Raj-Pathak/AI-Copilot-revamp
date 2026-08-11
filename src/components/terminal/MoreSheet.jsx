@@ -42,10 +42,10 @@ const SHEET_TRANSITION = { type: "spring", damping: 32, stiffness: 360, mass: 0.
 
 const ROW_CLASS =
   "flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04] active:bg-white/[0.07] focus-visible:bg-white/[0.06] focus-visible:outline-none";
-const ROW_ICON_CLASS = "size-[18px] shrink-0 text-[#bfbfbf]";
-const ROW_LABEL_CLASS = "min-w-0 flex-1 truncate text-sm font-medium text-white";
+const ROW_ICON_CLASS = "size-[18px] shrink-0 text-ink-muted";
+const ROW_LABEL_CLASS = "min-w-0 flex-1 truncate text-control text-ink";
 const SECTION_LABEL_CLASS =
-  "px-4 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.09em] text-[#757575]";
+  "ds-eyebrow px-4 pb-1.5 pt-4 text-ink-faint";
 
 export default function MoreSheet({
   open,
@@ -130,7 +130,7 @@ export default function MoreSheet({
             <header className="flex shrink-0 items-center justify-between px-4 pb-3 pt-3">
               <h2
                 id="more-sheet-title"
-                className="text-[15px] font-semibold leading-none text-white"
+                className="text-anchor text-ink"
               >
                 More
               </h2>
@@ -138,7 +138,7 @@ export default function MoreSheet({
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="-mr-1.5 flex size-8 items-center justify-center rounded-md text-[#8c8c8c] transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3e2e00]"
+                className="-mr-1.5 flex size-8 items-center justify-center rounded-md text-ink-subtle transition-colors hover:bg-white/[0.06] hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3e2e00]"
               >
                 <X className="size-4" aria-hidden />
               </button>
@@ -204,7 +204,7 @@ export default function MoreSheet({
                         {Icon ? <Icon className={ROW_ICON_CLASS} aria-hidden /> : null}
                         <span className={ROW_LABEL_CLASS}>{label}</span>
                         <ExternalLink
-                          className="size-3.5 shrink-0 text-[#757575]"
+                          className="size-3.5 shrink-0 text-ink-faint"
                           strokeWidth={2}
                           aria-hidden
                         />

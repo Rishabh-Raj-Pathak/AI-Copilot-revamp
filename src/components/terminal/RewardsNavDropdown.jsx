@@ -54,7 +54,7 @@ export default function RewardsNavDropdown({
         aria-haspopup="menu"
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((value) => !value)}
-        className={`flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+        className={`flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-control font-medium transition-colors sm:px-3 ${
           navActive
             ? "bg-[#3e2e00] text-[#f2b500]"
             : "text-white hover:bg-white/5"
@@ -84,7 +84,7 @@ export default function RewardsNavDropdown({
                 onViewChange?.(view.id);
                 setOpen(false);
               }}
-              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs text-white transition-colors hover:bg-white/10 sm:text-sm"
+              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-control text-ink transition-colors hover:bg-white/10"
             >
               <span>{view.label}</span>
               {view.id === activeView ? (

@@ -62,10 +62,10 @@ function MobileCopilotCard({
           height={24}
           draggable={false}
         />
-        <h2 className="min-w-0 flex-1 text-sm font-semibold leading-snug text-white">
+        <h2 className="min-w-0 flex-1 text-control font-medium text-ink">
           {setup.title}
         </h2>
-        <ChevronRight className="size-[18px] shrink-0 text-[#757575]" />
+        <ChevronRight className="size-[18px] shrink-0 text-ink-faint" />
       </div>
 
       {tagChips.length > 0 || strategyLabel ? (
@@ -161,11 +161,13 @@ export default function CopilotSuggestionCard({
             draggable={false}
           />
           <div className="min-w-0 flex-1">
-            <h2
-              className={`font-semibold leading-snug text-white ${
-                expanded ? "text-lg" : "text-sm"
-              }`}
-            >
+            {/*
+              One size in both states. This used to jump 14px → 18px on select,
+              which reflowed the card on a pure interaction change and put a
+              list item at the same size as the pair title. Selection is already
+              signalled by the border, background and radio.
+            */}
+            <h2 className="text-control font-medium text-ink">
               {setup.title}
             </h2>
           </div>

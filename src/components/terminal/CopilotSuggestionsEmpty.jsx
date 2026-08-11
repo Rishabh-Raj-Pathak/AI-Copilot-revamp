@@ -11,10 +11,10 @@ export default function CopilotSuggestionsEmpty({
 
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#242424] bg-[#0a0a0a] px-6 py-12 text-center">
-      <p className="text-sm font-medium text-white">
+      <p className="text-control font-medium text-ink">
         No {strategyName} setups in {categoryLabel} right now
       </p>
-      <p className="mt-2 max-w-sm text-xs leading-relaxed text-[#757575]">
+      <p className="mt-2 max-w-sm text-data text-ink-faint">
         Try a different market category or switch your AI strategy lens to see
         matching suggestions.
       </p>
@@ -23,7 +23,7 @@ export default function CopilotSuggestionsEmpty({
           <button
             type="button"
             onClick={() => onSwitchCategory?.("trending")}
-            className="rounded-md border border-[#242424] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:border-[#333333] hover:bg-white/5"
+            className="rounded-md border border-[#242424] px-3 py-1.5 text-control text-ink transition-colors hover:border-[#333333] hover:bg-white/5"
           >
             View Trending
           </button>
@@ -32,7 +32,7 @@ export default function CopilotSuggestionsEmpty({
           <button
             type="button"
             onClick={() => onSwitchCategory?.("bluechip")}
-            className="rounded-md border border-[#242424] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:border-[#333333] hover:bg-white/5"
+            className="rounded-md border border-[#242424] px-3 py-1.5 text-control text-ink transition-colors hover:border-[#333333] hover:bg-white/5"
           >
             View Bluechip
           </button>
@@ -40,7 +40,7 @@ export default function CopilotSuggestionsEmpty({
         <button
           type="button"
           onClick={onSwitchStrategy}
-          className="rounded-md border border-[#3e2e00] bg-[#171200] px-3 py-1.5 text-xs font-medium text-[#f2b500] transition-colors hover:border-[#f7bb08]/40"
+          className="rounded-md border border-[#3e2e00] bg-[#171200] px-3 py-1.5 text-control font-medium text-[#f2b500] transition-colors hover:border-[#f7bb08]/40"
         >
           Switch strategy
         </button>

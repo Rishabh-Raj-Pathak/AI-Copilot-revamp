@@ -55,13 +55,13 @@ export default function TradeSuccessModal({
           </div>
           <h2
             id="trade-success-title"
-            className="w-full text-center text-xl font-semibold leading-[1.2] text-white"
+            className="w-full text-center text-anchor text-ink"
           >
             You're in—position opened
           </h2>
-          <p className="w-full text-center text-base font-normal leading-[1.2] text-[#bfbfbf]">
+          <p className="w-full text-center text-control text-ink-muted">
             Follow size, PnL, and exits anytime from your{" "}
-            <span className="bg-linear-to-r from-[#f7bb08] from-[65.388%] to-[#2fffce] bg-clip-text font-semibold text-transparent">
+            <span className="bg-linear-to-r from-[#f7bb08] from-[65.388%] to-[#2fffce] bg-clip-text font-medium text-transparent">
               Portfolio
             </span>
             . Want to show friends what you just put on? You can share this setup in one tap.
@@ -70,14 +70,14 @@ export default function TradeSuccessModal({
             <button
               type="button"
               onClick={onViewPortfolio}
-              className="w-full rounded-[10px] border border-[#242424] bg-transparent px-6 py-3 text-lg font-medium leading-[1.2] text-white transition hover:bg-white/5"
+              className="w-full rounded-[10px] border border-[#242424] bg-transparent px-6 py-3 text-control font-medium text-ink transition hover:bg-white/5"
             >
               View Portfolio
             </button>
             <button
               type="button"
               onClick={onShareSetup}
-              className={`${terminalConnectWallet.componentClassName} w-full gap-2.5 px-6 py-3 text-lg font-medium leading-[1.2]`}
+              className={`${terminalConnectWallet.componentClassName} w-full gap-2.5 px-6 py-3 text-control font-medium`}
             >
               <span className="relative size-6 shrink-0">
                 <img

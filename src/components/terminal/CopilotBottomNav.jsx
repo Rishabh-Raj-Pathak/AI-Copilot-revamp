@@ -92,11 +92,11 @@ export default function CopilotBottomNav({
                 className={`flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-colors ${
                   moreMenuOpen
                     ? "bg-[#3e2e00]/40 text-[#f2b500]"
-                    : "text-[#8c8c8c] hover:text-white"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
               >
                 <Icon className="size-5 shrink-0" strokeWidth={2} aria-hidden />
-                <span className="text-[10px] font-medium leading-none">{label}</span>
+                <span className="text-meta font-medium">{label}</span>
               </button>
               <MoreSheet
                 open={moreMenuOpen}
@@ -120,7 +120,7 @@ export default function CopilotBottomNav({
                 className={`flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-colors ${
                   active || vaultMenuOpen
                     ? "bg-[#3e2e00]/40 text-[#f2b500] shadow-[0_0_20px_rgba(242,181,0,0.12)]"
-                    : "text-[#8c8c8c] hover:text-white"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
                 aria-current={active ? "page" : undefined}
               >
@@ -130,8 +130,8 @@ export default function CopilotBottomNav({
                   aria-hidden
                 />
                 <span
-                  className={`text-[10px] font-medium leading-none ${
-                    active || vaultMenuOpen ? "font-semibold text-[#f2b500]" : ""
+                  className={`text-meta font-medium ${
+                    active || vaultMenuOpen ? "text-[#f2b500]" : ""
                   }`}
                 >
                   {label}
@@ -150,9 +150,9 @@ export default function CopilotBottomNav({
                         key={v.id}
                         type="button"
                         role="menuitem"
-                        className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm ${
+                        className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-control ${
                           viewActive
-                            ? "bg-[#3e2e00]/60 font-semibold text-[#f2b500]"
+                            ? "bg-[#3e2e00]/60 font-medium text-[#f2b500]"
                             : "text-white hover:bg-white/10"
                         }`}
                         onClick={() => {
@@ -185,7 +185,7 @@ export default function CopilotBottomNav({
                 className={`flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-colors ${
                   active || rewardsMenuOpen
                     ? "bg-[#3e2e00]/40 text-[#f2b500] shadow-[0_0_20px_rgba(242,181,0,0.12)]"
-                    : "text-[#8c8c8c] hover:text-white"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
                 aria-current={active ? "page" : undefined}
               >
@@ -194,7 +194,7 @@ export default function CopilotBottomNav({
                   strokeWidth={active || rewardsMenuOpen ? 2.25 : 2}
                   aria-hidden
                 />
-                <span className={`text-[10px] font-medium leading-none ${active ? "font-semibold text-[#f2b500]" : ""}`}>
+                <span className={`text-meta font-medium ${active ? "text-[#f2b500]" : ""}`}>
                   {label}
                 </span>
               </button>
@@ -211,9 +211,9 @@ export default function CopilotBottomNav({
                         key={view.id}
                         type="button"
                         role="menuitem"
-                        className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm ${
+                        className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-control ${
                           viewActive
-                            ? "bg-[#3e2e00]/60 font-semibold text-[#f2b500]"
+                            ? "bg-[#3e2e00]/60 font-medium text-[#f2b500]"
                             : "text-white hover:bg-white/10"
                         }`}
                         onClick={() => {
@@ -242,7 +242,7 @@ export default function CopilotBottomNav({
             className={`flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-colors ${
               active
                 ? "bg-[#3e2e00]/40 text-[#f2b500] shadow-[0_0_20px_rgba(242,181,0,0.12)]"
-                : "text-[#8c8c8c] hover:text-white"
+                : "text-ink-subtle hover:text-ink"
             }`}
             aria-current={active ? "page" : undefined}
           >
@@ -252,8 +252,8 @@ export default function CopilotBottomNav({
               aria-hidden
             />
             <span
-              className={`text-[10px] font-medium leading-none ${
-                active ? "font-semibold text-[#f2b500]" : ""
+              className={`text-meta font-medium ${
+                active ? "text-[#f2b500]" : ""
               }`}
             >
               {label}

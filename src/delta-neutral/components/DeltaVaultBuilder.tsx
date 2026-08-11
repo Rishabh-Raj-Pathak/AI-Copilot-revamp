@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, CircleAlert, Cookie, Wallet } from "lucide-react";
+import { Check, ChevronDown, CircleAlert, Cookie, Wallet } from "lucide-react";
 import { VaultControls } from "./VaultControls";
 import { VaultOpeningOverlay } from "./VaultOpeningOverlay";
 import { VariationalOnboardingModal } from "./VariationalOnboardingModal";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Popover, PopoverAnchor, PopoverContent } from "./ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -129,6 +129,16 @@ function formatSignedPct(value: number, digits = 4) {
   return `${sign}${rounded.toFixed(digits)}%`;
 }
 
+/**
+ * Annualised funding, signed from the vault's point of view. Kept at 2dp because it is
+ * read against the headline APY, not against the 4dp per-interval rates.
+ */
+function formatApr(value: number) {
+  const rounded = Number(value.toFixed(2));
+  const sign = rounded > 0 ? "+" : "";
+  return `${sign}${rounded.toFixed(2)}%`;
+}
+
 function formatCompactUsd(value: number) {
   if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
   if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
@@ -210,6 +220,184 @@ function VaultMetricLabel({
   );
 }
 
+/**
+ * One selected venue's funding, stated as the venue's own rate. Legs are assigned at
+ * execution, not at setup, so nothing here is framed as earned or paid.
+ */
+type VenueReadout = {
+  dex: ManagedDexId;
+  /** Funding at the venue's own settlement interval, e.g. "+0.0035% / 1h". */
+  funding: string;
+  /** The same rate annualised, so venues on different clocks compare on one basis. */
+  apr: number;
+};
+
+/**
+ * The strip's escape hatch. Opens on hover for mouse users (cheap to peek at) and pins
+ * on click so the numbers can be read without holding the pointer still — the panel
+ * carries a live countdown and per-venue figures, which is more than a tooltip should own.
+ */
+function StrategyBreakdownPanel({
+  contextLabel,
+  venues,
+  netCapture,
+  hedgeIntegrity,
+  fundingSettlement,
+}: {
+  contextLabel: string;
+  venues: VenueReadout[];
+  netCapture: string;
+  hedgeIntegrity: number;
+  fundingSettlement: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const openTimer = useRef<number | null>(null);
+  const closeTimer = useRef<number | null>(null);
+
+  const clearTimers = () => {
+    if (openTimer.current !== null) window.clearTimeout(openTimer.current);
+    if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+    openTimer.current = null;
+    closeTimer.current = null;
+  };
+  useEffect(() => clearTimers, []);
+
+  // Touch has no hover state; taps fall through to the click handler instead.
+  const isMouse = (e: React.PointerEvent) => e.pointerType === "mouse";
+
+  const handleEnter = (e: React.PointerEvent) => {
+    if (!isMouse(e)) return;
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    if (open || openTimer.current !== null) return;
+    openTimer.current = window.setTimeout(() => {
+      openTimer.current = null;
+      setOpen(true);
+    }, 120);
+  };
+
+  const handleLeave = (e: React.PointerEvent) => {
+    if (!isMouse(e)) return;
+    if (openTimer.current !== null) {
+      window.clearTimeout(openTimer.current);
+      openTimer.current = null;
+    }
+    if (pinned || closeTimer.current !== null) return;
+    // Long enough to cross the gap between the trigger and the panel.
+    closeTimer.current = window.setTimeout(() => {
+      closeTimer.current = null;
+      setOpen(false);
+    }, 180);
+  };
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        // Esc or an outside click dismisses for good, pin included.
+        if (!next) {
+          clearTimers();
+          setPinned(false);
+        }
+        setOpen(next);
+      }}
+    >
+      <PopoverAnchor asChild>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label="Strategy breakdown — funding and APR for each venue"
+          onPointerEnter={handleEnter}
+          onPointerLeave={handleLeave}
+          onClick={() => {
+            clearTimers();
+            const nextPinned = !pinned;
+            setPinned(nextPinned);
+            setOpen(nextPinned);
+          }}
+          className={clsx(
+            "flex h-full shrink-0 items-center gap-1.5 border-l border-[rgba(255,255,255,0.07)] px-3 text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-[#c9a962]",
+            open
+              ? "bg-[rgba(214,176,106,0.12)] text-[#e2c68b]"
+              : "text-[#9f875c] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e2c68b]",
+          )}
+        >
+          Breakdown
+          <ChevronDown
+            className={clsx(
+              "h-3 w-3 shrink-0 transition-transform duration-150",
+              open && "rotate-180",
+            )}
+            aria-hidden
+          />
+        </button>
+      </PopoverAnchor>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        // A hover peek must not steal focus; a pinned open should land inside.
+        onOpenAutoFocus={(e) => {
+          if (!pinned) e.preventDefault();
+        }}
+        onPointerEnter={handleEnter}
+        onPointerLeave={handleLeave}
+        className="z-[130] w-[300px] border border-[rgba(146,111,56,0.55)] bg-[#090909] p-3 text-[#f5f5f5]"
+      >
+        <div className="mb-1 flex items-baseline justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.9px] text-[#c9a962]">
+            Strategy breakdown
+          </p>
+          <p className="truncate font-mono text-[10px] text-[#7d7e88]">
+            {contextLabel}
+          </p>
+        </div>
+        <div className="mt-2.5 space-y-2">
+          {venues.map((venue) => (
+            <div
+              key={venue.dex}
+              className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-2.5"
+            >
+              <DexLabel
+                dex={venue.dex}
+                className="text-[12px] text-[#ececf3]"
+              />
+              <dl className="mt-2 space-y-1 font-mono text-[11px]">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-[#8b8b98]">Funding</dt>
+                  <dd className="text-[#ececf3]">{venue.funding}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-[#8b8b98]">APR</dt>
+                  <dd className="text-[#ececf3]">{formatApr(venue.apr)}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        <dl className="mt-2.5 space-y-2 border-t border-[rgba(255,255,255,0.08)] pt-2.5 font-mono text-[11px]">
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-[#9c9cac]">Net capture</dt>
+            <dd className="text-right text-[#e8d5b5]">{netCapture}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-[#9c9cac]">Hedge integrity</dt>
+            <dd className="text-[#9babc0]">{hedgeIntegrity.toFixed(1)}%</dd>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-[#9c9cac]">Next settlement</dt>
+            <dd className="text-[#ccb17f]">{fundingSettlement}</dd>
+          </div>
+        </dl>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const LEVERAGE_OPTIONS = [
   {
     value: "3x",
@@ -255,8 +443,8 @@ type DexPairSetupCardProps = {
     spreadHours: number;
     maxDrawdown30d: number;
     hedgeIntegrity: number;
-    longFunding: string;
-    shortFunding: string;
+    /** In the order the user picked them — DEX A, then DEX B. */
+    venues: VenueReadout[];
     netCapture: string;
     fundingSettlement: string;
   };
@@ -565,7 +753,7 @@ function DexPairSetupCard({
           )}
 
           {market.mode === "tokens" && !marketDisabled && (
-            <div className="relative grid h-[48px] min-w-0 flex-1 grid-cols-3 overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
+            <div className="grid h-[48px] min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
               {[
                 {
                   label: "APY",
@@ -592,7 +780,6 @@ function DexPairSetupCard({
                     "flex min-w-0 flex-col justify-center gap-1 px-3",
                     index > 0 &&
                       "border-l border-[rgba(255,255,255,0.07)]",
-                    index === 2 && "pr-9",
                   )}
                 >
                   <p
@@ -611,62 +798,13 @@ function DexPairSetupCard({
                   </p>
                 </div>
               ))}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="View funding details"
-                    className="absolute right-1.5 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-[6px] text-[#9f875c] hover:bg-[rgba(214,176,106,0.1)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#c9a962]"
-                  >
-                    <CircleAlert className="h-3.5 w-3.5" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  className="z-[130] w-[280px] border border-[rgba(146,111,56,0.55)] bg-[#090909] p-3 text-[#f5f5f5]"
-                >
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.9px] text-[#c9a962]">
-                    Funding details
-                  </p>
-                  <dl className="space-y-2 font-mono text-[12px]">
-                    {[
-                      [
-                        "Hedge Integrity",
-                        `${strategyMetrics.hedgeIntegrity.toFixed(1)}%`,
-                        "text-[#9babc0]",
-                      ],
-                      [
-                        "DEX-1 Funding",
-                        strategyMetrics.longFunding,
-                        "text-[color:var(--vault-leg-long-fg)]",
-                      ],
-                      [
-                        "DEX-2 Funding",
-                        strategyMetrics.shortFunding,
-                        "text-[color:var(--vault-leg-short-fg)]",
-                      ],
-                      [
-                        "Net Capture",
-                        strategyMetrics.netCapture,
-                        "text-[#e8d5b5]",
-                      ],
-                      [
-                        "Funding Settlement",
-                        strategyMetrics.fundingSettlement,
-                        "text-[#ccb17f]",
-                      ],
-                    ].map(([label, value, tone]) => (
-                      <div
-                        key={label}
-                        className="flex items-center justify-between gap-4"
-                      >
-                        <dt className="text-[#9c9cac]">{label}</dt>
-                        <dd className={tone}>{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </PopoverContent>
-              </Popover>
+              <StrategyBreakdownPanel
+                contextLabel={market.token}
+                venues={strategyMetrics.venues}
+                netCapture={strategyMetrics.netCapture}
+                hedgeIntegrity={strategyMetrics.hedgeIntegrity}
+                fundingSettlement={strategyMetrics.fundingSettlement}
+              />
             </div>
           )}
 
@@ -938,6 +1076,27 @@ export function DeltaVaultBuilder({
   const spreadDisplayHours = dualValid ? payoutIntervalHours : 8;
   const payoutIntervalMs = payoutIntervalHours * 60 * 60 * 1000;
   const secondsToRent = useNextEpochCountdown(payoutIntervalMs);
+
+  /**
+   * Read straight off the two picked venues, in pick order. Deliberately not derived
+   * from `sides` — which venue ends up long or short is decided at execution, so the
+   * breakdown states each venue's own funding and leaves the roles out of it.
+   */
+  const venueReadouts = useMemo(
+    () =>
+      [dexA, dexB]
+        .filter((id): id is ManagedDexId => id !== "")
+        .map((dex) => {
+          const rate8h = DEX_PROFILES[dex].funding8hPct;
+          const intervalHours = DEX_FUNDING_INTERVAL_HOURS[dex];
+          return {
+            dex,
+            funding: `${formatSignedPct(rate8h * (intervalHours / 8))} / ${intervalHours}h`,
+            apr: rate8h * epochsPerYear,
+          };
+        }),
+    [dexA, dexB, epochsPerYear],
+  );
 
   const crossDexApr = useMemo(() => {
     const p = participationRate / 100;
@@ -1272,8 +1431,7 @@ export function DeltaVaultBuilder({
               spreadHours: spreadDisplayHours,
               maxDrawdown30d,
               hedgeIntegrity,
-              longFunding: `${formatSignedPct(longRatePerInterval)} / ${longFundingIntervalHours}h`,
-              shortFunding: `${formatSignedPct(shortRatePerInterval)} / ${shortFundingIntervalHours}h`,
+              venues: venueReadouts,
               netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
               fundingSettlement: formatHms(secondsToRent),
             }}

@@ -95,10 +95,10 @@ export default function CopilotNavDropdown({
   const isV2Nav = isModernStrategyCopilotNav(activeView);
 
   const triggerClass = isV2Nav
-    ? "flex shrink-0 items-center gap-1 rounded-md border border-white/8 bg-[rgba(255,255,255,0.04)] px-2.5 py-1.5 text-xs font-medium text-[#00F3B6] backdrop-blur-sm transition-colors hover:border-white/12 hover:bg-[rgba(255,255,255,0.06)] sm:px-3 sm:text-sm"
+    ? "flex shrink-0 items-center gap-1 rounded-md border border-white/8 bg-[rgba(255,255,255,0.04)] px-2.5 py-1.5 text-control font-medium text-[#00F3B6] backdrop-blur-sm transition-colors hover:border-white/12 hover:bg-[rgba(255,255,255,0.06)] sm:px-3"
     : isMobile
-      ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] sm:text-sm"
-      : "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] transition-colors sm:px-3 sm:text-sm";
+      ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-control font-medium text-[#f2b500]"
+      : "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-control font-medium text-[#f2b500] transition-colors sm:px-3";
 
   const chevronClass = isV2Nav ? "text-[#00F3B6]" : "text-[#f2b500]";
 
@@ -135,7 +135,7 @@ export default function CopilotNavDropdown({
               type="button"
               role="menuitem"
               onClick={() => pick(v.id)}
-              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs text-white transition-colors hover:bg-white/10 sm:text-sm"
+              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-control text-ink transition-colors hover:bg-white/10"
             >
               <span>{v.label}</span>
               {v.id === activeView ? (

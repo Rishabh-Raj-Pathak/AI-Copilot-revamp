@@ -181,6 +181,19 @@ export default function TerminalCopilotPage({
     return () => document.body.classList.remove("copilot-tour-mobile-trade-steps");
   }, [isNarrowViewport, copilotTourVariant, copilotTourStepIndex]);
 
+  /*
+   * Opt this page into the trading type scale (see design-tokens.css). Lives on
+   * <body> rather than the page root because much of this tree — the thesis
+   * modal, strategy sheet, MoreSheet, setup modals, success modal — renders
+   * through createPortal and would otherwise fall outside the scope.
+   */
+  useEffect(() => {
+    document.body.dataset.typeScale = "terminal";
+    return () => {
+      delete document.body.dataset.typeScale;
+    };
+  }, []);
+
   useEffect(() => {
     const onViewThesisStep =
       copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
@@ -762,7 +775,7 @@ export default function TerminalCopilotPage({
                 aria-hidden
               />
               <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <span className="text-sm font-semibold text-white">
+                <span className="text-control font-medium text-ink">
                   {selectedSetup.symbol} setup
                 </span>
                 <button

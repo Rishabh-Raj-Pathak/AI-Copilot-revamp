@@ -143,7 +143,7 @@ export function StepperField({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2">
-      <span className="text-xs text-[#bfbfbf]">{label}</span>
+      <span className="text-data text-ink-muted">{label}</span>
       <div className="flex items-center gap-2 rounded-md border border-[#242424] bg-black px-3 py-2">
         {percentIcon ? (
           <span className="flex size-4 shrink-0 items-center justify-center">
@@ -158,7 +158,7 @@ export function StepperField({
             />
           </span>
         )}
-        <span className="min-w-0 flex-1 text-sm font-medium text-white">
+        <span className="min-w-0 flex-1 text-control text-ink">
           {value}
         </span>
         {showArrows ? (
@@ -195,9 +195,9 @@ export function CollapseHeading({ title, open, onToggle }) {
       aria-expanded={open}
       className="group flex w-full items-center justify-between gap-2 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
     >
-      <span className="text-base font-medium text-[#d9d9d9]">{title}</span>
+      <span className="text-control font-medium text-ink-muted">{title}</span>
       <CollapseChevron
-        className={`size-5 shrink-0 text-[#bfbfbf] transition-transform duration-200 ease-out group-hover:text-[#d9d9d9] ${open ? "rotate-180" : "rotate-0"}`}
+        className={`size-5 shrink-0 text-ink-subtle transition-transform duration-200 ease-out group-hover:text-ink-muted ${open ? "rotate-180" : "rotate-0"}`}
       />
     </button>
   );
@@ -221,24 +221,29 @@ export function AmountField({
   hint,
   hintTone = "brand",
   percent = false,
+  readOnly = false,
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs text-[#bfbfbf]">{label}</span>
+        <span className="text-data text-ink-muted">{label}</span>
         {hint ? (
           <span
-            className={`text-xs font-medium ${HINT_TONES[hintTone] ?? HINT_TONES.brand}`}
+            className={`text-data ${HINT_TONES[hintTone] ?? HINT_TONES.brand}`}
           >
             {hint}
           </span>
         ) : null}
       </div>
-      <div className="flex items-center gap-2 rounded-md border border-[#242424] bg-black px-3 py-2 focus-within:border-[#3a3a3a]">
+      <div
+        className={`flex items-center gap-2 rounded-md border border-[#242424] px-3 py-2 ${
+          readOnly ? "bg-[#0f0f0f]" : "bg-black focus-within:border-[#3a3a3a]"
+        }`}
+      >
         {percent ? (
           <PercentGlyph />
         ) : (
-          <span className="w-4 shrink-0 text-center text-sm text-[#bfbfbf]">
+          <span className="w-4 shrink-0 text-center text-data text-ink-muted">
             $
           </span>
         )}
@@ -247,8 +252,11 @@ export function AmountField({
           inputMode="decimal"
           value={value}
           aria-label={label}
+          readOnly={readOnly}
           onChange={(e) => onChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-sm font-medium text-white outline-none placeholder:text-[#5a5a5a]"
+          className={`min-w-0 flex-1 bg-transparent text-control outline-none placeholder:text-ink-faint ${
+            readOnly ? "cursor-not-allowed text-ink-faint" : "text-ink"
+          }`}
         />
       </div>
     </div>

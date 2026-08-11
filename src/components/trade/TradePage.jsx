@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProfileCompletionBanner from "../profile/ProfileCompletionBanner.jsx";
 import { useProfile } from "../profile/ProfileContext.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
@@ -28,6 +28,14 @@ export default function TradePage({
   const [coin, setCoin] = useState(DEFAULT_COIN);
   const [successOpen, setSuccessOpen] = useState(false);
   const { socials } = useProfile();
+
+  /* Trading type scale — see design-tokens.css and TerminalCopilotPage. */
+  useEffect(() => {
+    document.body.dataset.typeScale = "terminal";
+    return () => {
+      delete document.body.dataset.typeScale;
+    };
+  }, []);
 
   /** With X linked the composer opens; without it, the ask is what's missing. */
   const handleShareSetup = () => {

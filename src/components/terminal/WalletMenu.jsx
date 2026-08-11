@@ -37,7 +37,7 @@ function WalletGlyph() {
 }
 
 const MENU_ITEM_CLASS =
-  "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm font-medium text-white transition-colors hover:bg-white/[0.06]";
+  "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-control text-ink transition-colors hover:bg-white/[0.06]";
 
 /**
  * Connected-wallet trigger + menu (Profile, Disconnect) shown in the navbar
@@ -89,8 +89,8 @@ export default function WalletMenu({
     : truncateAddress(address, { head: 5, tail: 6, separator: " ... " });
 
   const triggerClass = isMobile
-    ? "flex max-w-[11rem] items-center gap-1.5 rounded-md border border-[#242424] px-2.5 py-2 text-xs font-medium text-white hover:bg-white/5"
-    : "flex items-center gap-1.5 rounded-md border border-[#242424] px-3 py-1.5 text-sm font-medium text-white hover:bg-white/5";
+    ? "flex max-w-[11rem] items-center gap-1.5 rounded-md border border-[#242424] px-2.5 py-2 text-control text-ink hover:bg-white/5"
+    : "flex items-center gap-1.5 rounded-md border border-[#242424] px-3 py-1.5 text-control text-ink hover:bg-white/5";
 
   return (
     <div ref={rootRef} className="relative shrink-0">
@@ -112,7 +112,7 @@ export default function WalletMenu({
         )}
         <span className="truncate">{label}</span>
         <NavChevron
-          className={`size-4 shrink-0 text-[#757575] transition-transform ${
+          className={`size-4 shrink-0 text-ink-faint transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -132,12 +132,12 @@ export default function WalletMenu({
             className={MENU_ITEM_CLASS}
           >
             <CircleUserRound
-              className="size-[18px] shrink-0 text-[#bfbfbf]"
+              className="size-[18px] shrink-0 text-ink-muted"
               aria-hidden
             />
             Profile
             {showProgress ? (
-              <span className="ml-auto shrink-0 rounded-full border border-[#3e2e00] bg-[#171200] px-1.5 py-0.5 text-[10px] font-semibold text-[#f2b500]">
+              <span className="ml-auto shrink-0 rounded-full border border-[#3e2e00] bg-[#171200] ds-eyebrow px-1.5 py-0.5 text-[#f2b500]">
                 {progress.completedCount}/{progress.totalCount}
               </span>
             ) : null}
@@ -149,7 +149,7 @@ export default function WalletMenu({
             className={MENU_ITEM_CLASS}
           >
             <LogOut
-              className="size-[18px] shrink-0 text-[#bfbfbf]"
+              className="size-[18px] shrink-0 text-ink-muted"
               aria-hidden
             />
             Disconnect

@@ -136,6 +136,11 @@ export default function HeaderTerminal({
       >
         <div className="flex h-[29px] shrink-0 items-center gap-2 overflow-hidden">
           <Logo />
+          {/*
+            Brand lockup — exempt from the type scale. `text-[0px]` on the
+            wrapper collapses the whitespace between the two spans; it is a
+            layout hack, not typography. See src/design-system/TYPE-SCALE.md.
+          */}
           <p className="whitespace-nowrap text-[0px] text-white">
             <span className="font-semibold leading-[1.2] text-[18px]">
               Hypr
@@ -145,7 +150,10 @@ export default function HeaderTerminal({
             </span>
           </p>
         </div>
-        <div className="relative shrink-0 max-tablet:block tablet:hidden" ref={mobileNavRef}>
+        <div
+          className="relative hidden shrink-0 tablet:block xl:hidden"
+          ref={mobileNavRef}
+        >
           <button
             type="button"
             aria-expanded={mobileNavOpen}
@@ -189,7 +197,7 @@ export default function HeaderTerminal({
                       role="group"
                       aria-label="AI Copilot"
                     >
-                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                      <p className="ds-eyebrow px-2 py-1.5 text-ink-faint">
                         AI Copilot
                       </p>
                       {COPILOT_VIEWS.map((v) => {
@@ -203,9 +211,9 @@ export default function HeaderTerminal({
                               onNavItemClick?.(label);
                               setMobileNavOpen(false);
                             }}
-                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-control ${
                               viewActive
-                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                ? "bg-[#3e2e00] font-medium text-[#f2b500]"
                                 : "text-white hover:bg-white/10"
                             }`}
                           >
@@ -234,7 +242,7 @@ export default function HeaderTerminal({
                       role="group"
                       aria-label="Vaults"
                     >
-                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                      <p className="ds-eyebrow px-2 py-1.5 text-ink-faint">
                         Vaults
                       </p>
                       {VAULT_VIEWS.map((v) => {
@@ -247,9 +255,9 @@ export default function HeaderTerminal({
                               onVaultViewChange(v.id);
                               setMobileNavOpen(false);
                             }}
-                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-control ${
                               viewActive
-                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                ? "bg-[#3e2e00] font-medium text-[#f2b500]"
                                 : "text-white hover:bg-white/10"
                             }`}
                           >
@@ -276,7 +284,7 @@ export default function HeaderTerminal({
                       role="group"
                       aria-label="Rewards"
                     >
-                      <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#757575]">
+                      <p className="ds-eyebrow px-2 py-1.5 text-ink-faint">
                         Rewards
                       </p>
                       {REWARD_VIEWS.map((view) => {
@@ -289,9 +297,9 @@ export default function HeaderTerminal({
                               onNavItemClick?.(view.id === "kol" ? "KOL" : "Rewards");
                               setMobileNavOpen(false);
                             }}
-                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+                            className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-control ${
                               viewActive
-                                ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                                ? "bg-[#3e2e00] font-medium text-[#f2b500]"
                                 : "text-white hover:bg-white/10"
                             }`}
                           >
@@ -314,9 +322,9 @@ export default function HeaderTerminal({
                       onNavItemClick?.(label);
                       setMobileNavOpen(false);
                     }}
-                    className={`block w-full px-3 py-2.5 text-left text-sm ${
+                    className={`block w-full px-3 py-2.5 text-left text-control ${
                       active
-                        ? "bg-[#3e2e00] font-semibold text-[#f2b500]"
+                        ? "bg-[#3e2e00] font-medium text-[#f2b500]"
                         : "text-white hover:bg-white/10"
                     }`}
                   >
@@ -327,7 +335,7 @@ export default function HeaderTerminal({
               {showCopilotTutorialItem ? (
                 <button
                   type="button"
-                  className="block w-full border-t border-[#242424] px-3 py-2.5 text-left text-sm text-white hover:bg-white/10"
+                  className="block w-full border-t border-[#242424] px-3 py-2.5 text-left text-control text-ink hover:bg-white/10"
                   onClick={() => {
                     onCopilotTutorial?.();
                     setMobileNavOpen(false);
@@ -340,7 +348,7 @@ export default function HeaderTerminal({
               {showVaultTutorialItem ? (
                 <button
                   type="button"
-                  className="block w-full border-t border-[#242424] px-3 py-2.5 text-left text-sm text-white hover:bg-white/10"
+                  className="block w-full border-t border-[#242424] px-3 py-2.5 text-left text-control text-ink hover:bg-white/10"
                   onClick={() => {
                     onVaultTutorial?.();
                     setMobileNavOpen(false);
@@ -353,7 +361,7 @@ export default function HeaderTerminal({
             </nav>
           ) : null}
         </div>
-        <nav className="minimal-scrollbar hidden min-w-0 flex-1 items-end gap-1.5 overflow-x-auto sm:gap-2 tablet:flex tablet:flex-initial tablet:overflow-visible">
+        <nav className="minimal-scrollbar hidden min-w-0 flex-1 items-end gap-1.5 overflow-x-auto sm:gap-2 xl:flex xl:flex-initial xl:overflow-visible">
           {nav.map((label) => {
             const active = label === activeNavItem;
 
@@ -407,7 +415,7 @@ export default function HeaderTerminal({
                 key={label}
                 type="button"
                 onClick={() => onNavItemClick?.(label)}
-                className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                className={`shrink-0 rounded-md px-2.5 py-1.5 text-control font-medium transition-colors sm:px-3 ${
                   active
                     ? "bg-[#3e2e00] text-[#f2b500]"
                     : "text-white hover:bg-white/5"
@@ -428,7 +436,7 @@ export default function HeaderTerminal({
                 onDismissMoreTutorialHint?.();
                 setMoreMenuOpen((o) => !o);
               }}
-              className={`flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/5 sm:px-3 sm:text-sm ${
+              className={`flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-control font-medium text-ink hover:bg-white/5 sm:px-3 ${
                 highlightMoreForTutorial ? "hyprearn-more-tutorial-pulse" : ""
               }`}
             >
@@ -440,7 +448,7 @@ export default function HeaderTerminal({
                 className="absolute right-0 top-full z-[121] mt-1.5 max-w-[14rem] rounded-md border border-[#3e2e00] bg-[#171200] px-3 py-2 shadow-lg"
                 role="tooltip"
               >
-                <p className="text-xs leading-snug text-[#f2b500]">
+                <p className="text-data text-[#f2b500]">
                   Tutorial lives here — open <span className="text-white">More</span>{" "}
                   anytime.
                 </p>
@@ -455,7 +463,7 @@ export default function HeaderTerminal({
                   <button
                     type="button"
                     role="menuitem"
-                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    className="block w-full px-3 py-2 text-left text-control text-ink hover:bg-white/10"
                     onClick={() => {
                       onCopilotTutorial?.();
                       setMoreMenuOpen(false);
@@ -469,7 +477,7 @@ export default function HeaderTerminal({
                   <button
                     type="button"
                     role="menuitem"
-                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    className="block w-full px-3 py-2 text-left text-control text-ink hover:bg-white/10"
                     onClick={() => {
                       onVaultTutorial?.();
                       setMoreMenuOpen(false);
@@ -486,7 +494,7 @@ export default function HeaderTerminal({
                   <button
                     type="button"
                     role="menuitem"
-                    className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-white/10 sm:text-sm"
+                    className="block w-full px-3 py-2 text-left text-control text-ink hover:bg-white/10"
                     onClick={() => {
                       onOpenSupport?.();
                       setMoreMenuOpen(false);
@@ -513,7 +521,7 @@ export default function HeaderTerminal({
           {walletConnected ? (
             <button
               type="button"
-              className="rounded-md border border-[#242424] px-3 py-1.5 text-sm font-medium text-white hover:bg-white/5"
+              className="rounded-md border border-[#242424] px-3 py-1.5 text-control font-medium text-ink hover:bg-white/5"
             >
               Deposit
             </button>

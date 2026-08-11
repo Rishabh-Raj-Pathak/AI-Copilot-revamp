@@ -1,5 +1,5 @@
+/* Onest is also preloaded in index.html; this import carries the full variable axis. */
 @import url("https://fonts.googleapis.com/css2?family=Onest:wght@100..900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100..900&display=swap");
 @import "tailwindcss";
 @import "driver.js/dist/driver.css";
 @import "./styles/design-tokens.css";
@@ -88,9 +88,9 @@
   margin: 0;
   padding-right: calc(3.5rem + 1.25rem + 0.25rem);
   color: var(--ds-foreground);
-  font-size: var(--ds-text-body-lg-size);
+  font-size: var(--ds-type-anchor-size);
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: var(--ds-type-anchor-weight);
   letter-spacing: normal;
   text-shadow: none;
 }
@@ -99,8 +99,8 @@
   display: block;
   margin: 0.5rem 0 0;
   color: var(--ds-muted-foreground);
-  font-size: var(--ds-text-body-sm-size);
-  line-height: var(--ds-text-body-sm-leading);
+  font-size: var(--ds-type-data-size);
+  line-height: var(--ds-type-data-leading);
   font-weight: 400;
   letter-spacing: normal;
   text-shadow: none;
@@ -126,9 +126,9 @@
   background-color: transparent;
   color: var(--ds-foreground);
   cursor: pointer;
-  font-size: var(--ds-text-body-sm-size);
+  font-size: var(--ds-type-data-size);
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.02em;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -230,8 +230,8 @@
   flex: 1 1 auto;
   min-width: 0;
   font-family: var(--ds-font-sans) !important;
-  font-size: var(--ds-text-body-sm-size);
-  line-height: var(--ds-text-body-sm-leading);
+  font-size: var(--ds-type-data-size);
+  line-height: var(--ds-type-data-leading);
   font-weight: 400;
   letter-spacing: normal;
   color: var(--ds-muted-foreground);
@@ -263,9 +263,9 @@
   padding: 0.5rem 1rem;
   border-radius: var(--ds-radius-xs);
   font-family: var(--ds-font-sans) !important;
-  font-size: var(--ds-text-button-size) !important;
-  line-height: var(--ds-text-button-leading) !important;
-  font-weight: var(--ds-text-button-weight) !important;
+  font-size: var(--ds-type-control-size) !important;
+  line-height: var(--ds-type-control-leading) !important;
+  font-weight: var(--ds-type-control-weight) !important;
   cursor: pointer;
   text-shadow: none;
   transition:
@@ -410,9 +410,9 @@
   .copilot-mobile-tour-card__title {
     margin: 0;
     color: var(--ds-foreground);
-    font-size: var(--ds-text-body-lg-size);
+    font-size: var(--ds-type-anchor-size);
     line-height: 1.2;
-    font-weight: 600;
+    font-weight: var(--ds-type-anchor-weight);
     transition: opacity 0.2s ease;
   }
 
@@ -430,9 +430,9 @@
     color: var(--ds-foreground);
     cursor: pointer;
     font-family: var(--ds-font-sans);
-    font-size: var(--ds-text-body-sm-size);
+    font-size: var(--ds-type-data-size);
     line-height: 1.2;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.02em;
     text-decoration: underline;
     text-decoration-thickness: 1px;
@@ -457,8 +457,8 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     color: var(--ds-muted-foreground);
-    font-size: var(--ds-text-body-sm-size);
-    line-height: var(--ds-text-body-sm-leading);
+    font-size: var(--ds-type-data-size);
+    line-height: var(--ds-type-data-leading);
     font-weight: 400;
     transition: opacity 0.2s ease;
   }

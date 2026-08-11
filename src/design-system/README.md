@@ -20,7 +20,8 @@ This package mirrors the **HyprEarn Design System** Figma file using **Tailwind 
 | Category   | Source in repo                         | Tailwind usage examples                          |
 | ---------- | -------------------------------------- | ------------------------------------------------ |
 | Colors     | `--ds-*` → `@theme` `--color-*`        | `bg-background`, `text-muted-foreground`, `border-border` |
-| Typography | `--ds-text-*` + `.ds-text-*` classes   | `ds-text-heading-2`, `ds-text-body-sm`           |
+| Typography | **Trading surfaces:** `--ds-type-*` → `@theme` `--text-*` (see [TYPE-SCALE.md](./TYPE-SCALE.md)) | `text-data`, `text-control`, `ds-eyebrow`, `text-ink-muted` |
+|            | *Legacy marketing scale (frozen, `components/ui/` only):* `--ds-text-*` + `.ds-text-*` | `ds-text-heading-2`, `ds-text-body-sm`  |
 | Spacing    | Figma named steps (`xxxs` … `13xl`) ↔ Tailwind `spacing-*` (see `tokens/spacing.ts`) | `p-4` (= 16px = Figma `xl`), `gap-2.5` (= 10px = Figma `md`) |
 | Radius     | Figma corner ladder → `--ds-radius-*` + Tailwind `rounded-*` (see table below) | `rounded-md` (= 6px), `rounded-ds-3xl` (= 24px) |
 | Shadows    | `--ds-shadow-*` / `--shadow-ds-*`     | `shadow-ds-sm`, `shadow-ds-md`                 |
@@ -77,6 +78,8 @@ Use these as `max-w-*` / breakpoint targets alongside your product breakpoints.
 ### Onest font weights
 
 Figma lists **400 / 600 / 700**. `index.html` loads **400, 500, 600, 700** so labels (`500`) and headings (`600`/`700`) are covered.
+
+**Trading surfaces cap weight at 500** — no 600 or 700 anywhere in the terminal or trade UI, matching every reference perp DEX. Hierarchy there comes from the ink ladder (`text-ink` / `text-ink-muted` / `text-ink-subtle` / `text-ink-faint`), not weight. See [TYPE-SCALE.md](./TYPE-SCALE.md). 600/700 remain available for marketing pages and the brand wordmark.
 
 ## Component inventory
 

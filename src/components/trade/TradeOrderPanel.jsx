@@ -65,10 +65,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
   return (
     <aside className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-black lg:border-l lg:border-[#242424]">
       <div className="flex shrink-0 flex-col gap-2 border-b border-[#242424] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
-        <span className="text-lg font-semibold text-white">{market.symbol}</span>
-        <div className="flex flex-wrap items-end gap-1 whitespace-nowrap text-base">
-          <span className="text-[#bfbfbf]">Current Price:</span>
-          <span className="font-medium text-white tabular-nums">
+        <span className="text-anchor text-ink">{market.symbol}</span>
+        <div className="flex flex-wrap items-baseline gap-1.5 whitespace-nowrap">
+          <span className="text-data text-ink-muted">Current Price:</span>
+          <span className="text-control text-ink">
             $
             {market.markPx.toLocaleString("en-US", {
               minimumFractionDigits: market.pxDecimals,
@@ -82,7 +82,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
         <div className="flex flex-col gap-3">
           <button
             type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-black transition-[filter] hover:brightness-110"
+            className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-control font-medium text-black transition-[filter] hover:brightness-110"
             style={{
               backgroundImage: "linear-gradient(90deg, #f2b500, #00f3b6)",
             }}
@@ -95,10 +95,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setDirection("long")}
-              className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
+              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
                 direction === "long"
-                  ? "bg-[#0e381f] font-semibold text-white"
-                  : "text-[#bfbfbf] hover:bg-white/5"
+                  ? "bg-[#0e381f] font-medium text-ink"
+                  : "text-ink-subtle hover:bg-white/5"
               }`}
             >
               Buy / Long
@@ -106,10 +106,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setDirection("short")}
-              className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
+              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
                 direction === "short"
-                  ? "bg-[#5f1414] font-semibold text-white"
-                  : "text-[#bfbfbf] hover:bg-white/5"
+                  ? "bg-[#5f1414] font-medium text-ink"
+                  : "text-ink-subtle hover:bg-white/5"
               }`}
             >
               Sell / Short
@@ -120,10 +120,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setMarginMode("cross")}
-              className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
+              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
                 marginMode === "cross"
-                  ? "bg-[#242424] font-semibold text-white"
-                  : "text-[#bfbfbf] hover:bg-white/5"
+                  ? "bg-[#242424] font-medium text-ink"
+                  : "text-ink-subtle hover:bg-white/5"
               }`}
             >
               Cross
@@ -131,10 +131,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setMarginMode("isolated")}
-              className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
+              className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
                 marginMode === "isolated"
-                  ? "bg-[#3e2e00] font-semibold text-white"
-                  : "text-[#bfbfbf] hover:bg-white/5"
+                  ? "bg-[#3e2e00] font-medium text-ink"
+                  : "text-ink-subtle hover:bg-white/5"
               }`}
             >
               Isolated
@@ -145,10 +145,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setOrderType("market")}
-              className={`flex-1 py-3 text-sm ${
+              className={`flex-1 py-3 text-control ${
                 orderType === "market"
-                  ? "border-b-[3px] border-[#f2b500] font-semibold text-white"
-                  : "text-[#bfbfbf] hover:text-white"
+                  ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
+                  : "text-ink-subtle hover:text-ink"
               }`}
             >
               Market
@@ -156,10 +156,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             <button
               type="button"
               onClick={() => setOrderType("limit")}
-              className={`flex-1 py-3 text-sm ${
+              className={`flex-1 py-3 text-control ${
                 orderType === "limit"
-                  ? "border-b-[3px] border-[#f2b500] font-semibold text-white"
-                  : "text-[#bfbfbf] hover:text-white"
+                  ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
+                  : "text-ink-subtle hover:text-ink"
               }`}
             >
               Limit
@@ -173,10 +173,10 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
                 "linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.85)), linear-gradient(90deg, #f2b500, #00f3b6)",
             }}
           >
-            <span className="text-sm text-[#bfbfbf]">Available Balance</span>
+            <span className="text-data text-ink-muted">Available Balance</span>
             <div className="flex items-center gap-2">
               <img alt="" className="size-5 shrink-0" src={a.usdc} />
-              <span className="text-sm font-semibold text-white tabular-nums">
+              <span className="text-data text-ink">
                 {AVAILABLE_BALANCE.toFixed(4)} USDC
               </span>
             </div>
@@ -213,8 +213,8 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
 
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm text-[#bfbfbf]">Leverage</span>
-              <span className="text-xs text-[#787878]">
+              <span className="text-data text-ink-muted">Leverage</span>
+              <span className="text-data text-ink-faint">
                 Max: {market.maxLeverage}x
               </span>
             </div>
@@ -281,28 +281,28 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
             />
             {additionalOpen ? (
               <div className="rounded-lg border border-[#242424] p-5">
-                <dl className="flex flex-col gap-2 text-sm">
+                <dl className="flex flex-col gap-2 text-data">
                   <div className="flex justify-between">
-                    <dt className="text-[#bfbfbf]">Liquidation Price</dt>
-                    <dd className="font-semibold text-white tabular-nums">
+                    <dt className="text-ink-muted">Liquidation Price</dt>
+                    <dd className="text-ink">
                       {liqPrice}
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#bfbfbf]">Position Value</dt>
-                    <dd className="font-semibold text-white tabular-nums">
+                    <dt className="text-ink-muted">Position Value</dt>
+                    <dd className="text-ink">
                       {positionValue}
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#bfbfbf]">Margin Req.</dt>
-                    <dd className="font-semibold text-white tabular-nums">
+                    <dt className="text-ink-muted">Margin Req.</dt>
+                    <dd className="text-ink">
                       {marginReq}
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#bfbfbf]">Order Type</dt>
-                    <dd className="font-semibold text-white capitalize">
+                    <dt className="text-ink-muted">Order Type</dt>
+                    <dd className="text-ink capitalize">
                       {orderType} / {marginMode}
                     </dd>
                   </div>
@@ -316,7 +316,7 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
       <div className="flex shrink-0 flex-col gap-3 border-t border-[#242424] bg-black px-3 py-4 max-tablet:pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-5">
         <label className="flex min-h-11 cursor-pointer items-center gap-3 max-tablet:min-h-10">
           <Checkbox checked={openAtMark} onChange={setOpenAtMark} />
-          <span className="text-sm font-medium text-white">
+          <span className="text-data text-ink">
             Open Position at Current Price
           </span>
         </label>
@@ -324,12 +324,12 @@ export default function TradeOrderPanel({ coin, onSubmit }) {
           type="button"
           disabled={!canSubmit}
           onClick={() => onSubmit?.({ coin, direction, marginMode, orderType, margin: marginNum, leverage })}
-          className={`min-h-11 w-full rounded-lg py-2.5 text-base font-medium transition-[filter] ${
+          className={`min-h-11 w-full rounded-lg py-2.5 text-control font-medium transition-[filter] ${
             canSubmit
               ? direction === "long"
                 ? "bg-[#0e6b3a] text-white hover:brightness-110"
                 : "bg-[#d53d3d] text-white hover:brightness-110"
-              : "cursor-not-allowed bg-[#12291d] text-[#5f7a6c]"
+              : "cursor-not-allowed bg-[#12291d] text-ink-faint"
           }`}
         >
           Open {market.symbol} {dirLabel}

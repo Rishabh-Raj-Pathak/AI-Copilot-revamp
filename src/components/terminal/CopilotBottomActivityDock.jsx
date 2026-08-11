@@ -249,13 +249,13 @@ export default function CopilotBottomActivityDock({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`group relative flex shrink-0 items-center gap-1.5 px-2 py-2 text-xs font-medium whitespace-nowrap max-tablet:min-h-10 max-tablet:px-2.5 ${
-                  active ? "text-[#F2B500]" : "text-[#8c8c8c] hover:text-[#bfbfbf]"
+                className={`group relative flex shrink-0 items-center gap-1.5 px-2 py-2 text-control whitespace-nowrap max-tablet:min-h-10 max-tablet:px-2.5 ${
+                  active ? "font-medium text-[#F2B500]" : "text-ink-subtle hover:text-ink-muted"
                 }`}
               >
                 <span>{tab.label}</span>
                 <span
-                  className="rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
+                  className="ds-eyebrow rounded px-1.5 py-0.5"
                   style={{
                     backgroundColor: BADGE_BG,
                     color: GOLD,
@@ -282,7 +282,7 @@ export default function CopilotBottomActivityDock({
             <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
               <div className="flex min-h-0 min-w-[720px] flex-1 flex-col">
                 <div
-                  className="grid shrink-0 grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
+                  className="grid shrink-0 grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] ds-eyebrow gap-2 border-b px-3 py-2 text-ink-subtle"
                   style={{ borderColor: BORDER }}
                 >
                   <span>Time</span>
@@ -304,26 +304,26 @@ export default function CopilotBottomActivityDock({
                     return (
                       <div
                         key={`${row.time}-${i}`}
-                        className="grid grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-xs tabular-nums"
+                        className="grid grid-cols-[minmax(9rem,1.1fr)_minmax(3rem,0.5fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)_minmax(5.5rem,0.85fr)_minmax(4rem,0.65fr)_minmax(5rem,0.75fr)] gap-2 border-b px-3 py-2 text-data"
                         style={{ borderColor: "#1a1a1a" }}
                       >
-                        <span className="text-[#e5e5e5]">{row.time}</span>
+                        <span className="text-ink-muted">{row.time}</span>
                         <span className="font-medium" style={{ color: dColor }}>
                           {row.coin}
                         </span>
                         <span className="font-medium" style={{ color: dColor }}>
                           {row.direction}
                         </span>
-                        <span className="text-right text-[#e5e5e5]">
+                        <span className="text-right text-ink">
                           {row.price}
                         </span>
-                        <span className="text-right text-[#e5e5e5]">
+                        <span className="text-right text-ink">
                           {row.size}
                         </span>
-                        <span className="text-right text-[#e5e5e5]">
+                        <span className="text-right text-ink">
                           {row.tradeValue}
                         </span>
-                        <span className="text-right text-[#e5e5e5]">
+                        <span className="text-right text-ink">
                           {row.fee}
                         </span>
                         <span className="flex items-center justify-end gap-1 text-right font-medium">
@@ -332,14 +332,14 @@ export default function CopilotBottomActivityDock({
                           ) : row.pnlPositive === false ? (
                             <span style={{ color: RED }}>{row.closedPnl}</span>
                           ) : (
-                            <span className="text-[#8c8c8c]">
+                            <span className="text-ink-subtle">
                               {row.closedPnl}
                             </span>
                           )}
                           {showPnlIcon ? (
                             <button
                               type="button"
-                              className="text-[#8c8c8c] hover:text-white"
+                              className="text-ink-subtle hover:text-ink"
                               aria-label="View trade details"
                             >
                               <ExternalLinkIcon className="inline" />
@@ -358,7 +358,7 @@ export default function CopilotBottomActivityDock({
             <div className="minimal-scrollbar min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
               <div className="flex min-h-0 min-w-[560px] flex-1 flex-col">
                 <div
-                  className="grid shrink-0 grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2 text-[10px] font-medium tracking-wide text-[#8c8c8c] uppercase"
+                  className="grid shrink-0 grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] ds-eyebrow gap-2 border-b px-3 py-2 text-ink-subtle"
                   style={{ borderColor: BORDER }}
                 >
                   <span>Opened</span>
@@ -377,18 +377,18 @@ export default function CopilotBottomActivityDock({
                   <div
                     ref={openedPositionRowRef}
                     data-tour="copilot-demo-position-row"
-                    className={`relative grid grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2.5 text-xs tabular-nums ${
+                    className={`relative grid grid-cols-[minmax(5rem,0.65fr)_minmax(3rem,0.45fr)_minmax(3.5rem,0.5fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.6fr)_minmax(4.5rem,0.55fr)] gap-2 border-b px-3 py-2.5 text-data ${
                       highlightOpenedPositionRow
                         ? "overflow-hidden copilot-position-row-highlight [&>*]:relative [&>*]:z-[1]"
                         : ""
                     }`}
                     style={{ borderColor: "#1a1a1a" }}
                   >
-                    <span className="text-[#bfbfbf]">
+                    <span className="text-ink-muted">
                       {tourDemoPosition.openedAt}
                     </span>
                     <span
-                      className="font-semibold"
+                      className="text-ink"
                       style={{ color: positionSideColor(tourDemoPosition.side) }}
                     >
                       {tourDemoPosition.symbol}
@@ -399,17 +399,17 @@ export default function CopilotBottomActivityDock({
                     >
                       {tourDemoPosition.side}
                     </span>
-                    <span className="text-right text-[#e5e5e5]">
+                    <span className="text-right text-ink">
                       {tourDemoPosition.sizeLabel}
                     </span>
-                    <span className="text-right text-[#e5e5e5]">
+                    <span className="text-right text-ink">
                       {tourDemoPosition.entry}
                     </span>
-                    <span className="text-right text-[#e5e5e5]">
+                    <span className="text-right text-ink">
                       {tourDemoPosition.mark}
                     </span>
                     <span
-                      className="text-right font-semibold"
+                      className="text-right"
                       style={{ color: GREEN }}
                     >
                       {tourDemoPosition.upnl}
@@ -420,7 +420,7 @@ export default function CopilotBottomActivityDock({
             </div>
           </>
         ) : (
-          <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-6 text-center text-sm text-[#8c8c8c]">
+          <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-6 text-center text-data text-ink-subtle">
             {tabs.find((t) => t.id === activeTab)?.label} view is a placeholder
             — connect your account data here.
           </div>

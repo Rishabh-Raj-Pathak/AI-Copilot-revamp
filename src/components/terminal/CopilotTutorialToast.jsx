@@ -5,7 +5,7 @@ const VARIANTS = {
     message: (
       <>
         You can restart the tutorial anytime from{" "}
-        <span className="font-semibold text-white">More → Tutorial</span>.
+        <span className="font-medium text-ink">More → Tutorial</span>.
       </>
     ),
     autoDismissMs: 6000,
@@ -14,8 +14,8 @@ const VARIANTS = {
     message: (
       <>
         Demo position added. Open{" "}
-        <span className="font-semibold text-white">Portfolio</span> from{" "}
-        <span className="font-semibold text-white">More</span> when you connect a
+        <span className="font-medium text-ink">Portfolio</span> from{" "}
+        <span className="font-medium text-ink">More</span> when you connect a
         wallet.
       </>
     ),
@@ -47,10 +47,10 @@ export default function CopilotTutorialToast({
       role="status"
       aria-live="polite"
     >
-      <p className="text-sm leading-snug text-[#f2b500]">{content.message}</p>
+      <p className="text-data text-[#f2b500]">{content.message}</p>
       <button
         type="button"
-        className="mt-2 text-xs font-medium text-[#bfbfbf] underline-offset-2 hover:text-white hover:underline"
+        className="mt-2 text-data text-ink-muted underline-offset-2 hover:text-ink hover:underline"
         onClick={() => onDismiss?.()}
       >
         Got it

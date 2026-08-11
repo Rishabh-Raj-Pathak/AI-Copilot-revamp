@@ -13,6 +13,7 @@ function Logo() {
         />
       </div>
       <p className="whitespace-nowrap text-white">
+        {/* Brand lockup — exempt from the type scale (see TYPE-SCALE.md). */}
         <span className="text-[18px] font-semibold leading-[1.2]">Hypr</span>
         <span className="bg-gradient-to-r from-[#f7bb08] from-[65.388%] to-[#2fffce] bg-clip-text text-[18px] font-semibold leading-[1.2] text-transparent">
           Earn

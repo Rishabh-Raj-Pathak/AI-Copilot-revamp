@@ -1,5 +1,4 @@
 export { colorVar, rawPalette, type ColorToken } from './colors'
-export { typographyRoles, typographyClassName, type TypographyRole } from './typography'
 export { figmaSpacingPx, figmaToTailwindSpacing, spacingScaleDescription } from './spacing'
 export { radiusVar, type RadiusToken } from './radius'
 export { shadowVar, type ShadowToken } from './shadows'

@@ -66,10 +66,10 @@ export default function VaultsNavDropdown({
   const isMobile = variant === "mobile";
 
   const triggerClass = isMobile
-    ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] sm:text-sm"
+    ? "flex items-center gap-1 rounded-md border border-[#3e2e00] bg-[#3e2e00] px-2.5 py-1.5 text-control font-medium text-[#f2b500]"
     : isActive
-      ? "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-xs font-medium text-[#f2b500] transition-colors sm:px-3 sm:text-sm"
-      : "flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/5 sm:px-3 sm:text-sm";
+      ? "flex shrink-0 items-center gap-1 rounded-md bg-[#3e2e00] px-2.5 py-1.5 text-control font-medium text-[#f2b500] transition-colors sm:px-3"
+      : "flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-control font-medium text-ink transition-colors hover:bg-white/5 sm:px-3";
 
   const chevronClass = isActive || isMobile ? "text-[#f2b500]" : "text-white/80";
 
@@ -104,7 +104,7 @@ export default function VaultsNavDropdown({
               type="button"
               role="menuitem"
               onClick={() => pick(v.id)}
-              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs text-white transition-colors hover:bg-white/10 sm:text-sm"
+              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-control text-ink transition-colors hover:bg-white/10"
             >
               <span>{v.label}</span>
               {v.id === activeView ? (

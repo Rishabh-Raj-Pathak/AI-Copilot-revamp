@@ -6,6 +6,7 @@ import {
   CollapseHeading,
   CopilotSetupSlider,
 } from "./detailsPanelParts.jsx";
+import { LeverageModal, MarginModeModal } from "./setupConfigModals.jsx";
 
 const MAX_LEVERAGE = 40;
 
@@ -34,16 +35,18 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
   const [orderType, setOrderType] = useState("market");
   const [margin, setMargin] = useState("0");
   const [size, setSize] = useState("0");
+  const [limitPrice, setLimitPrice] = useState("0");
   const [leverage, setLeverage] = useState(10);
-  const [takeProfitOpen, setTakeProfitOpen] = useState(true);
-  const [additionalOpen, setAdditionalOpen] = useState(true);
+  const [takeProfitOpen, setTakeProfitOpen] = useState(false);
   const [tpPrice, setTpPrice] = useState("0");
   const [gainPct, setGainPct] = useState("20");
   const [slPrice, setSlPrice] = useState("0");
   const [lossPct, setLossPct] = useState("20");
-  const [earlyExit, setEarlyExit] = useState(true);
+  const [earlyExit, setEarlyExit] = useState(false);
   const [openAtMark, setOpenAtMark] = useState(false);
   const [activeRow, setActiveRow] = useState(0);
+  const [marginModeOpen, setMarginModeOpen] = useState(false);
+  const [leverageOpen, setLeverageOpen] = useState(false);
 
   useEffect(() => {
     const seedMargin = (Number.parseFloat(setup.balance) || 0) * 0.1;
@@ -51,6 +54,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
     setLeverage(10);
     setMargin(seedMargin.toFixed(2));
     setSize((seedMargin * 10).toFixed(2));
+    setLimitPrice(String(setup.price));
     setTpPrice(String(Math.round(Number(setup.price) * 0.96 * 10000) / 10000));
     setSlPrice(String(Math.round(Number(setup.price) * 1.02 * 10000) / 10000));
     setGainPct("20");
@@ -72,7 +76,7 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
 
   const onLeverageChange = (next) => {
     setLeverage(next);
-    setSize((marginNum * next).toFixed(2));
+    setMargin((sizeNum / Math.max(next, 1)).toFixed(2));
   };
 
   const dirLabel = direction === "long" ? "Long" : "Short";
@@ -88,11 +92,20 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
 
   return (
     <aside className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden bg-black max-tablet:min-h-0 lg:border-l lg:border-[#242424]">
-      <div className="flex shrink-0 flex-col gap-2 border-b border-[#242424] px-3 py-4 max-tablet:py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
-        <span className="text-lg font-semibold text-white">{setup.symbol}</span>
-        <div className="flex flex-wrap items-end gap-1 text-base whitespace-nowrap">
-          <span className="text-[#bfbfbf]">Current Price:</span>
-          <span className="font-medium text-white">${setup.price}</span>
+      {/*
+        Context strip, not a page title — it stays one row at every width and
+        borrows the body's type scale so it costs a control's worth of height
+        rather than a header's.
+      */}
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#242424] px-3 py-2.5 sm:px-5 sm:py-3">
+        <span className="min-w-0 truncate text-anchor text-ink">
+          {setup.symbol}
+        </span>
+        <div className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
+          <span className="text-data text-ink-muted">Current Price:</span>
+          <span className="text-control text-ink">
+            ${setup.price}
+          </span>
         </div>
       </div>
       <div
@@ -101,113 +114,122 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
       >
         <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4 max-tablet:px-3 max-tablet:py-3 sm:px-5 sm:py-5">
           <div className="flex flex-col gap-3">
-            <div className="flex gap-0 rounded-[10px] border border-[#242424] p-1">
+            {/*
+              Order mirrors the perp-DEX convention (Hyperliquid / Variational /
+              Lighter): sticky account config first, then order type, then the
+              per-trade direction — which sits closest to the size inputs and
+              the CTA it drives.
+            */}
+            {/*
+              Account-level settings read as value chips, not dropdowns. Every
+              reference DEX opens a dedicated modal here: the choice needs
+              explanation (cross vs isolated liquidation) and leverage needs a
+              slider plus a risk warning — neither fits a select list, and a
+              one-click select makes the riskiest control the cheapest to hit.
+            */}
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setDirection("long")}
-                className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
-                  direction === "long"
-                    ? "bg-[#0e381f] font-semibold text-white"
-                    : "text-[#bfbfbf] hover:bg-white/5"
-                }`}
+                aria-haspopup="dialog"
+                onClick={() => setMarginModeOpen(true)}
+                className="flex h-10 min-w-0 items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] px-3 text-control text-ink transition-colors hover:border-[#3a3a3a] hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-[#f2b500]/50 focus-visible:outline-none"
               >
-                Buy / Long
+                {marginMode === "cross" ? "Cross" : "Isolated"}
               </button>
               <button
                 type="button"
-                onClick={() => setDirection("short")}
-                className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
-                  direction === "short"
-                    ? "bg-[#5f1414] font-semibold text-white"
-                    : "text-[#bfbfbf] hover:bg-white/5"
-                }`}
+                aria-haspopup="dialog"
+                aria-label={`Leverage: ${leverage}x`}
+                onClick={() => setLeverageOpen(true)}
+                className="flex h-10 min-w-0 items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] px-3 text-control text-ink transition-colors hover:border-[#3a3a3a] hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-[#f2b500]/50 focus-visible:outline-none"
               >
-                Sell / Short
-              </button>
-            </div>
-            <div className="flex gap-0 rounded-[10px] border border-[#242424] p-1">
-              <button
-                type="button"
-                onClick={() => setMarginMode("cross")}
-                className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
-                  marginMode === "cross"
-                    ? "bg-[#242424] font-semibold text-white"
-                    : "text-[#bfbfbf] hover:bg-white/5"
-                }`}
-              >
-                Cross
-              </button>
-              <button
-                type="button"
-                onClick={() => setMarginMode("isolated")}
-                className={`flex-1 rounded-lg py-2.5 text-sm transition-colors ${
-                  marginMode === "isolated"
-                    ? "bg-[#3e2e00] font-semibold text-white"
-                    : "text-[#bfbfbf] hover:bg-white/5"
-                }`}
-              >
-                Isolated
+                {leverage}x
               </button>
             </div>
             <div className="flex justify-center gap-5 border-b border-[#242424]">
               <button
                 type="button"
+                aria-pressed={orderType === "market"}
                 onClick={() => setOrderType("market")}
-                className={`flex-1 py-3 text-sm ${
+                className={`flex-1 py-2.5 text-control ${
                   orderType === "market"
-                    ? "border-b-[3px] border-[#f2b500] font-semibold text-white"
-                    : "text-[#bfbfbf] hover:text-white"
+                    ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
               >
                 Market
               </button>
               <button
                 type="button"
+                aria-pressed={orderType === "limit"}
                 onClick={() => setOrderType("limit")}
-                className={`flex-1 py-3 text-sm ${
+                className={`flex-1 py-2.5 text-control ${
                   orderType === "limit"
-                    ? "border-b-[3px] border-[#f2b500] font-semibold text-white"
-                    : "text-[#bfbfbf] hover:text-white"
+                    ? "border-b-[3px] border-[#f2b500] font-medium text-ink"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
               >
                 Limit
               </button>
             </div>
-            <div
-              className="flex items-center justify-between gap-3 rounded-lg border border-[#f2b500] p-3"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.85)), linear-gradient(90deg, #f2b500, #00f3b6)",
-              }}
-            >
-              <span className="text-sm text-[#bfbfbf]">Available Balance</span>
+            <div className="flex rounded-[10px] border border-[#242424] p-1">
+              <button
+                type="button"
+                aria-pressed={direction === "long"}
+                onClick={() => setDirection("long")}
+                className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+                  direction === "long"
+                    ? "bg-[#0e381f] font-medium text-ink"
+                    : "text-ink-subtle hover:bg-white/5"
+                }`}
+              >
+                Buy / Long
+              </button>
+              <button
+                type="button"
+                aria-pressed={direction === "short"}
+                onClick={() => setDirection("short")}
+                className={`flex-1 rounded-lg py-2.5 text-control transition-colors ${
+                  direction === "short"
+                    ? "bg-[#5f1414] font-medium text-ink"
+                    : "text-ink-subtle hover:bg-white/5"
+                }`}
+              >
+                Sell / Short
+              </button>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-y border-[#242424] py-2.5">
+              <span className="text-data text-ink-muted">Available Balance</span>
               <div className="flex items-center gap-2">
                 <img alt="" className="size-5 shrink-0" src={a.usdc} />
-                <span className="text-sm font-semibold text-white tabular-nums">
+                <span className="text-data text-ink">
                   {setup.balance} USDC
                 </span>
               </div>
             </div>
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
+                {/*
+                  Limit differs from Market by exactly one field. Everything
+                  else stays put so switching tabs never reflows the form —
+                  same as the reference panels.
+                */}
+                {orderType === "limit" ? (
                   <AmountField
-                    label="Margin"
-                    value={margin}
-                    onChange={(v) => {
-                      setMargin(v);
-                      setSize((toNum(v) * leverage).toFixed(2));
-                    }}
+                    label="Price"
+                    value={limitPrice}
+                    onChange={setLimitPrice}
+                    readOnly={openAtMark}
                   />
-                  <AmountField
-                    label="Size"
-                    value={size}
-                    onChange={(v) => {
-                      setSize(v);
-                      setMargin((toNum(v) / Math.max(leverage, 1)).toFixed(2));
-                    }}
-                  />
-                </div>
+                ) : null}
+                <AmountField
+                  label="Size"
+                  value={size}
+                  onChange={(v) => {
+                    setSize(v);
+                    setMargin((toNum(v) / Math.max(leverage, 1)).toFixed(2));
+                  }}
+                />
                 <div className="flex items-center gap-2">
                   <CopilotSetupSlider
                     value={Math.round(marginPct)}
@@ -217,24 +239,6 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                     ariaLabel="Percent of available balance"
                     onChange={onMarginPctChange}
                     valueLabel={`${marginPct.toFixed(1)}%`}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-[#bfbfbf]">Leverage</span>
-                  <span className="text-xs text-[#787878]">
-                    Max: {MAX_LEVERAGE}x
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CopilotSetupSlider
-                    value={leverage}
-                    min={1}
-                    max={MAX_LEVERAGE}
-                    ariaLabel="Leverage"
-                    onChange={onLeverageChange}
-                    valueLabel={`${leverage}x`}
                   />
                 </div>
               </div>
@@ -261,61 +265,6 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                         hintTone="gain"
                       />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <Checkbox
-                          checked={earlyExit}
-                          onChange={setEarlyExit}
-                          className="size-4 shrink-0"
-                        />
-                        <span className="text-xs text-[#bfbfbf]">
-                          Early Exit Optimization
-                        </span>
-                      </label>
-                      <div className="minimal-scrollbar overflow-x-auto overflow-y-hidden rounded-lg border border-[#242424] max-tablet:-mx-0.5">
-                        <div className="flex border-b border-[#242424] bg-[#0f0f0f] text-[10px] text-[#bfbfbf]">
-                          <div className="flex min-w-0 flex-1 items-center justify-center px-3 py-3">
-                            Take Profit
-                          </div>
-                          <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-3">
-                            TP%
-                          </div>
-                          <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-3">
-                            Winning %
-                          </div>
-                          <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-3">
-                            Actions
-                          </div>
-                        </div>
-                        {[0, 1, 2].map((row) => (
-                          <div
-                            key={row}
-                            className={`flex border-b border-[#242424] last:border-b-0 ${
-                              activeRow === row ? "bg-white/4" : ""
-                            }`}
-                          >
-                            <div className="flex min-w-0 flex-1 items-center justify-center p-3 text-xs text-white">
-                              $3.73
-                            </div>
-                            <div className="flex w-[75px] shrink-0 items-center justify-center p-3 text-xs text-white">
-                              75%
-                            </div>
-                            <div className="flex w-[75px] shrink-0 items-center justify-center p-3 text-sm font-semibold text-white">
-                              96%
-                            </div>
-                            <div className="flex w-[75px] shrink-0 items-center justify-center p-2">
-                              <button
-                                type="button"
-                                onClick={() => setActiveRow(row)}
-                                className="rounded border border-[#242424] px-2 py-1 text-xs font-medium text-white hover:bg-white/5"
-                              >
-                                Activate
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                     <div className="flex gap-2">
                       <AmountField
                         label="SL Price"
@@ -331,55 +280,141 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                         hintTone="loss"
                       />
                     </div>
+                    {/* The ladder stays optional so the core order path remains compact. */}
+                    <div className="flex flex-col gap-2">
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <Checkbox
+                          checked={earlyExit}
+                          onChange={setEarlyExit}
+                          className="size-4 shrink-0"
+                        />
+                        <span className="text-data text-ink-muted">
+                          Early Exit Optimization
+                        </span>
+                      </label>
+                      {earlyExit ? (
+                        <div className="minimal-scrollbar overflow-x-auto overflow-y-hidden rounded-lg border border-[#242424] max-tablet:-mx-0.5">
+                          <div className="flex border-b border-[#242424] bg-[#0f0f0f] ds-eyebrow text-ink-muted">
+                            <div className="flex min-w-0 flex-1 items-center justify-center px-3 py-2">
+                              Take Profit
+                            </div>
+                            <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2">
+                              TP%
+                            </div>
+                            <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2">
+                              Winning %
+                            </div>
+                            <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2">
+                              Actions
+                            </div>
+                          </div>
+                          {[0, 1, 2].map((row) => (
+                            <div
+                              key={row}
+                              className={`flex border-b border-[#242424] last:border-b-0 ${
+                                activeRow === row ? "bg-white/4" : ""
+                              }`}
+                            >
+                              <div className="flex min-w-0 flex-1 items-center justify-center px-3 py-2 text-data text-ink">
+                                $3.73
+                              </div>
+                              <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2 text-data text-ink">
+                                75%
+                              </div>
+                              <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2 text-data text-ink">
+                                96%
+                              </div>
+                              <div className="flex w-[75px] shrink-0 items-center justify-center px-2 py-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveRow(row)}
+                                  className="rounded border border-[#242424] px-2 py-1 text-data text-ink hover:bg-white/5"
+                                >
+                                  Activate
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
                   </>
                 ) : null}
               </div>
+              <div className="flex flex-col gap-2.5 border-t border-[#242424] pt-3">
+                {/*
+                  Snaps Price to the live quote and locks the field — otherwise
+                  the checkbox and an edited limit price state two different
+                  intents at once.
+                */}
+                {orderType === "limit" ? (
+                  <label className="flex min-h-9 cursor-pointer items-center gap-3">
+                    <Checkbox
+                      checked={openAtMark}
+                      onChange={(next) => {
+                        setOpenAtMark(next);
+                        if (next) setLimitPrice(String(setup.price));
+                      }}
+                    />
+                    <span className="text-data text-ink">
+                      Open Position at Current Price
+                    </span>
+                  </label>
+                ) : null}
+                <button
+                  type="button"
+                  data-tour="trade-open-cta"
+                  onClick={() => onOpenTradeCtaClick?.()}
+                  className={`min-h-11 w-full rounded-lg py-2.5 text-control font-medium text-ink transition-[filter,transform] hover:brightness-110 active:translate-y-px ${
+                    direction === "long" ? "bg-[#0e6b3a]" : "bg-[#d53d3d]"
+                  }`}
+                >
+                  {openTradeCtaLabel ?? `Open ${setup.symbol} ${dirLabel}`}
+                </button>
+              </div>
             </div>
-            <div className="flex flex-col gap-3">
-              <CollapseHeading
-                title="Additional Info"
-                open={additionalOpen}
-                onToggle={() => setAdditionalOpen((o) => !o)}
-              />
-              {additionalOpen ? (
-                <div className="rounded-lg border border-[#242424] p-5">
-                  <dl className="flex flex-col gap-2 text-sm">
-                    {[
-                      ["Liquidation Price", setup.additional.liquidation],
-                      ["Asset Size", assetSize],
-                      ["Risk:Reward", riskReward],
-                      ["Winning %", winningPct],
-                    ].map(([term, value]) => (
-                      <div key={term} className="flex justify-between gap-3">
-                        <dt className="text-[#bfbfbf]">{term}</dt>
-                        <dd className="font-semibold text-[#f2b500] tabular-nums">
-                          {value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
+            {/*
+              Consequences of the order above — read-only, so they live below
+              the CTA. Facts stay neutral; the two copilot-derived edge metrics
+              carry the brand accent.
+            */}
+            <dl className="flex flex-col gap-2 border-t border-[#242424] pt-3 text-data">
+              {[
+                ["Liquidation Price", setup.additional.liquidation, false],
+                ["Asset Size", assetSize, false],
+                ["Risk:Reward", riskReward, true],
+                ["Winning %", winningPct, true],
+              ].map(([term, value, accent]) => (
+                <div key={term} className="flex justify-between gap-3">
+                  <dt className="text-ink-muted">{term}</dt>
+                  <dd
+                    className={`${
+                      accent ? "text-[#f2b500]" : "text-ink"
+                    }`}
+                  >
+                    {value}
+                  </dd>
                 </div>
-              ) : null}
-            </div>
+              ))}
+            </dl>
           </div>
         </div>
-        <div className="flex shrink-0 flex-col gap-3 border-t border-[#242424] bg-black px-3 py-4 max-tablet:sticky max-tablet:bottom-0 max-tablet:z-10 max-tablet:pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-5">
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 max-tablet:min-h-10">
-            <Checkbox checked={openAtMark} onChange={setOpenAtMark} />
-            <span className="text-sm font-medium text-white">
-              Open Position at Current Price
-            </span>
-          </label>
-          <button
-            type="button"
-            data-tour="trade-open-cta"
-            onClick={() => onOpenTradeCtaClick?.()}
-            className="w-full min-h-11 rounded-lg border border-[#d53d3d] bg-[#d53d3d] py-2.5 text-md font-medium text-white hover:brightness-110"
-          >
-            {openTradeCtaLabel ?? `Open ${setup.symbol} ${dirLabel}`}
-          </button>
-        </div>
       </div>
+      <MarginModeModal
+        open={marginModeOpen}
+        onClose={() => setMarginModeOpen(false)}
+        symbol={setup.symbol}
+        value={marginMode}
+        onConfirm={setMarginMode}
+      />
+      <LeverageModal
+        open={leverageOpen}
+        onClose={() => setLeverageOpen(false)}
+        symbol={setup.symbol}
+        value={leverage}
+        max={MAX_LEVERAGE}
+        onConfirm={onLeverageChange}
+      />
     </aside>
   );
 }
@@ -393,7 +428,7 @@ export default function DetailsPanel({
     return (
       <aside className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden bg-black max-tablet:min-h-[8rem] lg:border-l lg:border-[#242424]">
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-6 text-center max-tablet:py-4 sm:px-6">
-          <p className="max-w-[280px] text-sm leading-relaxed text-[#757575]">
+          <p className="max-w-[280px] text-data text-ink-faint">
             When you select a trade, details will show up here.
           </p>
         </div>
