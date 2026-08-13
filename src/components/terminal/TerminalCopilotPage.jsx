@@ -710,7 +710,11 @@ export default function TerminalCopilotPage({
                 />
               </div>
               <div
-                className={`flex flex-col gap-2.5 px-3 pt-2.5 transition-opacity duration-300 max-tablet:gap-2 sm:px-4 tablet:gap-2.5 tablet:pt-2.5 ${
+                /* `tablet:h-full` gives the list a definite height to measure
+                   against, so the expanded card can size itself to one screen
+                   of feed (see the `h-full` on its wrapper below). Cards are
+                   `shrink-0`, so the rest still overflow and scroll. */
+                className={`flex flex-col gap-2.5 px-3 pt-2.5 transition-opacity duration-300 max-tablet:gap-2 sm:px-4 tablet:h-full tablet:gap-2.5 tablet:pt-2.5 ${
                   listRefreshing ? "pointer-events-none opacity-40" : "opacity-100"
                 }`}
               >
@@ -728,7 +732,7 @@ export default function TerminalCopilotPage({
                       <div
                         key={setup.id}
                         id={`copilot-setup-${setup.id}`}
-                        className="scroll-mt-4"
+                        className={`scroll-mt-4 shrink-0 ${isSelected && !isNarrowViewport ? "tablet:h-full" : ""}`}
                         data-tour={
                           isSelected ? "copilot-expanded-suggestion" : undefined
                         }

@@ -154,14 +154,21 @@ export default function CopilotSuggestionCard({
           #f7bb08 border (the bloom washed over the cards either side of it),
           and then a warm #0c0b08 panel, which tinted the chart's own black.
         */
+        /*
+          Expanded, the card takes one full screen of the feed and hands the
+          leftover height to the chart — the next suggestion sits just below
+          the fold rather than sharing the view.
+        */
         `cursor-pointer rounded-xl border p-3.5 transition-colors duration-200 ${
+          expanded ? "flex h-full flex-col overflow-hidden" : ""
+        } ${
           selected
             ? "border-[#6b5200]"
             : "border-[#242424] hover:border-[#333333]"
         }`
       }
     >
-      <div className="flex flex-col gap-2.5">
+      <div className="flex shrink-0 flex-col gap-2.5">
         <div className="flex items-start gap-2.5">
           <img
             src={setup.tokenIcon}

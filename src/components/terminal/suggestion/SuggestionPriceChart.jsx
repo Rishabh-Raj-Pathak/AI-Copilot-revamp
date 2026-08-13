@@ -233,9 +233,9 @@ export default function SuggestionPriceChart({ setup, active, delayMs = 3 }) {
       role="presentation"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
-      className="mt-3 w-full overflow-hidden rounded-lg border border-[#1f1f1f] bg-[#080808] p-2"
+      className="mt-3 flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-[#1f1f1f] bg-[#080808] p-2"
     >
-      <div className="flex items-center justify-between gap-2 px-0.5 pb-1.5">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-0.5 pb-1.5">
         <span className="ds-eyebrow text-ink-subtle">
           {symbol} · 15m
         </span>
@@ -249,10 +249,12 @@ export default function SuggestionPriceChart({ setup, active, delayMs = 3 }) {
           </span>
         </span>
       </div>
-      {/* 168px could not carry 120 candles plus a volume overlay — the bodies
-          collapsed to a band, and 224px still read as a strip beside the
-          card's own header. Grows with the viewport. */}
-      <div className="h-72 w-full overflow-hidden rounded-md border border-[#1a1a1a] xl:h-80">
+      {/* No fixed height: fixed values were either too short to carry 120
+          candles plus the volume overlay (168px collapsed the bodies to a
+          band) or too tall for a laptop. The card is one screen of feed, so
+          the chart just takes the rest of it — down to the activity dock. The
+          floor is the old size, for a viewport too short to give it away. */}
+      <div className="min-h-56 w-full flex-1 overflow-hidden rounded-md border border-[#1a1a1a]">
         {mounted ? (
           <div ref={containerRef} className="size-full" />
         ) : (
