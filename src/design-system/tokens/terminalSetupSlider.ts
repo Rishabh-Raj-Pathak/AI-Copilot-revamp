@@ -14,11 +14,15 @@ export const terminalSetupSliderCssVars = {
 
 export const terminalSetupSlider = {
   root: 'ds-terminal-slider',
+  /** Column wrapper — rail + milestone row (`milestones` prop). */
+  stack: 'ds-terminal-slider__stack',
   well: 'ds-terminal-slider__well',
   input: 'ds-terminal-slider__input',
   trackRail: 'ds-terminal-slider__track-rail',
   trackFill: 'ds-terminal-slider__track-fill',
   thumbWrap: 'ds-terminal-slider__thumb-wrap',
-  thumbHit: 'ds-terminal-slider__thumb-hit',
+  thumb: 'ds-terminal-slider__thumb',
+  marks: 'ds-terminal-slider__marks',
+  mark: 'ds-terminal-slider__mark',
   value: 'ds-terminal-slider__value',
 } as const

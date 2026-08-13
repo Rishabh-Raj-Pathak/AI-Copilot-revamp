@@ -2,13 +2,20 @@ import { useEffect, useState } from "react";
 import { terminalAssets as a } from "../../figma/terminalAssets.js";
 import {
   AmountField,
-  Checkbox,
-  CollapseHeading,
+  CheckboxRow,
   CopilotSetupSlider,
+  Segmented,
+  TriggerField,
 } from "./detailsPanelParts.jsx";
 import { LeverageModal, MarginModeModal } from "./setupConfigModals.jsx";
 
 const MAX_LEVERAGE = 40;
+
+/** Gain/Loss unit — absolute USD or percent of position size. */
+const AMOUNT_UNITS = [
+  { value: "usd", label: "$" },
+  { value: "pct", label: "%" },
+];
 
 const toNum = (v) => {
   const n = Number.parseFloat(String(v).replace(/[^0-9.-]/g, ""));
@@ -40,8 +47,12 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
   const [takeProfitOpen, setTakeProfitOpen] = useState(false);
   const [tpPrice, setTpPrice] = useState("0");
   const [gainPct, setGainPct] = useState("20");
+  const [gainUsd, setGainUsd] = useState("0");
+  const [gainUnit, setGainUnit] = useState("pct");
   const [slPrice, setSlPrice] = useState("0");
   const [lossPct, setLossPct] = useState("20");
+  const [lossUsd, setLossUsd] = useState("0");
+  const [lossUnit, setLossUnit] = useState("pct");
   const [earlyExit, setEarlyExit] = useState(false);
   const [openAtMark, setOpenAtMark] = useState(false);
   const [activeRow, setActiveRow] = useState(0);
@@ -50,15 +61,19 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
 
   useEffect(() => {
     const seedMargin = (Number.parseFloat(setup.balance) || 0) * 0.1;
+    const seedSize = seedMargin * 10;
     setDirection(setup.direction === "long" ? "long" : "short");
     setLeverage(10);
     setMargin(seedMargin.toFixed(2));
-    setSize((seedMargin * 10).toFixed(2));
+    setSize(seedSize.toFixed(2));
     setLimitPrice(String(setup.price));
     setTpPrice(String(Math.round(Number(setup.price) * 0.96 * 10000) / 10000));
     setSlPrice(String(Math.round(Number(setup.price) * 1.02 * 10000) / 10000));
     setGainPct("20");
     setLossPct("20");
+    /* Seed both units so switching $ ⇄ % never starts from an empty field. */
+    setGainUsd((seedSize * 0.2).toFixed(2));
+    setLossUsd((seedSize * 0.2).toFixed(2));
     setActiveRow(0);
   }, [setup.id, setup.direction, setup.price, setup.balance]);
 
@@ -87,8 +102,19 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
     : `0 ${setup.symbol}`;
   const riskReward = chipValue(setup, "rr") ?? "—";
   const winningPct = chipValue(setup, "win") ?? setup.additional.winning;
-  const gainAmount = usd((sizeNum * toNum(gainPct)) / 100);
-  const lossAmount = usd((sizeNum * toNum(lossPct)) / 100);
+
+  /*
+    Gain/Loss accept either unit. Each unit keeps its own draft rather than one
+    value converted on every keystroke — a shared value re-formats the field
+    mid-typing ("1." → "0.10") and fights the caret.
+  */
+  const pctToUsd = (pct) => (sizeNum * toNum(pct)) / 100;
+  const usdToPct = (amount) => (sizeNum ? (toNum(amount) / sizeNum) * 100 : 0);
+  /** The field shows one unit; the caption shows the other. */
+  const targetHint = (unit, pct, amount) =>
+    unit === "pct"
+      ? `≈ ${usd(pctToUsd(pct))}`
+      : `≈ ${usdToPct(amount).toFixed(2)}%`;
 
   return (
     <aside className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden bg-black max-tablet:min-h-0 lg:border-l lg:border-[#242424]">
@@ -236,12 +262,18 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                     setMargin((toNum(v) / Math.max(leverage, 1)).toFixed(2));
                   }}
                 />
-                <div className="flex items-center gap-2">
+                {/*
+                  Labelled stops instead of bare dots — the rail alone never
+                  said what fraction of the balance a position was, and the
+                  quarter marks are the sizes people actually reach for.
+                */}
+                <div className="flex items-start gap-2 pt-0.5">
                   <CopilotSetupSlider
                     value={Math.round(marginPct)}
                     min={0}
                     max={100}
                     ticks={5}
+                    milestones
                     ariaLabel="Percent of available balance"
                     onChange={onMarginPctChange}
                     valueLabel={`${marginPct.toFixed(1)}%`}
@@ -249,55 +281,91 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <CollapseHeading
-                  title="Take Profit/Stop Loss"
-                  open={takeProfitOpen}
-                  onToggle={() => setTakeProfitOpen((o) => !o)}
+                {/*
+                  A checkbox, not a disclosure chevron: attaching TP/SL is an
+                  order option the user opts into — same control and layout as
+                  Early Exit Optimization below, which nests under it.
+                */}
+                <CheckboxRow
+                  checked={takeProfitOpen}
+                  onChange={setTakeProfitOpen}
+                  label={
+                    <span className="text-control font-medium text-ink-muted">
+                      Take Profit / Stop Loss
+                    </span>
+                  }
                 />
                 {takeProfitOpen ? (
                   <>
                     <div className="flex gap-2">
-                      <AmountField
+                      <TriggerField
                         label="TP Price"
                         value={tpPrice}
                         onChange={setTpPrice}
                       />
-                      <AmountField
-                        label="Gain %"
-                        value={gainPct}
-                        onChange={setGainPct}
-                        percent
-                        hint={gainAmount}
+                      <TriggerField
+                        label="Gain"
+                        value={gainUnit === "pct" ? gainPct : gainUsd}
+                        onChange={gainUnit === "pct" ? setGainPct : setGainUsd}
+                        hint={targetHint(gainUnit, gainPct, gainUsd)}
                         hintTone="gain"
+                        unitSlot={
+                          <Segmented
+                            size="xs"
+                            ariaLabel="Gain unit"
+                            value={gainUnit}
+                            onChange={(next) => {
+                              if (next === gainUnit) return;
+                              if (next === "usd")
+                                setGainUsd(pctToUsd(gainPct).toFixed(2));
+                              else setGainPct(usdToPct(gainUsd).toFixed(2));
+                              setGainUnit(next);
+                            }}
+                            options={AMOUNT_UNITS}
+                          />
+                        }
                       />
                     </div>
                     <div className="flex gap-2">
-                      <AmountField
+                      <TriggerField
                         label="SL Price"
                         value={slPrice}
                         onChange={setSlPrice}
                       />
-                      <AmountField
-                        label="Loss %"
-                        value={lossPct}
-                        onChange={setLossPct}
-                        percent
-                        hint={lossAmount}
+                      <TriggerField
+                        label="Loss"
+                        value={lossUnit === "pct" ? lossPct : lossUsd}
+                        onChange={lossUnit === "pct" ? setLossPct : setLossUsd}
+                        hint={targetHint(lossUnit, lossPct, lossUsd)}
                         hintTone="loss"
+                        unitSlot={
+                          <Segmented
+                            size="xs"
+                            ariaLabel="Loss unit"
+                            value={lossUnit}
+                            onChange={(next) => {
+                              if (next === lossUnit) return;
+                              if (next === "usd")
+                                setLossUsd(pctToUsd(lossPct).toFixed(2));
+                              else setLossPct(usdToPct(lossUsd).toFixed(2));
+                              setLossUnit(next);
+                            }}
+                            options={AMOUNT_UNITS}
+                          />
+                        }
                       />
                     </div>
                     {/* The ladder stays optional so the core order path remains compact. */}
                     <div className="flex flex-col gap-2">
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <Checkbox
-                          checked={earlyExit}
-                          onChange={setEarlyExit}
-                          className="size-4 shrink-0"
-                        />
-                        <span className="text-data text-ink-muted">
-                          Early Exit Optimization
-                        </span>
-                      </label>
+                      <CheckboxRow
+                        checked={earlyExit}
+                        onChange={setEarlyExit}
+                        label={
+                          <span className="text-data text-ink-muted">
+                            Early Exit Optimization
+                          </span>
+                        }
+                      />
                       {earlyExit ? (
                         <div className="minimal-scrollbar overflow-x-auto overflow-y-hidden rounded-lg border border-[#242424] max-tablet:-mx-0.5">
                           <div className="flex border-b border-[#242424] bg-[#0f0f0f] ds-eyebrow text-ink-muted">
@@ -310,7 +378,10 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                             <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2">
                               Winning %
                             </div>
-                            <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2">
+                            {/* Wider than the data columns so the button can
+                                clear the cell walls — at 75px it filled the
+                                cell edge to edge and read as a filled cell. */}
+                            <div className="flex w-22 shrink-0 items-center justify-center px-2 py-2">
                               Actions
                             </div>
                           </div>
@@ -330,13 +401,28 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                               <div className="flex w-[75px] shrink-0 items-center justify-center px-3 py-2 text-data text-ink">
                                 96%
                               </div>
-                              <div className="flex w-[75px] shrink-0 items-center justify-center px-2 py-1.5">
+                              <div className="flex w-22 shrink-0 items-center justify-center px-2 py-1.5">
+                                {/*
+                                  Reads as a raised control, not a cell: a fill
+                                  a step above the row, a border lighter than
+                                  the table's own #242424 grid lines (which is
+                                  what made the old outline vanish into the
+                                  chrome), a 1px top highlight and a press
+                                  nudge. Greyscale and 11px, so it stays quiet
+                                  next to the numbers it acts on — the picked
+                                  row carries the muted brand tint instead.
+                                */}
                                 <button
                                   type="button"
+                                  aria-pressed={activeRow === row}
                                   onClick={() => setActiveRow(row)}
-                                  className="rounded border border-[#242424] px-2 py-1 text-data text-ink hover:bg-white/5"
+                                  className={`cursor-pointer rounded-md border px-2 py-1 text-micro transition-colors active:translate-y-px ${
+                                    activeRow === row
+                                      ? "border-[#3e2e00] bg-[#171200] text-[#f2b500]"
+                                      : "border-[#3a3a3a] bg-[#1c1c1c] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-[#4a4a4a] hover:bg-[#262626]"
+                                  }`}
                                 >
-                                  Activate
+                                  {activeRow === row ? "Active" : "Activate"}
                                 </button>
                               </div>
                             </div>
@@ -354,18 +440,19 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                   intents at once.
                 */}
                 {orderType === "limit" ? (
-                  <label className="flex min-h-9 cursor-pointer items-center gap-3">
-                    <Checkbox
-                      checked={openAtMark}
-                      onChange={(next) => {
-                        setOpenAtMark(next);
-                        if (next) setLimitPrice(String(setup.price));
-                      }}
-                    />
-                    <span className="text-data text-ink">
-                      Open Position at Current Price
-                    </span>
-                  </label>
+                  <CheckboxRow
+                    className="min-h-9"
+                    checked={openAtMark}
+                    onChange={(next) => {
+                      setOpenAtMark(next);
+                      if (next) setLimitPrice(String(setup.price));
+                    }}
+                    label={
+                      <span className="text-data text-ink">
+                        Open Position at Current Price
+                      </span>
+                    }
+                  />
                 ) : null}
                 <button
                   type="button"

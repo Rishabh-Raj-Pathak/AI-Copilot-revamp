@@ -233,7 +233,7 @@ export default function SuggestionPriceChart({ setup, active, delayMs = 3 }) {
       role="presentation"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
-      className="mt-3 w-full overflow-hidden rounded-lg border border-[#2e2200] bg-[#0a0a0a] p-2"
+      className="mt-3 w-full overflow-hidden rounded-lg border border-[#1f1f1f] bg-[#080808] p-2"
     >
       <div className="flex items-center justify-between gap-2 px-0.5 pb-1.5">
         <span className="ds-eyebrow text-ink-subtle">
@@ -249,7 +249,10 @@ export default function SuggestionPriceChart({ setup, active, delayMs = 3 }) {
           </span>
         </span>
       </div>
-      <div className="h-42 w-full overflow-hidden rounded-md border border-[#1a1a1a]">
+      {/* 168px could not carry 120 candles plus a volume overlay — the bodies
+          collapsed to a band. Grows with the viewport, capped so an expanded
+          card still leaves the next suggestion in view. */}
+      <div className="h-56 w-full overflow-hidden rounded-md border border-[#1a1a1a] xl:h-64">
         {mounted ? (
           <div ref={containerRef} className="size-full" />
         ) : (

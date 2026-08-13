@@ -13,7 +13,7 @@
   --palette-neutral-0: #000000;
   --palette-neutral-5: #0f0f0f;
   --palette-neutral-10: #242424;
-  /* Between 10 and 15 — terminal outline controls on pure black (e.g. Backtest) */
+  /* Between 10 and 15 — hover edge for terminal outline controls (e.g. Backtest) */
   --palette-neutral-12: #333333;
   --palette-neutral-15: #313131;
   --palette-neutral-20: #454545;
@@ -227,23 +227,41 @@
   --ds-height-btn-lg: 3rem;
 
   /*
-   * Terminal — Copilot «Backtest» (brand-gradient stroke on black; Lucide `ScanSearch` + label).
-   * Pixel spec: 1px brand ramp border; radius 12–16px; py 8px px 16px; gap 8px; label white medium.
+   * Terminal — Copilot «Backtest» (secondary control, once per suggestion card).
+   *
+   * It used to wear the amber→aquamarine ramp as a 1px stroke at py 8px / px 16px,
+   * and two things made it read as bolted on. That ramp is the brand's *hero*
+   * signal — KPI values, setup sliders, Connect Wallet, the tour frame — so
+   * repeating it on every row made the rainbow the loudest thing in the list; and
+   * at ~36px tall it towered over the ~23px chip row it shares.
+   *
+   * It now sits in the card's own control family: the hairline the card and the
+   * category pills already use, a chip-fill panel, and amber held back for the
+   * glyph and the hover edge. Amber is the Copilot accent (R:R chip, active
+   * category, selected card), so the brand tie survives without the ramp.
    */
-  --ds-terminal-view-thesis-bg: var(--palette-neutral-0);
+  --ds-terminal-view-thesis-bg: var(--palette-neutral-5); /* #0f0f0f — chip fill */
+  --ds-terminal-view-thesis-bg-hover: var(--palette-neutral-10); /* #242424 */
   --ds-terminal-view-thesis-fg: var(--palette-neutral-100);
-  --ds-terminal-view-thesis-border: var(--palette-neutral-12);
+  --ds-terminal-view-thesis-border: var(
+    --palette-neutral-10
+  ); /* #242424 — the card's own hairline */
+  --ds-terminal-view-thesis-border-hover: var(
+    --palette-neutral-12
+  ); /* #333333 — the card's own hover edge */
+  --ds-terminal-view-thesis-icon-color: var(--palette-amber-70);
   --ds-terminal-view-thesis-radius: var(
     --ds-radius-xs
-  ); /* 6px — subtle corners (Figma ref ~4–6px) */
-  --ds-terminal-view-thesis-padding-y: 0.5rem; /* 8px */
-  --ds-terminal-view-thesis-padding-x: 1rem; /* 16px */
-  --ds-terminal-view-thesis-gap: 0.5rem; /* 8px */
+  ); /* 6px — same corner as the category pills */
+  --ds-terminal-view-thesis-padding-y: 0.25rem; /* 4px */
+  --ds-terminal-view-thesis-padding-x: 0.625rem; /* 10px */
+  --ds-terminal-view-thesis-gap: 0.375rem; /* 6px */
+  --ds-terminal-view-thesis-min-height: 1.75rem; /* 28px — one step over the chips */
   /* Secondary control ("Backtest") — reads off the trading scale, not its own numbers. */
   --ds-terminal-view-thesis-font-size: var(--ds-type-control-size);
   --ds-terminal-view-thesis-line-height: var(--ds-type-control-leading);
   --ds-terminal-view-thesis-font-weight: var(--ds-type-control-weight);
-  --ds-terminal-view-thesis-icon-size: 1rem; /* 16px — matches Lucide `size` */
+  --ds-terminal-view-thesis-icon-size: 0.875rem; /* 14px — matches Lucide `size` */
 
   /*
    * Brand horizontal ramp — terminal KPI stat values, setup sliders (`DetailsPanel`).
@@ -587,28 +605,39 @@ dialog::backdrop {
   .ds-terminal-view-thesis-button {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     flex-shrink: 0;
     gap: var(--ds-terminal-view-thesis-gap);
     box-sizing: border-box;
+    min-height: var(--ds-terminal-view-thesis-min-height);
     padding: var(--ds-terminal-view-thesis-padding-y)
       var(--ds-terminal-view-thesis-padding-x);
     border-radius: var(--ds-terminal-view-thesis-radius);
-    border: var(--ds-stroke-width) solid transparent;
-    background-color: transparent;
-    background-image:
-      linear-gradient(
-        var(--ds-terminal-view-thesis-bg),
-        var(--ds-terminal-view-thesis-bg)
-      ),
-      var(--ds-brand-gradient-horizontal);
-    background-origin: padding-box, border-box;
-    background-clip: padding-box, border-box;
+    border: var(--ds-stroke-width) solid var(--ds-terminal-view-thesis-border);
+    background-color: var(--ds-terminal-view-thesis-bg);
     color: var(--ds-terminal-view-thesis-fg);
     font-family: var(--ds-font-sans);
     font-size: var(--ds-terminal-view-thesis-font-size);
     line-height: var(--ds-terminal-view-thesis-line-height);
     font-weight: var(--ds-terminal-view-thesis-font-weight);
     cursor: pointer;
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+
+  /* The one warm note is the glyph, not the frame. */
+  .ds-terminal-view-thesis-button > svg {
+    color: var(--ds-terminal-view-thesis-icon-color);
+  }
+
+  .ds-terminal-view-thesis-button:hover {
+    border-color: var(--ds-terminal-view-thesis-border-hover);
+    background-color: var(--ds-terminal-view-thesis-bg-hover);
+  }
+
+  .ds-terminal-view-thesis-button:active {
+    background-color: var(--ds-terminal-view-thesis-bg);
   }
 
   .ds-terminal-view-thesis-button:focus-visible {
@@ -720,16 +749,68 @@ dialog::backdrop {
   .ds-terminal-slider__thumb-wrap {
     position: absolute;
     top: 50%;
-    z-index: 1;
-    width: 1.25rem;
-    height: 1.25rem;
+    z-index: 6;
+    width: 0.875rem;
+    height: 0.875rem;
     transform: translate(-50%, -50%);
     pointer-events: none;
   }
 
-  .ds-terminal-slider__thumb-hit {
+  /*
+   * Was an exported SVG knob whose circle sat off-centre in its own viewBox
+   * (cx 16 of 28) and was re-centred with negative insets on the wrapper — the
+   * knob still read as trailing the value it points at. A CSS disc centres on
+   * the rail exactly and carries the same amber + drop-shadow.
+   */
+  .ds-terminal-slider__thumb {
     position: absolute;
-    inset: -20% -10% -20% -30%;
+    inset: 0;
+    border-radius: var(--ds-radius-full);
+    background-color: var(--palette-amber-70);
+    box-shadow:
+      0 0 0 2px var(--palette-neutral-0),
+      0 1px 3px rgb(0 0 0 / 0.5);
+  }
+
+  /* Rail + milestone row (`CopilotSetupSlider milestones`). */
+  .ds-terminal-slider__stack {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0%;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .ds-terminal-slider__stack > .ds-terminal-slider__well {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .ds-terminal-slider__marks {
+    position: relative;
+    height: 0.875rem;
+  }
+
+  .ds-terminal-slider__mark {
+    position: absolute;
+    top: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-type-meta-size);
+    line-height: 1.4;
+    font-weight: var(--ds-type-meta-weight);
+    letter-spacing: var(--ds-type-meta-tracking);
+    transition: color 0.12s ease;
+  }
+
+  /* Colour lives on the element (utilities out-rank this layer) — see JSX. */
+  .ds-terminal-slider__mark:focus-visible {
+    outline: none;
+    border-radius: var(--ds-radius-xxs);
+    box-shadow: var(--ds-shadow-ring);
   }
 
   .ds-terminal-slider__value {

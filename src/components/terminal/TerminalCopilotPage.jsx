@@ -763,12 +763,14 @@ export default function TerminalCopilotPage({
         </main>
         <div
           className={
-            /* Fixed 320/336px from `tablet` up — ~19% of a 1700px viewport, the
-               same allocation as the Trade page's order ticket. The reclaimed
-               width goes to the feed, which is `flex-1`. */
+            /* Fixed 336/368px from `tablet` up — ~21% of a 1700px viewport. The
+               extra 16/32px over the Trade ticket buys the TP/SL grid room for
+               a value plus its unit control in each of two columns; below that
+               the fields truncate their own placeholders. The rest of the width
+               goes to the feed, which is `flex-1`. */
             selectedSetup && !mobileDetailsSheetDismissed
-              ? "flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black max-tablet:fixed max-tablet:inset-0 max-tablet:z-[55] max-tablet:h-dvh max-tablet:max-h-none max-tablet:border-t-0 tablet:h-full tablet:w-80 tablet:border-t-0 tablet:border-l xl:w-84"
-              : "hidden min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black tablet:flex tablet:h-full tablet:w-80 tablet:border-t-0 tablet:border-l tablet:border-[#242424] xl:w-84"
+              ? "flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black max-tablet:fixed max-tablet:inset-0 max-tablet:z-[55] max-tablet:h-dvh max-tablet:max-h-none max-tablet:border-t-0 tablet:h-full tablet:w-84 tablet:border-t-0 tablet:border-l xl:w-92"
+              : "hidden min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden border-t border-[#242424] bg-black tablet:flex tablet:h-full tablet:w-84 tablet:border-t-0 tablet:border-l tablet:border-[#242424] xl:w-92"
           }
         >
           {selectedSetup && !mobileDetailsSheetDismissed ? (

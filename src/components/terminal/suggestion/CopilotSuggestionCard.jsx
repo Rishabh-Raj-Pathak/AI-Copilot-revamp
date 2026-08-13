@@ -47,9 +47,9 @@ function MobileCopilotCard({
           onSelect?.(setup.id);
         }
       }}
-      className={`cursor-pointer rounded-lg border bg-[#0a0a0a] p-3.5 transition-[border-color,box-shadow] ${
+      className={`cursor-pointer rounded-lg border bg-[#0a0a0a] p-3.5 transition-colors duration-200 ${
         selected
-          ? "border-[#f7bb08] shadow-[0_0_0_1px_rgba(247,187,8,0.35)]"
+          ? "border-[#6b5200]"
           : "border-[#242424] hover:border-[#333333]"
       }`}
     >
@@ -90,8 +90,10 @@ function MobileCopilotCard({
         </div>
       ) : null}
 
+      {/* Full-width here, and `py-2.5` keeps a 40px touch target — the desktop
+          row's 28px is a pointer size, not a thumb size. */}
       <ViewThesisButton
-        className="mt-3 w-full justify-center py-2.5"
+        className="mt-3 w-full py-2.5"
         dataTour={selected ? "copilot-view-thesis" : undefined}
         onClick={(e) => {
           e.stopPropagation();
@@ -144,11 +146,20 @@ export default function CopilotSuggestionCard({
           onSelect?.(setup.id);
         }
       }}
-      className={`cursor-pointer rounded-xl border p-3.5 transition-[box-shadow,border-color] duration-200 ${
-        selected
-          ? "border-[#f7bb08] shadow-[0_0_0_1px_rgba(247,187,8,0.35),0_0_32px_rgba(247,187,8,0.12)]"
-          : "border-[#242424] hover:border-[#333333]"
-      }`}
+      className={
+        /*
+          Selection is a hairline amber edge and nothing else — the fill stays
+          the same black as every other card in the list. This has shed two
+          signals: a 1px amber ring plus a 32px bloom on a full-strength
+          #f7bb08 border (the bloom washed over the cards either side of it),
+          and then a warm #0c0b08 panel, which tinted the chart's own black.
+        */
+        `cursor-pointer rounded-xl border p-3.5 transition-colors duration-200 ${
+          selected
+            ? "border-[#6b5200]"
+            : "border-[#242424] hover:border-[#333333]"
+        }`
+      }
     >
       <div className="flex flex-col gap-2.5">
         <div className="flex items-start gap-2.5">

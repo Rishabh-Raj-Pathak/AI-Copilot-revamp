@@ -46,7 +46,7 @@ This package mirrors the **HyprEarn Design System** Figma file using **Tailwind 
 | `sidebar` | `Sidebar` |
 | `dropdown`, `dropdown-list` | `Dropdown`, `DropdownItem` |
 | Global variables `radius/*` (library) | Same px ladder as **Corner Radius** on `styles`; implementation uses `--ds-radius-*` + `@theme` `rounded-*` mapping. |
-| Terminal Copilot «View Thesis» | CSS `--ds-terminal-view-thesis-*` + `.ds-terminal-view-thesis-button`; Lucide `File`; TS `terminalViewThesisButton` in `tokens/terminalViewThesis.ts` |
+| Terminal Copilot «Backtest» | CSS `--ds-terminal-view-thesis-*` + `.ds-terminal-view-thesis-button`; Lucide `ScanSearch`; TS `terminalViewThesisButton` in `tokens/terminalViewThesis.ts` |
 | Terminal filters KPI row | `.ds-terminal-kpi-label` / `.ds-terminal-kpi-value`; gradient `--ds-brand-gradient-horizontal`; TS `terminalKpiBar` in `tokens/terminalKpiBar.ts` |
 | Terminal details sliders (margin %, leverage) | `.ds-terminal-slider*` + `--ds-terminal-slider-*`; brand ramp `--ds-brand-gradient-horizontal`; TS `terminalSetupSlider` in `tokens/terminalSetupSlider.ts` |
 | Terminal gradient CTA (Connect Wallet, Refresh) | `.ds-terminal-gradient-cta` + `--ds-terminal-connect-wallet-*`; TS `terminalGradientCta` |
