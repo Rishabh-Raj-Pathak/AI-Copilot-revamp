@@ -230,8 +230,8 @@ export function CopilotSetupSlider({
               type="button"
               onClick={() => onChange(stop.stopValue)}
               aria-label={`Set to ${formatMilestone(stop.stopValue)}`}
-              className={`${s.mark} hover:text-[#f2b500] ${
-                pct + 0.5 >= stop.at ? "text-[#f2b500]" : "text-ink-faint"
+              className={`${s.mark} hover:text-ink ${
+                pct + 0.5 >= stop.at ? "text-ink" : "text-ink-faint"
               }`}
               style={{
                 left: `${stop.at}%`,

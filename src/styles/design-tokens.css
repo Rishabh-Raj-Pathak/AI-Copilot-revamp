@@ -251,8 +251,8 @@
   ); /* #333333 — the card's own hover edge */
   --ds-terminal-view-thesis-icon-color: var(--palette-amber-70);
   --ds-terminal-view-thesis-radius: var(
-    --ds-radius-xs
-  ); /* 6px — same corner as the category pills */
+    --ds-radius-full
+  ); /* pill — sits on the same row as the setup chips, which are all rounded-full */
   --ds-terminal-view-thesis-padding-y: 0.25rem; /* 4px */
   --ds-terminal-view-thesis-padding-x: 0.625rem; /* 10px */
   --ds-terminal-view-thesis-gap: 0.375rem; /* 6px */

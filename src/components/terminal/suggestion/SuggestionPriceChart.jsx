@@ -250,9 +250,9 @@ export default function SuggestionPriceChart({ setup, active, delayMs = 3 }) {
         </span>
       </div>
       {/* 168px could not carry 120 candles plus a volume overlay — the bodies
-          collapsed to a band. Grows with the viewport, capped so an expanded
-          card still leaves the next suggestion in view. */}
-      <div className="h-56 w-full overflow-hidden rounded-md border border-[#1a1a1a] xl:h-64">
+          collapsed to a band, and 224px still read as a strip beside the
+          card's own header. Grows with the viewport. */}
+      <div className="h-72 w-full overflow-hidden rounded-md border border-[#1a1a1a] xl:h-80">
         {mounted ? (
           <div ref={containerRef} className="size-full" />
         ) : (

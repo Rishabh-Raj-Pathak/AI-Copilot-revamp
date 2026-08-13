@@ -2,7 +2,8 @@
  * Terminal Copilot — «Backtest» control (opens strategy write-up).
  *
  * Visual spec: secondary outline control in the suggestion card's own family —
- * `#0f0f0f` fill, 1px `#242424` hairline (`#333333` on hover), 6px corner radius,
+ * `#0f0f0f` fill, 1px `#242424` hairline (`#333333` on hover), pill corner radius
+ * (it shares a row with the setup chips, which are all `rounded-full`),
  * 4×10px padding / 28px min-height, 6px gap, 13px label in white, Lucide
  * **`ScanSearch`** only — no custom SVG — at 14px in brand amber.
  *
