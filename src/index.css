@@ -570,6 +570,27 @@
 
 /** Thin, low-contrast scrollbars (suggestions + details panes). */
 @layer utilities {
+  /*
+   * The one modal/drawer/sheet scrim. Use this instead of a `bg-black/NN`
+   * overlay so every dialog frosts the page the same way — tokens live in
+   * design-tokens.css.
+   */
+  .ds-scrim {
+    background: var(--ds-scrim-bg);
+    -webkit-backdrop-filter: blur(var(--ds-scrim-blur)) saturate(115%);
+    backdrop-filter: blur(var(--ds-scrim-blur)) saturate(115%);
+  }
+
+  /* No backdrop-filter (older Firefox, blur disabled): fall back to opacity,
+     otherwise the dialog would sit on a barely-dimmed live page. */
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    .ds-scrim {
+      background: var(--ds-scrim-bg-fallback);
+    }
+  }
+
   .minimal-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.06) transparent;

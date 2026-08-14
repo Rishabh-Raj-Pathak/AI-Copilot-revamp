@@ -18,9 +18,9 @@ const COPY_FEEDBACK_MS = 2000;
  *
  * Identity above the hairline, wallet credential below it. They were two cards
  * that between them rendered the same address three times; the address now
- * appears exactly once, in the strip that owns the actions on it. Desktop shows
- * it in full — this is the one page where you'd want to read the whole thing —
- * and only mobile truncates.
+ * appears exactly once, in the strip that owns the actions on it — and always
+ * truncated. The full 42 characters are wider than the actions they share a row
+ * with, so at desktop they pushed the explorer link out past the card edge.
  *
  * @param {object} props
  * @param {(message: string, variant?: 'success'|'error') => void} [props.onNotify]
@@ -111,25 +111,33 @@ export default function ProfileIdentityCard({ onNotify }) {
       {/* Stacked under a hairline until there's room; then it lifts onto the row
           and sits against the right edge, actions last — the same edge the
           checklist's chevrons hold, one card down. */}
-      <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2 border-t border-[#242424] pt-3.5 xl:mt-0 xl:ml-auto xl:min-w-0 xl:border-t-0 xl:pt-0">
-        {/* Dropped on mobile: a `0x…` in mono next to a chain badge needs no caption,
-            and its 46px is the difference between one line and two. */}
-        <span className="hidden text-[10px] font-medium uppercase tracking-wide text-[#757575] sm:inline">
-          Wallet
-        </span>
+      <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-[#242424] pt-3.5 xl:mt-0 xl:ml-auto xl:min-w-0 xl:border-t-0 xl:pt-0">
+        {/* What the wallet *is*. Its parts sit 8px apart — half the 16px that
+            separates the whole credential from the actions performed on it, so
+            the two groups read as two. Below `xl` the row spans the card and
+            this takes the slack, which is what holds the actions on the right
+            edge; at `xl` the row hugs and the two groups close up. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {/* Dropped on mobile: a `0x…` in mono next to a chain badge needs no caption,
+              and its 46px is the difference between one line and two. */}
+          <span className="hidden shrink-0 text-[10px] font-medium uppercase tracking-wide text-[#757575] sm:inline">
+            Wallet
+          </span>
 
-        {/* Full address at `md`, not `sm`: at 640px it and the explorer label
-            together push the action group onto a second line. */}
-        <span className="min-w-0 font-mono text-sm text-white">
-          <span className="hidden md:inline">{address}</span>
-          <span className="md:hidden">{truncateAddress(address)}</span>
-        </span>
+          {/* Truncated at every width. Nobody reads the middle 30 characters,
+              and rendering them costs more room than the actions beside it. */}
+          <span className="truncate font-mono text-sm text-white">
+            {truncateAddress(address)}
+          </span>
 
-        <span className="shrink-0 rounded-full border border-[#454545] px-2 py-0.5 text-xs text-[#bfbfbf] sm:px-2.5">
-          {WALLET_CHAIN.label}
-        </span>
+          <span className="shrink-0 rounded-full border border-[#454545] px-2 py-0.5 text-xs text-[#bfbfbf] sm:px-2.5">
+            {WALLET_CHAIN.label}
+          </span>
+        </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1">
+        {/* 4px apart — tighter than anything inside the credential, so the pair
+            reads as one cluster of controls rather than two stray buttons. */}
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={handleCopy}
@@ -144,12 +152,14 @@ export default function ProfileIdentityCard({ onNotify }) {
             )}
           </button>
 
+          {/* Width grows to fit the label, height doesn't: both actions stay
+              32px, so they read as one pair and not two different controls. */}
           <a
             href={addressExplorerUrl(address)}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View on ${WALLET_CHAIN.explorerName}`}
-            className="flex size-8 items-center justify-center rounded-md text-xs font-medium text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white md:size-auto md:gap-1.5 md:px-2 md:py-1.5"
+            className="flex size-8 items-center justify-center rounded-md text-xs font-medium text-[#bfbfbf] transition-colors hover:bg-white/5 hover:text-white md:w-auto md:gap-1.5 md:px-2"
           >
             <span className="hidden md:inline">
               View on {WALLET_CHAIN.explorerName}

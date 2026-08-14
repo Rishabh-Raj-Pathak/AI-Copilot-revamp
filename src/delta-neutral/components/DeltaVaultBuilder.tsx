@@ -1355,7 +1355,7 @@ export function DeltaVaultBuilder({
             >
               {/* The page recedes behind the vault while it opens. */}
               <div
-                className="absolute inset-0 bg-[#050505]/80 backdrop-blur-md"
+                className="ds-scrim absolute inset-0"
                 aria-hidden
               />
               <motion.div

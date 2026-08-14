@@ -88,7 +88,7 @@ export default function AgentLogsDrawer({
       {open ? (
         <motion.div
           key="agent-logs-backdrop"
-          className="fixed inset-0 z-[70] bg-black/65"
+          className="ds-scrim fixed inset-0 z-[70]"
           role="presentation"
           initial={{ opacity: reduceMotion ? 1 : 0 }}
           animate={{ opacity: 1 }}

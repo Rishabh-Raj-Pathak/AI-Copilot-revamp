@@ -49,7 +49,7 @@ export default function ProfileCompleteModal({ onDone }) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto bg-black/90 px-4 py-8 sm:px-5">
+    <div className="ds-scrim fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto px-4 py-8 sm:px-5">
       <button
         type="button"
         className="absolute inset-0 z-0 cursor-default border-0 bg-transparent"

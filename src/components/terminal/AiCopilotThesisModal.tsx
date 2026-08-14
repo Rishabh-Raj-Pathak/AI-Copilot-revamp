@@ -560,7 +560,7 @@ export function AiCopilotThesisModal({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5">
       <button
         type="button"
-        className="absolute inset-0 bg-[#050505]/88 backdrop-blur-md"
+        className="ds-scrim absolute inset-0"
         aria-label="Close AI Copilot thesis"
         onClick={() => onOpenChange(false)}
       />

@@ -24,7 +24,7 @@ export default function TradeSuccessModal({
 
   return createPortal(
     <div
-      className="hyprearn-trade-success-modal-root fixed inset-0 z-1000000001 flex items-center justify-center bg-black/90 px-5 py-8"
+      className="hyprearn-trade-success-modal-root ds-scrim fixed inset-0 z-1000000001 flex items-center justify-center px-5 py-8"
       style={{ pointerEvents: "auto" }}
     >
       <button

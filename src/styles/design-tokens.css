@@ -334,10 +334,24 @@
   --ds-copilot-v2-gradient-fg: #030504;
   --ds-copilot-v2-scroll-fade-size-y: 1rem;
   --ds-copilot-v2-scroll-fade-size-x: 1.25rem;
+
+  /*
+   * Modal / drawer / sheet scrim — frosted, not blacked out. Blur is what
+   * pushes the page back; the tint only buys contrast for the dialog on top.
+   * A near-opaque scrim (the old 0.82–0.90 blacks) erased the chart and
+   * position rows the dialog is talking about, so an open Backtest read as a
+   * page navigation rather than a layer. Consumed via `.ds-scrim` (index.css).
+   */
+  --ds-scrim-bg: rgb(3 5 4 / 0.55);
+  --ds-scrim-blur: 18px;
+  /* Browsers without backdrop-filter get opacity instead — see `.ds-scrim`. */
+  --ds-scrim-bg-fallback: rgb(3 5 4 / 0.88);
 }
 
 dialog::backdrop {
-  background: oklch(0% 0 0 / 0.65);
+  background: var(--ds-scrim-bg);
+  -webkit-backdrop-filter: blur(var(--ds-scrim-blur)) saturate(115%);
+  backdrop-filter: blur(var(--ds-scrim-blur)) saturate(115%);
 }
 
 @theme inline {

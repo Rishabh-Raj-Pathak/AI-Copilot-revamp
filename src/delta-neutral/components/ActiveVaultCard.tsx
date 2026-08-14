@@ -524,7 +524,7 @@ export function ActiveVaultCard({
       <AnimatePresence>
         {pnlOpen && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.75)] p-4"
+            className="ds-scrim fixed inset-0 z-[100] flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -608,7 +608,7 @@ export function ActiveVaultCard({
       <AnimatePresence>
         {moreInfoOpen && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.75)] p-4"
+            className="ds-scrim fixed inset-0 z-[100] flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

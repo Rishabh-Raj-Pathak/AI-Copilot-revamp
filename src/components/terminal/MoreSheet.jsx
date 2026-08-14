@@ -102,7 +102,7 @@ export default function MoreSheet({
       {open ? (
         <motion.div
           key="more-sheet-backdrop"
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-[#030504]/82 backdrop-blur-[3px]"
+          className="ds-scrim fixed inset-0 z-[70] flex items-end justify-center"
           role="presentation"
           initial={{ opacity: reduceMotion ? 1 : 0 }}
           animate={{ opacity: 1 }}

@@ -322,7 +322,7 @@ export function CollapseHeading({ title, open, onToggle }) {
   );
 }
 
-/** `hint` colours — Gain % reads green, Loss % red (order panel parity). */
+/** `AmountField` hint colours — Gain % reads green, Loss % red. */
 const HINT_TONES = {
   brand: "text-[#f2b500]",
   gain: "text-[#269755]",
@@ -338,47 +338,33 @@ const HINT_TONES = {
  * the moment a value lands in the field, and four filled boxes of digits are
  * exactly when "is this the TP or the SL leg" needs answering.
  *
- * `unitSlot` takes a `Segmented size="xs"` ($ ⇄ %); `hint` renders the
- * converted value under the field.
+ * `unitSlot` takes a `Segmented size="xs"` ($ ⇄ %). There is deliberately no
+ * converted-value caption under the box: the unit switch already shows the
+ * other reading on demand, and a red/green caption per leg put four coloured
+ * strings under four fields for a number the user can toggle to.
  */
-export function TriggerField({
-  label,
-  value,
-  onChange,
-  unitSlot,
-  hint,
-  hintTone = "brand",
-}) {
+export function TriggerField({ label, value, onChange, unitSlot }) {
   const inputId = useId();
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1">
-      {/* gap-1, not more: the value is right-aligned, so it grows leftward
-          toward the label and every extra pixel of gap comes off the digits. */}
-      <div className="flex h-9 min-w-0 items-center gap-1 rounded-lg border border-[#242424] bg-[#050505] pl-2.5 pr-1.5 transition-colors focus-within:border-[#3a3a3a]">
-        <label
-          htmlFor={inputId}
-          className="shrink-0 cursor-text text-data text-ink-muted"
-        >
-          {label}
-        </label>
-        <input
-          id={inputId}
-          type="text"
-          inputMode="decimal"
-          value={value}
-          placeholder="0"
-          onChange={(e) => onChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-right text-data text-ink outline-none placeholder:text-ink-faint"
-        />
-        {unitSlot}
-      </div>
-      {hint ? (
-        <span
-          className={`px-0.5 text-meta ${HINT_TONES[hintTone] ?? HINT_TONES.brand}`}
-        >
-          {hint}
-        </span>
-      ) : null}
+    /* gap-1, not more: the value is right-aligned, so it grows leftward toward
+       the label and every extra pixel of gap comes off the digits. */
+    <div className="flex h-9 min-w-0 flex-1 items-center gap-1 rounded-lg border border-[#242424] bg-[#050505] pl-2.5 pr-1.5 transition-colors focus-within:border-[#3a3a3a]">
+      <label
+        htmlFor={inputId}
+        className="shrink-0 cursor-text text-data text-ink-muted"
+      >
+        {label}
+      </label>
+      <input
+        id={inputId}
+        type="text"
+        inputMode="decimal"
+        value={value}
+        placeholder="0"
+        onChange={(e) => onChange(e.target.value)}
+        className="min-w-0 flex-1 bg-transparent text-right text-data text-ink outline-none placeholder:text-ink-faint"
+      />
+      {unitSlot}
     </div>
   );
 }

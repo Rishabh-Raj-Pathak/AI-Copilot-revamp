@@ -22,9 +22,6 @@ const toNum = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const usd = (n) =>
-  `$${n.toLocaleString("en-US", { maximumFractionDigits: n < 100 ? 2 : 0 })}`;
-
 /** `chips` carry the copy-ready strings ("R/R: 1:1.2") — strip the prefix. */
 const chipValue = (setup, kind) => {
   const chip = setup.chips?.find((c) => c.kind === kind);
@@ -110,11 +107,6 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
   */
   const pctToUsd = (pct) => (sizeNum * toNum(pct)) / 100;
   const usdToPct = (amount) => (sizeNum ? (toNum(amount) / sizeNum) * 100 : 0);
-  /** The field shows one unit; the caption shows the other. */
-  const targetHint = (unit, pct, amount) =>
-    unit === "pct"
-      ? `≈ ${usd(pctToUsd(pct))}`
-      : `≈ ${usdToPct(amount).toFixed(2)}%`;
 
   return (
     <aside className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden bg-black max-tablet:min-h-0 lg:border-l lg:border-[#242424]">
@@ -307,8 +299,6 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                         label="Gain"
                         value={gainUnit === "pct" ? gainPct : gainUsd}
                         onChange={gainUnit === "pct" ? setGainPct : setGainUsd}
-                        hint={targetHint(gainUnit, gainPct, gainUsd)}
-                        hintTone="gain"
                         unitSlot={
                           <Segmented
                             size="xs"
@@ -336,8 +326,6 @@ function DetailsPanelInner({ setup, openTradeCtaLabel, onOpenTradeCtaClick }) {
                         label="Loss"
                         value={lossUnit === "pct" ? lossPct : lossUsd}
                         onChange={lossUnit === "pct" ? setLossPct : setLossUsd}
-                        hint={targetHint(lossUnit, lossPct, lossUsd)}
-                        hintTone="loss"
                         unitSlot={
                           <Segmented
                             size="xs"

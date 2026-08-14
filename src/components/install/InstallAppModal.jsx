@@ -19,7 +19,7 @@ export default function InstallAppModal({ open, platform = "other", onClose }) {
       {open ? (
         <motion.div
           key="install-app-backdrop"
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-[#030504]/82 px-4 backdrop-blur-[3px]"
+          className="ds-scrim fixed inset-0 z-[70] flex items-end justify-center px-4"
           role="presentation"
           initial={{ opacity: reduceMotion ? 1 : 0 }}
           animate={{ opacity: 1 }}

@@ -46,7 +46,7 @@ function SetupModalShell({ open, onClose, titleId, title, subtitle, children }) 
     >
       <button
         type="button"
-        className="absolute inset-0 border-0 bg-black/85"
+        className="ds-scrim absolute inset-0 border-0"
         onClick={onClose}
         aria-label="Close"
       />

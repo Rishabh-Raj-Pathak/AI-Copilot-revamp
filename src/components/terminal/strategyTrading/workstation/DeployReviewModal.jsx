@@ -111,7 +111,7 @@ function DeployReviewModalV2({
     >
       <button
         type="button"
-        className="absolute inset-0 border-0 bg-[#030504]/82 backdrop-blur-[3px]"
+        className="ds-scrim absolute inset-0 border-0"
         onClick={() => onOpenChange(false)}
         aria-label="Close dialog"
       />

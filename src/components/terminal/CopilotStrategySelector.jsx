@@ -278,7 +278,7 @@ function CopilotStrategyMobileSheet({
       <button
         type="button"
         aria-label="Close strategy panel"
-        className="fixed inset-0 bg-black/60"
+        className="ds-scrim fixed inset-0"
         style={{ zIndex: Z_SHEET_BACKDROP }}
         onClick={onClose}
       />
