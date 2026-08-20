@@ -2,8 +2,10 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronDown, CircleAlert, Cookie, Wallet } from "lucide-react";
+import { Check, ChevronDown, Cookie, Wallet } from "lucide-react";
 import { VaultControls } from "./VaultControls";
+import { LeverageControl } from "./LeverageControl";
+import { TokenPicker } from "./TokenPicker";
 import { VaultOpeningOverlay } from "./VaultOpeningOverlay";
 import { VariationalOnboardingModal } from "./VariationalOnboardingModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -22,6 +24,11 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { DexLabel } from "./DexLogo";
+import {
+  THEME_CATALOG,
+  type ThemeOption,
+  type TokenOption,
+} from "../utils/markets";
 import { formatWalletAddress } from "../utils/wallet";
 import {
   DEX_FUNDING_INTERVAL_HOURS,
@@ -35,14 +42,6 @@ const PREPARE_MS = 5000;
 
 export type { ManagedDexId };
 type MarketMode = "themes" | "tokens";
-type ThemeOption =
-  | "Top Picks"
-  | "Bluechip"
-  | "Stocks"
-  | "Commodities"
-  | "Meme"
-  | "FX";
-type TokenOption = "BTC-USDC" | "ETH-USDC" | "SOL-USDC";
 
 type MarketSelection = {
   mode: MarketMode;
@@ -51,39 +50,6 @@ type MarketSelection = {
 };
 
 const MAX_NOTIONAL = 10000;
-/**
- * Categories carry no live funding/APY readout the way a token pair does, so each one
- * is described instead — the description is what the user picks on.
- */
-const THEME_CATALOG: { value: ThemeOption; description: string }[] = [
-  {
-    value: "Top Picks",
-    description: "Best traded tokens globally, based on funding rate and APY.",
-  },
-  {
-    value: "Bluechip",
-    description:
-      "Large, established tokens with the highest market cap and liquidity.",
-  },
-  {
-    value: "Stocks",
-    description:
-      "Perpetual markets tracking real-world stock prices, like NVDA and TSLA.",
-  },
-  {
-    value: "Commodities",
-    description: "Tokenized real-world commodities like gold, oil, and silver.",
-  },
-  {
-    value: "Meme",
-    description: "High-volatility tokens driven by community and social trends.",
-  },
-  {
-    value: "FX",
-    description: "Tokenized foreign exchange pairs, like USD, EUR, and JPY.",
-  },
-];
-const TOKEN_OPTIONS: TokenOption[] = ["BTC-USDC", "ETH-USDC", "SOL-USDC"];
 
 function parseMoney(s: string): number {
   const n = parseFloat(s.replace(/,/g, ""));
@@ -326,7 +292,7 @@ function StrategyBreakdownPanel({
               : "text-[#9f875c] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e2c68b]",
           )}
         >
-          More info
+          More Info
           <ChevronDown
             className={clsx(
               "h-3 w-3 shrink-0 transition-transform duration-150",
@@ -349,7 +315,7 @@ function StrategyBreakdownPanel({
       >
         <div className="mb-1 flex items-baseline justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.9px] text-[#c9a962]">
-            Strategy breakdown
+            Strategy details
           </p>
           <p className="truncate font-mono text-[10px] text-[#7d7e88]">
             {contextLabel}
@@ -371,7 +337,7 @@ function StrategyBreakdownPanel({
                   <dd className="text-[#ececf3]">{venue.funding}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[#8b8b98]">APR</dt>
+                  <dt className="text-[#8b8b98]">APY</dt>
                   <dd className="text-[#ececf3]">{formatApr(venue.apr)}</dd>
                 </div>
               </dl>
@@ -381,15 +347,17 @@ function StrategyBreakdownPanel({
 
         <dl className="mt-2.5 space-y-2 border-t border-[rgba(255,255,255,0.08)] pt-2.5 font-mono text-[11px]">
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-[#9c9cac]">Net capture</dt>
+            <dt className="text-[#9c9cac]">Net Capture</dt>
             <dd className="text-right text-[#e8d5b5]">{netCapture}</dd>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-[#9c9cac]">Hedge integrity</dt>
-            <dd className="text-[#9babc0]">{hedgeIntegrity.toFixed(1)}%</dd>
+            <dt className="text-[#9c9cac]">Hedge Integrity</dt>
+            <dd className="text-[#9babc0]">
+              {hedgeIntegrity > 0 ? `${hedgeIntegrity.toFixed(1)}%` : "–"}
+            </dd>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-[#9c9cac]">Next settlement</dt>
+            <dt className="text-[#9c9cac]">Funding Settlement</dt>
             <dd className="text-[#ccb17f]">{fundingSettlement}</dd>
           </div>
         </dl>
@@ -398,26 +366,17 @@ function StrategyBreakdownPanel({
   );
 }
 
-const LEVERAGE_OPTIONS = [
-  {
-    value: "3x",
-    label: "3x",
-    profile: "Balanced",
-    description: "Moderate yield with lower liquidation sensitivity.",
-  },
-  {
-    value: "5x",
-    label: "5x",
-    profile: "Higher yield",
-    description:
-      "More funding capture, but higher liquidation and rebalance risk.",
-  },
-] as const;
+/** Both legs move together, so the multiplier is a range rather than a set of presets. */
+const MIN_LEVERAGE = 1;
+const MAX_LEVERAGE = 50;
+const DEFAULT_LEVERAGE = 10;
 
-type LeverageOption = (typeof LEVERAGE_OPTIONS)[number]["value"];
-
-function leverageMeta(option: LeverageOption) {
-  return LEVERAGE_OPTIONS.find((o) => o.value === option);
+/** Read out beside the slider so the number carries its risk framing with it. */
+function leverageProfile(value: number) {
+  if (value <= 3) return "Conservative";
+  if (value <= 10) return "Balanced";
+  if (value <= 25) return "Higher yield";
+  return "Aggressive";
 }
 
 type BuilderUiVariant = "default" | "v2";
@@ -440,8 +399,7 @@ type DexPairSetupCardProps = {
   strategyMetrics: {
     apy: number;
     spreadPct: number;
-    spreadHours: number;
-    maxDrawdown30d: number;
+    maxFundingSpread: number;
     hedgeIntegrity: number;
     /** In the order the user picked them — DEX A, then DEX B. */
     venues: VenueReadout[];
@@ -713,43 +671,18 @@ function DexPairSetupCard({
         {/* Row 2 — the market selector, sized to its label, beside its live metrics. */}
         <div className="mt-2 flex flex-col gap-2 min-[1100px]:flex-row min-[1100px]:items-stretch">
           {market.mode === "tokens" && (
-            <Select
+            <TokenPicker
               disabled={marketDisabled}
               value={market.token}
-              onValueChange={(v) => onTokenChange(v as TokenOption)}
-            >
-              <SelectTrigger
-                className={clsx(
-                  // SelectTrigger ships `data-[size=default]:h-9`; a bare `h-` loses to it
-                  // on specificity, so the height has to be set on the same variant.
-                  "data-[size=default]:h-[48px]",
-                  selectTriggerBaseClass,
-                  // Sized to the pair label, so the metric strip beside it takes the rest
-                  // of the row. With no strip to sit next to, it spans the row.
-                  marketDisabled
-                    ? "cursor-not-allowed opacity-50"
-                    : "shrink-0 min-[1100px]:w-[200px]",
-                )}
-              >
-                <SelectValue className="truncate font-['Onest',sans-serif] text-[14px] text-[#f5f5f5]" />
-              </SelectTrigger>
-              <SelectContent className={selectContentClass}>
-                {TOKEN_OPTIONS.map((option) => (
-                  <SelectItem
-                    key={option}
-                    value={option}
-                    className={clsx(
-                      "pl-3 text-[14px] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)]",
-                      isV2
-                        ? "text-[#E8E2D2] focus:bg-[#1a1a1a] data-[state=checked]:bg-[#1a1a1a]"
-                        : "text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)]",
-                    )}
-                  >
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={onTokenChange}
+              variant={variant}
+              // Sized to hold the longest pair alongside the leg-structure label, so
+              // the metric strip beside it takes the rest of the row. With no strip to
+              // sit next to, it spans the row.
+              className={
+                marketDisabled ? "w-full" : "shrink-0 min-[1100px]:w-[240px]"
+              }
+            />
           )}
 
           {market.mode === "tokens" && !marketDisabled && (
@@ -757,27 +690,29 @@ function DexPairSetupCard({
               {[
                 {
                   label: "APY",
-                  value: `${strategyMetrics.apy.toFixed(1)}%`,
+                  value: `${strategyMetrics.apy.toFixed(2)}% APY`,
                   tone: "text-[#4ade80]",
                 },
                 {
+                  // Stated at the same 6dp precision as the ceiling below it, so the
+                  // two read as one pair rather than two unrelated numbers.
                   label: "Current Spread",
-                  value: `${formatSignedPct(strategyMetrics.spreadPct)} / ${strategyMetrics.spreadHours}h`,
+                  value: strategyMetrics.spreadPct.toFixed(6),
                   tone:
                     strategyMetrics.spreadPct >= 0
                       ? "text-[color:var(--vault-pnl-positive)]"
                       : "text-[color:var(--vault-pnl-negative)]",
                 },
                 {
-                  label: "Max Drawdown (30d)",
-                  value: `${strategyMetrics.maxDrawdown30d.toFixed(1)}%`,
+                  label: "Max Funding Spread",
+                  value: `${strategyMetrics.maxFundingSpread.toFixed(6)}%`,
                   tone: "text-[color:var(--vault-pnl-negative)]",
                 },
               ].map((metric, index) => (
                 <div
                   key={metric.label}
                   className={clsx(
-                    "flex min-w-0 flex-col justify-center gap-1 px-3",
+                    "flex min-w-0 flex-col justify-center gap-1 px-2.5",
                     index > 0 &&
                       "border-l border-[rgba(255,255,255,0.07)]",
                   )}
@@ -820,7 +755,7 @@ function DexPairSetupCard({
                 marketDisabled ? "opacity-50" : "",
               )}
             >
-              {THEME_CATALOG.map(({ value: themeOption, description }) => {
+              {THEME_CATALOG.map(({ value: themeOption, description, icon: ThemeIcon }) => {
                 const selected = market.themes.includes(themeOption);
                 return (
                   <Tooltip key={themeOption} delayDuration={180}>
@@ -851,12 +786,14 @@ function DexPairSetupCard({
                         )}
                       >
                         <span className="flex min-w-0 items-center justify-center gap-1.5">
-                          {selected && (
+                          {selected ? (
                             <Check
                               className="h-3 w-3 shrink-0"
                               strokeWidth={2.5}
                               aria-hidden
                             />
+                          ) : (
+                            <ThemeIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                           )}
                           <span className="truncate">{themeOption}</span>
                         </span>
@@ -896,10 +833,6 @@ export type DeltaVaultBuilderResult = {
   delta: number;
   estAprPct: number;
   fundingEarnedProjection: number;
-  closeRules: {
-    stopLossPnlPct: number | null;
-    takeProfitWithFundingPct: number | null;
-  };
 };
 
 type DeltaVaultBuilderProps = {
@@ -951,32 +884,15 @@ export function DeltaVaultBuilder({
   const [dexWallets, setDexWallets] = useState<
     Record<ManagedDexId, string | null>
   >(() => ({ ...INITIAL_DEX_WALLETS }));
-  const [leverage, setLeverage] = useState<LeverageOption>("3x");
+  const [leverage, setLeverage] = useState<number>(DEFAULT_LEVERAGE);
   const [participationRate, setParticipationRate] = useState(0);
   const [amount, setAmount] = useState("");
-  const [stopLossEnabled, setStopLossEnabled] = useState(false);
-  const [stopLossPnlPct, setStopLossPnlPct] = useState("10");
-  const [takeProfitEnabled, setTakeProfitEnabled] = useState(false);
-  const [takeProfitWithFundingPct, setTakeProfitWithFundingPct] =
-    useState("10");
   const [isPreparing, setIsPreparing] = useState(false);
   const [variationalModalOpen, setVariationalModalOpen] = useState(false);
   const [pendingActivate, setPendingActivate] = useState(false);
   // True when the modal was opened from the main Activate button (flow into opening
   // the vault on success); false when opened from a per-DEX Connect (just authenticate).
   const [activateAfterConnect, setActivateAfterConnect] = useState(false);
-
-  const leverageSelectTriggerClass = clsx(
-    "h-[38px] w-full min-w-[108px] max-w-[140px] rounded-[8px] px-3 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:ring-1 [&_svg]:h-3.5 [&_svg]:w-3.5",
-    isV2Shell
-      ? "border border-[#2a2a2a] bg-[#0d0d0d] text-[#E8E2D2] hover:bg-[#141414] focus:ring-[#d4af37]/30 [&_svg]:text-[#d4af37]/80"
-      : "border border-[rgba(255,255,255,0.09)] bg-[linear-gradient(180deg,rgba(19,19,21,0.96)_0%,rgba(11,11,13,0.98)_100%)] hover:bg-[linear-gradient(180deg,rgba(25,25,28,0.98)_0%,rgba(12,12,15,0.99)_100%)] focus:ring-[rgba(214,176,106,0.24)] [&_svg]:text-[rgba(227,202,157,0.76)]",
-  );
-  const leverageSelectContentClass = clsx(
-    isV2Shell
-      ? "border-[#3d3428] bg-[#0d0d0d] text-[#E8E2D2]"
-      : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(25,22,18,0.98)_0%,rgba(14,12,10,0.99)_100%)] text-[#f1dfbf]",
-  );
 
   /** The user picks two venues; funding — not the pick order — decides which leg is which. */
   const sides = useMemo(() => resolveLegs(dexA, dexB), [dexA, dexB]);
@@ -1043,6 +959,14 @@ export function DeltaVaultBuilder({
   const epochsPerYear = (365 * 24) / 8;
   const spreadAprGross = spreadFunding8h * epochsPerYear;
   const maxDrawdown30d = -1.8;
+  /**
+   * The widest the two venues' funding rates have pulled apart over the 30d lookback —
+   * the ceiling the current spread is read against. Mock data, scaled off the live
+   * spread so it always sits above it.
+   */
+  const maxFundingSpread = Number(
+    Math.max(0.001, Math.abs(spreadFunding8h) * 2.57).toFixed(6),
+  );
   const hedgeIntegrity = Number(
     (100 - Math.min(2.4, Math.abs(delta) / 22)).toFixed(1),
   );
@@ -1199,23 +1123,6 @@ export function DeltaVaultBuilder({
     setMarket((prev) => ({ ...prev, mode: "tokens", token }));
   };
 
-  const sanitizePercentInput = (value: string) => {
-    if (value === "") return "";
-    if (!/^\d*\.?\d*$/.test(value)) return null;
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) return null;
-    return Math.min(100, Math.max(0, parsed)).toString();
-  };
-
-  const applyRulePreset = (
-    preset: number,
-    target: "stopLoss" | "takeProfitWithFunding",
-  ) => {
-    const safe = Math.min(100, Math.max(0, preset)).toString();
-    if (target === "stopLoss") setStopLossPnlPct(safe);
-    else setTakeProfitWithFundingPct(safe);
-  };
-
   const handleInitialize = () => {
     if (!sides || isPreparing || !allSelectedVenuesConnected) return;
     const { longDex: resolvedLong, shortDex: resolvedShort } = sides;
@@ -1236,12 +1143,6 @@ export function DeltaVaultBuilder({
       delta,
       estAprPct: crossDexApr,
       fundingEarnedProjection: fundingProjection,
-      closeRules: {
-        stopLossPnlPct: stopLossEnabled ? Number(stopLossPnlPct || 0) : null,
-        takeProfitWithFundingPct: takeProfitEnabled
-          ? Number(takeProfitWithFundingPct || 0)
-          : null,
-      },
     };
     setIsPreparing(true);
     window.setTimeout(() => {
@@ -1314,7 +1215,9 @@ export function DeltaVaultBuilder({
       ? `Open ${market.mode === "tokens" ? market.token : "BTC/USDC"} vault`
       : firstDisconnectedVenue && requiresCookieAuth(firstDisconnectedVenue)
         ? `Activate ${firstDisconnectedVenue}`
-        : "Connect both DEXs to continue";
+        : firstDisconnectedVenue
+          ? `Connect ${firstDisconnectedVenue} wallet`
+          : "Connect both DEXs to continue";
 
   const bridgeKey = `${dexA || "none"}-${dexB || "none"}`;
   const marketLabel =
@@ -1428,8 +1331,7 @@ export function DeltaVaultBuilder({
             strategyMetrics={{
               apy: crossDexApr,
               spreadPct: spreadDisplayPct,
-              spreadHours: spreadDisplayHours,
-              maxDrawdown30d,
+              maxFundingSpread,
               hedgeIntegrity,
               venues: venueReadouts,
               netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
@@ -1447,6 +1349,7 @@ export function DeltaVaultBuilder({
             )}
           >
             <VaultControls
+              label="Margin"
               disabled={!dualValid}
               disabledSliderTooltip="Select both the dex before setting the amount"
               amount={amount}
@@ -1472,258 +1375,28 @@ export function DeltaVaultBuilder({
 
           <div
             className={clsx(
-              "flex flex-row items-center justify-between gap-3 rounded-[11px] border p-3 max-tablet:p-3",
-              isV2Shell
-                ? "border-[#1f1f1f] bg-[#121212]"
-                : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
-            )}
-          >
-            <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0">
-              <p
-                className={clsx(
-                  "text-[11px] tracking-[0.6px] uppercase",
-                  isV2Shell
-                    ? "text-[#c9a962]"
-                    : "text-[rgba(227,202,157,0.82)]",
-                )}
-              >
-                Leverage
-              </p>
-              <p
-                className={clsx(
-                  "text-[11px]",
-                  isV2Shell ? "text-[#6a6a6a]" : "text-[#717182]",
-                )}
-              >
-                {leverageMeta(leverage)?.profile}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Select
-                value={leverage}
-                onValueChange={(v) => setLeverage(v as LeverageOption)}
-              >
-                <SelectTrigger
-                  className={leverageSelectTriggerClass}
-                  aria-label="Leverage multiplier"
-                >
-                  <SelectValue
-                    placeholder="Select"
-                    className="font-['Onest',sans-serif] text-[13px] font-semibold"
-                  >
-                    {leverage}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className={leverageSelectContentClass}>
-                  {LEVERAGE_OPTIONS.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value}
-                      textValue={option.label}
-                      className="py-2.5 pl-3 pr-3 text-[14px] text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)]"
-                    >
-                      <div className="flex w-full min-w-[200px] flex-col gap-0.5">
-                        <span className="font-semibold leading-none">
-                          {option.label}
-                        </span>
-                        <span className="text-[11px] leading-snug text-[#8f90a1]">
-                          {option.profile}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="Leverage details"
-                    className={clsx(
-                      "inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[8px] border transition-colors",
-                      isV2Shell
-                        ? "border-[#2a2a2a] bg-[#0d0d0d] text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]"
-                        : "border-[rgba(255,255,255,0.08)] bg-[#0f1014] text-[#8f90a1] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d4d4d4]",
-                    )}
-                  >
-                    <CircleAlert className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#f5f5f5]">
-                  <div className="max-w-[240px] space-y-1.5">
-                    <p className="text-[12px] font-medium text-[#f0ddb9]">
-                      {leverage} · {leverageMeta(leverage)?.profile}
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-[#a8a8b8]">
-                      {leverageMeta(leverage)?.description}
-                    </p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-
-          <div
-            className={clsx(
               "rounded-[11px] border p-3 max-tablet:p-3",
               isV2Shell
                 ? "border-[#1f1f1f] bg-[#121212]"
                 : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
             )}
           >
-            <p
-              className={clsx(
-                "text-[11px] uppercase tracking-[1.1px]",
-                isV2Shell ? "text-[#c9a962]" : "text-[rgba(227,202,157,0.82)]",
-              )}
-            >
-              Set PnL
-            </p>
-            <p
-              className={clsx(
-                "mt-1 text-[11px]",
-                isV2Shell ? "text-[#888888]" : "text-[#7d7e88]",
-              )}
-            >
-              Optional safety/target exits for this vault.
-            </p>
+            <LeverageControl
+              value={leverage}
+              min={MIN_LEVERAGE}
+              max={MAX_LEVERAGE}
+              disabled={!dualValid}
+              disabledSliderTooltip="Select both the dex before setting leverage"
+              variant={variant}
+              infoTooltip={
+                `${leverage}x · ${leverageProfile(leverage)}
 
-            <div className="mt-3 space-y-2.5">
-              <div
-                className={clsx(
-                  "rounded-[10px] border p-2.5",
-                  isV2Shell
-                    ? "border-[#1f1f1f] bg-[#121212]"
-                    : "border-[rgba(255,255,255,0.06)] bg-[rgba(11,11,12,0.72)]",
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] text-[#d8d9e3]">
-                    Close if PnL drops below
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setStopLossEnabled((prev) => !prev)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${
-                      stopLossEnabled
-                        ? "border-[rgba(214,176,106,0.58)] bg-[rgba(120,90,40,0.36)]"
-                        : "border-[rgba(255,255,255,0.16)] bg-[rgba(255,255,255,0.06)]"
-                    }`}
-                    aria-pressed={stopLossEnabled}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 rounded-full bg-[#f5f5f5] transition-transform ${
-                        stopLossEnabled ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    disabled={!stopLossEnabled}
-                    value={stopLossPnlPct}
-                    onChange={(e) => {
-                      const sanitized = sanitizePercentInput(e.target.value);
-                      if (sanitized !== null) setStopLossPnlPct(sanitized);
-                    }}
-                    className={`h-[34px] w-[88px] rounded-[9px] border px-2 text-center text-[13px] outline-none ${
-                      stopLossEnabled
-                        ? "border-[rgba(173,134,73,0.5)] bg-[#0c0a08] text-[#e8d5b5]"
-                        : "cursor-not-allowed border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] text-[#777884]"
-                    }`}
-                  />
-                  <span className="text-[12px] text-[#9c9cac]">%</span>
-                  {[5, 10, 15].map((preset) => (
-                    <button
-                      key={`sl-${preset}`}
-                      type="button"
-                      disabled={!stopLossEnabled}
-                      onClick={() => applyRulePreset(preset, "stopLoss")}
-                      className={`h-[28px] rounded-[8px] border px-2.5 text-[11px] transition-colors ${
-                        stopLossEnabled
-                          ? "border-[rgba(173,134,73,0.4)] text-[#d6c39f] hover:border-[rgba(206,163,95,0.62)]"
-                          : "cursor-not-allowed border-[rgba(255,255,255,0.1)] text-[#6f7080]"
-                      }`}
-                    >
-                      {preset}%
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                className={clsx(
-                  "rounded-[10px] border p-2.5",
-                  isV2Shell
-                    ? "border-[#1f1f1f] bg-[#121212]"
-                    : "border-[rgba(255,255,255,0.06)] bg-[rgba(11,11,12,0.72)]",
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] text-[#d8d9e3]">
-                    Close when PnL + funding exceeds
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setTakeProfitEnabled((prev) => !prev)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${
-                      takeProfitEnabled
-                        ? "border-[rgba(214,176,106,0.58)] bg-[rgba(120,90,40,0.36)]"
-                        : "border-[rgba(255,255,255,0.16)] bg-[rgba(255,255,255,0.06)]"
-                    }`}
-                    aria-pressed={takeProfitEnabled}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 rounded-full bg-[#f5f5f5] transition-transform ${
-                        takeProfitEnabled ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    disabled={!takeProfitEnabled}
-                    value={takeProfitWithFundingPct}
-                    onChange={(e) => {
-                      const sanitized = sanitizePercentInput(e.target.value);
-                      if (sanitized !== null)
-                        setTakeProfitWithFundingPct(sanitized);
-                    }}
-                    className={`h-[34px] w-[88px] rounded-[9px] border px-2 text-center text-[13px] outline-none ${
-                      takeProfitEnabled
-                        ? "border-[rgba(173,134,73,0.5)] bg-[#0c0a08] text-[#e8d5b5]"
-                        : "cursor-not-allowed border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] text-[#777884]"
-                    }`}
-                  />
-                  <span className="text-[12px] text-[#9c9cac]">%</span>
-                  {[5, 10, 15].map((preset) => (
-                    <button
-                      key={`tp-${preset}`}
-                      type="button"
-                      disabled={!takeProfitEnabled}
-                      onClick={() =>
-                        applyRulePreset(preset, "takeProfitWithFunding")
-                      }
-                      className={`h-[28px] rounded-[8px] border px-2.5 text-[11px] transition-colors ${
-                        takeProfitEnabled
-                          ? "border-[rgba(173,134,73,0.4)] text-[#d6c39f] hover:border-[rgba(206,163,95,0.62)]"
-                          : "cursor-not-allowed border-[rgba(255,255,255,0.1)] text-[#6f7080]"
-                      }`}
-                    >
-                      {preset}%
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+` +
+                "Multiplies both legs equally, so the hedge stays delta-neutral. " +
+                "Higher leverage captures more funding but liquidates on a smaller adverse move."
+              }
+              onChange={setLeverage}
+            />
           </div>
 
           <button
