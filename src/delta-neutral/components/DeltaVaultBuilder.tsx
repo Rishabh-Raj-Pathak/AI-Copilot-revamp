@@ -840,22 +840,24 @@ type DeltaVaultBuilderProps = {
   variant?: BuilderUiVariant;
 };
 
+// Both default venues start connected so the builder opens on a vault that can
+// actually be funded, rather than one leg short.
 const INITIAL_DEX_CONNECTED: Record<ManagedDexId, boolean> = {
   Hyperliquid: true,
   Nado: false,
-  Pacifica: false,
+  Pacifica: true,
   Variational: false,
 };
 const INITIAL_DEX_BALANCES: Record<ManagedDexId, number> = {
   Hyperliquid: 12430,
   Nado: 0,
-  Pacifica: 0,
+  Pacifica: 9820,
   Variational: 0,
 };
 const INITIAL_DEX_WALLETS: Record<ManagedDexId, string | null> = {
   Hyperliquid: "0x7a3f8421c9f2e",
   Nado: null,
-  Pacifica: null,
+  Pacifica: "0x4d5e09b3a7c14",
   Variational: null,
 };
 
@@ -868,10 +870,12 @@ export function DeltaVaultBuilder({
   variant = "default",
 }: DeltaVaultBuilderProps) {
   const isV2Shell = variant === "v2";
-  const [dexA, setDexA] = useState<DexSelection>("");
-  const [dexB, setDexB] = useState<DexSelection>("");
+  // Opens on a working Perp <> Perp pair rather than an empty form, so the metrics
+  // strip and the picker have something to show on first paint.
+  const [dexA, setDexA] = useState<DexSelection>("Hyperliquid");
+  const [dexB, setDexB] = useState<DexSelection>("Pacifica");
   const [market, setMarket] = useState<MarketSelection>({
-    mode: "themes",
+    mode: "tokens",
     themes: [],
     token: "BTC-USDC",
   });

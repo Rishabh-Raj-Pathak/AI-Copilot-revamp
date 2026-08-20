@@ -3,7 +3,10 @@
   "configurations": [
     {
       "name": "ai-copilot",
-      "url": "http://localhost:5173"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }
