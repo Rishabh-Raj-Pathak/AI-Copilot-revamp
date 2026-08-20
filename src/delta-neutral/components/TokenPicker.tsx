@@ -3,7 +3,6 @@ import { clsx } from "clsx";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import {
-  LEG_STRUCTURES,
   TOKEN_FILTERS,
   THEME_ICONS,
   filterTokens,
@@ -21,12 +20,8 @@ interface TokenPickerProps {
   disabled?: boolean;
   variant?: TokenPickerVariant;
   className?: string;
-  /**
-   * Leg structure is picker-local by default. Pass both to lift it into the
-   * builder's market state once execution needs to branch on it.
-   */
+  /** Owned by the builder — the toggle for it lives above this control. */
   structure?: LegStructure;
-  onStructureChange?: (structure: LegStructure) => void;
 }
 
 /**
@@ -35,10 +30,11 @@ interface TokenPickerProps {
  * the panel — the same categories offered on the Categories tab, so the two market
  * modes stay one mental model.
  *
- * Leg structure sits above both because it cuts the catalog hardest. Spot <> Perp
- * needs a real spot book on the long side, which the synthetic markets — stocks,
- * commodities, FX — do not have, so the categories stop being a useful way to narrow
- * and are hidden entirely in that mode.
+ * Leg structure is chosen a level up, in the builder, and arrives here as a prop —
+ * it narrows the catalog to the pairs that can actually be traded that way. The
+ * categories are offered identically under both structures; a combination with no
+ * pairs behind it (Stocks under Spot <> Perp, say) falls through to the empty state,
+ * which names both halves so the reason is legible.
  */
 export function TokenPicker({
   value,
@@ -46,27 +42,12 @@ export function TokenPicker({
   disabled = false,
   variant = "default",
   className,
-  structure: structureProp,
-  onStructureChange,
+  structure = "Perp <> Perp",
 }: TokenPickerProps) {
   const isV2 = variant === "v2";
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<TokenFilter>("Top Picks");
-  const [structureState, setStructureState] =
-    useState<LegStructure>("Perp <> Perp");
-
-  const structure = structureProp ?? structureState;
-  const showCategories = structure === "Perp <> Perp";
-
-  const setStructure = (next: LegStructure) => {
-    setStructureState(next);
-    onStructureChange?.(next);
-    // Spot <> Perp hides the chips, so a category picked in the other mode would
-    // silently strand the list with no visible control to clear it.
-    if (next === "Spot <> Perp") setFilter("All Tokens");
-  };
-
   const results = useMemo(
     () => filterTokens(query, filter, structure),
     [query, filter, structure],
@@ -98,26 +79,14 @@ export function TokenPicker({
           <span className="truncate font-['Onest',sans-serif] text-[14px]">
             {value}
           </span>
-          <span className="flex shrink-0 items-center gap-2">
-            {/* Which book the pair trades on. Only worth saying here — inside the
-                panel the toggle is already on screen. */}
-            <span
-              className={clsx(
-                "font-['Onest',sans-serif] text-[10px] uppercase leading-none tracking-[0.7px]",
-                isV2 ? "text-[#888888]" : "text-[#7d7e88]",
-              )}
-            >
-              {structure}
-            </span>
-            <ChevronDown
-              className={clsx(
-                "h-3.5 w-3.5 transition-transform duration-150",
-                isV2 ? "text-[#d4af37]/80" : "text-[rgba(227,202,157,0.76)]",
-                open && "rotate-180",
-              )}
-              aria-hidden
-            />
-          </span>
+          <ChevronDown
+            className={clsx(
+              "h-3.5 w-3.5 shrink-0 transition-transform duration-150",
+              isV2 ? "text-[#d4af37]/80" : "text-[rgba(227,202,157,0.76)]",
+              open && "rotate-180",
+            )}
+            aria-hidden
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -130,44 +99,6 @@ export function TokenPicker({
             : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(16,15,13,0.99)_0%,rgba(9,9,10,0.99)_100%)]",
         )}
       >
-        {/* Leg structure — the widest cut, so it leads the panel. */}
-        <div className="px-2.5 pt-2.5">
-          <div
-            role="group"
-            aria-label="Leg structure"
-            className={clsx(
-              "grid grid-cols-2 gap-1 rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)]",
-              isV2
-                ? "border-[#2a2a2a] bg-[#0a0a0a]"
-                : "border-[rgba(255,255,255,0.09)] bg-[rgba(10,10,11,0.94)]",
-            )}
-          >
-            {LEG_STRUCTURES.map((option) => {
-              const active = structure === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setStructure(option)}
-                  className={clsx(
-                    "h-[34px] rounded-[8px] font-['Onest',sans-serif] text-[13px] font-medium tracking-[0.3px] transition-all focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1",
-                    active
-                      ? isV2
-                        ? "border border-[#c9a962] bg-[#141414] text-[#c9a962] focus-visible:outline-[#c9a962]"
-                        : "border border-[rgba(214,176,106,0.62)] bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] focus-visible:outline-[#d6b06a]"
-                      : isV2
-                        ? "border border-transparent text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4] focus-visible:outline-[#c9a962]"
-                        : "border border-transparent text-[#7f8090] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#cfcfd8] focus-visible:outline-[#d6b06a]",
-                  )}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Search */}
         <div className="p-2.5">
           <div
@@ -190,40 +121,37 @@ export function TokenPicker({
           </div>
         </div>
 
-        {/* Category filters — one chip per category, plus the unfiltered view. Only
-            Perp <> Perp spans enough of the catalog for them to be worth showing. */}
-        {showCategories && (
-          <div className="flex flex-wrap gap-1.5 px-2.5 pb-2.5">
-            {TOKEN_FILTERS.map((option) => {
-              const active = filter === option;
-              const Icon =
-                option === "All Tokens"
-                  ? undefined
-                  : THEME_ICONS[option as ThemeOption];
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setFilter(option)}
-                  className={clsx(
-                    "inline-flex h-[28px] shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 font-['Onest',sans-serif] text-[11px] leading-none transition-colors",
-                    active
-                      ? isV2
-                        ? "border-[#c9a962] bg-[#141414] text-[#c9a962]"
-                        : "border-[rgba(214,176,106,0.62)] bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9]"
-                      : isV2
-                        ? "border-[#2a2a2a] text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]"
-                        : "border-[rgba(255,255,255,0.08)] text-[#9a9ba8] hover:border-[rgba(214,176,106,0.22)] hover:bg-[rgba(120,90,40,0.14)] hover:text-[#f1dfbf]",
-                  )}
-                >
-                  {Icon && <Icon className="h-3 w-3 shrink-0" aria-hidden />}
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Category filters — one chip per category, plus the unfiltered view. */}
+        <div className="flex flex-wrap gap-1.5 px-2.5 pb-2.5">
+          {TOKEN_FILTERS.map((option) => {
+            const active = filter === option;
+            const Icon =
+              option === "All Tokens"
+                ? undefined
+                : THEME_ICONS[option as ThemeOption];
+            return (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter(option)}
+                className={clsx(
+                  "inline-flex h-[28px] shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 font-['Onest',sans-serif] text-[11px] leading-none transition-colors",
+                  active
+                    ? isV2
+                      ? "border-[#c9a962] bg-[#141414] text-[#c9a962]"
+                      : "border-[rgba(214,176,106,0.62)] bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9]"
+                    : isV2
+                      ? "border-[#2a2a2a] text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]"
+                      : "border-[rgba(255,255,255,0.08)] text-[#9a9ba8] hover:border-[rgba(214,176,106,0.22)] hover:bg-[rgba(120,90,40,0.14)] hover:text-[#f1dfbf]",
+                )}
+              >
+                {Icon && <Icon className="h-3 w-3 shrink-0" aria-hidden />}
+                {option}
+              </button>
+            );
+          })}
+        </div>
 
         <div
           className={clsx(

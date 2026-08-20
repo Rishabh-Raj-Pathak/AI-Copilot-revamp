@@ -25,7 +25,9 @@ import {
 } from "./ui/dialog";
 import { DexLabel } from "./DexLogo";
 import {
+  LEG_STRUCTURES,
   THEME_CATALOG,
+  type LegStructure,
   type ThemeOption,
   type TokenOption,
 } from "../utils/markets";
@@ -44,6 +46,12 @@ export type { ManagedDexId };
 type MarketMode = "themes" | "tokens";
 
 type MarketSelection = {
+  /**
+   * The parent choice. It decides which market controls below are applicable at
+   * all, so it sits above the Categories/Tokens switcher rather than inside the
+   * token picker.
+   */
+  structure: LegStructure;
   mode: MarketMode;
   themes: ThemeOption[];
   token: TokenOption;
@@ -393,6 +401,7 @@ type DexPairSetupCardProps = {
   dexBalanceMap: Record<ManagedDexId, number>;
   dexWalletMap: Record<ManagedDexId, string | null>;
   market: MarketSelection;
+  onStructureChange: (structure: LegStructure) => void;
   onModeChange: (mode: MarketMode) => void;
   onThemesChange: (themes: ThemeOption[]) => void;
   onTokenChange: (token: TokenOption) => void;
@@ -421,6 +430,7 @@ function DexPairSetupCard({
   dexBalanceMap,
   dexWalletMap,
   market,
+  onStructureChange,
   onModeChange,
   onThemesChange,
   onTokenChange,
@@ -622,199 +632,266 @@ function DexPairSetupCard({
           Select a DEX on both venues to unlock category and token controls.
         </p>
       )}
-      <div className="relative z-[1] mt-4">
-        <label
-          className={clsx(
-            "mb-2 block text-[11px] uppercase tracking-[1.2px]",
-            isV2 ? "text-[#888888]" : "text-[#8f90a1]",
-          )}
-        >
-          Market
-        </label>
-        {/* Row 1 — mode switcher on its own line. */}
+      {/* One card, two zones: a header holding the structure selector and a body
+          holding everything that selector governs, split by a full-bleed rule. The
+          earlier folder-tab treatment could not hold its seam — a transparent tab
+          border does not mask the panel outline beneath it — and a tab that reads as
+          a chip floating on a box is worse than no tab at all. A recessed track with
+          a raised active segment is unambiguous about being a control, and the shared
+          card is what carries the parent/child relationship. */}
+      <div
+        className={clsx(
+          "relative z-[1] mt-4 overflow-hidden rounded-[12px] border",
+          isV2
+            ? "border-[#2a2a2a] bg-[#0b0b0b]"
+            : "border-[rgba(255,255,255,0.08)] bg-[rgba(12,12,14,0.6)]",
+        )}
+      >
+        {/* Header — the parent selector. */}
         <div
           className={clsx(
-            // h-[48px] = 38px pills + 4px padding + 1px borders, matching the selector
-            // row below it and the h-[38px] control height used across this card.
-            "inline-flex h-[48px] rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)]",
+            "border-b px-3 py-3",
             isV2
-              ? "border-[#2a2a2a] bg-[#0a0a0a]"
-              : "border-[rgba(255,255,255,0.09)] bg-[rgba(10,10,11,0.94)]",
-            marketDisabled ? "opacity-50" : "",
+              ? "border-[#232323] bg-[#080808]"
+              : "border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.015)]",
           )}
         >
-          {(["themes", "tokens"] as MarketMode[]).map((mode) => {
-            const active = market.mode === mode;
-            return (
-              <button
-                key={mode}
-                type="button"
-                disabled={marketDisabled}
-                onClick={() => onModeChange(mode)}
-                className={clsx(
-                  "h-[38px] rounded-[8px] px-4 text-[13px] font-semibold tracking-[0.3px] transition-all",
-                  active
-                    ? isV2
-                      ? "border border-[#c9a962] bg-[#141414] text-[#c9a962]"
-                      : "bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
-                    : isV2
-                      ? "border border-transparent text-[#888888] hover:bg-[#141414] hover:text-[#c4c4c4]"
-                      : "text-[#7f8090] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#cfcfd8]",
-                )}
-              >
-                {mode === "themes" ? "Categories" : "Tokens"}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Row 2 — the market selector, sized to its label, beside its live metrics. */}
-        <div className="mt-2 flex flex-col gap-2 min-[1100px]:flex-row min-[1100px]:items-stretch">
-          {market.mode === "tokens" && (
-            <TokenPicker
-              disabled={marketDisabled}
-              value={market.token}
-              onChange={onTokenChange}
-              variant={variant}
-              // Sized to hold the longest pair alongside the leg-structure label, so
-              // the metric strip beside it takes the rest of the row. With no strip to
-              // sit next to, it spans the row.
-              className={
-                marketDisabled ? "w-full" : "shrink-0 min-[1100px]:w-[240px]"
-              }
-            />
-          )}
-
-          {market.mode === "tokens" && !marketDisabled && (
-            <div className="grid h-[48px] min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
-              {[
-                {
-                  label: "APY",
-                  value: `${strategyMetrics.apy.toFixed(2)}% APY`,
-                  tone: "text-[#4ade80]",
-                },
-                {
-                  // Stated at the same 6dp precision as the ceiling below it, so the
-                  // two read as one pair rather than two unrelated numbers.
-                  label: "Current Spread",
-                  value: strategyMetrics.spreadPct.toFixed(6),
-                  tone:
-                    strategyMetrics.spreadPct >= 0
-                      ? "text-[color:var(--vault-pnl-positive)]"
-                      : "text-[color:var(--vault-pnl-negative)]",
-                },
-                {
-                  label: "Max Funding Spread",
-                  value: `${strategyMetrics.maxFundingSpread.toFixed(6)}%`,
-                  tone: "text-[color:var(--vault-pnl-negative)]",
-                },
-              ].map((metric, index) => (
-                <div
-                  key={metric.label}
+          <div
+            role="group"
+            aria-label="Leg structure"
+            className={clsx(
+              // Recessed track. The inset shadow is what sells "something sits in here".
+              "inline-flex gap-1 rounded-[10px] border p-1 shadow-[inset_0_2px_6px_rgba(0,0,0,0.55)]",
+              isV2
+                ? "border-[#1f1f1f] bg-[#050505]"
+                : "border-[rgba(0,0,0,0.6)] bg-[rgba(6,6,7,0.9)]",
+              marketDisabled ? "opacity-50" : "",
+            )}
+          >
+            {LEG_STRUCTURES.map((option) => {
+              const active = market.structure === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  disabled={marketDisabled}
+                  aria-pressed={active}
+                  onClick={() => onStructureChange(option)}
                   className={clsx(
-                    "flex min-w-0 flex-col justify-center gap-1 px-2.5",
-                    index > 0 &&
-                      "border-l border-[rgba(255,255,255,0.07)]",
+                    "h-[36px] cursor-pointer rounded-[8px] border px-5 text-[13px] font-semibold tracking-[0.3px] transition-all duration-150 disabled:cursor-not-allowed",
+                    active
+                      // Raised out of the track: lit top edge, own shadow, gold rim.
+                      ? isV2
+                        ? "border-[#c9a962] bg-[#161616] text-[#c9a962] shadow-[0_1px_3px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.09)]"
+                        : "border-[rgba(214,176,106,0.5)] bg-[linear-gradient(180deg,rgba(58,45,26,0.95)_0%,rgba(32,26,17,0.95)_100%)] text-[#f5e4c2] shadow-[0_1px_3px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)]"
+                      : isV2
+                        ? "border-transparent text-[#8a8a8a] hover:bg-[#121212] hover:text-[#c4c4c4]"
+                        : "border-transparent text-[#82838f] hover:bg-[rgba(255,255,255,0.045)] hover:text-[#d8d9e3]",
                   )}
                 >
-                  <p
-                    className="min-w-0 truncate text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] text-[#9b9cad]"
-                    title={metric.label}
-                  >
-                    {metric.label}
-                  </p>
-                  <p
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Body — everything the header governs. */}
+        <div className="p-3">
+          <label
+            className={clsx(
+              "mb-2 block text-[11px] uppercase tracking-[1.2px]",
+              isV2 ? "text-[#888888]" : "text-[#8f90a1]",
+            )}
+          >
+            Market
+          </label>
+          {/* Row 1 — the child switcher. Offered identically under both structures. */}
+          <div
+            className={clsx(
+              // Deliberately smaller than the tab strip above it: a subordinate
+              // control inside the panel, not a second set of tabs.
+              "inline-flex h-[32px] rounded-[8px] border p-[3px]",
+              isV2
+                ? "border-[#232323] bg-[#0a0a0a]"
+                : "border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]",
+              marketDisabled ? "opacity-50" : "",
+            )}
+          >
+            {(["themes", "tokens"] as MarketMode[]).map((mode) => {
+              const active = market.mode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  disabled={marketDisabled}
+                  onClick={() => onModeChange(mode)}
+                  className={clsx(
+                    "h-[26px] cursor-pointer rounded-[6px] border px-3 text-[12px] font-medium tracking-[0.2px] transition-colors disabled:cursor-not-allowed",
+                    active
+                      ? isV2
+                        ? "border-[#3d3428] bg-[#1a1a1a] text-[#c9a962]"
+                        : "border-[rgba(214,176,106,0.24)] bg-[rgba(214,176,106,0.13)] text-[#e8d5b5]"
+                      : isV2
+                        ? "border-transparent text-[#888888] hover:text-[#c4c4c4]"
+                        : "border-transparent text-[#7f8090] hover:text-[#cfcfd8]",
+                  )}
+                >
+                  {mode === "themes" ? "Categories" : "Tokens"}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Row 2 — the market selector, sized to its label, beside its live metrics. */}
+          <div className="mt-2 flex flex-col gap-2 min-[1100px]:flex-row min-[1100px]:items-stretch">
+            {market.mode === "tokens" && (
+              <TokenPicker
+                disabled={marketDisabled}
+                value={market.token}
+                onChange={onTokenChange}
+                structure={market.structure}
+                variant={variant}
+                // Sized to hold the longest pair alongside the leg-structure label, so
+                // the metric strip beside it takes the rest of the row. With no strip to
+                // sit next to, it spans the row.
+                className={
+                  marketDisabled ? "w-full" : "shrink-0 min-[1100px]:w-[240px]"
+                }
+              />
+            )}
+
+            {market.mode === "tokens" && !marketDisabled && (
+              <div className="grid h-[48px] min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
+                {[
+                  {
+                    label: "APY",
+                    value: `${strategyMetrics.apy.toFixed(2)}% APY`,
+                    tone: "text-[#4ade80]",
+                  },
+                  {
+                    // Stated at the same 6dp precision as the ceiling below it, so the
+                    // two read as one pair rather than two unrelated numbers.
+                    label: "Current Spread",
+                    value: strategyMetrics.spreadPct.toFixed(6),
+                    tone:
+                      strategyMetrics.spreadPct >= 0
+                        ? "text-[color:var(--vault-pnl-positive)]"
+                        : "text-[color:var(--vault-pnl-negative)]",
+                  },
+                  {
+                    label: "Max Funding Spread",
+                    value: `${strategyMetrics.maxFundingSpread.toFixed(6)}%`,
+                    tone: "text-[color:var(--vault-pnl-negative)]",
+                  },
+                ].map((metric, index) => (
+                  <div
+                    key={metric.label}
                     className={clsx(
-                      "min-w-0 truncate font-mono text-[15px] font-semibold leading-[18px]",
-                      metric.tone,
+                      "flex min-w-0 flex-col justify-center gap-1 px-2.5",
+                      index > 0 &&
+                        "border-l border-[rgba(255,255,255,0.07)]",
                     )}
                   >
-                    {metric.value}
-                  </p>
-                </div>
-              ))}
-              <StrategyBreakdownPanel
-                contextLabel={market.token}
-                venues={strategyMetrics.venues}
-                netCapture={strategyMetrics.netCapture}
-                hedgeIntegrity={strategyMetrics.hedgeIntegrity}
-                fundingSettlement={strategyMetrics.fundingSettlement}
-              />
-            </div>
-          )}
-
-          {market.mode === "themes" && (
-            <div
-              role="group"
-              aria-label="Market categories. Select one or more."
-              className={clsx(
-                "grid w-full grid-cols-2 gap-1 rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)] min-[560px]:grid-cols-3",
-                isV2
-                  ? "border-[#2a2a2a] bg-[#0a0a0a]"
-                  : "border-[rgba(255,255,255,0.09)] bg-[rgba(10,10,11,0.94)]",
-                marketDisabled ? "opacity-50" : "",
-              )}
-            >
-              {THEME_CATALOG.map(({ value: themeOption, description, icon: ThemeIcon }) => {
-                const selected = market.themes.includes(themeOption);
-                return (
-                  <Tooltip key={themeOption} delayDuration={180}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        disabled={marketDisabled}
-                        aria-pressed={selected}
-                        onClick={() => {
-                          if (selected) {
-                            onThemesChange(
-                              market.themes.filter((x) => x !== themeOption),
-                            );
-                          } else {
-                            onThemesChange([...market.themes, themeOption]);
-                          }
-                        }}
-                        className={clsx(
-                          "min-h-[40px] min-w-0 rounded-[8px] border px-2.5 py-2 font-['Onest',sans-serif] text-[12px] font-semibold leading-tight tracking-[0.2px] transition-all focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1",
-                          selected
-                            ? isV2
-                              ? "border-[#c9a962] bg-[#141414] text-[#c9a962] focus-visible:outline-[#c9a962]"
-                              : "border-[rgba(214,176,106,0.62)] bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] focus-visible:outline-[#d6b06a]"
-                            : isV2
-                              ? "border-transparent text-[#888888] hover:border-[#3d3428] hover:bg-[#141414] hover:text-[#c4c4c4] focus-visible:outline-[#c9a962]"
-                              : "border-transparent text-[#9a9ba8] hover:border-[rgba(214,176,106,0.22)] hover:bg-[rgba(120,90,40,0.14)] hover:text-[#f1dfbf] focus-visible:outline-[#d6b06a]",
-                          marketDisabled && "cursor-not-allowed",
-                        )}
-                      >
-                        <span className="flex min-w-0 items-center justify-center gap-1.5">
-                          {selected ? (
-                            <Check
-                              className="h-3 w-3 shrink-0"
-                              strokeWidth={2.5}
-                              aria-hidden
-                            />
-                          ) : (
-                            <ThemeIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                          )}
-                          <span className="truncate">{themeOption}</span>
-                        </span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      sideOffset={6}
-                      className="z-[130] max-w-[240px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]"
+                    <p
+                      className="min-w-0 truncate text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] text-[#9b9cad]"
+                      title={metric.label}
                     >
-                      <p className="mb-0.5 font-semibold text-[#f0ddb9]">
-                        {themeOption}
-                      </p>
-                      <p className="leading-relaxed text-[#a8a8b8]">
-                        {description}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
-          )}
+                      {metric.label}
+                    </p>
+                    <p
+                      className={clsx(
+                        "min-w-0 truncate font-mono text-[15px] font-semibold leading-[18px]",
+                        metric.tone,
+                      )}
+                    >
+                      {metric.value}
+                    </p>
+                  </div>
+                ))}
+                <StrategyBreakdownPanel
+                  contextLabel={market.token}
+                  venues={strategyMetrics.venues}
+                  netCapture={strategyMetrics.netCapture}
+                  hedgeIntegrity={strategyMetrics.hedgeIntegrity}
+                  fundingSettlement={strategyMetrics.fundingSettlement}
+                />
+              </div>
+            )}
+
+            {market.mode === "themes" && (
+              <div
+                role="group"
+                aria-label="Market categories. Select one or more."
+                className={clsx(
+                  "grid w-full grid-cols-2 gap-1 rounded-[10px] border p-1 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.03)] min-[560px]:grid-cols-3",
+                  isV2
+                    ? "border-[#2a2a2a] bg-[#0a0a0a]"
+                    : "border-[rgba(255,255,255,0.09)] bg-[rgba(10,10,11,0.94)]",
+                  marketDisabled ? "opacity-50" : "",
+                )}
+              >
+                {THEME_CATALOG.map(({ value: themeOption, description, icon: ThemeIcon }) => {
+                  const selected = market.themes.includes(themeOption);
+                  return (
+                    <Tooltip key={themeOption} delayDuration={180}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={marketDisabled}
+                          aria-pressed={selected}
+                          onClick={() => {
+                            if (selected) {
+                              onThemesChange(
+                                market.themes.filter((x) => x !== themeOption),
+                              );
+                            } else {
+                              onThemesChange([...market.themes, themeOption]);
+                            }
+                          }}
+                          className={clsx(
+                            "min-h-[40px] min-w-0 rounded-[8px] border px-2.5 py-2 font-['Onest',sans-serif] text-[12px] font-semibold leading-tight tracking-[0.2px] transition-all focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1",
+                            selected
+                              ? isV2
+                                ? "border-[#c9a962] bg-[#141414] text-[#c9a962] focus-visible:outline-[#c9a962]"
+                                : "border-[rgba(214,176,106,0.62)] bg-[linear-gradient(180deg,rgba(73,56,31,0.92)_0%,rgba(35,28,19,0.95)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] focus-visible:outline-[#d6b06a]"
+                              : isV2
+                                ? "border-transparent text-[#888888] hover:border-[#3d3428] hover:bg-[#141414] hover:text-[#c4c4c4] focus-visible:outline-[#c9a962]"
+                                : "border-transparent text-[#9a9ba8] hover:border-[rgba(214,176,106,0.22)] hover:bg-[rgba(120,90,40,0.14)] hover:text-[#f1dfbf] focus-visible:outline-[#d6b06a]",
+                            marketDisabled && "cursor-not-allowed",
+                          )}
+                        >
+                          <span className="flex min-w-0 items-center justify-center gap-1.5">
+                            {selected ? (
+                              <Check
+                                className="h-3 w-3 shrink-0"
+                                strokeWidth={2.5}
+                                aria-hidden
+                              />
+                            ) : (
+                              <ThemeIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            )}
+                            <span className="truncate">{themeOption}</span>
+                          </span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        sideOffset={6}
+                        className="z-[130] max-w-[240px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]"
+                      >
+                        <p className="mb-0.5 font-semibold text-[#f0ddb9]">
+                          {themeOption}
+                        </p>
+                        <p className="leading-relaxed text-[#a8a8b8]">
+                          {description}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -875,6 +952,7 @@ export function DeltaVaultBuilder({
   const [dexA, setDexA] = useState<DexSelection>("Hyperliquid");
   const [dexB, setDexB] = useState<DexSelection>("Pacifica");
   const [market, setMarket] = useState<MarketSelection>({
+    structure: "Perp <> Perp",
     mode: "tokens",
     themes: [],
     token: "BTC-USDC",
@@ -1115,6 +1193,10 @@ export function DeltaVaultBuilder({
     );
   };
 
+  const handleStructureChange = (structure: LegStructure) => {
+    setMarket((prev) => ({ ...prev, structure }));
+  };
+
   const handleModeChange = (mode: MarketMode) => {
     setMarket((prev) => ({ ...prev, mode }));
   };
@@ -1329,6 +1411,7 @@ export function DeltaVaultBuilder({
             dexBalanceMap={dexBalances}
             dexWalletMap={dexWallets}
             market={market}
+            onStructureChange={handleStructureChange}
             onModeChange={handleModeChange}
             onThemesChange={handleThemesChange}
             onTokenChange={handleTokenChange}
