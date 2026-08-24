@@ -87,6 +87,20 @@ export type LegStructure = "Perp <> Perp" | "Spot <> Perp";
 
 export const LEG_STRUCTURES: LegStructure[] = ["Perp <> Perp", "Spot <> Perp"];
 
+/**
+ * The structure is not picked directly — it falls out of the instrument chosen on
+ * each leg. Spot on either side makes it cash-and-carry; two perps make it a funding
+ * arb. Spot on both sides is not a delta-neutral vault at all (nothing is short, so
+ * there is no funding to collect and no hedge), which is why the leg toggles refuse
+ * that combination rather than this function having a third case to return.
+ */
+export function legStructureFor(
+  a: InstrumentType,
+  b: InstrumentType,
+): LegStructure {
+  return a === "Spot" || b === "Spot" ? "Spot <> Perp" : "Perp <> Perp";
+}
+
 function supportsStructure(
   instruments: InstrumentType[],
   structure: LegStructure,
@@ -148,6 +162,19 @@ export const TOKEN_FILTERS: TokenFilter[] = [
   "All Tokens",
   ...THEME_CATALOG.map((t) => t.value),
 ];
+
+/**
+ * Whether a pair can still be traded under a structure. Flipping a leg to spot can
+ * strand a perp-only selection (stocks, commodities, FX), so the caller checks this
+ * before keeping the current token.
+ */
+export function tokenSupportsStructure(
+  token: TokenOption,
+  structure: LegStructure,
+): boolean {
+  const entry = TOKEN_CATALOG.find((t) => t.value === token);
+  return entry ? supportsStructure(entry.instruments, structure) : false;
+}
 
 export function filterTokens(
   query: string,

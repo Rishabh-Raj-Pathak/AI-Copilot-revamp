@@ -25,8 +25,11 @@ import {
 } from "./ui/dialog";
 import { DexLabel } from "./DexLogo";
 import {
-  LEG_STRUCTURES,
   THEME_CATALOG,
+  filterTokens,
+  legStructureFor,
+  tokenSupportsStructure,
+  type InstrumentType,
   type LegStructure,
   type ThemeOption,
   type TokenOption,
@@ -46,12 +49,6 @@ export type { ManagedDexId };
 type MarketMode = "themes" | "tokens";
 
 type MarketSelection = {
-  /**
-   * The parent choice. It decides which market controls below are applicable at
-   * all, so it sits above the Categories/Tokens switcher rather than inside the
-   * token picker.
-   */
-  structure: LegStructure;
   mode: MarketMode;
   themes: ThemeOption[];
   token: TokenOption;
@@ -400,8 +397,12 @@ type DexPairSetupCardProps = {
   dexConnectionMap: Record<ManagedDexId, boolean>;
   dexBalanceMap: Record<ManagedDexId, number>;
   dexWalletMap: Record<ManagedDexId, string | null>;
+  /** The instrument each leg trades. Derived structure arrives alongside it. */
+  legA: InstrumentType;
+  legB: InstrumentType;
+  structure: LegStructure;
+  onLegInstrumentChange: (slot: "a" | "b", instrument: InstrumentType) => void;
   market: MarketSelection;
-  onStructureChange: (structure: LegStructure) => void;
   onModeChange: (mode: MarketMode) => void;
   onThemesChange: (themes: ThemeOption[]) => void;
   onTokenChange: (token: TokenOption) => void;
@@ -429,8 +430,11 @@ function DexPairSetupCard({
   dexConnectionMap,
   dexBalanceMap,
   dexWalletMap,
+  legA,
+  legB,
+  structure,
+  onLegInstrumentChange,
   market,
-  onStructureChange,
   onModeChange,
   onThemesChange,
   onTokenChange,
@@ -438,15 +442,26 @@ function DexPairSetupCard({
   variant = "default",
 }: DexPairSetupCardProps) {
   const isV2 = variant === "v2";
-  // Height is kept out of the base so the categories trigger can grow with wrapped
-  // selections instead of fighting a fixed `h-` from the same utility group.
-  const selectTriggerBaseClass = clsx(
-    "w-full rounded-[10px] px-3 text-left shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors focus:ring-1 [&_svg]:h-3.5 [&_svg]:w-3.5",
+  /**
+   * The venue trigger inside the fused DEX field. It gives up its own border, fill
+   * and radius so the wrapper can own them — otherwise the row reads as two boxes
+   * jammed together rather than one control.
+   *
+   * `h-full!` is not decoration: the shared Select carries `data-[size=default]:h-9`,
+   * an attribute selector that outranks any plain height utility, so the trigger
+   * would sit 36px tall inside a 40px field and leave a dead strip under it.
+   */
+  const fusedSelectTriggerClass = clsx(
+    "h-full! w-full rounded-none border-0 bg-transparent px-3 text-left shadow-none transition-colors focus:ring-0 focus-visible:ring-0 [&_svg]:h-3.5 [&_svg]:w-3.5",
     isV2
-      ? "border border-[#2a2a2a] bg-[#0d0d0d] text-[#E8E2D2] hover:bg-[#141414] focus:ring-[#d4af37]/30 [&_svg]:text-[#d4af37]/80"
-      : "border border-[rgba(255,255,255,0.09)] bg-[linear-gradient(180deg,rgba(19,19,21,0.96)_0%,rgba(11,11,13,0.98)_100%)] hover:bg-[linear-gradient(180deg,rgba(25,25,28,0.98)_0%,rgba(12,12,15,0.99)_100%)] focus:ring-[rgba(214,176,106,0.24)] [&_svg]:text-[rgba(227,202,157,0.76)]",
+      ? "text-[#E8E2D2] hover:bg-[rgba(255,255,255,0.02)] [&_svg]:text-[#d4af37]/80"
+      : "hover:bg-[rgba(255,255,255,0.025)] [&_svg]:text-[rgba(227,202,157,0.76)]",
   );
-  const selectTriggerClass = clsx("h-[44px]", selectTriggerBaseClass);
+  /**
+   * Both rows of a DEX card split at this same offset, which is what makes the
+   * card read as aligned. Pulled out so the two can never drift apart.
+   */
+  const dexFieldAsideClass = "w-[116px] shrink-0 border-l max-tablet:w-[104px]";
   const selectContentClass = clsx(
     isV2
       ? "border-[#3d3428] bg-[#0d0d0d] text-[#E8E2D2]"
@@ -460,6 +475,8 @@ function DexPairSetupCard({
     onChange: (v: DexSelection) => void,
   ) => {
     const connected = value !== "" ? dexConnectionMap[value] : false;
+    const instrument = slot === "a" ? legA : legB;
+    const otherInstrument = slot === "a" ? legB : legA;
     return (
       <div
         className={clsx(
@@ -477,109 +494,218 @@ function DexPairSetupCard({
         >
           {slot === "a" ? "Select DEX A" : "Select DEX B"}
         </p>
-        <div className="min-w-0">
-          <Select
-            value={value || undefined}
-            onValueChange={(v) => onChange(v as ManagedDexId)}
-          >
-            <SelectTrigger className={selectTriggerClass}>
-              <div className="flex min-w-0 flex-1 items-center">
-                <SelectValue
-                  placeholder="Select DEX"
-                  className="truncate font-['Onest',sans-serif] text-[14px] text-[#ececf3]"
-                />
-              </div>
-            </SelectTrigger>
-            <SelectContent className={selectContentClass}>
-              {(Object.keys(DEX_PROFILES) as ManagedDexId[]).map((id) => (
-                <SelectItem
-                  key={`${slot}-${id}`}
-                  value={id}
-                  disabled={excludeDex !== "" && id === excludeDex}
-                  className="pl-3 text-[14px] text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)] data-[disabled]:pointer-events-none data-[disabled]:opacity-40"
-                >
-                  <span className="inline-flex min-w-0 items-center gap-2">
-                    <DexConnIndicator connected={dexConnectionMap[id]} />
-                    <DexLabel dex={id} />
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="mt-2">
-          {connected ? (
-            <div className="flex flex-col gap-2 max-tablet:items-stretch">
-              <div className="flex items-center gap-2 max-tablet:flex-col max-tablet:items-stretch">
-                <div className="inline-flex h-[38px] min-w-0 flex-1 items-center justify-between gap-2 rounded-[10px] border border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.1)] px-2.5 max-tablet:w-full">
-                  <span className="text-[10px] uppercase tracking-[0.8px] text-[#9de7b5]">
-                    Balance
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[12px] font-semibold text-[color:var(--vault-pnl-positive)]">
-                    <DexConnIndicator connected />
-                    {formatCompactUsd(dexBalanceMap[value])}
-                  </span>
+        {/* Primary field — venue and the book it trades on are one decision, so
+            they are one 40px control split by a rule, not two boxes with a gap
+            between them. This row is the tallest thing in the card because it is
+            the only thing in the card the user actually has to decide. */}
+        <div
+          className={clsx(
+            // No focus-within accent: the field keeps the same border whether or
+            // not the venue select inside it holds focus.
+            "flex h-10 items-stretch overflow-hidden rounded-[10px] border shadow-[inset_0_2px_6px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.04)]",
+            isV2
+              ? "border-[#2a2a2a] bg-[#0d0d0d]"
+              : "border-[rgba(255,255,255,0.1)] bg-[linear-gradient(180deg,rgba(19,19,21,0.96)_0%,rgba(11,11,13,0.98)_100%)]",
+          )}
+        >
+          <div className="min-w-0 flex-1">
+            <Select
+              value={value || undefined}
+              onValueChange={(v) => onChange(v as ManagedDexId)}
+            >
+              <SelectTrigger className={fusedSelectTriggerClass}>
+                <div className="flex min-w-0 flex-1 items-center">
+                  <SelectValue
+                    placeholder="Select DEX"
+                    className="truncate font-['Onest',sans-serif] text-[14px] text-[#ececf3]"
+                  />
                 </div>
+              </SelectTrigger>
+              <SelectContent className={selectContentClass}>
+                {(Object.keys(DEX_PROFILES) as ManagedDexId[]).map((id) => (
+                  <SelectItem
+                    key={`${slot}-${id}`}
+                    value={id}
+                    disabled={excludeDex !== "" && id === excludeDex}
+                    className="pl-3 text-[14px] text-[#f1dfbf] focus:bg-[rgba(120,90,40,0.28)] focus:text-[#f6e5c8] data-[state=checked]:bg-[rgba(120,90,40,0.2)] data-[disabled]:pointer-events-none data-[disabled]:opacity-40"
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <DexConnIndicator connected={dexConnectionMap[id]} />
+                      <DexLabel dex={id} />
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div
+            role="group"
+            aria-label={`Instrument for DEX ${slot.toUpperCase()}`}
+            // A flat well holding two rounded keys, mirroring the Active Vaults
+            // filter group exactly: same padding and gap, and — critically — no
+            // inset shadow. An inset shadow here casts a dark band over the top
+            // ~7px of the well, which sits right on the selected key's top border
+            // and reads as the border being cropped. Flat keeps it crisp.
+            className={clsx(
+              // p-1 (not p-1.5): the well shares the 40px field, so the tighter
+              // inset lets each key stand ~30px tall — matching the height of the
+              // Active Vaults filter tabs it borrows its look from, instead of a
+              // shrunken 26px chip floating in the field.
+              "flex items-stretch gap-1 p-1",
+              dexFieldAsideClass,
+              isV2
+                ? "border-[#232323] bg-[#0d0d0d]"
+                : "border-[rgba(255,255,255,0.08)] bg-[rgba(10,10,10,0.78)]",
+            )}
+          >
+            {(["Perp", "Spot"] as InstrumentType[]).map((option) => {
+              const active = instrument === option;
+              // A vault needs one leg short to hedge the other, and you cannot
+              // short spot — so the second spot is refused rather than silently
+              // rewriting the leg the user set first.
+              const blocked = option === "Spot" && otherInstrument === "Spot";
+              return (
                 <button
+                  key={option}
                   type="button"
-                  onClick={() => {
-                    if (value) onDepositDex(value);
-                  }}
-                  className="inline-flex h-[38px] shrink-0 items-center justify-center rounded-[10px] border border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(42,34,25,0.98)_0%,rgba(20,16,12,0.99)_100%)] px-3 text-[10px] font-semibold uppercase tracking-[0.7px] text-[#f0ddb9] transition-colors hover:border-[rgba(206,163,95,0.74)] max-tablet:w-full"
+                  disabled={blocked}
+                  aria-pressed={active}
+                  title={
+                    blocked
+                      ? "One leg must be a perp — both legs cannot trade spot."
+                      : undefined
+                  }
+                  onClick={() => onLegInstrumentChange(slot, option)}
+                  // The primary control in this card. It reuses the exact
+                  // recipe of the Active Vaults "All" filter tab — same gold
+                  // border, gradient fill, radius, type and ink — so the two
+                  // controls read as one family. The inactive segment stays
+                  // borderless so only one key at a time looks pressable.
+                  className={clsx(
+                    "flex-1 cursor-pointer rounded-[9px] border border-transparent px-1 text-[10px] font-semibold uppercase tracking-[0.85px] transition-colors disabled:cursor-not-allowed disabled:opacity-30",
+                    active
+                      ? "border-[rgba(214,176,106,0.42)] bg-[linear-gradient(180deg,rgba(54,42,28,0.96)_0%,rgba(22,18,13,0.98)_100%)] text-[#f0ddb9]"
+                      : "text-[#9394a1] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#d9dae4]",
+                  )}
                 >
-                  Deposit
+                  {option}
                 </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Secondary field — a readout, not a control, so it is shorter and flat
+            where the field above is recessed. It splits at the same offset, which
+            is what lines the two rows up. Deposit is a quiet inline action here:
+            as a filled gold button it competed with the instrument toggle directly
+            above it, and it is nowhere near the most important thing on screen. */}
+        <div
+          className={clsx(
+            "mt-1.5 flex h-8 items-stretch overflow-hidden rounded-[8px] border",
+            isV2
+              ? "border-[#242424] bg-[#0f0f0f]"
+              : "border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.022)]",
+          )}
+        >
+          {connected ? (
+            <>
+              {/* Green accent is scoped to the balance cell — it stops at the
+                  divider so the Deposit action stays neutral. #4ade80 is the same
+                  green the APY metric in this card already uses. */}
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 bg-[rgba(74,222,128,0.08)] px-2.5">
+                <span className="shrink-0 text-[10px] uppercase tracking-[0.8px] text-[#9de7b5]">
+                  Balance
+                </span>
+                <span className="truncate font-mono text-[12px] font-medium text-[#4ade80]">
+                  {formatCompactUsd(dexBalanceMap[value])}
+                </span>
               </div>
-              <div
+              <button
+                type="button"
+                onClick={() => {
+                  if (value) onDepositDex(value);
+                }}
                 className={clsx(
-                  "flex items-center gap-3 border-t px-1 pb-1 pt-2.5 max-tablet:flex-col max-tablet:items-stretch max-tablet:gap-2",
-                  isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.06)]",
+                  "cursor-pointer text-[10px] font-semibold uppercase tracking-[0.85px] transition-colors",
+                  dexFieldAsideClass,
+                  isV2
+                    ? "border-[#242424] text-[#b99a5e] hover:bg-[rgba(212,175,55,0.07)] hover:text-[#d8bd83]"
+                    : "border-[rgba(255,255,255,0.07)] text-[#c2ab80] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#f0ddb9]",
                 )}
               >
-                <Wallet
-                  className={clsx(
-                    "h-3.5 w-3.5 shrink-0",
-                    isV2 ? "text-[#888888]" : "text-[#8f90a1]",
-                  )}
-                  aria-hidden
-                />
-                <span
-                  className="min-w-0 flex-1 truncate font-mono text-[12px] text-[#ececf3]"
-                  title={dexWalletMap[value] ?? undefined}
-                >
-                  {dexWalletMap[value]
-                    ? formatWalletAddress(dexWalletMap[value]!)
-                    : "Wallet linked"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (value) onChangeWalletDex(value);
-                  }}
-                  className="shrink-0 rounded-[6px] px-2.5 py-1.5 text-[11px] font-medium text-[#f87171] transition-colors hover:bg-[rgba(248,113,113,0.1)] hover:text-[#fca5a5]"
-                >
-                  Change wallet
-                </button>
-              </div>
-            </div>
+                Deposit
+              </button>
+            </>
           ) : (
-            <button
-              type="button"
-              disabled={value === ""}
-              onClick={() => {
-                if (value) onConnectDex(value);
-              }}
-              className={`inline-flex h-[38px] items-center gap-2 rounded-[10px] border px-3 text-[10px] font-semibold uppercase tracking-[0.7px] transition-colors ${
-                value === ""
-                  ? "cursor-not-allowed border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] text-[#7f8090]"
-                  : "border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(42,34,25,0.98)_0%,rgba(20,16,12,0.99)_100%)] text-[#f0ddb9] hover:border-[rgba(206,163,95,0.74)]"
-              }`}
-            >
-              <DexConnIndicator connected={false} />
-              Connect DEX
-            </button>
+            <>
+              <div className="flex min-w-0 flex-1 items-center gap-2 px-2.5">
+                <DexConnIndicator connected={false} />
+                <span
+                  className={clsx(
+                    "truncate text-[11px]",
+                    isV2 ? "text-[#7c7c7c]" : "text-[#82838f]",
+                  )}
+                >
+                  {value === "" ? "No venue selected" : "Not connected"}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={value === ""}
+                onClick={() => {
+                  if (value) onConnectDex(value);
+                }}
+                className={clsx(
+                  "text-[10px] font-semibold uppercase tracking-[0.85px] transition-colors",
+                  dexFieldAsideClass,
+                  isV2 ? "border-[#242424]" : "border-[rgba(255,255,255,0.07)]",
+                  value === ""
+                    ? "cursor-not-allowed text-[#5f606c]"
+                    : isV2
+                      ? "cursor-pointer text-[#b99a5e] hover:bg-[rgba(212,175,55,0.07)] hover:text-[#d8bd83]"
+                      : "cursor-pointer text-[#c2ab80] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#f0ddb9]",
+                )}
+              >
+                Connect
+              </button>
+            </>
           )}
         </div>
+
+        {connected && (
+          <div
+            className={clsx(
+              "mt-2.5 flex items-center gap-2.5 border-t pt-2.5",
+              isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.06)]",
+            )}
+          >
+            <Wallet
+              className={clsx(
+                "h-3.5 w-3.5 shrink-0",
+                isV2 ? "text-[#7c7c7c]" : "text-[#82838f]",
+              )}
+              aria-hidden
+            />
+            <span
+              className="min-w-0 flex-1 truncate font-mono text-[11px] text-[#b9bac6]"
+              title={dexWalletMap[value] ?? undefined}
+            >
+              {dexWalletMap[value]
+                ? formatWalletAddress(dexWalletMap[value]!)
+                : "Wallet linked"}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (value) onChangeWalletDex(value);
+              }}
+              className="shrink-0 cursor-pointer rounded-[6px] px-1.5 py-1 text-[11px] font-medium text-[#e06a6a] transition-colors hover:bg-[rgba(248,113,113,0.1)] hover:text-[#fca5a5]"
+            >
+              Change wallet
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -632,13 +758,9 @@ function DexPairSetupCard({
           Select a DEX on both venues to unlock category and token controls.
         </p>
       )}
-      {/* One card, two zones: a header holding the structure selector and a body
-          holding everything that selector governs, split by a full-bleed rule. The
-          earlier folder-tab treatment could not hold its seam — a transparent tab
-          border does not mask the panel outline beneath it — and a tab that reads as
-          a chip floating on a box is worse than no tab at all. A recessed track with
-          a raised active segment is unambiguous about being a control, and the shared
-          card is what carries the parent/child relationship. */}
+      {/* Structure is no longer picked here — it is the sum of the two per-leg
+          instrument toggles above, so this panel lost its header band. It still
+          reads the resolved structure, which is what filters the token list. */}
       <div
         className={clsx(
           "relative z-[1] mt-4 overflow-hidden rounded-[12px] border",
@@ -647,56 +769,6 @@ function DexPairSetupCard({
             : "border-[rgba(255,255,255,0.08)] bg-[rgba(12,12,14,0.6)]",
         )}
       >
-        {/* Header — the parent selector. */}
-        <div
-          className={clsx(
-            "border-b px-3 py-3",
-            isV2
-              ? "border-[#232323] bg-[#080808]"
-              : "border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.015)]",
-          )}
-        >
-          <div
-            role="group"
-            aria-label="Leg structure"
-            className={clsx(
-              // Recessed track. The inset shadow is what sells "something sits in here".
-              "inline-flex gap-1 rounded-[10px] border p-1 shadow-[inset_0_2px_6px_rgba(0,0,0,0.55)]",
-              isV2
-                ? "border-[#1f1f1f] bg-[#050505]"
-                : "border-[rgba(0,0,0,0.6)] bg-[rgba(6,6,7,0.9)]",
-              marketDisabled ? "opacity-50" : "",
-            )}
-          >
-            {LEG_STRUCTURES.map((option) => {
-              const active = market.structure === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  disabled={marketDisabled}
-                  aria-pressed={active}
-                  onClick={() => onStructureChange(option)}
-                  className={clsx(
-                    "h-[36px] cursor-pointer rounded-[8px] border px-5 text-[13px] font-semibold tracking-[0.3px] transition-all duration-150 disabled:cursor-not-allowed",
-                    active
-                      // Raised out of the track: lit top edge, own shadow, gold rim.
-                      ? isV2
-                        ? "border-[#c9a962] bg-[#161616] text-[#c9a962] shadow-[0_1px_3px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.09)]"
-                        : "border-[rgba(214,176,106,0.5)] bg-[linear-gradient(180deg,rgba(58,45,26,0.95)_0%,rgba(32,26,17,0.95)_100%)] text-[#f5e4c2] shadow-[0_1px_3px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)]"
-                      : isV2
-                        ? "border-transparent text-[#8a8a8a] hover:bg-[#121212] hover:text-[#c4c4c4]"
-                        : "border-transparent text-[#82838f] hover:bg-[rgba(255,255,255,0.045)] hover:text-[#d8d9e3]",
-                  )}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Body — everything the header governs. */}
         <div className="p-3">
           <label
             className={clsx(
@@ -711,7 +783,11 @@ function DexPairSetupCard({
             className={clsx(
               // Deliberately smaller than the tab strip above it: a subordinate
               // control inside the panel, not a second set of tabs.
-              "inline-flex h-[32px] rounded-[8px] border p-[3px]",
+              //
+              // `items-center` matters: without it the chips fall back to
+              // flex-start, so any rounding in the track's height lands entirely
+              // on the bottom gap and the chip reads as sitting low.
+              "inline-flex h-[32px] items-center rounded-[8px] border p-[3px]",
               isV2
                 ? "border-[#232323] bg-[#0a0a0a]"
                 : "border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]",
@@ -727,11 +803,20 @@ function DexPairSetupCard({
                   disabled={marketDisabled}
                   onClick={() => onModeChange(mode)}
                   className={clsx(
-                    "h-[26px] cursor-pointer rounded-[6px] border px-3 text-[12px] font-medium tracking-[0.2px] transition-colors disabled:cursor-not-allowed",
+                    // 24px, not 26: the track is 32 tall with a 1px border and 3px
+                    // of padding, so 24 is all the room there is. At 26 the chip
+                    // overflowed its own track.
+                    "h-[24px] cursor-pointer rounded-[6px] border px-3 text-[12px] font-medium tracking-[0.2px] transition-colors disabled:cursor-not-allowed",
+                    // Subordinate switcher: a flat gold tint, no rim and no
+                    // gradient. The gradient's dark bottom stop was reading as a
+                    // shadow edge under the chip, which is exactly the weight this
+                    // control should not carry — depth belongs to the instrument
+                    // toggle. The border stays in the class list as transparent so
+                    // both states keep the same box.
                     active
                       ? isV2
-                        ? "border-[#3d3428] bg-[#1a1a1a] text-[#c9a962]"
-                        : "border-[rgba(214,176,106,0.24)] bg-[rgba(214,176,106,0.13)] text-[#e8d5b5]"
+                        ? "border-transparent bg-[rgba(201,169,98,0.14)] text-[#d5bd8b]"
+                        : "border-transparent bg-[rgba(214,176,106,0.16)] text-[#e8d5b5]"
                       : isV2
                         ? "border-transparent text-[#888888] hover:text-[#c4c4c4]"
                         : "border-transparent text-[#7f8090] hover:text-[#cfcfd8]",
@@ -750,7 +835,7 @@ function DexPairSetupCard({
                 disabled={marketDisabled}
                 value={market.token}
                 onChange={onTokenChange}
-                structure={market.structure}
+                structure={structure}
                 variant={variant}
                 // Sized to hold the longest pair alongside the leg-structure label, so
                 // the metric strip beside it takes the rest of the row. With no strip to
@@ -951,8 +1036,12 @@ export function DeltaVaultBuilder({
   // strip and the picker have something to show on first paint.
   const [dexA, setDexA] = useState<DexSelection>("Hyperliquid");
   const [dexB, setDexB] = useState<DexSelection>("Pacifica");
+  // The book each venue trades. Structure is read off this pair rather than being
+  // stored beside it, so the two can never drift out of agreement.
+  const [legA, setLegA] = useState<InstrumentType>("Perp");
+  const [legB, setLegB] = useState<InstrumentType>("Perp");
+  const structure = legStructureFor(legA, legB);
   const [market, setMarket] = useState<MarketSelection>({
-    structure: "Perp <> Perp",
     mode: "tokens",
     themes: [],
     token: "BTC-USDC",
@@ -1193,8 +1282,26 @@ export function DeltaVaultBuilder({
     );
   };
 
-  const handleStructureChange = (structure: LegStructure) => {
-    setMarket((prev) => ({ ...prev, structure }));
+  const handleLegInstrumentChange = (
+    slot: "a" | "b",
+    instrument: InstrumentType,
+  ) => {
+    const nextA = slot === "a" ? instrument : legA;
+    const nextB = slot === "b" ? instrument : legB;
+    // Spot on both legs is refused at the button, so this only ever sees a legal
+    // pair; no correction of the other leg is needed here.
+    if (slot === "a") setLegA(instrument);
+    else setLegB(instrument);
+
+    // Flipping a leg to spot narrows the market list to pairs with a spot book, and
+    // a perp-only selection (stocks, commodities, FX) would otherwise be left
+    // selected but absent from the picker.
+    const nextStructure = legStructureFor(nextA, nextB);
+    setMarket((prev) => {
+      if (tokenSupportsStructure(prev.token, nextStructure)) return prev;
+      const fallback = filterTokens("", "All Tokens", nextStructure)[0];
+      return fallback ? { ...prev, token: fallback.value } : prev;
+    });
   };
 
   const handleModeChange = (mode: MarketMode) => {
@@ -1410,8 +1517,11 @@ export function DeltaVaultBuilder({
             dexConnectionMap={dexConnected}
             dexBalanceMap={dexBalances}
             dexWalletMap={dexWallets}
+            legA={legA}
+            legB={legB}
+            structure={structure}
+            onLegInstrumentChange={handleLegInstrumentChange}
             market={market}
-            onStructureChange={handleStructureChange}
             onModeChange={handleModeChange}
             onThemesChange={handleThemesChange}
             onTokenChange={handleTokenChange}
