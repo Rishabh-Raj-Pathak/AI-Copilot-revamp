@@ -131,16 +131,10 @@ export default function CompetePage({
             <h1 className="text-hero text-ink">
               Compete
             </h1>
-            {/* One line from `sm` up — the measure cap was splitting a sentence that
-              comfortably fits. */}
-            <p className="text-copy mt-3 text-ink-muted sm:whitespace-nowrap xl:mt-4">
-              Trade our partner venues through HyprEarn and climb the volume
-              leaderboard.
-            </p>
-            {/* Inside the header, as a third sentence of the hub's opening
-                statement — what this page is, what it is for, and what you get
-                for joining. Above the title it was a banner about the page
-                rather than part of it. */}
+            {/* The offer is the whole subhead. The description that used to sit
+                here — "Trade our partner venues…" — was restating what the grid
+                of cards under it shows at a glance, and it pushed the one line
+                with something at stake in it down a row. */}
             {pendingEntry ? (
               <CompeteEntryPrompt onOpen={() => openEntry(pendingEntry.id)} />
             ) : null}

@@ -8,11 +8,15 @@ import { EntryOffer, XMark } from "./competeCopy.jsx";
  * without this the only remaining way in would be the CTA on one card — fine
  * if you noticed it, invisible if you scrolled past.
  *
- * One sentence in the page header, with the action set inside it as text. The
+ * One sentence in the page header — the hub's subhead now that the generic
+ * description above it is gone — with the action set inside it as text. The
  * bordered chip this used to be cost a row of its own and had no shared edge
  * with the line above it, so it read as appended rather than placed; as a
- * dashed-underlined phrase it sits in the sentence's own baseline and the
- * header keeps its shape whether the offer is showing or not.
+ * dashed-underlined phrase it sits on the sentence's own baseline.
+ *
+ * That does mean the header loses its second line once you enter. Acceptable:
+ * a title over a grid of cards that each name themselves needs no caption, and
+ * a sentence kept only to hold a row's worth of height is filler.
  *
  * Weight and the dashed rule carry the affordance, not a box. Solid underline
  * would read as a link to somewhere else — this opens a dialog over the page
@@ -26,10 +30,10 @@ import { EntryOffer, XMark } from "./competeCopy.jsx";
  */
 export default function CompeteEntryPrompt({ onOpen }) {
   return (
-    /* `text-ink` against the muted description above it: two muted lines in a
-       row read as one long paragraph, and this is the one with something in it
-       for the reader. Ink does the separating so the spacing does not have to. */
-    <p className="text-copy mt-2 text-ink">
+    /* Sits directly under the page title as its subhead, so it takes the gap
+       the description used to hold. `text-ink` rather than the muted grey a
+       subhead would normally get: this one is an offer, not a caption. */
+    <p className="text-copy mt-3 text-ink xl:mt-4">
       <EntryOffer />{" "}
       <button
         type="button"
