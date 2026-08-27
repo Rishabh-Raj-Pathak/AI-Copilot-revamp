@@ -69,6 +69,22 @@ export default defineConfig([
           message:
             'Weight is capped at 500 on trading surfaces. Use the ink ladder for hierarchy — src/design-system/TYPE-SCALE.md',
         },
+        /*
+         * The section scale (Compete and friends) carries display sizes and
+         * 600/700 weights. Correct there, wrong here — fence it off before it
+         * leaks, the way the arbitrary sizes did.
+         */
+        {
+          selector: 'Literal[value=/\btext-(hero|headline|figure|copy|tag)\b/]',
+          message:
+            'Section-scale class on a trading surface. Use text-anchor | text-control | text-data | text-micro | text-meta | ds-eyebrow — src/design-system/TYPE-SCALE.md',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/\btext-(hero|headline|figure|copy|tag)\b/]',
+          message:
+            'Section-scale class on a trading surface. Use the trading scale — src/design-system/TYPE-SCALE.md',
+        },
+
       ],
     },
   },

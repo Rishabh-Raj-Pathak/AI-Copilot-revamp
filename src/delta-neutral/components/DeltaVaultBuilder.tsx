@@ -734,14 +734,6 @@ function DexPairSetupCard({
         >
           Cross-DEX Setup
         </p>
-        <p
-          className={clsx(
-            "text-right text-[10px] leading-tight",
-            isV2 ? "text-[#666666]" : "text-[#7d7e88]",
-          )}
-        >
-          Legs are assigned at execution, not at setup.
-        </p>
       </div>
       <div className="relative z-[1] grid grid-cols-1 gap-3 tablet:grid-cols-2">
         {renderDexSelector("a", dexA, dexB, onDexAChange)}

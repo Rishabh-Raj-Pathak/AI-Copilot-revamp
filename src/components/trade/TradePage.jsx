@@ -15,6 +15,7 @@ import { DEFAULT_COIN } from "./tradeMockData.js";
 export default function TradePage({
   onOpenCopilot,
   onOpenRewards,
+  onOpenCompete,
   onVaultViewChange,
   onOpenCopilotTutorial,
   walletConnected,
@@ -52,6 +53,7 @@ export default function TradePage({
           if (label === "AI Copilot") onOpenCopilot?.();
           if (label === "Rewards") onOpenRewards?.();
           if (label === "KOL") onOpenRewards?.("kol");
+          if (label === "Compete") onOpenCompete?.();
         }}
         onVaultViewChange={onVaultViewChange}
         onCopilotTutorial={onOpenCopilotTutorial}

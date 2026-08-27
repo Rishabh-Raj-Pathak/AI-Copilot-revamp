@@ -45,15 +45,22 @@ function Logo({ className = "h-5 w-[15px] shrink-0 relative" }) {
   );
 }
 
+/**
+ * Top-level nav order. `"Vaults"` keeps its historic id — parents still pass
+ * `activeNavItem="Vaults"` — but renders as "Agents". Portfolio, PnL Calendar
+ * and Leaderboard moved into the More menu (`MORE_NAV_ITEMS`).
+ */
 const nav = [
   "AI Copilot",
   "Vaults",
   "Trade",
-  "Portfolio",
-  "PnL Calendar",
-  "Leaderboard",
   "Rewards",
+  "Compete",
+  "Points",
 ];
+
+/** Secondary destinations, relocated out of the top row into More. */
+const MORE_NAV_ITEMS = ["Portfolio", "PnL Calendar", "Leaderboard"];
 
 export default function HeaderTerminal({
   onCopilotTutorial,
@@ -240,10 +247,10 @@ export default function HeaderTerminal({
                       key={label}
                       className="border-b border-[#242424] px-1 py-1"
                       role="group"
-                      aria-label="Vaults"
+                      aria-label="Agents"
                     >
                       <p className="ds-eyebrow px-2 py-1.5 text-ink-faint">
-                        Vaults
+                        Agents
                       </p>
                       {VAULT_VIEWS.map((v) => {
                         const viewActive = vaultView === v.id;
@@ -322,16 +329,38 @@ export default function HeaderTerminal({
                       onNavItemClick?.(label);
                       setMobileNavOpen(false);
                     }}
-                    className={`block w-full px-3 py-2.5 text-left text-control ${
+                    className={`flex w-full items-center gap-1.5 px-3 py-2.5 text-left text-control ${
                       active
                         ? "bg-[#3e2e00] font-medium text-[#f2b500]"
                         : "text-white hover:bg-white/10"
                     }`}
                   >
                     {label}
+                    {label === "Compete" ? (
+                      <span className="rounded-full bg-[#f2b500] px-1.5 py-0.5 text-meta font-medium uppercase leading-none text-black">
+                        Live
+                      </span>
+                    ) : null}
                   </button>
                 );
               })}
+              {MORE_NAV_ITEMS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    onNavItemClick?.(item);
+                    setMobileNavOpen(false);
+                  }}
+                  className={`block w-full px-3 py-2.5 text-left text-control ${
+                    item === activeNavItem
+                      ? "bg-[#3e2e00] font-medium text-[#f2b500]"
+                      : "text-white hover:bg-white/10"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
               {showCopilotTutorialItem ? (
                 <button
                   type="button"
@@ -388,6 +417,7 @@ export default function HeaderTerminal({
               return (
                 <VaultsNavDropdown
                   key={label}
+                  label="Agents"
                   activeView={vaultView ?? "featured"}
                   onViewChange={(id) => {
                     onVaultViewChange(id);
@@ -410,6 +440,26 @@ export default function HeaderTerminal({
               );
             }
 
+            if (label === "Compete") {
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => onNavItemClick?.(label)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-control font-medium transition-colors sm:px-3 ${
+                    active
+                      ? "bg-[#3e2e00] text-[#f2b500]"
+                      : "text-white hover:bg-white/5"
+                  }`}
+                >
+                  {label}
+                  <span className="rounded-full bg-[#f2b500] px-1.5 py-0.5 text-meta font-medium uppercase leading-none text-black">
+                    Live
+                  </span>
+                </button>
+              );
+            }
+
             return (
               <button
                 key={label}
@@ -429,10 +479,9 @@ export default function HeaderTerminal({
             <button
               type="button"
               data-tutorial-more-trigger
-              aria-expanded={moreMenuHasContent ? moreMenuOpen : undefined}
-              aria-haspopup={moreMenuHasContent ? "menu" : undefined}
+              aria-expanded={moreMenuOpen}
+              aria-haspopup="menu"
               onClick={() => {
-                if (!moreMenuHasContent) return;
                 onDismissMoreTutorialHint?.();
                 setMoreMenuOpen((o) => !o);
               }}
@@ -454,11 +503,33 @@ export default function HeaderTerminal({
                 </p>
               </div>
             ) : null}
-            {moreMenuOpen && moreMenuHasContent ? (
+            {moreMenuOpen ? (
               <div
                 className="absolute right-0 top-full z-[120] mt-1 min-w-[12.5rem] rounded-md border border-[#242424] bg-[#0f0f0f] py-1 shadow-lg"
                 role="menu"
               >
+                {MORE_NAV_ITEMS.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="menuitem"
+                    className={`block w-full px-3 py-2 text-left text-control ${
+                      item === activeNavItem
+                        ? "bg-[#3e2e00] font-medium text-[#f2b500]"
+                        : "text-ink hover:bg-white/10"
+                    }`}
+                    onClick={() => {
+                      onNavItemClick?.(item);
+                      setMoreMenuOpen(false);
+                      onDismissMoreTutorialHint?.();
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+                {moreMenuHasContent ? (
+                  <div className="my-1 border-t border-[#242424]" aria-hidden />
+                ) : null}
                 {showCopilotTutorialItem ? (
                   <button
                     type="button"

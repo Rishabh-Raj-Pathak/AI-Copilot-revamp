@@ -71,6 +71,7 @@ export default function VaultsPage({
   onTerminalPlatformChange,
   onOpenCopilot,
   onOpenRewards,
+  onOpenCompete,
   onOpenTrade,
   onOpenCopilotTutorial,
   onVaultViewChange,
@@ -219,6 +220,7 @@ export default function VaultsPage({
           if (label === "Trade") onOpenTrade?.();
           if (label === "Rewards") onOpenRewards?.();
           if (label === "KOL") onOpenRewards?.("kol");
+          if (label === "Compete") onOpenCompete?.();
         }}
         onCopilotTutorial={onOpenCopilotTutorial}
         onVaultTutorial={runVaultsProductTour}
@@ -318,6 +320,7 @@ export default function VaultsPage({
         activeId="vaults"
         vaultView="featured"
         onVaultViewChange={onVaultViewChange}
+        onOpenCompete={onOpenCompete}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
           if (id === "rewards") onOpenRewards?.();

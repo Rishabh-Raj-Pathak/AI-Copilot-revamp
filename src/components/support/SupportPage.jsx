@@ -45,6 +45,7 @@ export default function SupportPage({
   onOpenCopilot,
   onOpenTrade,
   onOpenRewards,
+  onOpenCompete,
   onVaultViewChange,
 }) {
   const walletHeaderProps = {
@@ -70,6 +71,7 @@ export default function SupportPage({
           if (label === "Trade") onOpenTrade?.();
           if (label === "Rewards") onOpenRewards?.();
           if (label === "KOL") onOpenRewards?.("kol");
+          if (label === "Compete") onOpenCompete?.();
         }}
         showCopilotTutorial={false}
       />
@@ -103,6 +105,7 @@ export default function SupportPage({
         vaultView="featured"
         onVaultViewChange={onVaultViewChange}
         onOpenSupport={onOpenSupport}
+        onOpenCompete={onOpenCompete}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
           if (id === "trade") onOpenTrade?.();

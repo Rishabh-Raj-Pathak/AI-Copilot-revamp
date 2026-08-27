@@ -185,6 +185,66 @@
   --ds-type-eyebrow-tracking: 0.04em;
 
   /*
+   * SECTION TYPE SCALE — the content surfaces inside the app shell (Compete
+   * today). Same discipline as the trading scale above, one step looser: these
+   * pages carry headings and prose, so they get a heading ladder and weight
+   * above 500. Five steps. Not eight.
+   *
+   * Anchored to the app, NOT to the Figma marketing canvas the Compete section
+   * was drawn on. That canvas is 1672px wide and sets its hero at 82px; dropped
+   * into the shell next to a 12px trading surface it reads enormous. The
+   * ceilings here match what the neighbouring pages already ship: a 32px page
+   * title (RewardsPage), 14px body.
+   *
+   * The heading step is deliberately below the app's 24px card title: these
+   * are tiles in a grid that grows with every competition, not one-off panels,
+   * and at three across a 24px title wraps to three lines.
+   *
+   *   text-hero · text-headline · text-figure · text-copy · text-tag
+   *
+   * Every step is fluid between a 375px and a 1536px viewport, so a component
+   * names a role once instead of restating it at every breakpoint. The rem
+   * term in each clamp keeps user font-size scaling working, and both ends
+   * are clamped so nothing runs away on a 4K monitor or collapses on a phone.
+   *
+   * Hierarchy still comes from the ink ladder first — see TYPE-SCALE.md.
+   *
+   * NOT for trading surfaces: ESLint bans these five names under
+   * src/components/terminal/** and src/components/trade/**.
+   */
+  --ds-section-hero-size: clamp(1.5rem, 1.339rem + 0.689vw, 2rem); /* 24 → 32px — page h1, once per screen */
+  --ds-section-hero-leading: 1.05;
+  --ds-section-hero-weight: 700;
+  --ds-section-hero-tracking: -0.03em;
+
+  --ds-section-headline-size: clamp(1rem, 0.919rem + 0.345vw, 1.25rem); /* 16 → 20px — card title */
+  --ds-section-headline-leading: 1.25;
+  --ds-section-headline-weight: 700;
+  --ds-section-headline-tracking: -0.01em;
+
+  /* Money, counts and brand wordmarks — prominent text that is not a heading. */
+  --ds-section-figure-size: clamp(0.875rem, 0.814rem + 0.258vw, 1.0625rem); /* 14 → 17px */
+  --ds-section-figure-leading: 1.3;
+  --ds-section-figure-weight: 600;
+
+  /* The workhorse: labels, meta, body, button text. ~70% of the surface. */
+  --ds-section-copy-size: clamp(0.75rem, 0.71rem + 0.172vw, 0.875rem); /* 12 → 14px */
+  --ds-section-copy-leading: 1.45;
+  --ds-section-copy-weight: 400;
+
+  /*
+   * Status pills. Its own step rather than a re-dressed copy step: the app's
+   * existing badges sit at 10px, and a 14px LIVE pill shouts over the card
+   * title it sits beside. Authored UPPERCASE in markup, so no text-transform
+   * key is needed here.
+   */
+  --ds-section-tag-size: clamp(0.625rem, 0.605rem + 0.086vw, 0.6875rem); /* 10 → 11px */
+  --ds-section-tag-leading: 1;
+  --ds-section-tag-weight: 600;
+  --ds-section-tag-tracking: 0.06em;
+
+
+  /*
    * Ink ladder — the emphasis tool that replaces font-weight. Four steps
    * consolidating the eight greys the terminal had drifted into
    * (#f4f4f4 #e5e5e5 #bfbfbf #929292 #8c8c8c #8a8a8a #757575 #585858).
@@ -357,6 +417,13 @@ dialog::backdrop {
 @theme inline {
   /* Figma grid: mobile < 834px, tablet/desktop >= 834px (`tablet:` / `max-tablet:`) */
   --breakpoint-tablet: 52.125rem;
+  /*
+   * Wide-desktop step for grids that keep adding items (the Compete hub). A
+   * named breakpoint rather than `min-[1800px]:`, because Tailwind sorts named
+   * screens by value — an arbitrary min-width variant lands before `xl` in the
+   * stylesheet and loses to it at every width above 1800.
+   */
+  --breakpoint-wide: 112.5rem;
 
   --font-sans: var(--ds-font-sans);
 
@@ -447,6 +514,30 @@ dialog::backdrop {
   --text-meta--line-height: var(--ds-type-meta-leading);
   --text-meta--font-weight: var(--ds-type-meta-weight);
   --text-meta--letter-spacing: var(--ds-type-meta-tracking);
+
+  /* Section type scale → `text-*` utilities. See TYPE-SCALE.md. */
+  --text-hero: var(--ds-section-hero-size);
+  --text-hero--line-height: var(--ds-section-hero-leading);
+  --text-hero--font-weight: var(--ds-section-hero-weight);
+  --text-hero--letter-spacing: var(--ds-section-hero-tracking);
+
+  --text-headline: var(--ds-section-headline-size);
+  --text-headline--line-height: var(--ds-section-headline-leading);
+  --text-headline--font-weight: var(--ds-section-headline-weight);
+  --text-headline--letter-spacing: var(--ds-section-headline-tracking);
+
+  --text-figure: var(--ds-section-figure-size);
+  --text-figure--line-height: var(--ds-section-figure-leading);
+  --text-figure--font-weight: var(--ds-section-figure-weight);
+
+  --text-copy: var(--ds-section-copy-size);
+  --text-copy--line-height: var(--ds-section-copy-leading);
+  --text-copy--font-weight: var(--ds-section-copy-weight);
+
+  --text-tag: var(--ds-section-tag-size);
+  --text-tag--line-height: var(--ds-section-tag-leading);
+  --text-tag--font-weight: var(--ds-section-tag-weight);
+  --text-tag--letter-spacing: var(--ds-section-tag-tracking);
 
   /* Ink ladder → `text-ink*` / `border-ink*` utilities. */
   --color-ink: var(--ds-ink);

@@ -1,8 +1,21 @@
-# Trading type scale
+# Type scales
+
+Two live scales, plus one frozen.
+
+- **[Trading scale](#trading-scale)** — AI Copilot and Trade. Five steps, 12px
+  base, weight capped at 500.
+- **[Section scale](#section-scale)** — content surfaces inside the app
+  shell (Compete). Five fluid steps, 14px base, weight up to 700.
+- **[Legacy `.ds-text-*`](#legacy--ds-text-)** — frozen, `src/components/ui/` only.
+
+Profile, Rewards and delta-neutral are still on the legacy scale and out of scope
+for both.
+
+---
+
+## Trading scale
 
 The type system for **trading surfaces** — the AI Copilot page and the Trade page.
-Everything else (Profile, Rewards, delta-neutral, marketing) is out of scope and
-still uses the legacy scale, which is frozen.
 
 Reverse-engineered from the computed CSS of Hyperliquid, Variational, Lighter and
 Vooi. All four converge on the same three rules, and so do we:
@@ -14,7 +27,7 @@ Vooi. All four converge on the same three rules, and so do we:
 
 ---
 
-## The scale
+### The scale
 
 | Role | Class | Size | Weight | Notes |
 |---|---|---|---|---|
@@ -25,7 +38,7 @@ Vooi. All four converge on the same three rules, and so do we:
 | Eyebrow / table header | `ds-eyebrow` | 11px | 500 | UPPERCASE, +0.04em — all bundled |
 | Meta / badge / status | `text-meta` | 10px | 400 | |
 
-## Pick one in five seconds
+### Pick one in five seconds
 
 - Is it **the pair title**? → `text-anchor`
 - Is it a **tab, nav item or button**? → `text-control`
@@ -36,7 +49,7 @@ Vooi. All four converge on the same three rules, and so do we:
 `text-micro` is the escape hatch for a dense table that genuinely will not fit at
 12px. Reach for it last, not first.
 
-## Hierarchy is colour, not weight
+### Hierarchy is colour, not weight
 
 Weight is capped at **500**. Since that removes the tool most people reach for,
 emphasis lives in the ink ladder:
@@ -51,7 +64,7 @@ emphasis lives in the ink ladder:
 An active tab is `font-medium` **and** `text-ink`; an inactive one is 400 and
 `text-ink-subtle`. Two levers, both subtle, which is why the result reads calm.
 
-## Banned patterns
+### Banned patterns
 
 | Don't write | Write instead | Why |
 |---|---|---|
@@ -64,7 +77,7 @@ An active tab is `font-medium` **and** `text-ink`; an inactive one is 400 and
 | `text-[#bfbfbf]`, `text-[#8c8c8c]`, `text-white` | `text-ink-muted`, `text-ink-subtle`, `text-ink` | eight greys were doing the work of four |
 | `.ds-text-*` | any of the above | see *Legacy* below |
 
-## Numerals align by default
+### Numerals align by default
 
 `[data-type-scale="terminal"]` on `<body>` sets `font-variant-numeric:
 tabular-nums`, which is an **inherited** property — so it covers the whole tree,
@@ -80,7 +93,7 @@ figures read better, opt out with Tailwind's stock `proportional-nums`.
 > comparing widths. If it is a no-op, right-align numeric table columns — that
 > solves column scanning without adding a second typeface.
 
-## Before / after
+### Before / after
 
 Bottom-nav label — [`CopilotBottomNav.jsx`](../components/terminal/CopilotBottomNav.jsx):
 
@@ -96,7 +109,7 @@ Dropdown group header — [`HeaderTerminal.jsx`](../components/terminal/HeaderTe
 +<p className="ds-eyebrow px-2 py-1.5 text-ink-faint">
 ```
 
-## Exemptions
+### Exemptions
 
 - **The brand wordmark** (`HyprEarn` in the header) is a logo lockup, not content
   type. It keeps 18px/600. Every reference DEX also carries a logo alongside its
@@ -104,7 +117,7 @@ Dropdown group header — [`HeaderTerminal.jsx`](../components/terminal/HeaderTe
 - **`text-[0px]`** on the wordmark wrapper is a whitespace-collapse hack, not a
   font size.
 
-## Where it lives
+### Where it lives
 
 - Tokens: `src/styles/design-tokens.css` — `--ds-type-*` and `--ds-ink*` in
   `:root`, mapped to `--text-*` / `--color-ink*` in `@theme inline`.
@@ -117,6 +130,79 @@ That base reset exists because `src/delta-neutral/styles/theme.css` is imported
 app-wide (not scoped to its own subtree) and sizes bare `button`, `label`,
 `input` and `h1`–`h4` at 16–24px. Without the reset, any control that forgets a
 utility silently renders at 16px.
+
+## Section scale
+
+Covers content surfaces that live inside the app shell —
+[Compete](../components/compete/) today. It exists because the trading scale
+genuinely cannot do this job: these pages carry a page title, headings and prose,
+and bold is a legitimate tool on them.
+
+Same three rules, different numbers.
+
+| Role | Class | Size (375px → 1536px) | Weight | Use |
+|---|---|---|---|---|
+| Hero | `text-hero` | 24 → 32px | 700 | page `h1`, **once per screen** |
+| Card title | `text-headline` | 18 → 24px | 700 | |
+| Money, counts, wordmarks | `text-figure` | 15 → 18px | 600 | prominent, but not a heading |
+| **Body, labels, buttons** | **`text-copy`** | **12 → 14px** | 400 | the workhorse |
+| Status pill | `text-tag` | 10 → 11px | 600 | UPPERCASE in markup, +0.06em |
+
+A clean ~1.3 ladder: 32 · 24 · 18 · 14 · 11.
+
+### Anchor to the app, not to the mock
+
+The Figma section this was built from is a **1672px marketing canvas** whose hero
+is 82px and whose card titles are 44px. Those sizes are right on a landing page
+and far too loud in the shell, a nav click away from a 12px trading surface.
+
+So the ceilings come from what the neighbouring pages already ship — a 32px page
+title (`RewardsPage`), 24px card titles, 14px body — and the mock is treated as a
+source of *proportion and layout*, not of absolute size. Anything sized against
+the type has to come down with it: icons, button boxes, and especially key art,
+which is the one that gets missed, because a width percentage keeps looking
+reasonable while everything beside it shrinks.
+
+### Every step is fluid
+
+Each size is a `clamp()` ramping between a 375px and a 1536px viewport, so a
+component names a role **once** instead of restating it at every breakpoint:
+
+```diff
+-<h2 className="text-[24px] font-bold leading-[1.25] tracking-[-0.01em] text-white sm:text-[32px] xl:text-[44px] xl:leading-[55px]">
++<h2 className="text-headline text-ink">
+```
+
+Both ends are clamped and every clamp keeps a `rem` term, so user font-size
+scaling still works. **Do not stack `sm:` / `xl:` size variants on top** — if a
+step reads wrong at some width, the clamp is wrong, not the call site.
+
+### Icons ride the type
+
+Icons and the gaps beside them are sized in `em` against whichever step owns
+their row, so a cluster stays proportional as the type moves:
+
+```jsx
+<div className="text-figure flex items-center gap-[1.1em]">
+  <Database className="size-[1.6em]" />  {/* 26px at 16, 38px at 24 */}
+```
+
+### Hierarchy is still colour
+
+Same ink ladder, same job. The Figma reference renders the live card's dot and
+countdown as two different greens, and the settled card's icons, label and dot as
+three near-identical greys — that is antialiasing noise in a screenshot, not
+intent. Shipped: two accents (`#4AE87F` green, `#FFD400` gold) plus the four ink
+steps. Compete renders **5 sizes, 3 weights, 5 colours** at every width.
+
+### Fenced off
+
+ESLint bans these class names under `src/components/terminal/**` and
+`src/components/trade/**`, the same way it bans arbitrary sizes there. The two
+scales are not interchangeable and nothing else can tell you which surface you
+are on.
+
+---
 
 ## Legacy — `.ds-text-*`
 

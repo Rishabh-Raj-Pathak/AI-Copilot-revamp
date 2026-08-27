@@ -10,6 +10,7 @@ import {
   Sparkles,
   Trash2,
   TriangleAlert,
+  Trophy,
   Wallet,
   X,
 } from "lucide-react";
@@ -51,6 +52,7 @@ export default function MoreSheet({
   open,
   onClose,
   onOpenSupport,
+  onOpenCompete,
   onCopilotTutorial,
   onVaultTutorial,
 }) {
@@ -145,6 +147,33 @@ export default function MoreSheet({
             </header>
 
             <div className="minimal-scrollbar flex-1 overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {typeof onOpenCompete === "function" ? (
+                <section aria-labelledby="more-sheet-explore">
+                  <h3 id="more-sheet-explore" className={SECTION_LABEL_CLASS}>
+                    Explore
+                  </h3>
+                  <div className="divide-y divide-[#1c1c1c] border-y border-[#1c1c1c]">
+                    <motion.button
+                      type="button"
+                      className={ROW_CLASS}
+                      onClick={() => {
+                        onClose?.();
+                        onOpenCompete();
+                      }}
+                      {...rowMotion(rowIndex++)}
+                    >
+                      <Trophy className={ROW_ICON_CLASS} aria-hidden />
+                      <span className={ROW_LABEL_CLASS}>Compete</span>
+                      {/* Phones cannot reach the header nav, so the live badge
+                          has to survive the trip into this sheet. */}
+                      <span className="shrink-0 rounded-full bg-[#f2b500] px-1.5 py-0.5 text-meta font-medium uppercase leading-none text-black">
+                        Live
+                      </span>
+                    </motion.button>
+                  </div>
+                </section>
+              ) : null}
+
               {tutorials.length ? (
                 <section aria-labelledby="more-sheet-tutorials">
                   <h3 id="more-sheet-tutorials" className={SECTION_LABEL_CLASS}>

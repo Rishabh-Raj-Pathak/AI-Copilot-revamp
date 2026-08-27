@@ -73,6 +73,7 @@ export default function TerminalCopilotPage({
   onTerminalPlatformChange,
   onOpenVaults,
   onOpenRewards,
+  onOpenCompete,
   onOpenTrade,
   onOpenDeltaNeutralVaults,
   onVaultViewChange,
@@ -651,6 +652,7 @@ export default function TerminalCopilotPage({
           if (label === "Trade") onOpenTrade?.();
           if (label === "Rewards") onOpenRewards?.();
           if (label === "KOL") onOpenRewards?.("kol");
+          if (label === "Compete") onOpenCompete?.();
         }}
         showCopilotTutorial
         highlightMoreForTutorial={highlightMoreForTutorial}
@@ -870,6 +872,7 @@ export default function TerminalCopilotPage({
           if (id === "kol") onOpenRewards?.("kol");
         }}
         onOpenSupport={onOpenSupport}
+        onOpenCompete={onOpenCompete}
         onCopilotTutorial={runCopilotTutorial}
         onVaultTutorial={onOpenVaultTutorial}
       />

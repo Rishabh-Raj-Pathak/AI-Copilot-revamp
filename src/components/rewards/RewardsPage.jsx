@@ -29,6 +29,7 @@ export default function RewardsPage({
   onOpenCopilot,
   onOpenTrade,
   onOpenRewards,
+  onOpenCompete,
   onVaultViewChange,
 }) {
   const isKol = variant === "kol";
@@ -66,6 +67,7 @@ export default function RewardsPage({
           if (label === "AI Copilot") onOpenCopilot?.();
           if (label === "Trade") onOpenTrade?.();
           if (label === "KOL") onOpenRewards?.("kol");
+          if (label === "Compete") onOpenCompete?.();
           if (label === "Rewards") onOpenRewards?.("rewards");
         }}
         showCopilotTutorial={false}
@@ -107,6 +109,7 @@ export default function RewardsPage({
         vaultView="featured"
         onVaultViewChange={onVaultViewChange}
         onOpenSupport={onOpenSupport}
+        onOpenCompete={onOpenCompete}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
           if (id === "trade") onOpenTrade?.();

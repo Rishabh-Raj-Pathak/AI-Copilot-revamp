@@ -36,6 +36,7 @@ export default function VaultsNavDropdown({
   menuAlign = "left",
   variant = "navbar",
   className = "",
+  label = "Vaults",
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
@@ -83,7 +84,7 @@ export default function VaultsNavDropdown({
         onClick={() => setOpen((o) => !o)}
         className={triggerClass}
       >
-        Vaults
+        {label}
         <NavChevron
           className={`size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""} ${chevronClass}`}
         />

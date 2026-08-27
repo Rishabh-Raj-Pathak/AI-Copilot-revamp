@@ -26,6 +26,7 @@ export default function CopilotBottomNav({
   rewardView = "rewards",
   onVaultViewChange,
   onOpenSupport,
+  onOpenCompete,
   onCopilotTutorial,
   onVaultTutorial,
 }) {
@@ -102,6 +103,7 @@ export default function CopilotBottomNav({
                 open={moreMenuOpen}
                 onClose={() => setMoreMenuOpen(false)}
                 onOpenSupport={onOpenSupport}
+                onOpenCompete={onOpenCompete}
                 onCopilotTutorial={onCopilotTutorial}
                 onVaultTutorial={onVaultTutorial}
               />

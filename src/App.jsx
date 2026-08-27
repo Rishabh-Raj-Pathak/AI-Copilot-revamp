@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { destroyCopilotProductTourIfStillActive } from "./copilot/copilotTour.js";
 import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
+import CompetePage from "./components/compete/CompetePage.jsx";
 import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import ProfilePage from "./components/profile/ProfilePage.jsx";
@@ -67,6 +68,7 @@ export default function App() {
   const openTrade = () => setPage("trade");
   const openRewards = (viewId = "rewards") =>
     setPage(viewId === "kol" ? "kol" : "rewards");
+  const openCompete = () => setPage("compete");
 
   const content =
     page === "support" ? (
@@ -76,6 +78,7 @@ export default function App() {
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "profile" ? (
@@ -85,6 +88,7 @@ export default function App() {
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "rewards" ? (
@@ -94,6 +98,7 @@ export default function App() {
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "kol" ? (
@@ -104,6 +109,16 @@ export default function App() {
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
+        onVaultViewChange={handleVaultViewChange}
+      />
+    ) : page === "compete" ? (
+      <CompetePage
+        {...sharedWalletProps}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "trade" ? (
@@ -115,6 +130,7 @@ export default function App() {
           setPage("copilot");
         }}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}
       />
     ) : page === "vaults" ? (
@@ -123,6 +139,7 @@ export default function App() {
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
@@ -138,6 +155,7 @@ export default function App() {
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onOpenCopilotTutorial={() => {
           destroyVaultsProductTourIfStillActive();
           setRunCopilotTourOnEnter(true);
@@ -152,6 +170,7 @@ export default function App() {
         onOpenTrade={openTrade}
         onOpenDeltaNeutralVaults={() => setPage("delta-neutral-vaults")}
         onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}
         onOpenVaultTutorial={() => {
           destroyCopilotProductTourIfStillActive();

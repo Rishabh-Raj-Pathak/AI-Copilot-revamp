@@ -25,6 +25,7 @@ export default function ProfilePage({
   onOpenCopilot,
   onOpenTrade,
   onOpenRewards,
+  onOpenCompete,
   onVaultViewChange,
 }) {
   const { progress } = useProfile();
@@ -62,6 +63,7 @@ export default function ProfilePage({
           if (label === "Trade") onOpenTrade?.();
           if (label === "Rewards") onOpenRewards?.();
           if (label === "KOL") onOpenRewards?.("kol");
+          if (label === "Compete") onOpenCompete?.();
         }}
         showCopilotTutorial={false}
       />
@@ -101,6 +103,7 @@ export default function ProfilePage({
         vaultView="featured"
         onVaultViewChange={onVaultViewChange}
         onOpenSupport={onOpenSupport}
+        onOpenCompete={onOpenCompete}
         onNavClick={(id) => {
           if (id === "copilot") onOpenCopilot?.();
           if (id === "trade") onOpenTrade?.();
