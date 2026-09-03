@@ -6,8 +6,33 @@ import { formatSignedUsd, PnlCompositionCell, pnlTextClass } from './PnlComposit
 import type { ManagedDexId } from './ActiveVaultCard';
 import { WalletAddressLabel } from './WalletAddressLabel';
 import { walletForDex } from '../utils/wallet';
+import type { InstrumentType } from '../utils/markets';
 
 type BottomTab = 'positions' | 'history';
+
+/**
+ * A spot leg has no funding stream and cannot be liquidated, so those cells hold
+ * nothing rather than a zero — a zero would read as "flat right now" when the
+ * truth is "this leg never has one". Rendered dimmed, with a hover explanation.
+ */
+const NOT_APPLICABLE = '—';
+const NOT_APPLICABLE_TITLE = 'Not applicable to a spot leg';
+
+/**
+ * The same green and red the P&L legs and the DualCell rules already use. The
+ * side label used to sit on the muted --vault-leg-*-fg pair, which left the row
+ * saying "long" in sage while the rule beside it said long in green.
+ */
+/**
+ * The wallet hangs under the side label rather than under the venue logo, so
+ * both lines of a leg share one left edge. DexLogo renders at its own h-4 (16px)
+ * — clsx concatenates rather than merges, so a smaller size passed in here is
+ * silently dropped — which puts that edge at 16px of logo plus the 4px gap.
+ */
+const LEG_INDENT = 'pl-[20px]';
+
+const LONG_INK = 'text-[#00d492]';
+const SHORT_INK = 'text-[#e5484d]';
 
 const POSITIONS_COLUMNS = [
   'Market',
@@ -34,6 +59,7 @@ const HISTORY_GRID =
 
 type PositionLeg = {
   dex: ManagedDexId;
+  instrument: InstrumentType;
   wallet: string;
   leverage: number;
   size: string;
@@ -58,6 +84,7 @@ type DeltaNeutralPosition = {
 
 type HistoryLeg = {
   dex: ManagedDexId;
+  instrument: InstrumentType;
   wallet: string;
   action: string;
   price: string;
@@ -82,22 +109,26 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
     coin: 'BTC/USDC',
     long: {
       dex: 'Hyperliquid',
+      // Cash-and-carry: the long leg is held on the spot book, so it is
+      // unlevered and has neither a funding stream nor a liquidation price.
+      instrument: 'Spot',
       wallet: walletForDex('Hyperliquid'),
-      leverage: 3,
+      leverage: 1,
       size: '0.24 BTC',
       positionValue: '$16,560',
       entryPrice: '$68,940',
       currentPrice: '$69,140',
       pnl: '+$48',
       pnlValue: 48,
-      liqPrice: '$61,220',
-      margin: '$3,450',
-      funding: '+$6.2',
+      liqPrice: NOT_APPLICABLE,
+      margin: '$16,560',
+      funding: NOT_APPLICABLE,
       tpSl: '72k / 66.8k',
       expected: '+6.8% / -3.4%',
     },
     short: {
       dex: 'Nado',
+      instrument: 'Perp',
       wallet: walletForDex('Nado'),
       leverage: 3,
       size: '0.24 BTC',
@@ -118,6 +149,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
     category: 'Bluechip',
     long: {
       dex: 'Hyperliquid',
+      instrument: 'Perp',
       wallet: walletForDex('Hyperliquid'),
       leverage: 5,
       size: '1.85 ETH',
@@ -134,6 +166,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
     },
     short: {
       dex: 'Pacifica',
+      instrument: 'Perp',
       wallet: walletForDex('Pacifica'),
       leverage: 5,
       size: '1.85 ETH',
@@ -154,6 +187,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
     category: 'Trending',
     long: {
       dex: 'Nado',
+      instrument: 'Perp',
       wallet: walletForDex('Nado'),
       leverage: 5,
       size: '39.6 SOL',
@@ -170,6 +204,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
     },
     short: {
       dex: 'Pacifica',
+      instrument: 'Perp',
       wallet: walletForDex('Pacifica'),
       leverage: 5,
       size: '39.6 SOL',
@@ -194,6 +229,7 @@ const HISTORY_PAIRS: HistoryPair[] = [
     event: 'Close',
     long: {
       dex: 'Hyperliquid',
+      instrument: 'Perp',
       wallet: walletForDex('Hyperliquid'),
       action: 'Close Long',
       price: '$3,478',
@@ -205,6 +241,7 @@ const HISTORY_PAIRS: HistoryPair[] = [
     },
     short: {
       dex: 'Pacifica',
+      instrument: 'Perp',
       wallet: walletForDex('Pacifica'),
       action: 'Close Short',
       price: '$3,479',
@@ -222,6 +259,7 @@ const HISTORY_PAIRS: HistoryPair[] = [
     event: 'Open',
     long: {
       dex: 'Nado',
+      instrument: 'Perp',
       wallet: walletForDex('Nado'),
       action: 'Open Long',
       price: '$162.4',
@@ -233,6 +271,7 @@ const HISTORY_PAIRS: HistoryPair[] = [
     },
     short: {
       dex: 'Pacifica',
+      instrument: 'Perp',
       wallet: walletForDex('Pacifica'),
       action: 'Open Short',
       price: '$162.5',
@@ -250,6 +289,7 @@ const HISTORY_PAIRS: HistoryPair[] = [
     event: 'Close',
     long: {
       dex: 'Hyperliquid',
+      instrument: 'Spot',
       wallet: walletForDex('Hyperliquid'),
       action: 'Close Long',
       price: '$68,940',
@@ -261,6 +301,7 @@ const HISTORY_PAIRS: HistoryPair[] = [
     },
     short: {
       dex: 'Nado',
+      instrument: 'Perp',
       wallet: walletForDex('Nado'),
       action: 'Close Short',
       price: '$68,950',
@@ -287,13 +328,21 @@ function DualCell({
   return (
     <div className="flex min-h-[34px] flex-col justify-center gap-[5px] pr-2">
       <span
-        className={clsx('border-l-2 pl-1.5 text-[11px] leading-tight', longClassName)}
+        title={longVal === NOT_APPLICABLE ? NOT_APPLICABLE_TITLE : undefined}
+        className={clsx(
+          'border-l-2 pl-1.5 text-[11px] leading-tight',
+          longClassName ?? (longVal === NOT_APPLICABLE ? 'text-[#5f6070]' : undefined),
+        )}
         style={{ borderColor: 'rgba(0,212,146,0.4)' }}
       >
         {longVal}
       </span>
       <span
-        className={clsx('border-l-2 pl-1.5 text-[11px] leading-tight', shortClassName)}
+        title={shortVal === NOT_APPLICABLE ? NOT_APPLICABLE_TITLE : undefined}
+        className={clsx(
+          'border-l-2 pl-1.5 text-[11px] leading-tight',
+          shortClassName ?? (shortVal === NOT_APPLICABLE ? 'text-[#5f6070]' : undefined),
+        )}
         style={{ borderColor: 'rgba(229,72,77,0.4)' }}
       >
         {shortVal}
@@ -302,33 +351,90 @@ function DualCell({
   );
 }
 
+/**
+ * Which book the leg actually trades on.
+ *
+ * Both values share one ink. Colour in this row is already spoken for and means
+ * something specific — green is long, red is short, gold is the pair and its
+ * category — so giving spot a colour of its own cast it as a status, some state
+ * the leg had got into, when it is a plain attribute of the market. Neither book
+ * is the exceptional one.
+ *
+ * What separates them instead is the word and its position: the fixed-width side
+ * label above holds every instrument at the same offset, so the two of them stack
+ * into a column you read straight down. It sits on the row's own text ink, the
+ * same as the numbers in the cells beside it, because that is what it is — a
+ * value in the row, not a badge on it.
+ *
+ * Chrome-less for the same reason. As a filled chip this was a third boxed object
+ * in a 148px cell that already holds a gold category pill. Title case against the
+ * all-caps side label is what marks it as a qualifier of the leg rather than a
+ * second label competing with it.
+ */
+function InstrumentTag({ instrument }: { instrument: InstrumentType }) {
+  return (
+    <span
+      title={
+        instrument === 'Spot'
+          ? 'Spot leg — held 1:1 on the spot book. No leverage, no funding, no liquidation price.'
+          : 'Perpetual leg — leveraged, pays or earns funding, carries a liquidation price.'
+      }
+      className="shrink-0 text-[10px] font-medium leading-tight text-[#c8c9d5]"
+    >
+      {instrument}
+    </span>
+  );
+}
+
+/** Funding is signed on a perp leg and absent on a spot one. */
+function fundingClass(value: string) {
+  if (value === NOT_APPLICABLE) return 'text-[#5f6070]';
+  return value.startsWith('-')
+    ? 'text-[color:var(--vault-pnl-negative)]'
+    : 'text-[color:var(--vault-pnl-positive)]';
+}
+
 function LegChip({
   side,
   dex,
+  instrument,
   leverage,
   wallet,
 }: {
   side: 'long' | 'short';
   dex: ManagedDexId;
+  instrument: InstrumentType;
   leverage: number;
   wallet: string;
 }) {
   const isLong = side === 'long';
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
-      <div className="flex items-center gap-1.5 min-w-0">
-        <DexLogo dex={dex} className="h-3.5 w-3.5" />
+      {/* gap-1, not gap-1.5: it is the 4px half of LEG_INDENT. */}
+      <div className="flex items-center gap-1 min-w-0">
+        <DexLogo dex={dex} />
+        {/* w-[38px] holds the wider of the two words. Ragged side labels were
+            pushing "Spot" and "Perp" to different offsets on the two rows of a
+            cell, and that misalignment — more than the words themselves — was
+            what made the column look busy. Fixed, they stack into a column the
+            eye can run straight down. */}
         <span
           className={clsx(
-            'text-[10px] font-semibold uppercase tracking-wide',
-            isLong ? 'text-[color:var(--vault-leg-long-fg)]' : 'text-[color:var(--vault-leg-short-fg)]',
+            'w-[38px] shrink-0 text-[10px] font-semibold uppercase tracking-wide',
+            isLong ? LONG_INK : SHORT_INK,
           )}
         >
           {isLong ? 'Long' : 'Short'}
         </span>
-        <span className="text-[9px] text-[#8f90a1]">{leverage}×</span>
+        <InstrumentTag instrument={instrument} />
+        {/* Leverage belongs to the perp leg only — a spot leg is held 1:1, and a
+            "1×" there would invite the reader to compare it against the 3× opposite
+            it as if both were dials the vault had set. */}
+        {instrument === 'Perp' && (
+          <span className="text-[9px] text-[#63646f]">{leverage}×</span>
+        )}
       </div>
-      <WalletAddressLabel address={wallet} className="pl-[18px]" />
+      <WalletAddressLabel address={wallet} className={LEG_INDENT} />
     </div>
   );
 }
@@ -338,6 +444,8 @@ function MarketCell({
   category,
   longDex,
   shortDex,
+  longInstrument,
+  shortInstrument,
   longLev,
   shortLev,
   longWallet,
@@ -347,6 +455,8 @@ function MarketCell({
   category?: string;
   longDex: ManagedDexId;
   shortDex: ManagedDexId;
+  longInstrument: InstrumentType;
+  shortInstrument: InstrumentType;
   longLev: number;
   shortLev: number;
   longWallet: string;
@@ -362,8 +472,20 @@ function MarketCell({
           </span>
         )}
       </div>
-      <LegChip side="long" dex={longDex} leverage={longLev} wallet={longWallet} />
-      <LegChip side="short" dex={shortDex} leverage={shortLev} wallet={shortWallet} />
+      <LegChip
+        side="long"
+        dex={longDex}
+        instrument={longInstrument}
+        leverage={longLev}
+        wallet={longWallet}
+      />
+      <LegChip
+        side="short"
+        dex={shortDex}
+        instrument={shortInstrument}
+        leverage={shortLev}
+        wallet={shortWallet}
+      />
     </div>
   );
 }
@@ -512,7 +634,7 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
           <div className="flex items-center gap-2">
             <p className={clsx('hidden text-[10px] tablet:block', headerText)}>
               {activeTab === 'positions'
-                ? 'One row per token — long & short legs hedged across DEXs'
+                ? 'One row per token — each leg tagged spot or perp, hedged across DEXs'
                 : 'Paired long + short fills per vault action'}
             </p>
             <ChevronDown
@@ -565,6 +687,8 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                           category={pair.category}
                           longDex={pair.long.dex}
                           shortDex={pair.short.dex}
+                          longInstrument={pair.long.instrument}
+                          shortInstrument={pair.short.instrument}
                           longLev={pair.long.leverage}
                           shortLev={pair.short.leverage}
                           longWallet={pair.long.wallet}
@@ -587,8 +711,8 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                         <DualCell
                           longVal={pair.long.funding}
                           shortVal={pair.short.funding}
-                          longClassName="text-[color:var(--vault-pnl-positive)]"
-                          shortClassName={pair.short.funding.startsWith('+') ? 'text-[color:var(--vault-pnl-positive)]' : 'text-[color:var(--vault-pnl-negative)]'}
+                          longClassName={fundingClass(pair.long.funding)}
+                          shortClassName={fundingClass(pair.short.funding)}
                         />
                         <DualCell longVal={pair.long.tpSl} shortVal={pair.short.tpSl} />
                         <DualCell longVal={pair.long.expected} shortVal={pair.short.expected} />
@@ -620,18 +744,34 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                         </div>
                         <div className="flex min-h-[52px] flex-col justify-center gap-2 pr-2">
                           <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-1.5">
-                              <DexLogo dex={row.long.dex} className="h-3.5 w-3.5" />
-                              <span className="text-[10px] text-[color:var(--vault-leg-long-fg)]">{row.long.action}</span>
+                            <div className="flex items-center gap-1">
+                              <DexLogo dex={row.long.dex} />
+                              <span
+                                className={clsx(
+                                  'w-[62px] shrink-0 text-[10px] font-medium',
+                                  LONG_INK,
+                                )}
+                              >
+                                {row.long.action}
+                              </span>
+                              <InstrumentTag instrument={row.long.instrument} />
                             </div>
-                            <WalletAddressLabel address={row.long.wallet} className="pl-[18px]" />
+                            <WalletAddressLabel address={row.long.wallet} className={LEG_INDENT} />
                           </div>
                           <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-1.5">
-                              <DexLogo dex={row.short.dex} className="h-3.5 w-3.5" />
-                              <span className="text-[10px] text-[color:var(--vault-leg-short-fg)]">{row.short.action}</span>
+                            <div className="flex items-center gap-1">
+                              <DexLogo dex={row.short.dex} />
+                              <span
+                                className={clsx(
+                                  'w-[62px] shrink-0 text-[10px] font-medium',
+                                  SHORT_INK,
+                                )}
+                              >
+                                {row.short.action}
+                              </span>
+                              <InstrumentTag instrument={row.short.instrument} />
                             </div>
-                            <WalletAddressLabel address={row.short.wallet} className="pl-[18px]" />
+                            <WalletAddressLabel address={row.short.wallet} className={LEG_INDENT} />
                           </div>
                         </div>
                         <DualCell longVal={row.long.price} shortVal={row.short.price} />
