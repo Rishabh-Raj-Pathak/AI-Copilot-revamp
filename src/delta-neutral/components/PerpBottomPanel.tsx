@@ -138,7 +138,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
       pnl: '-$32',
       pnlValue: -32,
       liqPrice: '$74,800',
-      margin: '$3,450',
+      margin: '$5,520',
       funding: '-$2.1',
       tpSl: '65k / 71k',
       expected: '+5.9% / -3.1%',
@@ -159,7 +159,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
       pnl: '+$26',
       pnlValue: 26,
       liqPrice: '$2,940',
-      margin: '$429',
+      margin: '$1,287',
       funding: '+$1.8',
       tpSl: '3.7k / 3.2k',
       expected: '+5.2% / -2.6%',
@@ -176,7 +176,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
       pnl: '+$20',
       pnlValue: 20,
       liqPrice: '$3,980',
-      margin: '$431',
+      margin: '$1,292',
       funding: '+$1.2',
       tpSl: '3.2k / 3.65k',
       expected: '+4.8% / -2.4%',
@@ -197,7 +197,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
       pnl: '+$28',
       pnlValue: 28,
       liqPrice: '$138.2',
-      margin: '$804',
+      margin: '$1,286',
       funding: '+$0.9',
       tpSl: '175 / 152',
       expected: '+7.1% / -3.8%',
@@ -214,7 +214,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
       pnl: '-$4',
       pnlValue: -4,
       liqPrice: '$182.4',
-      margin: '$807',
+      margin: '$1,292',
       funding: '-$0.4',
       tpSl: '150 / 170',
       expected: '+6.4% / -3.2%',
@@ -319,16 +319,20 @@ function DualCell({
   shortVal,
   longClassName,
   shortClassName,
+  longTitle,
+  shortTitle,
 }: {
   longVal: string;
   shortVal: string;
   longClassName?: string;
   shortClassName?: string;
+  longTitle?: string;
+  shortTitle?: string;
 }) {
   return (
     <div className="flex min-h-[34px] flex-col justify-center gap-[5px] pr-2">
       <span
-        title={longVal === NOT_APPLICABLE ? NOT_APPLICABLE_TITLE : undefined}
+        title={longTitle ?? (longVal === NOT_APPLICABLE ? NOT_APPLICABLE_TITLE : undefined)}
         className={clsx(
           'border-l-2 pl-1.5 text-[11px] leading-tight',
           longClassName ?? (longVal === NOT_APPLICABLE ? 'text-[#5f6070]' : undefined),
@@ -338,7 +342,7 @@ function DualCell({
         {longVal}
       </span>
       <span
-        title={shortVal === NOT_APPLICABLE ? NOT_APPLICABLE_TITLE : undefined}
+        title={shortTitle ?? (shortVal === NOT_APPLICABLE ? NOT_APPLICABLE_TITLE : undefined)}
         className={clsx(
           'border-l-2 pl-1.5 text-[11px] leading-tight',
           shortClassName ?? (shortVal === NOT_APPLICABLE ? 'text-[#5f6070]' : undefined),
@@ -386,6 +390,17 @@ function InstrumentTag({ instrument }: { instrument: InstrumentType }) {
   );
 }
 
+/**
+ * Spot cannot be levered, so that leg is funded with the whole notional while the
+ * perp leg opposite it posts a fraction of the same number. The margin column is
+ * where that asymmetry actually shows up, so the explanation lives on the cell.
+ */
+function marginTitle(leg: PositionLeg) {
+  return leg.instrument === 'Spot'
+    ? `Spot cannot be levered — this leg is funded with the full ${leg.positionValue} notional.`
+    : `${leg.margin} posted at ${leg.leverage}× to carry ${leg.positionValue} of notional.`;
+}
+
 /** Funding is signed on a perp leg and absent on a spot one. */
 function fundingClass(value: string) {
   if (value === NOT_APPLICABLE) return 'text-[#5f6070]';
@@ -427,12 +442,14 @@ function LegChip({
           {isLong ? 'Long' : 'Short'}
         </span>
         <InstrumentTag instrument={instrument} />
-        {/* Leverage belongs to the perp leg only — a spot leg is held 1:1, and a
-            "1×" there would invite the reader to compare it against the 3× opposite
-            it as if both were dials the vault had set. */}
-        {instrument === 'Perp' && (
-          <span className="text-[9px] text-[#63646f]">{leverage}×</span>
-        )}
+        {/* Shown on both legs, spot included, where it is always 1×. Spot carrying
+            no multiplier at all left the margin column looking arbitrary: the two
+            legs of a cash-and-carry hold the same notional but post very different
+            capital, and nothing on screen said why. With the multiplier on every
+            line the row explains itself — margin × multiplier is the position
+            value on both legs, so the reader can see the hedge is balanced even
+            though one side ties up three times the cash. */}
+        <span className="text-[9px] text-[#63646f]">{leverage}×</span>
       </div>
       <WalletAddressLabel address={wallet} className={LEG_INDENT} />
     </div>
@@ -707,7 +724,12 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                           shortPnlValue={pair.short.pnlValue}
                         />
                         <DualCell longVal={pair.long.liqPrice} shortVal={pair.short.liqPrice} />
-                        <DualCell longVal={pair.long.margin} shortVal={pair.short.margin} />
+                        <DualCell
+                          longVal={pair.long.margin}
+                          shortVal={pair.short.margin}
+                          longTitle={marginTitle(pair.long)}
+                          shortTitle={marginTitle(pair.short)}
+                        />
                         <DualCell
                           longVal={pair.long.funding}
                           shortVal={pair.short.funding}

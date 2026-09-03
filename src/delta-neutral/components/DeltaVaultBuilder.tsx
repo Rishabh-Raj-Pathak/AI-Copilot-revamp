@@ -61,6 +61,11 @@ function parseMoney(s: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Whole dollars — the margin readout is for sizing, not for settlement. */
+function formatCapital(n: number): string {
+  return `$${Math.round(n).toLocaleString()}`;
+}
+
 function useNextEpochCountdown(intervalMs: number) {
   const [anchorMs, setAnchorMs] = useState(() => Date.now());
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -1076,6 +1081,31 @@ export function DeltaVaultBuilder({
     () => Math.abs(longN) + Math.abs(shortN),
     [longN, shortN],
   );
+  /**
+   * The one thing a Spot <> Perp vault cannot be read off its own fields: the perp
+   * leg's margin is the figure typed into Margin, but spot cannot be levered, so
+   * that leg has to put up margin x leverage. Same semantics the positions table
+   * states per leg (see `marginTitle` in PerpBottomPanel).
+   *
+   * Only this number, and only as a sentence. Earlier passes tried a row per leg
+   * and then a combined position size, and both fought the same problem: the two
+   * legs of a cash-and-carry carry equal size, so any per-leg table prints the
+   * same figure twice and the reader has to work out that they agree. The perp
+   * side in particular never needed a row — it is the number already sitting in
+   * the Margin field a few pixels above.
+   *
+   * Only on Spot <> Perp: a Perp <> Perp vault posts the same on both sides and
+   * has no caveat to state.
+   *
+   * The margin field is per leg, not a pot to halve — $4,910 in the field means
+   * $4,910 on each side. That is the same reading the deployable cap already takes,
+   * being the lower of the two venue balances rather than their sum.
+   */
+  const spotMargin = useMemo(() => {
+    if (structure !== "Spot <> Perp" || totalAmount <= 0) return null;
+    return totalAmount * leverage;
+  }, [structure, totalAmount, leverage]);
+
   const hasBothDexSelected = dexA !== "" && dexB !== "";
   const dualValid = sides !== null;
 
@@ -1581,11 +1611,41 @@ export function DeltaVaultBuilder({
                 `${leverage}x · ${leverageProfile(leverage)}
 
 ` +
-                "Multiplies both legs equally, so the hedge stays delta-neutral. " +
+                (structure === "Spot <> Perp"
+                  ? "Sets the position size of both legs. The perp posts your margin against it; the spot has to hold that size in coin. "
+                  : "Multiplies both legs equally, so the hedge stays delta-neutral. ") +
                 "Higher leverage captures more funding but liquidates on a smaller adverse move."
               }
               onChange={setLeverage}
             />
+
+            {/* Only on cash-and-carry, and only once there is an amount to size
+                against. A Perp <> Perp vault posts the same on both sides and sees
+                nothing new here, so the common path is untouched.
+
+                A note, not a metric row. There is one fact to land and it has a
+                cause ("spot cannot be levered") and an effect (a number), which is
+                a sentence, not a label-and-value pair. Prose also carries its own
+                explanation, so this needs no tooltip — the reason a table row
+                needed one is that a table row cannot say "because".
+
+                The figure is the only part lifted out of the muted ink, so it is
+                still findable at a glance; the derivation trails it in parentheses
+                for anyone checking the arithmetic against the field above. */}
+            {spotMargin !== null && (
+              <p
+                className={clsx(
+                  "mt-3 border-t pt-2.5 text-[11px] leading-[1.55] text-[#8f90a1]",
+                  isV2Shell ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.07)]",
+                )}
+              >
+                Note — For Spot, the required amount will be{" "}
+                <span className="tabular-nums text-[#c8c9d5]">
+                  {formatCapital(spotMargin)}
+                </span>{" "}
+                <span className="text-[#63646f]">(margin × leverage)</span>.
+              </p>
+            )}
           </div>
 
           <button
