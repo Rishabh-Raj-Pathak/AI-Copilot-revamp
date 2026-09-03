@@ -8,9 +8,21 @@ import ConnectionsCard from "./ConnectionsCard.jsx";
 import ProfileChecklistCard from "./ProfileChecklistCard.jsx";
 import ProfileCompleteModal from "./ProfileCompleteModal.jsx";
 import ProfileIdentityCard from "./ProfileIdentityCard.jsx";
+import ProfileSimpleCard from "./ProfileSimpleCard.jsx";
+import ProfileViewSwitcher from "./ProfileViewSwitcher.jsx";
 import { useProfile } from "./ProfileContext.jsx";
 
 const FEEDBACK_MS = 2000;
+
+/** Points aren't live yet — this is the profile everyone lands on until they are. */
+const DEFAULT_VIEW = "simple";
+const VIEW_STORAGE_KEY = "hyprearn.profile.view";
+
+function readStoredView() {
+  if (typeof window === "undefined") return DEFAULT_VIEW;
+  const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+  return stored === "points" || stored === "simple" ? stored : DEFAULT_VIEW;
+}
 
 /** Wallet session detail + profile completion. No backend behind any of it. */
 export default function ProfilePage({
@@ -31,8 +43,14 @@ export default function ProfilePage({
   const { progress } = useProfile();
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
+  const [view, setView] = useState(readStoredView);
 
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+
+  const changeView = useCallback((next) => {
+    setView(next);
+    window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+  }, []);
 
   const notify = useCallback((message, variant = "success") => {
     setToast({ message, variant });
@@ -85,16 +103,23 @@ export default function ProfilePage({
             <h1 className="truncate text-xl font-semibold text-white sm:text-2xl">
               My Profile
             </h1>
+            <ProfileViewSwitcher view={view} onChange={changeView} />
           </div>
         </div>
 
         <div className="flex w-full flex-col gap-6 px-5 py-8 pb-16 max-tablet:gap-4 max-tablet:px-4 max-tablet:py-5 max-tablet:pb-4 sm:px-8 lg:px-10 xl:px-12">
-          <ProfileIdentityCard onNotify={notify} />
-          <ProfileChecklistCard onNotify={notify} />
+          {view === "points" ? (
+            <>
+              <ProfileIdentityCard onNotify={notify} />
+              <ProfileChecklistCard onNotify={notify} />
 
-          {/* Until the checklist is done it hosts the connect step inline;
-              showing the card as well would duplicate the same controls. */}
-          {progress.isComplete ? <ConnectionsCard onNotify={notify} /> : null}
+              {/* Until the checklist is done it hosts the connect step inline;
+                  showing the card as well would duplicate the same controls. */}
+              {progress.isComplete ? <ConnectionsCard onNotify={notify} /> : null}
+            </>
+          ) : (
+            <ProfileSimpleCard onNotify={notify} />
+          )}
         </div>
       </main>
 
