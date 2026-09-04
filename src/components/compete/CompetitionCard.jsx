@@ -12,16 +12,12 @@ import VenueLockup from "./VenueLockup.jsx";
 import {
   formatEndedOn,
   formatRemaining,
-  formatUsd,
   formatUsdCompact,
-  formatWallet,
 } from "./competeMockData.js";
 import {
-  BAR_SWEEP,
   CTA_SWEEP,
   EDGE_ENDED,
   EDGE_SWEEP,
-  GOLD,
   INK_FAINT,
   INK_MUTED,
   LIVE_GREEN,
@@ -37,7 +33,13 @@ import {
  * Live and ended are the same component in two states, not two layouts: same
  * geometry, same stat row, same footer rail — separated by colour. The live
  * card carries the HyprEarn sweep on its edge, its stat icons and its CTA; the
- * ended one drops to neutral grey and swaps the funding block for the payout.
+ * ended one drops to neutral grey. Nothing else differs between them now:
+ * same title, same three stats, same rail.
+ *
+ * Neither state names a trader any more. Standings and payouts belong to the
+ * leaderboard the card opens, not to the tile — `leader` and `winner` stay in
+ * the data for that view. What is left is the pitch: whose competition it is,
+ * what the pool is worth, how many are in, and how long you have.
  *
  * `entered` is a third footer state rather than a fourth card: joining changes
  * what you can do with a competition, not what it is, so only the CTA moves.
@@ -64,9 +66,11 @@ import {
  * card's right edge and dissolves downward and to the left, so copy can sit over
  * it without a scrim and without ever meeting a hard edge.
  *
- * The render gets its own zone — the header plus the title block — and is
- * clipped to it, so it cannot paint over the funding bar or the stat row no
- * matter how the card is shaped. That matters because the content above the
+ * The zone runs from the card's top edge down to the first rule, and the
+ * render is clipped to it. That clip is the effect: the coin is drawn taller
+ * than the space it is given, so it stops dead on the rule and reads as though
+ * it carries on behind it. Nothing below the rule is ever touched, however the
+ * card is shaped. That matters because the content above the
  * stats swings between 43%% and 57%% of card height depending on state and
  * column count, so no single card-relative fade clears it everywhere.
  *
@@ -78,13 +82,19 @@ import {
  * bottom-right corner opaque, and white copy over a lit coin is the one kind of
  * overlap that does not work.
  *
- * The vertical mask also fades the render IN at the top. Both crops were taken
+ * The vertical mask fades the render IN at the top and part of the way OUT at
+ * the foot: solid to 78%, then down to 0.65 where it meets the rule. Not to
+ * zero — the coin has to still be there when the clip cuts it, or there is no
+ * cut to see — but not solid either, which left it stopping on the line like a
+ * sticker. Two thirds visible at the join is the design's own figure, and it
+ * is what makes the disc read as passing behind the rule rather than butting
+ * against it (Figma 7435:1111 / 7435:1140). Both crops were taken
  * tight against the reference's status pills, so their glow starts on the first
  * row of the file — sat flush to the card edge that reads as a slice through the
  * coin. Dissolving the top edge is the fix; there are no spare pixels above it.
  */
 const ART_FADE =
-  "linear-gradient(to bottom, transparent 0%, #000 9%, #000 45%, transparent 88%), linear-gradient(to right, transparent 30%, #000 68%)";
+  "linear-gradient(to bottom, transparent 0%, #000 9%, #000 78%, rgba(0,0,0,0.65) 100%), linear-gradient(to right, transparent 30%, #000 68%)";
 const ART_MASK = {
   WebkitMaskImage: ART_FADE,
   maskImage: ART_FADE,
@@ -95,13 +105,18 @@ const ART_MASK = {
 function StatusPill({ live }) {
   return (
     <span
-      className="text-tag flex shrink-0 items-center gap-[0.78em] rounded-full border bg-black/45 px-[1.3em] py-[0.94em] backdrop-blur-[3px]"
+      className="text-tag flex shrink-0 items-center gap-[0.35em] rounded-full border bg-black/45 px-[1.3em] py-[0.51em] backdrop-blur-[3px]"
       style={{ borderColor: live ? "rgba(74,222,128,0.5)" : "#555555" }}
     >
+      {/* Only the running state animates — see `ds-live-dot` in
+          design-tokens.css. `color` is set alongside the background because
+          the pulse ring is a `::after` painted in `currentColor`: one value
+          feeds the dot and the ring it grows out of, so they cannot drift. */}
       <span
-        className="size-[0.78em] shrink-0 rounded-full"
+        className={`size-[0.78em] shrink-0 rounded-full${live ? " ds-live-dot" : ""}`}
         style={{
           backgroundColor: live ? LIVE_GREEN : INK_FAINT,
+          color: live ? LIVE_GREEN : undefined,
           boxShadow: live ? "0 0 8px rgba(74,232,127,0.55)" : undefined,
         }}
       />
@@ -156,14 +171,12 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
     prizePool,
     participants,
     volume,
-    winner,
     endsAt,
     endedAt,
   } = competition;
 
   const live = status === "live";
   const remaining = useCountdown(live ? endsAt : null);
-  const fundedPct = Math.min(100, (prizePool.funded / prizePool.total) * 100);
   const tint = live ? LIVE_ICON : INK_MUTED;
 
   const ctaBase =
@@ -179,15 +192,25 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
       <div className="relative flex h-full flex-col overflow-hidden rounded-[13px] bg-black p-4 xl:p-5">
         <div className="relative">
           <div
-            className="pointer-events-none absolute -inset-x-4 -top-4 bottom-0 select-none overflow-hidden xl:-inset-x-5 xl:-top-5"
+            className="pointer-events-none absolute -inset-x-4 -bottom-4 -top-4 select-none overflow-hidden xl:-inset-x-5 xl:-bottom-5 xl:-top-5"
             style={ART_MASK}
             aria-hidden
           >
+            {/* Sized off WIDTH now, not height. The renders are squares, and
+                a square measured against a zone that grows when a title wraps
+                would swell with it; measured against the card it holds one
+                size down the whole grid. Height follows the aspect ratio, and
+                it comes out taller than the zone on purpose — that overhang is
+                what the clip turns into the cut at the rule. */}
             <img
               src={art.src}
               alt=""
-              className="absolute right-0 top-[6px] w-auto max-w-none"
-              style={{ height: `${art.height}%` }}
+              className="absolute h-auto max-w-none"
+              style={{
+                width: `${art.width}%`,
+                top: `${art.top}%`,
+                right: `${art.right}%`,
+              }}
             />
           </div>
 
@@ -196,60 +219,34 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
             <StatusPill live={live} />
           </header>
 
-          {/* Capped short of the art's solid core — the title may cross its
-              faded left edge, never the coin itself. */}
+          {/* The title is the whole block now. It keeps the 72% cap: it is
+              still the one run of copy that has to clear the art's solid
+              core, and it may cross the render's faded left edge but never
+              the coin itself.
+
+              What used to sit under it — the live standings, the settled
+              payout — has moved to the leaderboard each card links to. A
+              tile answers "what is this and is it worth entering"; the stat
+              row under this already does that in three numbers, and a fourth
+              line naming one wallet was the card telling you about somebody
+              else. */}
           <div className="relative mt-4 w-[72%]">
             <h2 className="text-headline text-ink">{title}</h2>
-
-            {live ? (
-              <>
-                <p className="text-copy mt-3 text-ink-muted">Pool funded</p>
-                {/* Funded and target share a step — the design separates them
-                    by barely 2px, so the ink ladder carries the difference. */}
-                <p className="text-figure mt-0.5 text-ink">
-                  {formatUsd(prizePool.funded)}
-                  <span className="font-normal text-ink-subtle">
-                    {` / ${formatUsdCompact(prizePool.total)}`}
-                  </span>
-                </p>
-              </>
-            ) : (
-              /* Same two rows as the live card — label, then the number — so
-                 both states share a rhythm. Running them together on one line
-                 left the payout buried mid-sentence behind an address. */
-              <>
-                <p className="text-copy mt-3 truncate text-ink-muted">
-                  {`Won by ${formatWallet(winner.wallet)}`}
-                </p>
-                <p className="text-figure mt-0.5" style={{ color: GOLD }}>
-                  {formatUsd(winner.prize)}
-                </p>
-              </>
-            )}
           </div>
         </div>
 
-        {live ? (
-          /* The pool grows with traded volume — the one number that moves while
-             you watch, so it keeps its own row. The percentage rides the same
-             line rather than a second one, and the countdown is not repeated
-             here: the footer already carries it. */
-          <div className="relative mt-4 flex shrink-0 items-center gap-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#151515] xl:h-2">
-              <div
-                className="h-full rounded-full transition-[width] duration-500"
-                style={{ width: `${fundedPct}%`, backgroundImage: BAR_SWEEP }}
-              />
-            </div>
-            <span className="text-copy shrink-0 text-ink-muted">
-              {Math.floor(fundedPct)}% funded
-            </span>
-          </div>
-        ) : (
-          <div className="relative mt-4 h-px w-full shrink-0 bg-[#262626]" />
-        )}
+        {/* The face's vertical rhythm tracks its own inset: `p-4 xl:p-5`, so
+            `mt-4 xl:mt-5`. Gap equal to padding is what keeps a short card
+            reading as one block rather than as rows stacked in a box — and it
+            means the rhythm tightens on a phone exactly where the inset does,
+            instead of holding a desktop gap inside a 16px frame.
 
-        <div className="relative mt-auto grid grid-cols-3 divide-x divide-[#262626] pt-4">
+            The step into the footer stays at 16: that rule and the row under
+            it are one unit, and the CTA is tall enough that a wider gap above
+            it opens a hole in the bottom of the card. */}
+        <div className="relative mt-4 h-px w-full shrink-0 bg-[#262626] xl:mt-5" />
+
+        <div className="relative mt-auto grid grid-cols-3 divide-x divide-[#262626] pt-4 xl:pt-5">
           <StatCell
             icon={Coins}
             tint={tint}
@@ -273,9 +270,9 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
           />
         </div>
 
-        <div className="relative mt-4 h-px w-full shrink-0 bg-[#262626]" />
+        <div className="relative mt-4 h-px w-full shrink-0 bg-[#262626] xl:mt-5" />
 
-        <footer className="relative mt-3 flex items-center justify-between gap-3">
+        <footer className="relative mt-4 flex items-center justify-between gap-3">
           <p className="text-copy flex min-w-0 items-center gap-[0.9em] text-ink-muted">
             {live ? (
               <Timer

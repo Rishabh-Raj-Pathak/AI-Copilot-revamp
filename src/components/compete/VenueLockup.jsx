@@ -11,9 +11,12 @@ import { terminalAssets as a } from "../../figma/terminalAssets.js";
  * vendored asset, so its mark is inlined from the Figma vector (7101:8) —
  * `currentColor` rather than a baked fill, so it can dim with the card.
  *
- * Marks and gaps are sized in `em` against the `text-figure` step on the
- * wrapper, so the whole lockup rides the fluid type scale as one object rather
- * than being re-pinned at every breakpoint.
+ * Marks and gaps are sized in `em` against the step set on the wrapper, so the
+ * whole lockup rides the fluid type scale as one object rather than being
+ * re-pinned at every breakpoint. That is also the only dial its size has: it
+ * sits at the copy step rather than the figure one, which takes the marks and
+ * the words down together and leaves the card's own title the largest thing in
+ * the header — a co-brand line is an attribution, not a heading.
  */
 
 function LighterMark({ className }) {
@@ -54,7 +57,7 @@ export default function VenueLockup({ venueId, venue, compact = true }) {
   const mark = VENUE_MARKS[venueId];
 
   return (
-    <div className="text-figure flex min-w-0 items-center gap-[0.5em] leading-none">
+    <div className="text-copy flex min-w-0 items-center gap-[0.5em] leading-none">
       <img
         src={a.logoMark}
         alt=""
@@ -66,7 +69,7 @@ export default function VenueLockup({ venueId, venue, compact = true }) {
       <span className={compact ? "hidden text-ink sm:inline" : "text-ink"}>
         HyprEarn
       </span>
-      <span className="text-copy text-ink-subtle" aria-hidden>
+      <span className="text-ink-subtle" aria-hidden>
         ×
       </span>
       {mark ? mark.render(mark.className) : null}

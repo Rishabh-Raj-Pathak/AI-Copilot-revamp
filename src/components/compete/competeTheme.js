@@ -12,9 +12,8 @@
  * keeps treating that file as a component module.
  */
 
-/** The HyprEarn sweep — gold in, teal out. Same ramp on edge, bar and CTA. */
+/** The HyprEarn sweep — gold in, teal out. Same ramp on the edge and the CTA. */
 export const EDGE_SWEEP = "linear-gradient(90deg,#A88900 0%,#86890A 50%,#09855C 100%)";
-export const BAR_SWEEP = "linear-gradient(90deg,#F9D60A 0%,#FAD601 28%,#00CFD5 100%)";
 export const CTA_SWEEP = "linear-gradient(90deg,#FED501 0%,#FCD603 25%,#00CDC9 100%)";
 
 /** Settled edge on a competition that has already paid out. */

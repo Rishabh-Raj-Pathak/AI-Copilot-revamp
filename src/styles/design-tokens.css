@@ -582,6 +582,76 @@ dialog::backdrop {
     }
   }
 
+  /*
+   * The live dot, breathing.
+   *
+   * A running competition is the one thing on this surface still changing
+   * while you look at it, and its marker is the only place that can say so
+   * without words. Two moves, both off the same 1.8s clock so they read as one
+   * pulse: the core dims and brightens, and a ring pushes out of it and fades.
+   * That pairing is the broadcast convention — it lands as "on air" rather
+   * than as a spinner.
+   *
+   * Restraint is what keeps it from becoming noise on a grid of cards. It is
+   * slow, it is eased at both ends, and it never goes fully dark: a marker
+   * that blinks off reads as a fault light, not a heartbeat. The ring is
+   * capped at 2.2x so it dissolves inside the pill's own padding instead of
+   * washing across its border.
+   *
+   * Colour comes from `currentColor`, so the ring cannot drift from the dot
+   * it grows out of — the caller sets one value for both.
+   */
+  @keyframes ds-live-dot-core {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes ds-live-dot-ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+    70% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+  }
+
+  .ds-live-dot {
+    position: relative;
+    animation: ds-live-dot-core 1.8s ease-in-out infinite;
+  }
+
+  .ds-live-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background-color: currentColor;
+    animation: ds-live-dot-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Motion is the whole point here, so there is nothing to slow down — it
+     stops, and the solid dot and its glow carry the state on their own. */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-live-dot {
+      animation: none;
+    }
+
+    .ds-live-dot::after {
+      content: none;
+    }
+  }
+
   @keyframes ds-prompt-glow-breathe {
     0% {
       opacity: 0.06;
