@@ -102,10 +102,21 @@ const ART_MASK = {
   maskComposite: "intersect",
 };
 
+/**
+ * Every multiplier here is the design's own ratio against the 11px tag step —
+ * 9/11 for the dot, 4/11 for the gap — rather than a rounded guess, so the
+ * cluster keeps its proportions as the fluid step moves.
+ *
+ * The paddings are the one place that is not a plain ratio. Figma paints this
+ * stroke INSIDE the frame, so its 14px inset already contains the 1px rule; a
+ * CSS border sits OUTSIDE the padding box, so the em value has to give that
+ * pixel back or every side lands a pixel wide. Hence 1.18em + 1px, not 1.3em —
+ * the same subtraction `py` was already making.
+ */
 function StatusPill({ live }) {
   return (
     <span
-      className="text-tag flex shrink-0 items-center gap-[0.35em] rounded-full border bg-black/45 px-[1.3em] py-[0.51em] backdrop-blur-[3px]"
+      className="text-tag flex shrink-0 items-center gap-[0.36em] rounded-full border bg-black/45 px-[1.18em] py-[0.51em] backdrop-blur-[3px]"
       style={{ borderColor: live ? "rgba(74,222,128,0.5)" : "#555555" }}
     >
       {/* Only the running state animates — see `ds-live-dot` in
@@ -113,7 +124,7 @@ function StatusPill({ live }) {
           the pulse ring is a `::after` painted in `currentColor`: one value
           feeds the dot and the ring it grows out of, so they cannot drift. */}
       <span
-        className={`size-[0.78em] shrink-0 rounded-full${live ? " ds-live-dot" : ""}`}
+        className={`size-[0.82em] shrink-0 rounded-full${live ? " ds-live-dot" : ""}`}
         style={{
           backgroundColor: live ? LIVE_GREEN : INK_FAINT,
           color: live ? LIVE_GREEN : undefined,
