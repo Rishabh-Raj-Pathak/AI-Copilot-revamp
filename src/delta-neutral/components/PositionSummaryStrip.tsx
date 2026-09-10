@@ -258,19 +258,13 @@ function PositionDetailsPanel({
           </div>
         </div>
 
+        {/*
+          Income / 30d and the round-trip cost used to sit here too. They are the
+          derivations already printed under Est. income and Break-even on the strip
+          itself, and a panel that opens to restate what is behind it teaches the user
+          not to open it. What is left is what the face genuinely does not say.
+        */}
         <dl className="mt-2.5 space-y-2 border-t border-[rgba(255,255,255,0.08)] pt-2.5 font-mono text-[11px]">
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-[#9c9cac]">Income / 30d</dt>
-            <dd className={summary.incomeUsd.monthly >= 0 ? POSITIVE : NEGATIVE}>
-              {formatSignedUsd(summary.incomeUsd.monthly)}
-            </dd>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-[#9c9cac]">Round-trip cost</dt>
-            <dd className="text-[#ececf3]">
-              {formatUsd(summary.roundTripCostUsd.total)}
-            </dd>
-          </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="text-[#9c9cac]">Capital required</dt>
             <dd className="text-[#ececf3]">
