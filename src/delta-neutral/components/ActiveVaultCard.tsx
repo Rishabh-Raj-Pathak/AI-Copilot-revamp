@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, Pencil, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,8 @@ import {
 } from "./ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { WalletAddressLabel } from "./WalletAddressLabel";
+import { VaultControls } from "./VaultControls";
+import { LeverageControl } from "./LeverageControl";
 
 const FUNDING_EPOCH_MS = 8 * 60 * 60 * 1000;
 export type ManagedDexId = "Hyperliquid" | "Pacifica" | "Nado" | "Variational";
@@ -28,7 +30,39 @@ export type ActiveVaultCardModel = {
   fundingEarned: number;
   notional: number;
   hedgeHealth: number;
+  /**
+   * What the position was sized with. Optional because the seeded vaults predate the
+   * editor and a vault is perfectly describable without them -- notional is the fact,
+   * these two are how it was arrived at. Absent, the card infers them (see
+   * DEFAULT_LEVERAGE below) rather than refusing to open the editor.
+   */
+  marginUsd?: number;
+  leverage?: number;
 };
+
+/**
+ * The box both header actions wear. Square and icon-only on mobile, a fixed-width
+ * labelled pill from tablet up so Deactivate and Edit/Save stack as one block.
+ */
+const ACTION_BUTTON =
+  "flex size-9 shrink-0 items-center justify-center rounded-[10px] border transition-colors tablet:h-[30px] tablet:w-[112px] tablet:px-3 tablet:text-[10px] tablet:font-semibold tablet:uppercase tablet:tracking-[0.08em]";
+
+/** What a vault is assumed to have been opened at when it does not say. */
+const DEFAULT_LEVERAGE = 3;
+const MIN_LEVERAGE = 1;
+const MAX_LEVERAGE = 50;
+
+/** Margin settings a vault is saved with. */
+export type VaultSettings = { marginUsd: number; leverage: number };
+
+/**
+ * A margin ceiling that always contains the current value, rounded to something a
+ * slider can be read against. A max below the amount already committed would put the
+ * handle off the end of its own track.
+ */
+function marginCeilingFor(marginUsd: number) {
+  return Math.max(10000, Math.ceil((marginUsd * 2) / 1000) * 1000);
+}
 
 type ActiveVaultUiVariant = "default" | "v2";
 
@@ -37,6 +71,14 @@ type ActiveVaultCardProps = {
   expanded?: boolean;
   onToggleExpand?: () => void;
   onStop?: () => void;
+  /**
+   * Save handler for the inline Margin/Leverage editor. Its presence is what puts the
+   * Edit button on the card -- a card with nowhere to send the new settings should not
+   * offer to collect them.
+   */
+  onSaveSettings?: (next: VaultSettings) => void;
+  /** The More Info sheet. Off where the same figures already sit on the card. */
+  showMoreInfo?: boolean;
   variant?: ActiveVaultUiVariant;
 };
 
@@ -188,6 +230,8 @@ export function ActiveVaultCard({
   expanded = false,
   onToggleExpand,
   onStop,
+  onSaveSettings,
+  showMoreInfo = true,
   variant = "default",
 }: ActiveVaultCardProps) {
   const isV2 = variant === "v2";
@@ -195,6 +239,64 @@ export function ActiveVaultCard({
   const syncing = vault.status === "rebalancing";
   const [pnlOpen, setPnlOpen] = useState(false);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
+
+  /*
+   * The inline editor.
+   *
+   * Its values are a draft, not the vault: the card goes on reporting what the vault
+   * is actually running at while the sliders move, and only Save writes them back.
+   * Cancel therefore costs nothing to implement and is the difference between a
+   * control you can explore and one you have to be sure about before touching.
+   */
+  const leverage = vault.leverage ?? DEFAULT_LEVERAGE;
+  const marginUsd = vault.marginUsd ?? Math.round(vault.notional / leverage);
+  const [editing, setEditing] = useState(false);
+  const [draftAmount, setDraftAmount] = useState(String(marginUsd));
+  const [draftLeverage, setDraftLeverage] = useState(leverage);
+  const marginCeiling = marginCeilingFor(marginUsd);
+  const draftMargin = Number(draftAmount.replace(/[^0-9.]/g, "")) || 0;
+  /*
+   * Rounded, as the builder's own margin field rounds it. The slider and the readout
+   * are one value in VaultControls, so an unrounded share of the ceiling is not a
+   * more precise handle position -- it is "47.1133333%" printed next to the dollar
+   * figure it was divided from.
+   */
+  const draftPercent = Math.round(clamp((draftMargin / marginCeiling) * 100, 0, 100));
+
+  /** Typed amounts: digits only, and never past the ceiling the slider ends at. */
+  const handleDraftAmountChange = (val: string) => {
+    if (!/^\d*\.?\d*$/.test(val)) return;
+    const num = parseFloat(val);
+    if (!Number.isNaN(num) && num > marginCeiling) {
+      setDraftAmount(String(marginCeiling));
+      return;
+    }
+    setDraftAmount(val);
+  };
+
+  const handleDraftPercentChange = (nextPercent: number) => {
+    setDraftAmount(String(Math.round((nextPercent / 100) * marginCeiling)));
+  };
+
+  const startEditing = () => {
+    // Reseed from the vault every time, so a cancelled edit does not leave its
+    // abandoned numbers waiting in the panel the next time it opens.
+    setDraftAmount(String(marginUsd));
+    setDraftLeverage(leverage);
+    setEditing(true);
+  };
+
+  const handleEditToggle = () => {
+    if (!editing) {
+      startEditing();
+      return;
+    }
+    onSaveSettings?.({
+      marginUsd: Math.round(draftMargin),
+      leverage: draftLeverage,
+    });
+    setEditing(false);
+  };
 
   const netPnl = vault.longPnl + vault.shortPnl + vault.fundingEarned;
   const todayPnl = netPnl * 0.18;
@@ -318,46 +420,104 @@ export function ActiveVaultCard({
               </span>
               <WalletAddressLabel address={vault.shortWallet} />
             </div>
+
+            {/*
+              The card's two read-only detours, under the identity they belong to.
+
+              They used to sit on their own row beneath the header, right-aligned --
+              which put three things against the right edge at three different heights:
+              the button stack, then a lone dashed link under it. Left, they finish the
+              block that names the vault, and the right edge is left to the two things
+              that act on it.
+            */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 tablet:mt-2.5">
+              <button
+                type="button"
+                onClick={() => setPnlOpen(true)}
+                className={clsx(
+                  "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
+                  isV2
+                    ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
+                    : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
+                )}
+              >
+                PnL Breakdown
+              </button>
+              {showMoreInfo && (
+                <button
+                  type="button"
+                  onClick={() => setMoreInfoOpen(true)}
+                  className={clsx(
+                    "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
+                    isV2
+                      ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
+                      : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
+                  )}
+                >
+                  More Info
+                </button>
+              )}
+            </div>
           </div>
 
-          {onStop && (
-            <button
-              type="button"
-              onClick={onStop}
-              aria-label={`Deactivate ${vault.pair} vault`}
-              className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(248,113,113,0.42)] bg-[#0f0f0f] text-[#f87171] transition-colors hover:border-[rgba(248,113,113,0.6)] hover:bg-[rgba(248,113,113,0.08)] tablet:h-[30px] tablet:w-auto tablet:px-3 tablet:text-[10px] tablet:font-semibold tablet:uppercase tablet:tracking-[0.08em]"
-            >
-              <X className="size-4 tablet:hidden" strokeWidth={2} aria-hidden />
-              <span className="hidden tablet:inline">Deactivate</span>
-            </button>
-          )}
-        </div>
+          {/*
+            The two actions on a running vault, stacked rather than in a row: they are
+            not a pair to choose between. Deactivate ends the thing; Edit changes how
+            much of it there is. Stacked, the destructive one keeps the corner it has
+            always had and the new one takes the space underneath, which is empty.
 
-        <div className="flex flex-wrap items-center gap-3 max-tablet:gap-2 tablet:gap-2.5 xl:justify-end">
-          <button
-            type="button"
-            onClick={() => setPnlOpen(true)}
-            className={clsx(
-              "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
-              isV2
-                ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
-                : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
+            One box for both -- 36px square on mobile where only the icon fits, a
+            112px-wide pill from tablet up. Sized rather than hugging their labels,
+            because "Save" is half the word "Deactivate" is and a stack of two buttons
+            whose right edges align but whose left edges do not reads as a mistake
+            rather than as a pair. 112px is what the longer of the two needs.
+          */}
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {onStop && (
+              <button
+                type="button"
+                onClick={onStop}
+                aria-label={`Deactivate ${vault.pair} vault`}
+                className={clsx(
+                  ACTION_BUTTON,
+                  "border-[rgba(248,113,113,0.42)] bg-[#0f0f0f] text-[#f87171] hover:border-[rgba(248,113,113,0.6)] hover:bg-[rgba(248,113,113,0.08)]",
+                )}
+              >
+                <X className="size-4 tablet:hidden" strokeWidth={2} aria-hidden />
+                <span className="hidden tablet:inline">Deactivate</span>
+              </button>
             )}
-          >
-            PnL Breakdown
-          </button>
-          <button
-            type="button"
-            onClick={() => setMoreInfoOpen(true)}
-            className={clsx(
-              "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
-              isV2
-                ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
-                : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
+
+            {onSaveSettings && (
+              <button
+                type="button"
+                onClick={handleEditToggle}
+                aria-expanded={editing}
+                aria-label={
+                  editing
+                    ? `Save margin and leverage for ${vault.pair} vault`
+                    : `Edit margin and leverage for ${vault.pair} vault`
+                }
+                className={clsx(
+                  ACTION_BUTTON,
+                  editing
+                    ? // Saving is the commit, so it is the only filled button on the
+                      // card. Outlined, it read as one more thing to consider.
+                      "border-[rgba(206,163,95,0.74)] bg-[linear-gradient(180deg,rgba(49,39,29,1)_0%,rgba(22,18,13,1)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] hover:brightness-110"
+                    : "border-[rgba(120,90,40,0.45)] bg-[#0f0f0f] text-[#ccb17f] hover:border-[rgba(176,132,65,0.65)] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e8d5b5]",
+                )}
+              >
+                {editing ? (
+                  <Check className="size-4 tablet:hidden" strokeWidth={2} aria-hidden />
+                ) : (
+                  <Pencil className="size-4 tablet:hidden" strokeWidth={2} aria-hidden />
+                )}
+                <span className="hidden tablet:inline">
+                  {editing ? "Save" : "Edit"}
+                </span>
+              </button>
             )}
-          >
-            More Info
-          </button>
+          </div>
         </div>
 
         <div
@@ -477,12 +637,20 @@ export function ActiveVaultCard({
               </div>
             </div>
           ) : (
+            /*
+              Three risk figures under three performance figures, on the same three
+              columns. They used to sit in a `[auto_1fr_1fr_1fr]` row led by the word
+              "Risk", which pushed all three off the grid above them by the width of
+              that word and put a rule between each -- so the card had two rows of three
+              numbers that lined up with nothing. The label moves to its own line, where
+              it heads the row rather than indenting it.
+            */
             <div className="mt-2.5 border-t border-[rgba(255,255,255,0.08)] pt-2 max-tablet:mt-2 tablet:mt-3">
-              <div className="grid grid-cols-3 gap-1.5 max-tablet:gap-1 tablet:grid-cols-[auto_1fr_1fr_1fr] tablet:items-center tablet:gap-x-3 tablet:gap-y-1">
-                <p className="col-span-3 text-[9px] uppercase tracking-[0.9px] text-[#898a98] max-tablet:mb-0.5 tablet:col-span-1 tablet:mb-0 tablet:text-[10px] tablet:tracking-[1px]">
-                  Risk
-                </p>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2 tablet:border-l tablet:border-[rgba(255,255,255,0.08)] tablet:pl-3">
+              <p className="mb-1.5 text-[9px] uppercase tracking-[0.9px] text-[#898a98] tablet:text-[10px] tablet:tracking-[1px]">
+                Risk
+              </p>
+              <div className="grid grid-cols-3 gap-2 max-tablet:gap-1.5 tablet:gap-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
                   <MetricLabel
                     label="Exposure"
                     description="Remaining directional market exposure after hedging. Closer to 0% means more neutral."
@@ -493,7 +661,7 @@ export function ActiveVaultCard({
                     {formatSignedPercent(exposure, 1)}
                   </p>
                 </div>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2 tablet:border-l tablet:border-[rgba(255,255,255,0.08)] tablet:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
                   <MetricLabel
                     label="Safety Buffer"
                     description="Distance from liquidation risk. Higher means safer."
@@ -504,7 +672,7 @@ export function ActiveVaultCard({
                     {formatPercent(safetyBuffer, 0)}
                   </p>
                 </div>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2 tablet:border-l tablet:border-[rgba(255,255,255,0.08)] tablet:pl-3">
+                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
                   <MetricLabel
                     label="Capital Used"
                     description="Percent of your collateral currently used to maintain the hedge."
@@ -519,6 +687,146 @@ export function ActiveVaultCard({
             </div>
           )}
         </div>
+
+        {/*
+          The editor, inside the card rather than in a modal.
+          
+          What it changes -- how much capital is at work and at what multiple -- is
+          stated three lines above it as NAV and Capital Used, and a dialog would cover
+          exactly the figures the user is adjusting against. It opens where the change
+          will show.
+
+          Height-animated the same way the strategy deep dive below the card is, so a
+          card that grows downward does it one way regardless of which control grew it.
+        */}
+        <AnimatePresence initial={false}>
+          {editing && (
+            <motion.div
+              key="vault-settings-editor"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <div
+                className={clsx(
+                  "rounded-[10px] border p-2.5 tablet:p-3",
+                  isV2
+                    ? "border-[#c9a962]/35 bg-[#050505]"
+                    : "border-[rgba(214,176,106,0.28)] bg-[rgba(255,255,255,0.01)]",
+                )}
+              >
+                {/*
+                  Title left, the way out right. Cancel used to sit alone under its own
+                  full-width rule at the foot of the panel, which drew a line whose only
+                  job was to have a link under it. Up here it pairs with the eyebrow,
+                  and the rule it vacated is free to separate something real.
+                */}
+                <div className="flex items-baseline justify-between gap-3">
+                  <p
+                    className={clsx(
+                      "text-[10px] font-semibold uppercase tracking-[0.9px]",
+                      isV2 ? "text-[#c9a962]" : "text-[#ccb17f]",
+                    )}
+                  >
+                    Edit position
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(false)}
+                    className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.75px] text-[#8f90a1] underline decoration-dashed underline-offset-2 transition-colors hover:text-[#d8d9e3]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                {/*
+                  Both controls on one line. They are the same control twice -- an
+                  eyebrow, a track and a readout, all 44px tall -- so stacked they cost
+                  two rows to say one thing, and the card is wide enough that each was
+                  running a slider most of a metre long to set a number with three
+                  digits in it.
+
+                  Paired at 1180px of viewport, not at `tablet`. The margin readout is
+                  a fixed 248px, so half a card has to be wide enough to leave a track
+                  longer than the box beside it -- below that the slider reads as a stub
+                  hung off an input rather than as the control it is. 1180 is where that
+                  turns over, and it is the step the builder already splits at.
+
+                  Under it they stack at full card width, and under `tablet` each control
+                  drops its own readout beneath its own slider -- which is why the
+                  pairing step has to sit above that one rather than replace it.
+                */}
+                <div className="mt-3 grid grid-cols-1 items-start gap-y-4 min-[1180px]:grid-cols-2">
+                  <div className="min-[1180px]:pr-5">
+                  <VaultControls
+                    label="Margin"
+                    amount={draftAmount}
+                    percent={draftPercent}
+                    maxAmount={marginCeiling}
+                    stretch
+                    compactInput
+                    largeSlider
+                    variant={variant}
+                    onAmountChange={handleDraftAmountChange}
+                    onPercentChange={handleDraftPercentChange}
+                  />
+                  </div>
+                  {/*
+                    A rule between the halves, not just a gap. Margin's readout ends
+                    248px into its column and Leverage's eyebrow starts a few pixels
+                    later, so with whitespace alone the two controls read as one run of
+                    four boxes and it is not obvious which slider drives which number.
+                    The rule only exists where they are actually side by side.
+                  */}
+                  <div
+                    className={clsx(
+                      "min-[1180px]:border-l min-[1180px]:pl-5",
+                      isV2
+                        ? "min-[1180px]:border-[#1f1f1f]"
+                        : "min-[1180px]:border-[rgba(255,255,255,0.08)]",
+                    )}
+                  >
+                    <LeverageControl
+                      value={draftLeverage}
+                      min={MIN_LEVERAGE}
+                      max={MAX_LEVERAGE}
+                      variant={variant}
+                      onChange={setDraftLeverage}
+                    />
+                  </div>
+                </div>
+
+                {/*
+                  The consequence, live, under the rule -- inputs above it, the number
+                  they resolve to below. Margin and leverage are both terms of one
+                  figure the user actually cares about, and it is the figure the card
+                  reports as NAV; floated up in the header beside the title it read as a
+                  caption, when it is the answer.
+                */}
+                <div
+                  className={clsx(
+                    "mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t pt-2.5",
+                    isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.08)]",
+                  )}
+                >
+                  <p className="text-[10px] uppercase tracking-[0.9px] text-[#8f90a1]">
+                    New position size
+                  </p>
+                  <p className="font-mono text-[13px] font-semibold">
+                    <span className={isV2 ? "text-[#E8D5A1]" : "text-[#e8d5b5]"}>
+                      {formatCurrency(draftMargin * draftLeverage)}
+                    </span>
+                    <span className="ml-2 text-[10px] font-normal text-[#63646f]">
+                      was {formatCurrency(marginUsd * leverage)}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>

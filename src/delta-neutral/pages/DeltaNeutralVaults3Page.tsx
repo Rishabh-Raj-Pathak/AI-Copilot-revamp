@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { CircleAlert } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { DeltaVaultBuilder, type DeltaVaultBuilderResult } from '../components/DeltaVaultBuilder';
-import { ActiveVaultCard, type ActiveVaultCardModel } from '../components/ActiveVaultCard';
+import { ActiveVaultCard, type ActiveVaultCardModel, type VaultSettings } from '../components/ActiveVaultCard';
 import { StrategyDeepDive } from '../components/StrategyDeepDive';
 import { PerpBottomPanel } from '../components/PerpBottomPanel';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
@@ -232,6 +232,26 @@ export function DeltaNeutralVaults3Page() {
     if (expandedId === id) setExpandedId(null);
   };
 
+  /*
+   * Notional is recomputed rather than carried: it is margin x leverage by definition,
+   * and leaving the old figure in place would leave the card reporting a NAV and a
+   * capital-used figure that no longer describe the position the user just resized.
+   */
+  const handleSaveSettings = (id: string, next: VaultSettings) => {
+    setVaults(prev =>
+      prev.map(v =>
+        v.id === id
+          ? {
+              ...v,
+              marginUsd: next.marginUsd,
+              leverage: next.leverage,
+              notional: Math.round(next.marginUsd * next.leverage),
+            }
+          : v,
+      ),
+    );
+  };
+
   // Keys the builder can produce, plus the legacy names still carried by the seeded vaults above.
   const categoryDexTokenMapByPair: Record<string, Partial<Record<ActiveVaultCardModel['longAccount'], string>>> = {
     'Top Picks': { Hyperliquid: 'BTC/USDC', Pacifica: 'BTC/USDC' },
@@ -250,11 +270,18 @@ export function DeltaNeutralVaults3Page() {
   const renderVaultRows = (items: ActiveVaultCardModel[]) =>
     items.map(v => (
       <div key={v.id} className="flex flex-col gap-0">
+        {/*
+          v1 only. More Info restated figures the card already carries, and the margin
+          and leverage a running vault is sized at are editable in place -- neither is
+          wired up on v2, which keeps the card it shipped with.
+        */}
         <ActiveVaultCard
           vault={v}
           expanded={expandedId === v.id}
           onToggleExpand={() => setExpandedId(expandedId === v.id ? null : v.id)}
           onStop={() => handleStop(v.id)}
+          onSaveSettings={next => handleSaveSettings(v.id, next)}
+          showMoreInfo={false}
         />
         <AnimatePresence initial={false}>
           {expandedId === v.id && (
