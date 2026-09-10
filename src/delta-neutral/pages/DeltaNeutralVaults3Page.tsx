@@ -347,7 +347,15 @@ export function DeltaNeutralVaults3Page() {
         </Dialog>
       </section>
 
-      <DeltaVaultBuilder onActivate={handleActivate} />
+      {/*
+        v1 only. The summary sits under the market row as a strip here; v2 keeps the
+        original two-column shape with the summary as a card beside the controls, so
+        the placement is opted into per page rather than changed in the component.
+      */}
+      <DeltaVaultBuilder
+        onActivate={handleActivate}
+        summaryPlacement="market-strip"
+      />
 
       <section className="flex flex-col gap-3.5">
         <div className="flex items-center gap-3 max-tablet:flex tablet:hidden">

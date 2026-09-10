@@ -26,6 +26,7 @@ import {
 import { DexLabel } from "./DexLogo";
 import { VaultMetricLabel } from "./VaultMetricLabel";
 import { PositionSummaryPanel } from "./PositionSummaryPanel";
+import { PositionSummaryStrip } from "./PositionSummaryStrip";
 import {
   THEME_CATALOG,
   filterTokens,
@@ -50,6 +51,7 @@ import {
 import {
   buildPositionSummary,
   EPOCHS_PER_YEAR,
+  type PositionSummary,
 } from "../utils/positionSummary";
 import {
   formatApr,
@@ -323,6 +325,26 @@ function StrategyBreakdownPanel({
   );
 }
 
+/**
+ * A wrapper that is only a box when it needs to be.
+ *
+ * The two summary placements group the same blocks differently -- one wants the
+ * controls in a left column, the other wants Margin and Leverage in a grid of their
+ * own -- and the alternative to this is the whole control stack written out twice,
+ * where the copy that is not being looked at quietly rots.
+ */
+function MaybeBox({
+  when,
+  className,
+  children,
+}: {
+  when: boolean;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return when ? <div className={className}>{children}</div> : <>{children}</>;
+}
+
 /** Both legs move together, so the multiplier is a range rather than a set of presets. */
 const MIN_LEVERAGE = 1;
 const MAX_LEVERAGE = 50;
@@ -382,6 +404,17 @@ type DexPairSetupCardProps = {
   legSlippage?: Partial<
     Record<ManagedDexId, { side: "long" | "short"; pct: number; usd: number }>
   >;
+  /**
+   * What the current settings add up to. Rendered as a strip under the market row —
+   * the position's economics belong next to the market they belong to, the same
+   * argument that put APY and Current Spread there.
+   *
+   * Only when `showSummaryStrip` says so: the other layout keeps the summary as a
+   * card in its own column, and rendering it in both places would state the same
+   * three figures twice on one screen.
+   */
+  summary: PositionSummary | null;
+  showSummaryStrip?: boolean;
   variant?: BuilderUiVariant;
 };
 
@@ -406,6 +439,8 @@ function DexPairSetupCard({
   onTokenChange,
   strategyMetrics,
   legSlippage,
+  summary,
+  showSummaryStrip = false,
   variant = "default",
 }: DexPairSetupCardProps) {
   const isV2 = variant === "v2";
@@ -996,6 +1031,20 @@ function DexPairSetupCard({
               </div>
             )}
           </div>
+
+          {/*
+            Row 3 — what the position itself comes to, directly under the market it is
+            taken in and the rates it is taken at. Same 48px readout as the strip above
+            so the two stack as one block: market economics, then position economics.
+
+            Tokens only, and only once both venues resolve, which is the same gate the
+            metric strip sits behind. Categories select a basket rather than a position
+            — there is no pair, no resolved legs and no cost to open to state — so the
+            row is absent there rather than present and empty.
+          */}
+          {showSummaryStrip && market.mode === "tokens" && !marketDisabled && (
+            <PositionSummaryStrip summary={summary} className="mt-2" />
+          )}
         </div>
       </div>
     </div>
@@ -1019,6 +1068,21 @@ export type DeltaVaultBuilderResult = {
 type DeltaVaultBuilderProps = {
   onActivate?: (payload: DeltaVaultBuilderResult) => void;
   variant?: BuilderUiVariant;
+  /**
+   * Where the position summary goes, and with it the whole shape of the builder.
+   *
+   * "panel" is the original: two columns at 1180px, controls stacked on the left and
+   * a tall summary card with the CTA under it on the right.
+   *
+   * "market-strip" folds the summary into a 48px readout under the market row, which
+   * lets the builder collapse to one column and pair Margin with Leverage.
+   *
+   * A prop rather than a swap because the two Delta Neutral versions are separate
+   * surfaces on the same component: v1 opts in, v2 keeps what it shipped with. It is
+   * deliberately not keyed off `variant` — that one drives the v2 palette, and the
+   * layout and the palette are not the same decision.
+   */
+  summaryPlacement?: "panel" | "market-strip";
 };
 
 // Both default venues start connected so the builder opens on a vault that can
@@ -1049,8 +1113,10 @@ const requiresCookieAuth = (dex: ManagedDexId): boolean =>
 export function DeltaVaultBuilder({
   onActivate,
   variant = "default",
+  summaryPlacement = "panel",
 }: DeltaVaultBuilderProps) {
   const isV2Shell = variant === "v2";
+  const summaryInStrip = summaryPlacement === "market-strip";
   // Opens on a working Perp <> Perp pair rather than an empty form, so the metrics
   // strip and the picker have something to show on first paint.
   const [dexA, setDexA] = useState<DexSelection>("Hyperliquid");
@@ -1461,6 +1527,18 @@ export function DeltaVaultBuilder({
           ? `Connect ${firstDisconnectedVenue} wallet`
           : "Connect both DEXs to continue";
 
+  /*
+   * Rendered in different places by the two layouts -- between the two control cards
+   * where they are stacked, under the pair where they sit side by side -- so it is
+   * written once here rather than twice in the tree.
+   */
+  const dualSourceWarning =
+    hasBothDexSelected && !dualValid ? (
+      <p className="font-mono text-[11px] text-[#f87171]">
+        Select two different DEX sources to unlock cross-venue spread.
+      </p>
+    ) : null;
+
   const bridgeKey = `${dexA || "none"}-${dexB || "none"}`;
   const marketLabel =
     market.mode === "themes"
@@ -1539,112 +1617,136 @@ export function DeltaVaultBuilder({
       />
 
       {/*
-        Two columns once there is room for them: what you set on the left, what it
-        gets you on the right, both on screen at the same time.
+        Two shapes, one set of blocks. `summaryPlacement` picks between them.
 
-        Stacked, the column was taller than a laptop viewport, so the numbers that
-        justify the trade sat below the fold from the controls that change them — you
-        could not watch leverage move the APR without scrolling between the two. Side
-        by side, every input and its consequence are visible together.
+        "panel" — the original, and what Delta Neutral v2 still ships: two columns at
+        1180px, what you set on the left, what it gets you on the right. Stacked, the
+        column ran past a laptop viewport, so the numbers that justify the trade sat
+        below the fold from the controls that change them; side by side, every input
+        and its consequence are visible together. 1180px, not the 834px `tablet` step,
+        because the left column alone holds two venue cards abreast.
 
-        1180px, not the 834px `tablet` step: the left column alone holds two venue
-        cards side by side, and the market row inside it already switches to a row at
-        1100px. Splitting the width any earlier squeezes both halves at once. Below
-        that it stacks, and because the CTA lives in the right column the stacked
-        order stays inputs -> summary -> button.
+        "market-strip" — v1. With the summary folded into a 48px readout under the
+        market row, the split stops buying anything: the figures are already beside
+        the token they describe and a short scroll from every control. So it collapses
+        to one column, in the order the decision is made — pick the venues and the
+        market, see what a position in it comes to, size it, go — and Margin and
+        Leverage pair up, since two small controls of the same kind cost a whole row
+        of height stacked and read no better for it.
 
-        `items-start` keeps each column its own height; without it the shorter one
-        stretches and its bottom card grows a dead gap.
+        `items-start` in the split layout keeps each column its own height; without it
+        the shorter one stretches and its bottom card grows a dead gap.
       */}
-      <div className="relative z-[1] grid grid-cols-1 items-start gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="flex flex-col gap-4 max-tablet:gap-3">
-          <DexPairSetupCard
-            dexA={dexA}
-            dexB={dexB}
-            onDexAChange={setDexA}
-            onDexBChange={setDexB}
-            onConnectDex={(dex) => {
-              // Variational connects via the cookie onboarding modal, not the instant
-              // mock-connect. Opened from the leg's Connect button → authenticate only.
-              if (requiresCookieAuth(dex)) {
-                setActivateAfterConnect(false);
-                setVariationalModalOpen(true);
-                return;
-              }
-              setDexConnected((prev) => ({ ...prev, [dex]: true }));
-              setDexWallets((prev) => ({
-                ...prev,
-                [dex]: prev[dex] ?? createMockWalletAddress(dex),
-              }));
-              setDexBalances((prev) => ({
-                ...prev,
-                [dex]: prev[dex] > 0 ? prev[dex] : 500,
-              }));
-            }}
-            onDepositDex={(dex) =>
-              setDexBalances((prev) => ({ ...prev, [dex]: prev[dex] + 500 }))
+      <div
+        className={clsx(
+          "relative z-[1] gap-4 max-tablet:gap-3",
+          summaryInStrip
+            ? "flex flex-col"
+            : "grid grid-cols-1 items-start min-[1180px]:grid-cols-[minmax(0,1fr)_380px]",
+        )}
+      >
+        <MaybeBox
+          when={!summaryInStrip}
+          className="flex flex-col gap-4 max-tablet:gap-3"
+        >
+        <DexPairSetupCard
+          dexA={dexA}
+          dexB={dexB}
+          onDexAChange={setDexA}
+          onDexBChange={setDexB}
+          onConnectDex={(dex) => {
+            // Variational connects via the cookie onboarding modal, not the instant
+            // mock-connect. Opened from the leg's Connect button → authenticate only.
+            if (requiresCookieAuth(dex)) {
+              setActivateAfterConnect(false);
+              setVariationalModalOpen(true);
+              return;
             }
-            onChangeWalletDex={(dex) => {
-              setDexWallets((prev) => ({
-                ...prev,
-                [dex]: createMockWalletAddress(dex),
-              }));
-            }}
-            dexConnectionMap={dexConnected}
-            dexBalanceMap={dexBalances}
-            dexWalletMap={dexWallets}
-            legA={legA}
-            legB={legB}
-            structure={structure}
-            onLegInstrumentChange={handleLegInstrumentChange}
-            market={market}
-            onModeChange={handleModeChange}
-            onThemesChange={handleThemesChange}
-            onTokenChange={handleTokenChange}
-            strategyMetrics={{
-              /*
-                Gated on `valid`, not just on `summary` being present. With venues
-                picked but no amount entered the summary still computes, and rendering
-                that as "0.00%" quotes a rate the user was never offered — the same
-                fabrication as the old fallback-venue APY, one step further along.
-              */
-              apy: summary?.valid
-                ? `${formatPct(summary.netAprOnCapitalPct)} APY`
-                : "—",
-              apyPositive: (summary?.valid && summary.netAprOnCapitalPct > 0) ?? false,
-              /*
-                The spread and its ceiling come off the resolved legs, not off the
-                summary: they are venue economics, so they stand before an amount is
-                entered — unlike the APY above, which is a return on capital the user
-                has not yet posted.
-              */
-              currentSpread: sides ? formatCompactPct(spreadFunding8h) : "—",
-              spreadPositive: spreadFunding8h >= 0,
-              maxFundingSpread: sides ? formatCompactPct(maxSpreadFunding8h) : "—",
-              venues: venueReadouts,
-              netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
-              hedgeIntegrity: hedgeIntegrityLabel,
-              fundingSettlement: formatHms(secondsToRent),
-            }}
-            legSlippage={
-              summary
-                ? {
-                    [summary.long.venue]: {
-                      side: "long" as const,
-                      pct: summary.long.priceImpactPct,
-                      usd: summary.long.priceImpactUsd,
-                    },
-                    [summary.short.venue]: {
-                      side: "short" as const,
-                      pct: summary.short.priceImpactPct,
-                      usd: summary.short.priceImpactUsd,
-                    },
-                  }
-                : undefined
-            }
-            variant={variant}
-          />
+            setDexConnected((prev) => ({ ...prev, [dex]: true }));
+            setDexWallets((prev) => ({
+              ...prev,
+              [dex]: prev[dex] ?? createMockWalletAddress(dex),
+            }));
+            setDexBalances((prev) => ({
+              ...prev,
+              [dex]: prev[dex] > 0 ? prev[dex] : 500,
+            }));
+          }}
+          onDepositDex={(dex) =>
+            setDexBalances((prev) => ({ ...prev, [dex]: prev[dex] + 500 }))
+          }
+          onChangeWalletDex={(dex) => {
+            setDexWallets((prev) => ({
+              ...prev,
+              [dex]: createMockWalletAddress(dex),
+            }));
+          }}
+          dexConnectionMap={dexConnected}
+          dexBalanceMap={dexBalances}
+          dexWalletMap={dexWallets}
+          legA={legA}
+          legB={legB}
+          structure={structure}
+          onLegInstrumentChange={handleLegInstrumentChange}
+          market={market}
+          onModeChange={handleModeChange}
+          onThemesChange={handleThemesChange}
+          onTokenChange={handleTokenChange}
+          strategyMetrics={{
+            /*
+              Gated on `valid`, not just on `summary` being present. With venues
+              picked but no amount entered the summary still computes, and rendering
+              that as "0.00%" quotes a rate the user was never offered — the same
+              fabrication as the old fallback-venue APY, one step further along.
+            */
+            apy: summary?.valid
+              ? `${formatPct(summary.netAprOnCapitalPct)} APY`
+              : "—",
+            apyPositive: (summary?.valid && summary.netAprOnCapitalPct > 0) ?? false,
+            /*
+              The spread and its ceiling come off the resolved legs, not off the
+              summary: they are venue economics, so they stand before an amount is
+              entered — unlike the APY above, which is a return on capital the user
+              has not yet posted.
+            */
+            currentSpread: sides ? formatCompactPct(spreadFunding8h) : "—",
+            spreadPositive: spreadFunding8h >= 0,
+            maxFundingSpread: sides ? formatCompactPct(maxSpreadFunding8h) : "—",
+            venues: venueReadouts,
+            netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
+            hedgeIntegrity: hedgeIntegrityLabel,
+            fundingSettlement: formatHms(secondsToRent),
+          }}
+          legSlippage={
+            summary
+              ? {
+                  [summary.long.venue]: {
+                    side: "long" as const,
+                    pct: summary.long.priceImpactPct,
+                    usd: summary.long.priceImpactUsd,
+                  },
+                  [summary.short.venue]: {
+                    side: "short" as const,
+                    pct: summary.short.priceImpactPct,
+                    usd: summary.short.priceImpactUsd,
+                  },
+                }
+              : undefined
+          }
+          summary={summary}
+          showSummaryStrip={summaryInStrip}
+          variant={variant}
+        />
 
+        {/*
+          Margin and leverage, paired — but only where the summary is a strip. In the
+          panel layout these are the left column's own stack, one under the other,
+          beside the summary card.
+        */}
+        <MaybeBox
+          when={summaryInStrip}
+          className="grid grid-cols-1 items-start gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-2"
+        >
           <div
             className={clsx(
               "rounded-[11px] border p-3 max-tablet:p-3",
@@ -1672,11 +1774,7 @@ export function DeltaVaultBuilder({
             />
           </div>
 
-          {hasBothDexSelected && !dualValid && (
-            <p className="font-mono text-[11px] text-[#f87171]">
-              Select two different DEX sources to unlock cross-venue spread.
-            </p>
-          )}
+          {!summaryInStrip && dualSourceWarning}
 
           <div
             className={clsx(
@@ -1706,51 +1804,56 @@ export function DeltaVaultBuilder({
             />
 
           </div>
-        </div>
+        </MaybeBox>
+
+        {summaryInStrip && dualSourceWarning}
+        </MaybeBox>
 
         {/*
-          The right column: what the settings on the left add up to, and the button
-          that acts on it.
+          Where the CTA ends up, in both shapes: last, after everything that decides
+          what it opens. In the panel layout that is the foot of the right column,
+          directly beneath the numbers that justify pressing it; as a strip, the foot
+          of the single column.
 
-          The CTA belongs here rather than under the controls. On desktop it lands
-          directly beneath the numbers that justify pressing it; stacked, it keeps the
-          reading order honest -- inputs, then what you get, then go -- which putting
-          it at the foot of the left column would invert.
-
-          The summary also absorbs the Spot note that used to trail the leverage card:
-          "the required amount will be $X" is one line of a capital breakdown, and a
-          cash-and-carry has more to say than that -- it funds its spot leg outright,
-          collects on one leg instead of two, and cannot be liquidated on the side it
-          holds.
+          Not full-bleed at 1180px in the strip layout: a 1100px-wide gold button reads
+          as a banner rather than a control, and there is nothing beside it that needs
+          the width. Capped and centred, it sits under the seam between Margin and
+          Leverage — the two controls it is waiting on.
         */}
-        <div className="flex flex-col gap-4 max-tablet:gap-3">
+        <MaybeBox
+          when={!summaryInStrip}
+          className="flex flex-col gap-4 max-tablet:gap-3"
+        >
+        {!summaryInStrip && (
           <PositionSummaryPanel summary={summary} variant={variant} />
+        )}
 
-          <button
-            type="button"
-            disabled={!dualValid || isPreparing}
-            onClick={handlePrimaryAction}
-            className={clsx(
-              "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
+        <button
+          type="button"
+          disabled={!dualValid || isPreparing}
+          onClick={handlePrimaryAction}
+          className={clsx(
+            "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
+            summaryInStrip &&
+              "min-[1180px]:mx-auto min-[1180px]:max-w-[520px]",
               isV2Shell
                 ? !dualValid || isPreparing
                   ? "cursor-not-allowed rounded-[10px] border border-[#5c4d38] bg-transparent text-[#c9a962] opacity-95"
                   : "rounded-[10px] border border-[#c9a962] bg-gradient-to-b from-[#3a3024] to-[#14110d] text-[#f5ead6] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:brightness-110 active:translate-y-[1px]"
                 : "rounded-[11px] border border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(43,34,24,0.98)_0%,rgba(19,15,11,0.99)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] hover:-translate-y-[1px] hover:border-[rgba(206,163,95,0.74)] hover:bg-[linear-gradient(180deg,rgba(49,39,29,1)_0%,rgba(22,18,13,1)_100%)] active:shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)] disabled:pointer-events-none disabled:border-[rgba(173,134,73,0.28)] disabled:text-[#b8a78a] disabled:opacity-90",
-            )}
-          >
-            <span className="inline-flex items-center gap-2">
-              {firstDisconnectedVenue &&
-                (requiresCookieAuth(firstDisconnectedVenue) ? (
-                  <Cookie className="h-3.5 w-3.5" />
-                ) : (
-                  <Wallet className="h-3.5 w-3.5" />
-                ))}
-              {primaryLabel}
-            </span>
-          </button>
-        </div>
-
+          )}
+        >
+          <span className="inline-flex items-center gap-2">
+            {firstDisconnectedVenue &&
+              (requiresCookieAuth(firstDisconnectedVenue) ? (
+                <Cookie className="h-3.5 w-3.5" />
+              ) : (
+                <Wallet className="h-3.5 w-3.5" />
+              ))}
+            {primaryLabel}
+          </span>
+        </button>
+        </MaybeBox>
       </div>
     </section>
   );
