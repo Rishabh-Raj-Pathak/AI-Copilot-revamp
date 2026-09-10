@@ -1549,15 +1549,21 @@ export function DeltaVaultBuilder({
     <section
       className={clsx(
         /*
-          850px was the right measure for a single column of controls. Two columns
-          have to be paid for: at 850 the split left 422px for the left half, which
-          squeezes the two venue cards it holds side by side and makes that column
-          taller than the summary beside it -- the opposite of the point. The wider
-          cap applies at exactly the breakpoint where the split happens, so the
-          stacked layout keeps its original comfortable line length. 1180 also sits
-          inside the page's own max-w-[1280px] main, so nothing else has to move.
+          850px is the right measure for a single column of controls, and the only
+          reason to go past it is the two-column split: at 850 the split left 422px
+          for the left half, which squeezes the two venue cards it holds side by side
+          and makes that column taller than the summary beside it -- the opposite of
+          the point. So the wider cap applies at exactly the breakpoint where the
+          split happens, and only in the layout that splits. 1180 also sits inside
+          the page's own max-w-[1280px] main, so nothing else has to move.
+
+          The strip layout keeps 850 at every width. It is one column, and a single
+          column of controls does not get better by being stretched to 1116px -- it
+          gets a 15px figure adrift in a third of a metre of dark card, and a form
+          whose label and its input are a screen apart.
         */
-        "font-['Onest',sans-serif] relative mx-auto w-full max-w-[850px] overflow-hidden p-3.5 tablet:p-4 min-[1180px]:max-w-[1180px]",
+        "font-['Onest',sans-serif] relative mx-auto w-full max-w-[850px] overflow-hidden p-3.5 tablet:p-4",
+        !summaryInStrip && "min-[1180px]:max-w-[1180px]",
         isV2Shell
           ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none max-tablet:rounded-[14px] max-tablet:p-2.5"
           : clsx(
@@ -1738,15 +1744,6 @@ export function DeltaVaultBuilder({
           variant={variant}
         />
 
-        {/*
-          Margin and leverage, paired — but only where the summary is a strip. In the
-          panel layout these are the left column's own stack, one under the other,
-          beside the summary card.
-        */}
-        <MaybeBox
-          when={summaryInStrip}
-          className="grid grid-cols-1 items-start gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-2"
-        >
           <div
             className={clsx(
               "rounded-[11px] border p-3 max-tablet:p-3",
@@ -1774,7 +1771,7 @@ export function DeltaVaultBuilder({
             />
           </div>
 
-          {!summaryInStrip && dualSourceWarning}
+          {dualSourceWarning}
 
           <div
             className={clsx(
@@ -1806,19 +1803,16 @@ export function DeltaVaultBuilder({
           </div>
         </MaybeBox>
 
-        {summaryInStrip && dualSourceWarning}
-        </MaybeBox>
-
         {/*
           Where the CTA ends up, in both shapes: last, after everything that decides
           what it opens. In the panel layout that is the foot of the right column,
           directly beneath the numbers that justify pressing it; as a strip, the foot
           of the single column.
 
-          Not full-bleed at 1180px in the strip layout: a 1100px-wide gold button reads
-          as a banner rather than a control, and there is nothing beside it that needs
-          the width. Capped and centred, it sits under the seam between Margin and
-          Leverage — the two controls it is waiting on.
+          Capped and centred in the strip layout rather than spanning the column: at
+          818px a solid gold bar reads as a banner rather than as a control, and the
+          panel layout's CTA is 380px wide, which is the width a commit button wants
+          to be. Full width below tablet, where the column is that narrow anyway.
         */}
         <MaybeBox
           when={!summaryInStrip}
@@ -1834,8 +1828,7 @@ export function DeltaVaultBuilder({
           onClick={handlePrimaryAction}
           className={clsx(
             "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
-            summaryInStrip &&
-              "min-[1180px]:mx-auto min-[1180px]:max-w-[520px]",
+            summaryInStrip && "tablet:mx-auto tablet:max-w-[520px]",
               isV2Shell
                 ? !dualValid || isPreparing
                   ? "cursor-not-allowed rounded-[10px] border border-[#5c4d38] bg-transparent text-[#c9a962] opacity-95"

@@ -41,8 +41,8 @@ const NEGATIVE = "text-[#f87171]";
 const CELL_LABEL =
   "min-w-0 truncate text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] text-[#9b9cad]";
 const CELL_VALUE = "font-mono text-[15px] font-semibold leading-[18px]";
-/** The unit or derivation trailing a value -- never competing with it. */
-const CELL_SUB = "font-mono text-[10px] leading-[12px] text-[#63646f]";
+/** The derivation under a value -- never competing with it. */
+const CELL_SUB = "min-w-0 truncate font-mono text-[10px] leading-[12px] text-[#63646f]";
 
 const INCOME_HELP =
   "Funding, plus any staking yield on a spot leg, at the current rate. Entry costs are listed separately rather than netted off here, so that income, cost and payback reconcile.";
@@ -72,12 +72,18 @@ const CELL_RULES = [
 ];
 
 /**
- * One cell: label, value, and a derivation that trails the value on the same line.
+ * One cell: label, then value over its derivation.
  *
- * On the same line, not under it, because the whole point of the strip is that it
- * costs one 48px row. The derivation is the first thing to go when the row is narrow
- * -- a container query, not a breakpoint, since this strip is as wide as the setup
- * card and that width does not track the viewport's once the builder splits.
+ * The derivation used to trail the value on the same line, to hold the strip to a
+ * 48px row. It does not fit. "+$9.06 /day" beside "≈ +$271.77 / 30d" needs ~210px of
+ * the ~224 a cell has at this measure, so the pair survived only while the numbers
+ * stayed small -- push the margin up and it became "+$18.12 /day ≈ +$543..." with the
+ * figure that matters cut off. A truncated number is not a smaller number, it is a
+ * wrong one.
+ *
+ * Stacked, each line is as long as it needs to be, the eye reads down one column of
+ * values instead of across pairs, and the row costs 66px instead of 48. That is the
+ * whole price, and it buys back the third line the old summary card charged 260px for.
  */
 function Cell({
   label,
@@ -97,7 +103,7 @@ function Cell({
   return (
     <div
       className={clsx(
-        "flex min-h-[46px] min-w-0 flex-col justify-center gap-1 px-2.5 py-2 @[420px]:py-0",
+        "flex min-w-0 flex-col justify-center gap-0.5 px-2.5 py-2.5",
         RULE,
         CELL_RULES[index],
       )}
@@ -107,18 +113,12 @@ function Cell({
         description={description}
         className={CELL_LABEL}
       />
-      <p className="flex min-w-0 items-baseline gap-1.5">
-        <span
-          className={clsx("min-w-0 truncate", CELL_VALUE, tone ?? "text-[#e6e7ef]")}
-        >
-          {value}
-        </span>
-        {sub && (
-          <span className={clsx("hidden min-w-0 truncate @[600px]:inline", CELL_SUB)}>
-            {sub}
-          </span>
-        )}
+      <p className={clsx("min-w-0 truncate", CELL_VALUE, tone ?? "text-[#e6e7ef]")}>
+        {value}
       </p>
+      {/* A placeholder line, not a missing one: without it the cells in a row stop
+          agreeing on where the value sits. */}
+      <p className={CELL_SUB}>{sub ?? " "}</p>
     </div>
   );
 }
@@ -200,7 +200,7 @@ function PositionDetailsPanel({
           aria-label="Position details - cost breakdown, capital and net APY"
           onClick={() => setOpen((v) => !v)}
           className={clsx(
-            "flex h-full min-h-[46px] shrink-0 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-[#c9a962] @[420px]:justify-start",
+            "flex h-full shrink-0 items-center justify-center gap-1.5 px-3 text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-[#c9a962] @[420px]:justify-start",
             RULE,
             CELL_RULES[3],
             warning
@@ -311,7 +311,7 @@ export function PositionSummaryStrip({
    * matches and the strip stays two-up at every width.
    */
   const shell =
-    "grid grid-cols-2 overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] @[420px]:h-[48px] @[420px]:grid-cols-[repeat(3,minmax(0,1fr))_auto]";
+    "grid grid-cols-2 overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] @[420px]:grid-cols-[repeat(3,minmax(0,1fr))_auto]";
 
   /*
    * Nothing sized yet. Em-dashes rather than numbers computed from a defaulted
@@ -344,7 +344,7 @@ export function PositionSummaryStrip({
         />
           <p
             className={clsx(
-              "flex min-h-[46px] shrink-0 items-center px-3 text-[10px] leading-[12px] text-[#63646f]",
+              "flex shrink-0 items-center px-3 text-[10px] leading-[12px] text-[#63646f]",
               RULE,
               CELL_RULES[3],
             )}
