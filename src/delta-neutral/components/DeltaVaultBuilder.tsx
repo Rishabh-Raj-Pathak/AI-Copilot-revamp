@@ -1809,10 +1809,13 @@ export function DeltaVaultBuilder({
           directly beneath the numbers that justify pressing it; as a strip, the foot
           of the single column.
 
-          Capped and centred in the strip layout rather than spanning the column: at
-          818px a solid gold bar reads as a banner rather than as a control, and the
-          panel layout's CTA is 380px wide, which is the width a commit button wants
-          to be. Full width below tablet, where the column is that narrow anyway.
+          Full width in both, and in the strip layout that means the full 761px column.
+          It was capped at 520 and centred for a while on the theory that a wide gold
+          bar reads as a banner; at this measure it does not. It lines up with the
+          Margin and Leverage cards above it, which is what makes it read as the last
+          step of the same form rather than as a floating badge under one -- and a
+          centred button leaves two ragged gaps in a column whose every other edge is
+          flush.
         */}
         <MaybeBox
           when={!summaryInStrip}
@@ -1828,7 +1831,6 @@ export function DeltaVaultBuilder({
           onClick={handlePrimaryAction}
           className={clsx(
             "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
-            summaryInStrip && "tablet:mx-auto tablet:max-w-[520px]",
               isV2Shell
                 ? !dualValid || isPreparing
                   ? "cursor-not-allowed rounded-[10px] border border-[#5c4d38] bg-transparent text-[#c9a962] opacity-95"
