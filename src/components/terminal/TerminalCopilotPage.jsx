@@ -75,7 +75,6 @@ export default function TerminalCopilotPage({
   onOpenRewards,
   onOpenCompete,
   onOpenTrade,
-  onOpenDeltaNeutralVaults,
   onVaultViewChange,
   onOpenVaultTutorial,
   runProductTourOnEnter = false,
@@ -642,11 +641,7 @@ export default function TerminalCopilotPage({
         copilotView={copilotView}
         onCopilotViewChange={setCopilotView}
         vaultView="featured"
-        onVaultViewChange={(viewId) => {
-          onVaultViewChange?.(viewId);
-          if (viewId === "delta-neutral") onOpenDeltaNeutralVaults?.();
-          else onOpenVaults?.();
-        }}
+        onVaultViewChange={onVaultViewChange}
         onNavItemClick={(label) => {
           if (label === "Vaults") onOpenVaults?.();
           if (label === "Trade") onOpenTrade?.();
@@ -861,11 +856,7 @@ export default function TerminalCopilotPage({
       <CopilotBottomNav
         activeId="copilot"
         vaultView="featured"
-        onVaultViewChange={(viewId) => {
-          onVaultViewChange?.(viewId);
-          if (viewId === "delta-neutral") onOpenDeltaNeutralVaults?.();
-          else onOpenVaults?.();
-        }}
+        onVaultViewChange={onVaultViewChange}
         onNavClick={(id) => {
           if (id === "vaults") onOpenVaults?.();
           if (id === "rewards") onOpenRewards?.();

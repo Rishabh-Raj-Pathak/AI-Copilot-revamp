@@ -25,9 +25,15 @@ export default function App() {
   /** Where the back arrow on the support page returns to. */
   const [supportReturnPage, setSupportReturnPage] = useState("copilot");
 
+  /*
+   * The nav menus hand back a VAULT_VIEWS id; this is the one place it becomes a page.
+   * "delta-neutral" used to be a single view -- it is now numbered, and the number is
+   * carried through into the page id so the two versions are separate routes rather
+   * than one route with a toggle inside it.
+   */
   const handleVaultViewChange = (viewId) => {
-    if (viewId === "delta-neutral") {
-      setPage("delta-neutral-vaults");
+    if (viewId?.startsWith("delta-neutral")) {
+      setPage(viewId === "delta-neutral-2" ? "dn-vaults-2" : "dn-vaults-1");
       return;
     }
     setPage("vaults");
@@ -149,8 +155,13 @@ export default function App() {
         runProductTourOnEnter={runVaultTourOnEnter}
         onProductTourEnterConsumed={() => setRunVaultTourOnEnter(false)}
       />
-    ) : page === "delta-neutral-vaults" ? (
+    ) : page === "dn-vaults-1" || page === "dn-vaults-2" ? (
       <DeltaNeutralVaultsPage
+        // Remount on the version switch. The two pages hold their own builder and
+        // active-vault state; without a key React reconciles one into the other and
+        // v2 inherits whatever v1 was mid-way through setting up.
+        key={page}
+        version={page === "dn-vaults-2" ? 2 : 1}
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}
@@ -168,7 +179,6 @@ export default function App() {
         {...sharedWalletProps}
         onOpenVaults={() => setPage("vaults")}
         onOpenTrade={openTrade}
-        onOpenDeltaNeutralVaults={() => setPage("delta-neutral-vaults")}
         onOpenRewards={openRewards}
         onOpenCompete={openCompete}
         onVaultViewChange={handleVaultViewChange}

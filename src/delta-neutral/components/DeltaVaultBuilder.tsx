@@ -24,10 +24,13 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { DexLabel } from "./DexLogo";
+import { VaultMetricLabel } from "./VaultMetricLabel";
+import { PositionSummaryPanel } from "./PositionSummaryPanel";
 import {
   THEME_CATALOG,
   filterTokens,
   legStructureFor,
+  marketProfileFor,
   tokenSupportsStructure,
   type InstrumentType,
   type LegStructure,
@@ -38,10 +41,26 @@ import { formatWalletAddress } from "../utils/wallet";
 import {
   DEX_FUNDING_INTERVAL_HOURS,
   DEX_PROFILES,
+  maxFundingSpread8h,
+  resolveCashAndCarryLegs,
   resolveLegs,
   type DexSelection,
   type ManagedDexId,
 } from "../utils/legs";
+import {
+  buildPositionSummary,
+  EPOCHS_PER_YEAR,
+} from "../utils/positionSummary";
+import {
+  formatApr,
+  formatCompactPct,
+  formatCompactUsd,
+  formatCostPct,
+  formatHms,
+  formatPct,
+  formatSignedPct,
+  formatUsd,
+} from "../utils/format";
 
 const PREPARE_MS = 5000;
 
@@ -62,9 +81,6 @@ function parseMoney(s: string): number {
 }
 
 /** Whole dollars — the margin readout is for sizing, not for settlement. */
-function formatCapital(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
-}
 
 function useNextEpochCountdown(intervalMs: number) {
   const [anchorMs, setAnchorMs] = useState(() => Date.now());
@@ -92,34 +108,13 @@ function useNextEpochCountdown(intervalMs: number) {
   return secondsLeft;
 }
 
-function formatHms(totalSeconds: number) {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${h}h ${m.toString().padStart(2, "0")}m ${s.toString().padStart(2, "0")}s`;
-}
 
-function formatSignedPct(value: number, digits = 4) {
-  const rounded = Number(value.toFixed(digits));
-  const sign = rounded >= 0 ? "+" : "";
-  return `${sign}${rounded.toFixed(digits)}%`;
-}
 
 /**
  * Annualised funding, signed from the vault's point of view. Kept at 2dp because it is
  * read against the headline APY, not against the 4dp per-interval rates.
  */
-function formatApr(value: number) {
-  const rounded = Number(value.toFixed(2));
-  const sign = rounded > 0 ? "+" : "";
-  return `${sign}${rounded.toFixed(2)}%`;
-}
 
-function formatCompactUsd(value: number) {
-  if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
-  if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
-  return `$${value.toFixed(0)}`;
-}
 
 function formatThemesSelection(themes: ThemeOption[]): string {
   if (themes.length === 0) return "Select categories";
@@ -150,52 +145,6 @@ function DexConnIndicator({ connected }: { connected: boolean }) {
   );
 }
 
-function VaultMetricLabel({
-  label,
-  description,
-  className = "text-[10px] uppercase tracking-[0.8px] text-[#8f90a1]",
-}: {
-  label: string;
-  description: string;
-  className?: string;
-}) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  return (
-    <>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            className={`hidden cursor-help text-left outline-none transition-colors hover:text-[#d8d9e3] focus-visible:text-[#e8d5b5] tablet:inline ${className}`}
-          >
-            {label}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-[220px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]">
-          {description}
-        </TooltipContent>
-      </Tooltip>
-      <button
-        type="button"
-        onClick={() => setMobileOpen(true)}
-        className={`cursor-help text-left outline-none transition-colors hover:text-[#d8d9e3] focus-visible:text-[#e8d5b5] max-tablet:inline tablet:hidden ${className}`}
-      >
-        {label}
-      </button>
-      <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-        <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-[14px] border border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(12,12,12,0.98)_0%,rgba(6,6,6,0.98)_100%)] p-4 text-[#f5f5f5]">
-          <DialogTitle className="font-['Onest',sans-serif] text-[14px] text-[#e8d5b5]">
-            {label}
-          </DialogTitle>
-          <DialogDescription className="mt-1 text-[12px] text-[#b4b5c2]">
-            {description}
-          </DialogDescription>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
 /**
  * One selected venue's funding, stated as the venue's own rate. Legs are assigned at
  * execution, not at setup, so nothing here is framed as earned or paid.
@@ -223,7 +172,7 @@ function StrategyBreakdownPanel({
   contextLabel: string;
   venues: VenueReadout[];
   netCapture: string;
-  hedgeIntegrity: number;
+  hedgeIntegrity: string;
   fundingSettlement: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -362,9 +311,7 @@ function StrategyBreakdownPanel({
           </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="text-[#9c9cac]">Hedge Integrity</dt>
-            <dd className="text-[#9babc0]">
-              {hedgeIntegrity > 0 ? `${hedgeIntegrity.toFixed(1)}%` : "–"}
-            </dd>
+            <dd className="text-[#9babc0]">{hedgeIntegrity}</dd>
           </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="text-[#9c9cac]">Funding Settlement</dt>
@@ -379,7 +326,12 @@ function StrategyBreakdownPanel({
 /** Both legs move together, so the multiplier is a range rather than a set of presets. */
 const MIN_LEVERAGE = 1;
 const MAX_LEVERAGE = 50;
-const DEFAULT_LEVERAGE = 10;
+/*
+ * Three, not ten. Leverage multiplies the headline rate, so a high default is how an
+ * honest spread gets presented as a triple-digit APR — and on a hedged position it is
+ * the one dial that also multiplies liquidation risk on both legs at once.
+ */
+const DEFAULT_LEVERAGE = 3;
 
 /** Read out beside the slider so the number carries its risk framing with it. */
 function leverageProfile(value: number) {
@@ -412,15 +364,24 @@ type DexPairSetupCardProps = {
   onThemesChange: (themes: ThemeOption[]) => void;
   onTokenChange: (token: TokenOption) => void;
   strategyMetrics: {
-    apy: number;
-    spreadPct: number;
-    maxFundingSpread: number;
-    hedgeIntegrity: number;
+    /** Preformatted — the strip renders it, the summary owns the arithmetic. */
+    apy: string;
+    apyPositive: boolean;
+    /** Live cross-venue funding spread, %/8h. */
+    currentSpread: string;
+    spreadPositive: boolean;
+    /** The lookback ceiling the live spread is read against. */
+    maxFundingSpread: string;
     /** In the order the user picked them — DEX A, then DEX B. */
     venues: VenueReadout[];
     netCapture: string;
+    hedgeIntegrity: string;
     fundingSettlement: string;
   };
+  /** Per-leg entry cost, keyed by venue. Absent until both venues resolve. */
+  legSlippage?: Partial<
+    Record<ManagedDexId, { side: "long" | "short"; pct: number; usd: number }>
+  >;
   variant?: BuilderUiVariant;
 };
 
@@ -444,6 +405,7 @@ function DexPairSetupCard({
   onThemesChange,
   onTokenChange,
   strategyMetrics,
+  legSlippage,
   variant = "default",
 }: DexPairSetupCardProps) {
   const isV2 = variant === "v2";
@@ -678,6 +640,46 @@ function DexPairSetupCard({
           )}
         </div>
 
+        {/*
+          Which side this venue takes, and what it costs to get on there.
+
+          It belongs on the venue row rather than in a separate execution panel: this
+          is where the venue is chosen, so it is where the consequence of choosing it
+          should appear. Sides are not a control — funding assigns them (see
+          resolveLegs) — so this is a readout, and the totals roll up into Price
+          impact in the Position Summary, where they add up against the fees rather
+          than floating free of them.
+        */}
+        {value !== "" && legSlippage?.[value] && (
+          <div
+            className={clsx(
+              "mt-2.5 flex items-center justify-between gap-2 border-t pt-2.5",
+              isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.06)]",
+            )}
+          >
+            <span
+              className={clsx(
+                "rounded-[5px] px-1.5 py-0.5 ds-eyebrow",
+                legSlippage[value]!.side === "long"
+                  ? "bg-[rgba(100,118,102,0.16)] text-[color:var(--vault-leg-long-fg)]"
+                  : "bg-[rgba(112,82,80,0.18)] text-[color:var(--vault-pnl-negative)]",
+              )}
+            >
+              {legSlippage[value]!.side === "long" ? "Long" : "Short"}
+              <span className="ml-1 text-[#82838f]">{instrument}</span>
+            </span>
+            <span className="flex items-baseline gap-2 tabular-nums">
+              <span className="text-meta text-[#63646f]">Est. slippage</span>
+              <span className="text-micro tabular-nums text-[#b4b5c2]">
+                {formatCostPct(legSlippage[value]!.pct)}
+              </span>
+              <span className="text-micro tabular-nums text-[#82838f]">
+                {formatUsd(legSlippage[value]!.usd)}
+              </span>
+            </span>
+          </div>
+        )}
+
         {connected && (
           <div
             className={clsx(
@@ -844,27 +846,47 @@ function DexPairSetupCard({
             )}
 
             {market.mode === "tokens" && !marketDisabled && (
+              /*
+                Three metrics: the rate on offer, the spread it is earned from, and the
+                ceiling that spread is read against. A spread means little without the
+                band it has been moving in.
+
+                All three are stated at significant figures rather than at a fixed 6dp
+                (see formatCompactPct). The predecessor padded every one to six decimal
+                places, which is how "0.000005" and "0.014000" ended up in the same row
+                — one all zeros, the other all padding, neither scannable.
+
+                The settlement clock moved into Strategy details, beside the per-venue
+                funding intervals that set it.
+              */
               <div className="grid h-[48px] min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
                 {[
                   {
                     label: "APY",
-                    value: `${strategyMetrics.apy.toFixed(2)}% APY`,
-                    tone: "text-[#4ade80]",
+                    value: strategyMetrics.apy,
+                    tone: strategyMetrics.apyPositive
+                      ? "text-[#4ade80]"
+                      : "text-[#f87171]",
                   },
                   {
-                    // Stated at the same 6dp precision as the ceiling below it, so the
-                    // two read as one pair rather than two unrelated numbers.
+                    /*
+                      The same greens and reds as the APY beside it, rather than
+                      --vault-pnl-positive/negative. Those two tokens are muted
+                      (#9eada2 / #a88884) so that a table of many P&L cells does not
+                      strobe; three metrics in one strip is not that table, and half
+                      a row at full saturation next to half at a quarter of it reads
+                      as two different kinds of number.
+                    */
                     label: "Current Spread",
-                    value: strategyMetrics.spreadPct.toFixed(6),
-                    tone:
-                      strategyMetrics.spreadPct >= 0
-                        ? "text-[color:var(--vault-pnl-positive)]"
-                        : "text-[color:var(--vault-pnl-negative)]",
+                    value: strategyMetrics.currentSpread,
+                    tone: strategyMetrics.spreadPositive
+                      ? "text-[#4ade80]"
+                      : "text-[#f87171]",
                   },
                   {
                     label: "Max Funding Spread",
-                    value: `${strategyMetrics.maxFundingSpread.toFixed(6)}%`,
-                    tone: "text-[color:var(--vault-pnl-negative)]",
+                    value: strategyMetrics.maxFundingSpread,
+                    tone: "text-[#f87171]",
                   },
                 ].map((metric, index) => (
                   <div
@@ -1067,45 +1089,15 @@ export function DeltaVaultBuilder({
   const longDex: DexSelection = sides?.longDex ?? "";
   const shortDex: DexSelection = sides?.shortDex ?? "";
 
-  const longProfile = DEX_PROFILES[longDex || "Hyperliquid"];
-  const shortProfile = DEX_PROFILES[shortDex || "Pacifica"];
+  /*
+   * `DEX_PROFILES[longDex || "Hyperliquid"]` used to stand here, substituting a
+   * default venue's economics whenever the user had picked nothing — which quoted a
+   * live spread and APY for an empty form. Nothing needs it now: the spread comes
+   * from the resolved legs and the summary from buildPositionSummary, and both are
+   * absent until two real venues are chosen.
+   */
 
   const totalAmount = parseMoney(amount);
-  const longN = totalAmount / 2;
-  const shortN = totalAmount / 2;
-  const delta = useMemo(
-    () => Math.abs(longN) - Math.abs(shortN),
-    [longN, shortN],
-  );
-  const notional = useMemo(
-    () => Math.abs(longN) + Math.abs(shortN),
-    [longN, shortN],
-  );
-  /**
-   * The one thing a Spot <> Perp vault cannot be read off its own fields: the perp
-   * leg's margin is the figure typed into Margin, but spot cannot be levered, so
-   * that leg has to put up margin x leverage. Same semantics the positions table
-   * states per leg (see `marginTitle` in PerpBottomPanel).
-   *
-   * Only this number, and only as a sentence. Earlier passes tried a row per leg
-   * and then a combined position size, and both fought the same problem: the two
-   * legs of a cash-and-carry carry equal size, so any per-leg table prints the
-   * same figure twice and the reader has to work out that they agree. The perp
-   * side in particular never needed a row — it is the number already sitting in
-   * the Margin field a few pixels above.
-   *
-   * Only on Spot <> Perp: a Perp <> Perp vault posts the same on both sides and
-   * has no caveat to state.
-   *
-   * The margin field is per leg, not a pot to halve — $4,910 in the field means
-   * $4,910 on each side. That is the same reading the deployable cap already takes,
-   * being the lower of the two venue balances rather than their sum.
-   */
-  const spotMargin = useMemo(() => {
-    if (structure !== "Spot <> Perp" || totalAmount <= 0) return null;
-    return totalAmount * leverage;
-  }, [structure, totalAmount, leverage]);
-
   const hasBothDexSelected = dexA !== "" && dexB !== "";
   const dualValid = sides !== null;
 
@@ -1136,46 +1128,43 @@ export function DeltaVaultBuilder({
   const allSelectedVenuesConnected =
     selectedVenues.length === 2 && !firstDisconnectedVenue;
 
-  const longRate = longProfile.funding8hPct;
-  const shortRate = shortProfile.funding8hPct;
   /**
-   * Cross-venue spread (short − long). Non-negative because the short leg is always
-   * assigned to the higher-paying venue — see resolveLegs.
+   * Cross-venue spread (short − long), %/8h. Read off the resolved legs rather than
+   * recomputed from two venue profiles: resolveLegs already assigns the short to the
+   * higher-paying venue, so taking it from there cannot disagree with the sides the
+   * rest of the card shows. Zero until both venues resolve — the fallback profiles
+   * above name venues for the selects, they are not a rate to quote on an empty form.
    */
-  const spreadFunding8h = shortRate - longRate;
-  const longFundingIntervalHours =
-    longDex !== "" ? DEX_FUNDING_INTERVAL_HOURS[longDex] : 8;
-  const shortFundingIntervalHours =
-    shortDex !== "" ? DEX_FUNDING_INTERVAL_HOURS[shortDex] : 8;
-  const longRatePerInterval = longRate * (longFundingIntervalHours / 8);
-  const shortRatePerInterval = shortRate * (shortFundingIntervalHours / 8);
-  const epochsPerYear = (365 * 24) / 8;
-  const spreadAprGross = spreadFunding8h * epochsPerYear;
-  const maxDrawdown30d = -1.8;
+  const spreadFunding8h = sides?.spread8h ?? 0;
   /**
-   * The widest the two venues' funding rates have pulled apart over the 30d lookback —
-   * the ceiling the current spread is read against. Mock data, scaled off the live
-   * spread so it always sits above it.
+   * The ceiling the live spread above is read against, %/8h — the widest the two
+   * legs' funding pulled apart across the venue profiles' own lookback series. Zero
+   * until both venues resolve, on the same reasoning as the spread itself.
    */
-  const maxFundingSpread = Number(
-    Math.max(0.001, Math.abs(spreadFunding8h) * 2.57).toFixed(6),
+  const maxSpreadFunding8h = useMemo(
+    () => (sides ? maxFundingSpread8h(sides) : 0),
+    [sides],
   );
-  const hedgeIntegrity = Number(
-    (100 - Math.min(2.4, Math.abs(delta) / 22)).toFixed(1),
-  );
-  const feesDragEst = Number(
-    (
-      parseFloat(longProfile.feeRoundTripPct) +
-      parseFloat(shortProfile.feeRoundTripPct)
-    ).toFixed(3),
-  );
-  const avgSlippage = 0.012;
-  const fundingVolBucket =
-    Math.abs(spreadFunding8h) > 0.008
-      ? "High"
-      : Math.abs(spreadFunding8h) > 0.004
-        ? "Medium"
-        : "Low";
+  const epochsPerYear = EPOCHS_PER_YEAR;
+  /*
+   * Everything else that used to live here -- maxDrawdown30d, feesDragEst,
+   * avgSlippage, fundingVolBucket, crossDexApr, fundingProjection -- is gone.
+   *
+   * They were not measurements: the drawdown was the literal -1.8 and slippage the
+   * constant 0.012, on a label that promised the difference between expected and
+   * filled price. The APR had a Math.max(30.01, ...) floor that no venue pair could
+   * clear, so the headline never moved.
+   *
+   * maxFundingSpread and hedgeIntegrity are back on the strip, but not as they were:
+   * the ceiling is now measured off the venues' own funding series rather than being
+   * the live spread times 2.57, and hedge integrity is read off the summary's
+   * netDeltaUsd instead of |N| - |N|, so it can report a hedge that is not exact and
+   * says "–" before there is a position to hedge.
+   *
+   * The rest now comes from buildPositionSummary, which is pure, tested, and
+   * branches on the leg structure -- a spot leg earns no funding, funds its own
+   * notional and cannot be liquidated, none of which the old maths expressed.
+   */
 
   /**
    * Settlement cadence belongs to the venue, not to the leg it was handed. Legs flip
@@ -1187,10 +1176,6 @@ export function DeltaVaultBuilder({
     dexA !== "" ? DEX_FUNDING_INTERVAL_HOURS[dexA] : 8,
     dexB !== "" ? DEX_FUNDING_INTERVAL_HOURS[dexB] : 8,
   );
-  const spreadFundingPerPayoutInterval =
-    spreadFunding8h * (payoutIntervalHours / 8);
-  const spreadDisplayPct = dualValid ? spreadFundingPerPayoutInterval : 0.024;
-  const spreadDisplayHours = dualValid ? payoutIntervalHours : 8;
   const payoutIntervalMs = payoutIntervalHours * 60 * 60 * 1000;
   const secondsToRent = useNextEpochCountdown(payoutIntervalMs);
 
@@ -1215,25 +1200,67 @@ export function DeltaVaultBuilder({
     [dexA, dexB, epochsPerYear],
   );
 
-  const crossDexApr = useMemo(() => {
-    const p = participationRate / 100;
-    const feeLong = parseFloat(longProfile.feeRoundTripPct) / 10000;
-    const feeShort = parseFloat(shortProfile.feeRoundTripPct) / 10000;
-    const feeDragApr = (feeLong + feeShort) * epochsPerYear * 0.25;
-    const raw = spreadAprGross * p - feeDragApr;
-    return Number(Math.max(30.01, Math.max(0, raw)).toFixed(2));
+  /**
+   * The whole Position Summary, in one pure call. Branches on the leg structure, so a
+   * cash-and-carry reports one funding leg, a fully-funded spot side and a single
+   * liquidation price rather than borrowing the perp-perp shape.
+   *
+   * Deliberately not memoised on a fallback venue: until both venues resolve this is
+   * null and the panel renders an em-dash. The predecessor defaulted to Hyperliquid's
+   * profile and quoted a live APY for an empty form.
+   */
+  const summary = useMemo(() => {
+    if (!sides || longDex === "" || shortDex === "") return null;
+    const isCashAndCarry = structure === "Spot <> Perp";
+    const spotVenue = isCashAndCarry
+      ? legA === "Spot"
+        ? (dexA as ManagedDexId)
+        : (dexB as ManagedDexId)
+      : null;
+    const legs =
+      isCashAndCarry && spotVenue
+        ? resolveCashAndCarryLegs(
+            spotVenue,
+            spotVenue === dexA ? (dexB as ManagedDexId) : (dexA as ManagedDexId),
+          )
+        : sides;
+    if (!legs) return null;
+    return buildPositionSummary({
+      structure,
+      legs,
+      spotVenue,
+      marginUsd: totalAmount,
+      leverage,
+      market: marketProfileFor(market.token),
+    });
   }, [
-    participationRate,
-    spreadAprGross,
-    longProfile.feeRoundTripPct,
-    shortProfile.feeRoundTripPct,
-    epochsPerYear,
+    sides,
+    longDex,
+    shortDex,
+    structure,
+    legA,
+    dexA,
+    dexB,
+    totalAmount,
+    leverage,
+    market.token,
   ]);
 
-  const fundingProjection = useMemo(() => {
-    const ratePer8h = Math.max(0, spreadFunding8h) / 100;
-    return notional * ratePer8h * epochsPerYear * (participationRate / 100);
-  }, [notional, spreadFunding8h, participationRate, epochsPerYear]);
+  /**
+   * How much of the gross exposure actually cancels: 100% is a hedge with no residual
+   * direction left in it. Read off the summary's own netDeltaUsd, so a structure that
+   * cannot match its legs exactly reports that rather than the flat 100.0% its
+   * predecessor returned for every input.
+   *
+   * "–" until there is a sized position. A hedge quality on an empty form describes
+   * nothing, which is the state the strip opens in.
+   */
+  const hedgeIntegrityLabel = useMemo(() => {
+    if (!summary?.valid || summary.grossExposureUsd <= 0) return "–";
+    const residualShare =
+      Math.abs(summary.netDeltaUsd) / summary.grossExposureUsd;
+    return `${(100 * (1 - residualShare)).toFixed(1)}%`;
+  }, [summary]);
 
   useEffect(() => {
     const cap = deployableMaxUsd;
@@ -1356,8 +1383,8 @@ export function DeltaVaultBuilder({
       shortNotional: shortN,
       notional,
       delta,
-      estAprPct: crossDexApr,
-      fundingEarnedProjection: fundingProjection,
+      estAprPct: summary?.netAprOnCapitalPct ?? 0,
+      fundingEarnedProjection: summary?.incomeUsd.annual ?? 0,
     };
     setIsPreparing(true);
     window.setTimeout(() => {
@@ -1443,7 +1470,16 @@ export function DeltaVaultBuilder({
   return (
     <section
       className={clsx(
-        "font-['Onest',sans-serif] relative mx-auto w-full max-w-[850px] overflow-hidden p-3.5 tablet:p-4",
+        /*
+          850px was the right measure for a single column of controls. Two columns
+          have to be paid for: at 850 the split left 422px for the left half, which
+          squeezes the two venue cards it holds side by side and makes that column
+          taller than the summary beside it -- the opposite of the point. The wider
+          cap applies at exactly the breakpoint where the split happens, so the
+          stacked layout keeps its original comfortable line length. 1180 also sits
+          inside the page's own max-w-[1280px] main, so nothing else has to move.
+        */
+        "font-['Onest',sans-serif] relative mx-auto w-full max-w-[850px] overflow-hidden p-3.5 tablet:p-4 min-[1180px]:max-w-[1180px]",
         isV2Shell
           ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none max-tablet:rounded-[14px] max-tablet:p-2.5"
           : clsx(
@@ -1502,7 +1538,25 @@ export function DeltaVaultBuilder({
         pairedDex={selectedVenues.find((id) => id !== "Variational")}
       />
 
-      <div className="relative z-[1] grid grid-cols-1 gap-4 max-tablet:gap-3">
+      {/*
+        Two columns once there is room for them: what you set on the left, what it
+        gets you on the right, both on screen at the same time.
+
+        Stacked, the column was taller than a laptop viewport, so the numbers that
+        justify the trade sat below the fold from the controls that change them — you
+        could not watch leverage move the APR without scrolling between the two. Side
+        by side, every input and its consequence are visible together.
+
+        1180px, not the 834px `tablet` step: the left column alone holds two venue
+        cards side by side, and the market row inside it already switches to a row at
+        1100px. Splitting the width any earlier squeezes both halves at once. Below
+        that it stacks, and because the CTA lives in the right column the stacked
+        order stays inputs -> summary -> button.
+
+        `items-start` keeps each column its own height; without it the shorter one
+        stretches and its bottom card grows a dead gap.
+      */}
+      <div className="relative z-[1] grid grid-cols-1 items-start gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex flex-col gap-4 max-tablet:gap-3">
           <DexPairSetupCard
             dexA={dexA}
@@ -1548,14 +1602,46 @@ export function DeltaVaultBuilder({
             onThemesChange={handleThemesChange}
             onTokenChange={handleTokenChange}
             strategyMetrics={{
-              apy: crossDexApr,
-              spreadPct: spreadDisplayPct,
-              maxFundingSpread,
-              hedgeIntegrity,
+              /*
+                Gated on `valid`, not just on `summary` being present. With venues
+                picked but no amount entered the summary still computes, and rendering
+                that as "0.00%" quotes a rate the user was never offered — the same
+                fabrication as the old fallback-venue APY, one step further along.
+              */
+              apy: summary?.valid
+                ? `${formatPct(summary.netAprOnCapitalPct)} APY`
+                : "—",
+              apyPositive: (summary?.valid && summary.netAprOnCapitalPct > 0) ?? false,
+              /*
+                The spread and its ceiling come off the resolved legs, not off the
+                summary: they are venue economics, so they stand before an amount is
+                entered — unlike the APY above, which is a return on capital the user
+                has not yet posted.
+              */
+              currentSpread: sides ? formatCompactPct(spreadFunding8h) : "—",
+              spreadPositive: spreadFunding8h >= 0,
+              maxFundingSpread: sides ? formatCompactPct(maxSpreadFunding8h) : "—",
               venues: venueReadouts,
               netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
+              hedgeIntegrity: hedgeIntegrityLabel,
               fundingSettlement: formatHms(secondsToRent),
             }}
+            legSlippage={
+              summary
+                ? {
+                    [summary.long.venue]: {
+                      side: "long" as const,
+                      pct: summary.long.priceImpactPct,
+                      usd: summary.long.priceImpactUsd,
+                    },
+                    [summary.short.venue]: {
+                      side: "short" as const,
+                      pct: summary.short.priceImpactPct,
+                      usd: summary.short.priceImpactUsd,
+                    },
+                  }
+                : undefined
+            }
             variant={variant}
           />
 
@@ -1619,34 +1705,26 @@ export function DeltaVaultBuilder({
               onChange={setLeverage}
             />
 
-            {/* Only on cash-and-carry, and only once there is an amount to size
-                against. A Perp <> Perp vault posts the same on both sides and sees
-                nothing new here, so the common path is untouched.
-
-                A note, not a metric row. There is one fact to land and it has a
-                cause ("spot cannot be levered") and an effect (a number), which is
-                a sentence, not a label-and-value pair. Prose also carries its own
-                explanation, so this needs no tooltip — the reason a table row
-                needed one is that a table row cannot say "because".
-
-                The figure is the only part lifted out of the muted ink, so it is
-                still findable at a glance; the derivation trails it in parentheses
-                for anyone checking the arithmetic against the field above. */}
-            {spotMargin !== null && (
-              <p
-                className={clsx(
-                  "mt-3 border-t pt-2.5 text-[11px] leading-[1.55] text-[#8f90a1]",
-                  isV2Shell ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.07)]",
-                )}
-              >
-                Note — For Spot, the required amount will be{" "}
-                <span className="tabular-nums text-[#c8c9d5]">
-                  {formatCapital(spotMargin)}
-                </span>{" "}
-                <span className="text-[#63646f]">(margin × leverage)</span>.
-              </p>
-            )}
           </div>
+        </div>
+
+        {/*
+          The right column: what the settings on the left add up to, and the button
+          that acts on it.
+
+          The CTA belongs here rather than under the controls. On desktop it lands
+          directly beneath the numbers that justify pressing it; stacked, it keeps the
+          reading order honest -- inputs, then what you get, then go -- which putting
+          it at the foot of the left column would invert.
+
+          The summary also absorbs the Spot note that used to trail the leverage card:
+          "the required amount will be $X" is one line of a capital breakdown, and a
+          cash-and-carry has more to say than that -- it funds its spot leg outright,
+          collects on one leg instead of two, and cannot be liquidated on the side it
+          holds.
+        */}
+        <div className="flex flex-col gap-4 max-tablet:gap-3">
+          <PositionSummaryPanel summary={summary} variant={variant} />
 
           <button
             type="button"
@@ -1673,208 +1751,6 @@ export function DeltaVaultBuilder({
           </button>
         </div>
 
-        <aside
-          hidden
-          className={clsx(
-            "rounded-[12px] border p-4 max-tablet:order-last max-tablet:p-3",
-            isV2Shell
-              ? "border-[#1f1f1f] bg-[#0a0a0a]"
-              : "rounded-[16px] border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(11,11,12,0.92)_0%,rgba(8,8,8,0.96)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.32)]",
-          )}
-        >
-          <p
-            className={clsx(
-              "mb-3 font-['Onest',sans-serif] text-[14px] font-semibold uppercase tracking-[1.1px]",
-              isV2Shell ? "text-[#c9a962]" : "text-[#e8d5b5]",
-            )}
-          >
-            Vault Details
-          </p>
-          <div
-            className={clsx(
-              "mb-4 grid grid-cols-2 gap-0 overflow-hidden rounded-[10px]",
-              isV2Shell
-                ? "border border-[#1f1f1f] bg-[#050505]"
-                : "rounded-[11px] bg-[rgba(8,8,9,0.6)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
-            )}
-          >
-            <div
-              className={clsx(
-                "p-2.5 border-r border-b",
-                isV2Shell
-                  ? "border-[#1f1f1f]"
-                  : "border-[rgba(255,255,255,0.07)]",
-              )}
-            >
-              <VaultMetricLabel
-                label="APY"
-                description="Estimated yearly return if current conditions continue."
-              />
-              <p
-                className={clsx(
-                  "font-mono text-[16px] font-semibold max-tablet:text-[14px]",
-                  isV2Shell ? "text-[#d4af37]" : "text-[#e8d5b5]",
-                )}
-              >
-                {crossDexApr.toFixed(1)}% APY
-              </p>
-            </div>
-            <div
-              className={clsx(
-                "p-2.5 border-b",
-                isV2Shell
-                  ? "border-[#1f1f1f]"
-                  : "border-[rgba(255,255,255,0.07)]",
-              )}
-            >
-              <VaultMetricLabel
-                label="Current Spread"
-                description="Funding-rate gap between your short side and long side. A bigger positive spread usually means better earning potential."
-              />
-              <p
-                className={`font-mono text-[16px] font-semibold max-tablet:text-[14px] ${spreadDisplayPct >= 0 ? "text-[color:var(--vault-pnl-positive)]" : "text-[color:var(--vault-pnl-negative)]"}`}
-              >
-                {formatSignedPct(spreadDisplayPct)} / {spreadDisplayHours}h
-              </p>
-            </div>
-            <div
-              className={clsx(
-                "p-2.5 border-r",
-                isV2Shell
-                  ? "border-[#1f1f1f]"
-                  : "border-[rgba(255,255,255,0.07)]",
-              )}
-            >
-              <VaultMetricLabel
-                label="Max Drawdown (30d)"
-                description="Biggest drop the strategy saw in the last 30 days."
-              />
-              <p className="font-mono text-[16px] font-semibold text-[color:var(--vault-pnl-negative)] max-tablet:text-[14px]">
-                {maxDrawdown30d.toFixed(1)}%
-              </p>
-            </div>
-            <div className="p-2.5">
-              <VaultMetricLabel
-                label="Hedge Integrity"
-                description="How well long and short positions cancel each other. Closer to 100% is better."
-              />
-              <p className="font-mono text-[16px] font-semibold text-[#8e9eb0] max-tablet:text-[14px]">
-                {hedgeIntegrity.toFixed(1)}%
-              </p>
-            </div>
-          </div>
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={spreadSubtitleKey}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className={clsx(
-                "mb-4 text-[11px]",
-                isV2Shell ? "text-[#666666]" : "text-[#717182]",
-              )}
-            >
-              Spread model · {dexA || "—"} ⇄ {dexB || "—"} · {marketLabel}
-            </motion.p>
-          </AnimatePresence>
-
-          <div className="space-y-4">
-            <div className="border-b border-[rgba(255,255,255,0.08)] pb-3 font-mono text-[12px]">
-              <p className="mb-2 text-[12px] uppercase tracking-[1px] text-[#9c9cac]">
-                Current funding details
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="DEX-1 Funding"
-                    description="Funding rate currently applied to your short side."
-                    className="text-[13px] text-[#8f90a1]"
-                  />
-                  <span className="text-[13px] text-[color:var(--vault-leg-short-fg)]">
-                    {formatSignedPct(shortRatePerInterval)} /{" "}
-                    {shortFundingIntervalHours}h
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="DEX-2 Funding"
-                    description="Funding rate currently applied to your long side."
-                    className="text-[13px] text-[#8f90a1]"
-                  />
-                  <span className="text-[13px] text-[color:var(--vault-leg-long-fg)]">
-                    {formatSignedPct(longRatePerInterval)} /{" "}
-                    {longFundingIntervalHours}h
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="Net Capture"
-                    description="What the vault actually keeps: the short leg's funding minus the long leg's."
-                    className="text-[13px] text-[#8f90a1]"
-                  />
-                  <span className="text-[13px] text-[#e8d5b5]">
-                    {formatSignedPct(spreadFunding8h)} / 8h
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="Funding Settlement"
-                    description="Time left until the next funding settlement."
-                    className="text-[13px] text-[#8f90a1]"
-                  />
-                  <span className="text-[13px] text-[#ccb17f]">
-                    {formatHms(secondsToRent)}
-                  </span>
-                </div>
-                <div className="text-[12px] leading-relaxed text-[#717182]">
-                  Policy: Pacifica 1h, Hyperliquid 4h, Nado 8h. Payout timer
-                  uses the higher interval of the two selected DEXs.
-                </div>
-              </div>
-            </div>
-
-            <div className="border-b border-[rgba(255,255,255,0.08)] pb-3">
-              <span className="mb-1 block text-[12px] uppercase tracking-[0.8px] text-[#9c9cac]">
-                Costs
-              </span>
-              <div className="space-y-1.5 font-mono text-[11px]">
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="Fees Drag (Est.)"
-                    description="Estimated return lost to trading and execution fees."
-                    className="text-[#8f90a1] text-[13px]"
-                  />
-                  <span className="text-[#e8d5b5] text-[13px]">
-                    {feesDragEst.toFixed(3)}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="Avg Slippage"
-                    description="Average difference between expected price and actual filled price."
-                    className="text-[#8f90a1] text-[13px]"
-                  />
-                  <span className="text-[#e8d5b5] text-[13px]">
-                    {avgSlippage.toFixed(3)}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <VaultMetricLabel
-                    label="Funding Volatility"
-                    description="How unstable funding rates are right now (Low, Medium, or High)."
-                    className="text-[#8f90a1] text-[13px]"
-                  />
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] ${fundingVolBucket === "Low" ? "bg-[rgba(100,118,102,0.14)] text-[color:var(--vault-leg-long-fg)]" : fundingVolBucket === "Medium" ? "bg-[rgba(184,149,106,0.14)] text-[#b8956a]" : "bg-[rgba(112,82,80,0.14)] text-[color:var(--vault-pnl-negative)]"}`}
-                  >
-                    {fundingVolBucket}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
       </div>
     </section>
   );

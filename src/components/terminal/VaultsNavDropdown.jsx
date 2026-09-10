@@ -1,9 +1,18 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check } from "lucide-react";
 
+/*
+ * The one catalogue of vault views. The navbar dropdown, the header's own menu and the
+ * mobile bottom nav all map over this, so a view added here appears in all three and
+ * cannot appear in only two.
+ *
+ * "delta-neutral" split into two numbered views. They render the same page today; v2
+ * exists so it can be changed without touching v1, which is the version in use.
+ */
 export const VAULT_VIEWS = [
   { id: "featured", label: "Featured Vaults" },
-  { id: "delta-neutral", label: "Delta Neutral Vault" },
+  { id: "delta-neutral-1", label: "Delta Neutral 1" },
+  { id: "delta-neutral-2", label: "Delta Neutral 2" },
 ];
 
 function NavChevron({ className }) {

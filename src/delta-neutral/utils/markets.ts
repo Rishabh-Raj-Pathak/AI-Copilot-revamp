@@ -189,3 +189,81 @@ export function filterTokens(
     return true;
   });
 }
+
+/**
+ * Asset-level economics — the half of the cost model that belongs to the market
+ * rather than the venue.
+ *
+ * Depth and yield are properties of the book and the coin, not of the exchange:
+ * WIF is thin everywhere and ETH pays staking wherever you hold it. Keeping them
+ * here rather than on `DexProfile` avoids a venue x pair table, which is 92 rows
+ * of invented numbers to maintain. If per-venue depth is ever needed, multiply
+ * these by a venue depth factor rather than duplicating the table.
+ */
+export type MarketProfile = {
+  token: TokenOption;
+  /** Reference price, used to turn a liquidation distance into a liquidation price. */
+  markPriceUsd: number;
+  /**
+   * (perp − spot) / spot at entry, percent. A cash-and-carry entered at a premium
+   * banks this once when the two converge; it is not a rate and is never annualised
+   * into the APR. Zero on perp-only markets, which have no spot to be a basis against.
+   */
+  basisPct: number;
+  /** Staking or lending yield on the held coin. Only earned on a Spot <> Perp long leg. */
+  spotYieldAprPct: number;
+  /**
+   * Linear depth model: `impactPct = bpsPerMillion * (notionalUsd / 1e6) / 100`.
+   *
+   * One parameter rather than a full curve. It buys the property that actually
+   * matters — impact grows with size, so break-even moves when the user changes the
+   * amount — and swaps for a real book walk behind an unchanged signature.
+   */
+  perpImpactBpsPerMillion: number;
+  /** `null` on a perp-only market. */
+  spotImpactBpsPerMillion: number | null;
+};
+
+const MARKET_PROFILES: Record<string, Omit<MarketProfile, "token">> = {
+  "BTC-USDC": { markPriceUsd: 108000, basisPct: 0.04, spotYieldAprPct: 0, perpImpactBpsPerMillion: 18, spotImpactBpsPerMillion: 26 },
+  "ETH-USDC": { markPriceUsd: 3900, basisPct: 0.05, spotYieldAprPct: 2.8, perpImpactBpsPerMillion: 22, spotImpactBpsPerMillion: 32 },
+  "SOL-USDC": { markPriceUsd: 185, basisPct: 0.06, spotYieldAprPct: 6.2, perpImpactBpsPerMillion: 34, spotImpactBpsPerMillion: 48 },
+  "HYPE-USDC": { markPriceUsd: 38, basisPct: 0.09, spotYieldAprPct: 2.1, perpImpactBpsPerMillion: 55, spotImpactBpsPerMillion: 80 },
+  "BNB-USDC": { markPriceUsd: 940, basisPct: 0.03, spotYieldAprPct: 0.8, perpImpactBpsPerMillion: 40, spotImpactBpsPerMillion: 60 },
+  "XRP-USDC": { markPriceUsd: 2.4, basisPct: 0.05, spotYieldAprPct: 0, perpImpactBpsPerMillion: 45, spotImpactBpsPerMillion: 70 },
+  "ARB-USDC": { markPriceUsd: 0.42, basisPct: 0.08, spotYieldAprPct: 0, perpImpactBpsPerMillion: 90, spotImpactBpsPerMillion: 140 },
+  "ZK-USDC": { markPriceUsd: 0.06, basisPct: 0.11, spotYieldAprPct: 0, perpImpactBpsPerMillion: 130, spotImpactBpsPerMillion: 210 },
+  "DOGE-USDC": { markPriceUsd: 0.19, basisPct: 0.07, spotYieldAprPct: 0, perpImpactBpsPerMillion: 60, spotImpactBpsPerMillion: 95 },
+  "WIF-USDC": { markPriceUsd: 0.85, basisPct: 0.12, spotYieldAprPct: 0, perpImpactBpsPerMillion: 150, spotImpactBpsPerMillion: 240 },
+  "BONK-USDC": { markPriceUsd: 0.000019, basisPct: 0.14, spotYieldAprPct: 0, perpImpactBpsPerMillion: 170, spotImpactBpsPerMillion: 260 },
+
+  /* Perp-only from here — no spot book, so no basis, no spot yield, no spot depth. */
+  "KPEPE-USDC": { markPriceUsd: 0.0105, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 145, spotImpactBpsPerMillion: null },
+  "NVDA-USDC": { markPriceUsd: 178, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 70, spotImpactBpsPerMillion: null },
+  "TSLA-USDC": { markPriceUsd: 415, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 85, spotImpactBpsPerMillion: null },
+  "AAPL-USDC": { markPriceUsd: 245, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 75, spotImpactBpsPerMillion: null },
+  "MSTR-USDC": { markPriceUsd: 330, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 120, spotImpactBpsPerMillion: null },
+  "XAU-USDC": { markPriceUsd: 2650, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 45, spotImpactBpsPerMillion: null },
+  "XAG-USDC": { markPriceUsd: 31, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 90, spotImpactBpsPerMillion: null },
+  "WTI-USDC": { markPriceUsd: 71, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 110, spotImpactBpsPerMillion: null },
+  "NATGAS-USDC": { markPriceUsd: 3.1, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 160, spotImpactBpsPerMillion: null },
+  "EUR-USDC": { markPriceUsd: 1.08, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 25, spotImpactBpsPerMillion: null },
+  "JPY-USDC": { markPriceUsd: 0.0065, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 30, spotImpactBpsPerMillion: null },
+  "GBP-USDC": { markPriceUsd: 1.27, basisPct: 0, spotYieldAprPct: 0, perpImpactBpsPerMillion: 35, spotImpactBpsPerMillion: null },
+};
+
+/*
+ * A mid-liquidity alt. Deliberately not the best case: an unlisted pair should not
+ * quote a tighter book than the majors that are listed.
+ */
+const FALLBACK_MARKET: Omit<MarketProfile, "token"> = {
+  markPriceUsd: 1,
+  basisPct: 0.05,
+  spotYieldAprPct: 0,
+  perpImpactBpsPerMillion: 100,
+  spotImpactBpsPerMillion: 150,
+};
+
+export function marketProfileFor(token: TokenOption): MarketProfile {
+  return { token, ...(MARKET_PROFILES[token] ?? FALLBACK_MARKET) };
+}
