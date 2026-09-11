@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { WalletAddressLabel } from "./WalletAddressLabel";
+import { VaultLegChip } from "./VaultLegChip";
 import { VaultControls } from "./VaultControls";
 import { LeverageControl } from "./LeverageControl";
 
@@ -38,6 +38,13 @@ export type ActiveVaultCardModel = {
    */
   marginUsd?: number;
   leverage?: number;
+  /**
+   * Notional traded by the vault, all-time and over the trailing week. Optional
+   * because a vault opened a second ago has genuinely traded nothing: absent reads as
+   * zero rather than as missing, which is what a fresh vault should say.
+   */
+  totalVolumeUsd?: number;
+  volume7dUsd?: number;
 };
 
 /**
@@ -77,8 +84,6 @@ type ActiveVaultCardProps = {
    * offer to collect them.
    */
   onSaveSettings?: (next: VaultSettings) => void;
-  /** The More Info sheet. Off where the same figures already sit on the card. */
-  showMoreInfo?: boolean;
   variant?: ActiveVaultUiVariant;
 };
 
@@ -106,14 +111,17 @@ function formatCountdown(totalSeconds: number) {
   return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-function formatSignedCurrency(value?: number) {
+/**
+ * Volume runs from nothing to eight figures inside the same column, so it is written
+ * short: $0, $146.7K, $2.4M. Written in full, the widest vault would set the column
+ * width for every other one.
+ */
+function formatCompactUsd(value?: number) {
   if (typeof value !== "number" || Number.isNaN(value)) return "--";
-  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(0)}`;
-}
-
-function formatSignedPercent(value?: number, digits = 2) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "--";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
+  return `$${value.toFixed(0)}`;
 }
 
 function formatCurrency(value?: number) {
@@ -128,21 +136,6 @@ function formatPercent(value?: number, digits = 1) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-function getExposureTone(value?: number): RiskTone | null {
-  if (typeof value !== "number" || Number.isNaN(value)) return null;
-  const abs = Math.abs(value);
-  if (abs > 3) return "danger";
-  if (abs > 1) return "caution";
-  return "good";
-}
-
-function getSafetyBufferTone(value?: number): RiskTone | null {
-  if (typeof value !== "number" || Number.isNaN(value)) return null;
-  if (value < 15) return "danger";
-  if (value < 30) return "caution";
-  return "good";
 }
 
 function getCapitalUsedTone(value?: number): RiskTone | null {
@@ -231,14 +224,12 @@ export function ActiveVaultCard({
   onToggleExpand,
   onStop,
   onSaveSettings,
-  showMoreInfo = true,
   variant = "default",
 }: ActiveVaultCardProps) {
   const isV2 = variant === "v2";
   const payoutSec = usePayoutCountdown();
   const syncing = vault.status === "rebalancing";
   const [pnlOpen, setPnlOpen] = useState(false);
-  const [moreInfoOpen, setMoreInfoOpen] = useState(false);
 
   /*
    * The inline editor.
@@ -299,19 +290,9 @@ export function ActiveVaultCard({
   };
 
   const netPnl = vault.longPnl + vault.shortPnl + vault.fundingEarned;
-  const todayPnl = netPnl * 0.18;
-  const nav = vault.notional + netPnl;
-  const netPnlPct = useMemo(
-    () => (vault.notional > 0 ? (netPnl / vault.notional) * 100 : 0),
-    [netPnl, vault.notional],
-  );
   const status = statusToneAndText(syncing, vault.hedgeHealth);
   const exposure = useMemo(
     () => clamp((100 - vault.hedgeHealth) / 10, -5.5, 5.5),
-    [vault.hedgeHealth],
-  );
-  const safetyBuffer = useMemo(
-    () => clamp(vault.hedgeHealth * 0.42, 8, 60),
     [vault.hedgeHealth],
   );
   const capitalUsed = useMemo(
@@ -330,17 +311,7 @@ export function ActiveVaultCard({
     () => clamp(99.95 - Math.abs(exposure) * 0.12, 96.8, 99.95),
     [exposure],
   );
-  const hedgeStatus = syncing ? "Syncing" : "Synced";
-  const lastRebalanced = syncing
-    ? "Just now"
-    : `${Math.max(3, Math.round(Math.abs(exposure) * 7 + 4))}m ago`;
-  const exposureTone = getExposureTone(exposure);
-  const safetyTone = getSafetyBufferTone(safetyBuffer);
   const capitalTone = getCapitalUsedTone(capitalUsed);
-  const primaryReturnTone =
-    netPnl >= 0
-      ? "text-[color:var(--vault-pnl-positive)]"
-      : "text-[color:var(--vault-pnl-negative)]";
   return (
     <motion.article
       layout
@@ -396,46 +367,57 @@ export function ActiveVaultCard({
                 </button>
               )}
             </div>
-            <p
-              className={clsx(
-                "mt-0.5 text-[10px] max-tablet:leading-snug tablet:mt-1 tablet:text-[11px]",
-                isV2 ? "text-[#888888]" : "text-[#9496a2]",
-              )}
-            >
-              {vault.longAccount}{" "}
-              <span className={isV2 ? "text-[#555]" : "text-[#717182]"}>
-                ↔
-              </span>{" "}
-              {vault.shortAccount}
-            </p>
-            <div className="mt-0.5 hidden flex-wrap items-center gap-x-2 gap-y-0.5 tablet:mt-1 tablet:flex">
-              <WalletAddressLabel address={vault.longWallet} />
+            {/*
+              Venue and wallet, paired per leg, on one row.
+
+              This block used to run four ragged lines deep -- name, venues, wallets,
+              then a lone link -- each shorter and quieter than the last, while the
+              right half of the header held nothing but two buttons. Two of those lines
+              said the same thing twice: "Hyperliquid <-> Pacifica" over
+              "0x7a3f...9f2e <-> 0x4d5e...c3a6", with the same arrow in the middle and
+              nothing but column position to say which address belonged to which venue.
+
+              Pairing each venue with its own wallet inside a chip states that
+              relationship outright and buys back a line, which PnL Breakdown then
+              takes: the sub-header is one row, and the chips are wide enough to hold
+              the right edge of the card rather than trailing off into empty space.
+            */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 tablet:mt-2">
+              <VaultLegChip
+                venue={vault.longAccount}
+                address={vault.longWallet}
+                isV2={isV2}
+              />
               <span
+                aria-hidden
                 className={clsx(
-                  "text-[9px]",
-                  isV2 ? "text-[#444]" : "text-[#5a5a68]",
+                  "text-[11px] leading-none",
+                  isV2 ? "text-[#555]" : "text-[#717182]",
                 )}
               >
                 ↔
               </span>
-              <WalletAddressLabel address={vault.shortWallet} />
-            </div>
+              <VaultLegChip
+                venue={vault.shortAccount}
+                address={vault.shortWallet}
+                isV2={isV2}
+              />
 
-            {/*
-              The card's two read-only detours, under the identity they belong to.
+              {/* A hairline holds the read-only detour apart from the two chips, which
+                  are about the vault's identity rather than about what you can open. */}
+              <span
+                aria-hidden
+                className={clsx(
+                  "hidden h-[14px] w-px shrink-0 tablet:block",
+                  isV2 ? "bg-[#262626]" : "bg-[rgba(255,255,255,0.1)]",
+                )}
+              />
 
-              They used to sit on their own row beneath the header, right-aligned --
-              which put three things against the right edge at three different heights:
-              the button stack, then a lone dashed link under it. Left, they finish the
-              block that names the vault, and the right edge is left to the two things
-              that act on it.
-            */}
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 tablet:mt-2.5">
               <button
                 type="button"
                 onClick={() => setPnlOpen(true)}
                 className={clsx(
-                  "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
+                  "h-[20px] shrink-0 border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
                   isV2
                     ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
                     : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
@@ -443,20 +425,6 @@ export function ActiveVaultCard({
               >
                 PnL Breakdown
               </button>
-              {showMoreInfo && (
-                <button
-                  type="button"
-                  onClick={() => setMoreInfoOpen(true)}
-                  className={clsx(
-                    "h-[20px] border-none bg-transparent p-0 text-[10px] font-semibold uppercase tracking-[0.75px] underline decoration-dashed underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-1 tablet:tracking-[0.85px]",
-                    isV2
-                      ? "text-[#888888] hover:text-[#c9a962] focus-visible:ring-[#c9a962]/40"
-                      : "text-[#9596a1] hover:text-[#e8d5b5] focus-visible:ring-[rgba(204,177,127,0.45)]",
-                  )}
-                >
-                  More Info
-                </button>
-              )}
             </div>
           </div>
 
@@ -528,53 +496,48 @@ export function ActiveVaultCard({
               : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.01)]",
           )}
         >
-          <MetricLabel
-            label="NAV"
-            description="Current total value of your vault position."
-          />
-          <p
-            className={clsx(
-              "mt-0.5 font-mono text-[22px] font-semibold leading-none max-tablet:text-[21px] tablet:mt-1 tablet:text-[27px]",
-              isV2 ? "text-white" : "text-[#f2e2c4]",
-            )}
-          >
-            {formatCurrency(nav)}
-          </p>
+          {/*
+            What a running vault is doing, in the order you ask it.
 
-          <div className="mt-2.5 grid grid-cols-3 gap-2 max-tablet:gap-1.5 tablet:mt-3 tablet:gap-3">
+            This panel used to lead with NAV and two P&L figures over a second row of
+            three risk percentages -- six numbers, all of them restated in the PnL
+            Breakdown dialog and the deep dive below. What it did not say was how much
+            the vault had actually traded, which is the thing that distinguishes a
+            working vault from a funded one sitting still.
+
+            Volume answers that, all-time beside the trailing week so a stalled vault
+            shows as a full total against a flat 7d. Funding keeps its column: it is
+            the clock the position runs on.
+          */}
+          <div className="grid grid-cols-3 gap-2 max-tablet:gap-1.5 tablet:gap-3">
             <div className="min-w-0">
               <MetricLabel
-                label="Total Return"
-                description="Overall profit or loss since this vault started."
-              />
-              <p
-                className={`mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] tablet:mt-1 tablet:text-[18px] tablet:leading-none ${primaryReturnTone}`}
-              >
-                {formatSignedCurrency(netPnl)}{" "}
-                <span
-                  className={clsx(
-                    "block text-[9px] max-tablet:inline tablet:text-[10px]",
-                    isV2 ? "text-[#666666]" : "text-[#8f90a1]",
-                  )}
-                >
-                  ({formatSignedPercent(netPnlPct)})
-                </span>
-              </p>
-            </div>
-            <div className="min-w-0">
-              <MetricLabel
-                label="Today"
-                description="Profit or loss generated today."
+                label="Total Volume"
+                mobileTitle="Volume"
+                description="Notional traded by this vault since it was opened, across both legs."
               />
               <p
                 className={clsx(
                   "mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] tablet:mt-1 tablet:text-[18px] tablet:leading-none",
-                  todayPnl >= 0
-                    ? "text-[color:var(--vault-pnl-positive)]"
-                    : "text-[color:var(--vault-pnl-negative)]",
+                  isV2 ? "text-white" : "text-[#f2e2c4]",
                 )}
               >
-                {formatSignedCurrency(todayPnl)}
+                {formatCompactUsd(vault.totalVolumeUsd ?? 0)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <MetricLabel
+                label="Volume 7D"
+                mobileTitle="7D"
+                description="Notional traded over the last seven days. Flat against a rising total means the vault has gone quiet."
+              />
+              <p
+                className={clsx(
+                  "mt-0.5 font-mono text-[15px] font-semibold leading-tight max-tablet:text-[14px] tablet:mt-1 tablet:text-[18px] tablet:leading-none",
+                  isV2 ? "text-white" : "text-[#f2e2c4]",
+                )}
+              >
+                {formatCompactUsd(vault.volume7dUsd ?? 0)}
               </p>
             </div>
             <div className="min-w-0">
@@ -594,107 +557,63 @@ export function ActiveVaultCard({
             </div>
           </div>
 
-          {isV2 ? (
-            <div className="mt-3 border-t border-[#1f1f1f] pt-3">
-              <div className="grid grid-cols-3 divide-x divide-[#2a2a2a] text-center">
-                <div className="px-2">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#888888]">
-                    Risk exposure
-                  </p>
-                  <p
-                    className={clsx(
-                      "mt-1 font-mono text-[13px] font-semibold",
-                      riskValueTone(exposureTone),
-                    )}
-                  >
-                    {formatSignedPercent(exposure, 1)}
-                  </p>
-                </div>
-                <div className="px-2">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#888888]">
-                    Safety buffer
-                  </p>
-                  <p
-                    className={clsx(
-                      "mt-1 font-mono text-[13px] font-semibold text-white",
-                    )}
-                  >
-                    {formatPercent(safetyBuffer, 0)}
-                  </p>
-                </div>
-                <div className="px-2">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#888888]">
-                    Capital used
-                  </p>
-                  <p
-                    className={clsx(
-                      "mt-1 font-mono text-[13px] font-semibold text-white",
-                    )}
-                  >
-                    {formatPercent(capitalUsed, 0)}
-                  </p>
-                </div>
+          {/*
+            How the position is sized, on its own row under a rule.
+
+            Two figures rather than three columns of risk: they are a pair -- margin is
+            what is committed, leverage is the multiple it is working at -- and they are
+            also exactly what the Edit button below changes, so they sit closest to it.
+            The rule separates a fact about the vault's activity from a setting you can
+            reach in and change.
+          */}
+          <div
+            className={clsx(
+              "mt-2.5 border-t pt-2 max-tablet:mt-2 tablet:mt-3",
+              isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.08)]",
+            )}
+          >
+            <div className="grid grid-cols-2 gap-2 max-tablet:gap-1.5 tablet:gap-3">
+              <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
+                <MetricLabel
+                  label="Margin"
+                  description="Percent of your collateral currently committed to maintaining the hedge."
+                />
+                <p
+                  className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(capitalTone)}`}
+                >
+                  {formatPercent(capitalUsed, 0)}
+                </p>
+              </div>
+              <div
+                className={clsx(
+                  "flex min-w-0 flex-col gap-0.5 border-l pl-3 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2",
+                  isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.08)]",
+                )}
+              >
+                <MetricLabel
+                  label="Leverage"
+                  description="The multiple both legs are sized at. Higher magnifies the funding spread and the cost of drift alike."
+                />
+                <p
+                  className={clsx(
+                    "font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal",
+                    isV2 ? "text-white" : "text-[#f2e2c4]",
+                  )}
+                >
+                  {leverage}x
+                </p>
               </div>
             </div>
-          ) : (
-            /*
-              Three risk figures under three performance figures, on the same three
-              columns. They used to sit in a `[auto_1fr_1fr_1fr]` row led by the word
-              "Risk", which pushed all three off the grid above them by the width of
-              that word and put a rule between each -- so the card had two rows of three
-              numbers that lined up with nothing. The label moves to its own line, where
-              it heads the row rather than indenting it.
-            */
-            <div className="mt-2.5 border-t border-[rgba(255,255,255,0.08)] pt-2 max-tablet:mt-2 tablet:mt-3">
-              <p className="mb-1.5 text-[9px] uppercase tracking-[0.9px] text-[#898a98] tablet:text-[10px] tablet:tracking-[1px]">
-                Risk
-              </p>
-              <div className="grid grid-cols-3 gap-2 max-tablet:gap-1.5 tablet:gap-3">
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
-                  <MetricLabel
-                    label="Exposure"
-                    description="Remaining directional market exposure after hedging. Closer to 0% means more neutral."
-                  />
-                  <p
-                    className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(exposureTone)}`}
-                  >
-                    {formatSignedPercent(exposure, 1)}
-                  </p>
-                </div>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
-                  <MetricLabel
-                    label="Safety Buffer"
-                    description="Distance from liquidation risk. Higher means safer."
-                  />
-                  <p
-                    className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(safetyTone)}`}
-                  >
-                    {formatPercent(safetyBuffer, 0)}
-                  </p>
-                </div>
-                <div className="flex min-w-0 flex-col gap-0.5 max-tablet:items-start tablet:flex-row tablet:items-baseline tablet:gap-2">
-                  <MetricLabel
-                    label="Capital Used"
-                    description="Percent of your collateral currently used to maintain the hedge."
-                  />
-                  <p
-                    className={`font-mono text-[11px] font-semibold max-tablet:text-[11px] tablet:text-[13px] tablet:font-normal ${riskValueTone(capitalTone)}`}
-                  >
-                    {formatPercent(capitalUsed, 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/*
           The editor, inside the card rather than in a modal.
           
           What it changes -- how much capital is at work and at what multiple -- is
-          stated three lines above it as NAV and Capital Used, and a dialog would cover
-          exactly the figures the user is adjusting against. It opens where the change
-          will show.
+          stated on the row directly above it as Margin and Leverage, and a dialog would
+          cover exactly the figures the user is adjusting against. It opens where the
+          change will show.
 
           Height-animated the same way the strategy deep dive below the card is, so a
           card that grows downward does it one way regardless of which control grew it.
@@ -908,207 +827,6 @@ export function ActiveVaultCard({
                   <span className="text-[#9c9cac]">Net Delta</span>
                   <span className="text-[#8e9eb0]">+0.3%</span>
                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {moreInfoOpen && (
-          <motion.div
-            className="ds-scrim fixed inset-0 z-[100] flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              className="w-full max-w-[520px] rounded-[16px] border border-[rgba(146,111,56,0.45)] bg-[linear-gradient(180deg,rgba(12,12,12,0.98)_0%,rgba(6,6,6,0.98)_100%)] p-4"
-            >
-              <div className="mb-1 flex items-center justify-between">
-                <p className="text-[14px] font-semibold text-[#f5f5f5]">
-                  {vault.pair} Vault Info
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setMoreInfoOpen(false)}
-                  className="text-[#8f90a1] hover:text-[#f5f5f5]"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <p className="mb-1 text-[12px] text-[#8f90a1]">
-                {vault.longAccount} <span className="text-[#6d6e7d]">↔</span>{" "}
-                {vault.shortAccount}
-              </p>
-              <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <WalletAddressLabel address={vault.longWallet} />
-                <span className="text-[9px] text-[#5a5a68]">↔</span>
-                <WalletAddressLabel address={vault.shortWallet} />
-              </div>
-              <div className="space-y-3">
-                <section className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
-                  <p className="mb-2 text-[10px] uppercase tracking-[1px] text-[#ccb17f]">
-                    Risk
-                  </p>
-                  <div className="space-y-2">
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Exposure
-                        </span>
-                        <span
-                          className={`font-mono text-[12px] ${riskValueTone(exposureTone)}`}
-                        >
-                          {formatSignedPercent(exposure, 1)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        This shows how much market direction risk is still left
-                        after hedging. The closer this value is to 0%, the more
-                        truly delta-neutral your vault is.
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Safety Buffer
-                        </span>
-                        <span
-                          className={`font-mono text-[12px] ${riskValueTone(safetyTone)}`}
-                        >
-                          {formatPercent(safetyBuffer, 0)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        Think of this as your cushion before liquidation risk
-                        becomes serious. A higher buffer means the vault has
-                        more room to absorb volatility safely.
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Capital Used
-                        </span>
-                        <span
-                          className={`font-mono text-[12px] ${riskValueTone(capitalTone)}`}
-                        >
-                          {formatPercent(capitalUsed, 0)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        This is how much of your posted collateral is currently
-                        being used by the strategy. Lower usage usually means
-                        more free margin and better safety headroom.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-                <section className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
-                  <p className="mb-2 text-[10px] uppercase tracking-[1px] text-[#ccb17f]">
-                    Performance
-                  </p>
-                  <div className="space-y-2">
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Yield Earned
-                        </span>
-                        <span
-                          className={`font-mono text-[12px] ${vault.fundingEarned >= 0 ? "text-[color:var(--vault-pnl-positive)]" : "text-[color:var(--vault-pnl-negative)]"}`}
-                        >
-                          {formatSignedCurrency(vault.fundingEarned)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        Total income generated so far from funding-rate and
-                        spread capture in this vault.
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Sharpe
-                        </span>
-                        <span className="font-mono text-[12px] text-[#d1d2dc]">
-                          {sharpe.toFixed(2)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        This tells you how efficient returns are after
-                        accounting for risk. Higher Sharpe means better return
-                        quality, not just higher raw profit.
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Max Drawdown
-                        </span>
-                        <span className="font-mono text-[12px] text-[color:var(--vault-pnl-negative)]">
-                          {formatSignedPercent(maxDrawdown, 1)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        The biggest drop from a previous peak value during the
-                        observed period. It helps you understand the worst dip
-                        this vault experienced.
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Uptime
-                        </span>
-                        <span className="font-mono text-[12px] text-[#d1d2dc]">
-                          {formatPercent(uptime, 1)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#8f90a1]">
-                        How consistently this vault has been running as expected
-                        without interruptions.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-                <section className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
-                  <p className="mb-2 text-[10px] uppercase tracking-[1px] text-[#ccb17f]">
-                    System
-                  </p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#d8d9e3]">Status</span>
-                      <span
-                        className={`font-mono text-[12px] ${syncing ? "text-[#b8956a]" : vault.hedgeHealth < 70 ? "text-[color:var(--vault-pnl-negative)]" : "text-[color:var(--vault-pnl-positive)]"}`}
-                      >
-                        {status.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#d8d9e3]">
-                        Hedge Status
-                      </span>
-                      <span
-                        className={`font-mono text-[12px] ${syncing ? "text-[#b8956a]" : "text-[color:var(--vault-pnl-positive)]"}`}
-                      >
-                        {hedgeStatus || "--"}
-                      </span>
-                    </div>
-                    {lastRebalanced ? (
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#d8d9e3]">
-                          Last Rebalanced
-                        </span>
-                        <span className="font-mono text-[12px] text-[#d1d2dc]">
-                          {lastRebalanced}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </section>
               </div>
             </motion.div>
           </motion.div>

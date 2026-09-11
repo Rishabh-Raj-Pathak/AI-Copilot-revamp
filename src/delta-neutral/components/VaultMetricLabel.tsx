@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import {
   Dialog,
@@ -18,10 +18,18 @@ import {
 export function VaultMetricLabel({
   label,
   description,
+  detail,
   className = "text-[10px] uppercase tracking-[0.8px] text-[#8f90a1]",
 }: {
   label: string;
   description: string;
+  /**
+   * Structured content under the prose -- a figure's own arithmetic, say. Kept a
+   * separate prop rather than widening `description` to a node: the touch path renders
+   * the description inside Radix's `<p>`, and a table is not phrasing content. This
+   * renders as its sibling instead, so both paths stay valid markup.
+   */
+  detail?: ReactNode;
   className?: string;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -36,8 +44,17 @@ export function VaultMetricLabel({
             {label}
           </button>
         </TooltipTrigger>
-        <TooltipContent className="max-w-[220px] border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5]">
-          {description}
+        <TooltipContent
+          className={`border border-[rgba(146,111,56,0.45)] bg-[#0a0a0a] text-[#e8d5b5] ${
+            detail ? "max-w-[320px]" : "max-w-[220px]"
+          }`}
+        >
+          <p>{description}</p>
+          {detail && (
+            <div className="mt-2.5 border-t border-[rgba(255,255,255,0.1)] pt-2.5">
+              {detail}
+            </div>
+          )}
         </TooltipContent>
       </Tooltip>
       <button
@@ -55,6 +72,11 @@ export function VaultMetricLabel({
           <DialogDescription className="mt-1 text-[12px] text-[#b4b5c2]">
             {description}
           </DialogDescription>
+          {detail && (
+            <div className="mt-3 border-t border-[rgba(255,255,255,0.1)] pt-3">
+              {detail}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

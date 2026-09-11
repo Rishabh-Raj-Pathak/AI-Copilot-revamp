@@ -162,6 +162,11 @@ type VenueReadout = {
   apr: number;
 };
 
+/** Per-leg entry cost, keyed by venue. Absent until both venues resolve. */
+type LegSlippageMap = Partial<
+  Record<ManagedDexId, { side: "long" | "short"; pct: number; usd: number }>
+>;
+
 /** The market's three headline figures, preformatted. */
 type StrategyMetrics = {
   /** Preformatted — the strip renders it, the summary owns the arithmetic. */
@@ -173,6 +178,8 @@ type StrategyMetrics = {
   /** The lookback ceiling the live spread is read against. */
   maxFundingSpread: string;
 };
+
+const BREAKDOWN_RULE = "border-[rgba(255,255,255,0.07)]";
 
 const POSITIVE = "text-[#4ade80]";
 /*
@@ -212,6 +219,13 @@ function marketMetrics(metrics: StrategyMetrics): MarketMetric[] {
       description:
         "The funding the two legs pull apart by right now, per 8h — what the position is paid before entry costs. On a spot/perp pair only one leg quotes funding, so the perp's own rate is the whole capture.",
       value: metrics.currentSpread,
+      /*
+        The period, on the surface. A funding rate without one is not a smaller fact
+        than a rate with one, it is an ambiguous one -- and it used to be stated only
+        inside the hover panel, as the "/ 8h" on Net Capture. The strip layout has no
+        second line to put it on and keeps that panel; the column card has both.
+      */
+      sub: "per 8h",
       tone: metrics.spreadPositive ? POSITIVE : NEGATIVE,
     },
     {
@@ -219,9 +233,147 @@ function marketMetrics(metrics: StrategyMetrics): MarketMetric[] {
       description:
         "The widest those two rates pulled apart at any point in the venues' lookback window, per 8h — the ceiling the live spread above is read against.",
       value: metrics.maxFundingSpread,
+      sub: "lookback high / 8h",
       tone: NEGATIVE,
     },
   ];
+}
+
+/**
+ * One line of the breakdown: what it is on the left, what it says on the right.
+ *
+ * Every line takes this shape -- a venue's funding, its APY, its slippage, and the two
+ * position facts under them -- and so do the headline cells in the card above. That is
+ * the point of it. The predecessor was a four-column table, which asks the reader to
+ * carry three column headers in their head across a 380px measure and match each figure
+ * to the right one; a label beside its own figure asks nothing.
+ */
+function BreakdownRow({
+  label,
+  value,
+  sub,
+  tone = "text-[#ececf3]",
+}: {
+  label: string;
+  value: string;
+  /** A second figure for the same fact, quieter and on the same line. */
+  sub?: string;
+  tone?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-[11px] text-[#8b8b98]">{label}</dt>
+      <dd className="flex min-w-0 items-baseline gap-1.5 truncate font-mono text-[11px]">
+        <span className={tone}>{value}</span>
+        {sub && <span className="text-[10px] text-[#63646f]">{sub}</span>}
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * Where the market's headline figures come from, stated under them.
+ *
+ * The same facts the strip layout keeps behind More Info, laid out for a column that
+ * has the room to print them. Three tiers, in the order the numbers derive:
+ *
+ *   the rates          — what the market pays (the cells above this block)
+ *   each venue         — the two funding rates the spread is the gap between, and
+ *                        what getting on at each one costs
+ *   hedge + settlement — the facts about the position that hold for either venue
+ *
+ * Each tier is smaller and quieter than the one above it, so the card has an answer at
+ * a glance and its working underneath, rather than eleven figures at one weight.
+ *
+ * Net Capture is not repeated here. It is the same number as Current Spread above --
+ * the popover could restate it because it was a separate surface; on one card it would
+ * read as a second, differently-named quantity. The "/ 8h" it carried moved onto the
+ * Current Spread cell instead, which is the fact it was actually adding.
+ *
+ * A block per venue, not the popover's bordered sub-card each and not the column table
+ * that replaced it. Nested borders inside an already-bordered 380px card are noise; a
+ * table is worse -- it asks the reader to hold three column headings in their head and
+ * match six figures to the right one across a narrow measure. A label beside its own
+ * figure asks nothing, and it is the shape every other line on this card and the one
+ * below it already takes.
+ *
+ * The venue's name is the only label the block needs: two rows of logo-and-name are
+ * self-evidently a per-venue section, and an eyebrow over them said nothing the names
+ * did not. The rule above the block is what separates it from the rates.
+ */
+function MarketBreakdown({
+  venues,
+  slippage,
+  hedgeIntegrity,
+  fundingSettlement,
+}: {
+  venues: VenueReadout[];
+  /**
+   * What getting on at each venue costs, keyed by venue. It used to sit on the venue
+   * row itself in the left column; here it joins the two figures that are already
+   * stated per venue, so one table answers what a venue pays and what it charges to
+   * enter rather than splitting that across two columns of the page.
+   */
+  slippage?: LegSlippageMap;
+  hedgeIntegrity: string;
+  fundingSettlement: string;
+}) {
+  /*
+    Tight on purpose. A venue's name binds to its own three figures more closely than
+    one venue binds to the next, and the whole block has to sit inside the height of the
+    control column beside it -- past that the CTA, which is bounded by that column,
+    starts on an edge the form does not otherwise have.
+  */
+  return (
+    <div className="flex flex-col gap-2.5">
+      {venues.map((venue) => {
+        const leg = slippage?.[venue.dex];
+        return (
+          <div key={venue.dex} className="flex flex-col gap-0.5">
+            <DexLabel dex={venue.dex} className="text-[11px] text-[#c8c9d4]" />
+            {/*
+              Indented to the venue name rather than to the logo, so the facts hang off
+              the word that names them and the block reads as one venue's entry.
+            */}
+            <dl className="flex flex-col gap-0.5 pl-[22px]">
+              <BreakdownRow label="Funding" value={venue.funding} />
+              {/* The same rate on an annual basis -- what makes a 4h venue and a 1h
+                  venue comparable at a glance. */}
+              <BreakdownRow label="APY" value={formatApr(venue.apr)} />
+              <BreakdownRow
+                label="Slippage"
+                value={leg ? formatCostPct(leg.pct) : "—"}
+                /*
+                  Both figures, because neither answers the question alone: the percent
+                  is how this venue's book compares, the dollars are what it takes out
+                  of this position -- and the two dollar figures are the Spread term
+                  that Cost to open adds up from.
+                */
+                sub={leg ? formatUsd(leg.usd) : undefined}
+              />
+            </dl>
+          </div>
+        );
+      })}
+
+      {/*
+        Two facts about the position rather than about either venue, so they sit below
+        the venues and not as two more lines inside one of them.
+      */}
+      <dl className={clsx("flex flex-col gap-1 border-t pt-2.5", BREAKDOWN_RULE)}>
+        <BreakdownRow
+          label="Hedge integrity"
+          value={hedgeIntegrity}
+          tone="text-[#9babc0]"
+        />
+        <BreakdownRow
+          label="Funding settlement"
+          value={fundingSettlement}
+          tone="text-[#ccb17f]"
+        />
+      </dl>
+    </div>
+  );
 }
 
 /**
@@ -235,15 +387,12 @@ function StrategyBreakdownPanel({
   netCapture,
   hedgeIntegrity,
   fundingSettlement,
-  className,
 }: {
   contextLabel: string;
   venues: VenueReadout[];
   netCapture: string;
   hedgeIntegrity: string;
   fundingSettlement: string;
-  /** Lets the card layout hand it the footer's full width, as Details gets. */
-  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -319,7 +468,6 @@ function StrategyBreakdownPanel({
             open
               ? "bg-[rgba(214,176,106,0.12)] text-[#e2c68b]"
               : "text-[#9f875c] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e2c68b]",
-            className,
           )}
         >
           More Info
@@ -462,9 +610,7 @@ type DexPairSetupCardProps = {
     fundingSettlement: string;
   };
   /** Per-leg entry cost, keyed by venue. Absent until both venues resolve. */
-  legSlippage?: Partial<
-    Record<ManagedDexId, { side: "long" | "short"; pct: number; usd: number }>
-  >;
+  legSlippage?: LegSlippageMap;
   /**
    * What the current settings add up to. Rendered as a strip under the market row —
    * the position's economics belong next to the market they belong to, the same
@@ -532,15 +678,16 @@ function DexPairSetupCard({
   );
   const marketDisabled = dexA === "" || dexB === "";
   /*
-   * Whether the market's own figures sit beside the token selector.
+   * Whether this card carries the readouts itself.
    *
-   * Only in the strip layout, and for the same reason the position summary is a strip
-   * there: one column, so a readout belongs under the thing it describes. The column
-   * layout moved them to the right column instead, where the readouts live -- so the
-   * row is the selector alone and the selector takes all of it, exactly as it does
-   * before any venues are picked.
+   * Only in the strip layout. It is one column, so a figure belongs under the thing it
+   * describes: the market's rates beside the token selector, each leg's entry cost on
+   * the venue row that chose it. The column layout draws the line differently -- left
+   * is what you set, right is what it gets you -- so both moved to the right column and
+   * this card is controls only. The market row is then the selector alone and the
+   * selector takes all of it, exactly as it does before any venues are picked.
    */
-  const metricsInRow = showSummaryStrip;
+  const readoutsInline = showSummaryStrip;
   const renderDexSelector = (
     slot: "a" | "b",
     value: DexSelection,
@@ -756,7 +903,7 @@ function DexPairSetupCard({
           impact in the Position Summary, where they add up against the fees rather
           than floating free of them.
         */}
-        {value !== "" && legSlippage?.[value] && (
+        {readoutsInline && value !== "" && legSlippage?.[value] && (
           <div
             className={clsx(
               "mt-2.5 flex items-center justify-between gap-2 border-t pt-2.5",
@@ -946,14 +1093,14 @@ function DexPairSetupCard({
                 // the metric strip beside it takes the rest of the row. With no strip to
                 // sit next to, it spans the row.
                 className={
-                  marketDisabled || !metricsInRow
+                  marketDisabled || !readoutsInline
                     ? "w-full"
                     : "shrink-0 min-[1100px]:w-[240px]"
                 }
               />
             )}
 
-            {metricsInRow && market.mode === "tokens" && !marketDisabled && (
+            {readoutsInline && market.mode === "tokens" && !marketDisabled && (
               /*
                 The market's three figures beside the selector they belong to. The list
                 and the labels come from `marketMetrics`; only the arrangement is here.
@@ -1586,6 +1733,26 @@ export function DeltaVaultBuilder({
   const spreadSubtitleKey = `${bridgeKey}-${marketLabel}`;
 
   /*
+    Per-leg entry cost, keyed by venue. Built once: the strip layout prints it on the
+    venue row and the column layout prints it in the right column's venue table, and a
+    figure stated in two shapes has to be the same figure.
+  */
+  const legSlippage: LegSlippageMap | undefined = summary
+    ? {
+        [summary.long.venue]: {
+          side: "long" as const,
+          pct: summary.long.priceImpactPct,
+          usd: summary.long.priceImpactUsd,
+        },
+        [summary.short.venue]: {
+          side: "short" as const,
+          pct: summary.short.priceImpactPct,
+          usd: summary.short.priceImpactUsd,
+        },
+      }
+    : undefined;
+
+  /*
     The market's figures, built once. The setup card renders them as a strip in the
     v1 layout and the right column renders them as a card in v2, and the two must be
     the same numbers -- they are the same market.
@@ -1796,22 +1963,7 @@ export function DeltaVaultBuilder({
           onThemesChange={handleThemesChange}
           onTokenChange={handleTokenChange}
           strategyMetrics={strategyMetrics}
-          legSlippage={
-            summary
-              ? {
-                  [summary.long.venue]: {
-                    side: "long" as const,
-                    pct: summary.long.priceImpactPct,
-                    usd: summary.long.priceImpactUsd,
-                  },
-                  [summary.short.venue]: {
-                    side: "short" as const,
-                    pct: summary.short.priceImpactPct,
-                    usd: summary.short.priceImpactUsd,
-                  },
-                }
-              : undefined
-          }
+          legSlippage={legSlippage}
           summary={summary}
           showSummaryStrip={summaryInStrip}
           variant={variant}
@@ -1906,14 +2058,19 @@ export function DeltaVaultBuilder({
                 <MarketMetricsPanel
                   variant={variant}
                   metrics={marketMetrics(strategyMetrics)}
-                  footer={
-                    <StrategyBreakdownPanel
-                      contextLabel={market.token}
+                  breakdown={
+                    <MarketBreakdown
                       venues={strategyMetrics.venues}
-                      netCapture={strategyMetrics.netCapture}
+                      /*
+                        Gated on `valid`, like the APY above it. Before an amount is
+                        entered the impact arithmetic still runs and comes out at zero,
+                        and printing "0.000%" quotes a slippage the user was never
+                        offered -- in a table whose other size-dependent figures are
+                        all showing "—", which makes the zero look like a measurement.
+                      */
+                      slippage={summary?.valid ? legSlippage : undefined}
                       hedgeIntegrity={strategyMetrics.hedgeIntegrity}
                       fundingSettlement={strategyMetrics.fundingSettlement}
-                      className="w-full justify-center border-l-0"
                     />
                   }
                 />

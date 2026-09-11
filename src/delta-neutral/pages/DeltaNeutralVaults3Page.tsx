@@ -61,6 +61,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 11.3,
     notional: 21200,
     hedgeHealth: 79,
+    totalVolumeUsd: 262900,
+    volume7dUsd: 36800,
   },
   {
     id: 'v3-seed-1',
@@ -74,6 +76,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 12.7,
     notional: 20500,
     hedgeHealth: 96,
+    totalVolumeUsd: 139400,
+    volume7dUsd: 12500,
   },
   {
     id: 'v3-seed-2',
@@ -87,6 +91,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 10.8,
     notional: 19200,
     hedgeHealth: 88,
+    totalVolumeUsd: 347500,
+    volume7dUsd: 73000,
   },
   {
     id: 'v3-seed-3',
@@ -100,6 +106,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 9.1,
     notional: 17600,
     hedgeHealth: 82,
+    totalVolumeUsd: 73900,
+    volume7dUsd: 3000,
   },
   {
     id: 'v3-seed-4',
@@ -113,6 +121,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 12.1,
     notional: 22100,
     hedgeHealth: 93,
+    totalVolumeUsd: 212200,
+    volume7dUsd: 25500,
   },
   {
     id: 'v3-seed-5',
@@ -126,6 +136,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 10.1,
     notional: 16800,
     hedgeHealth: 74,
+    totalVolumeUsd: 257000,
+    volume7dUsd: 46300,
   },
   {
     id: 'v3-seed-6',
@@ -139,6 +151,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 8.6,
     notional: 15900,
     hedgeHealth: 77,
+    totalVolumeUsd: 112900,
+    volume7dUsd: 7900,
   },
   {
     id: 'v3-seed-7',
@@ -152,6 +166,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 14.9,
     notional: 15400,
     hedgeHealth: 91,
+    totalVolumeUsd: 181700,
+    volume7dUsd: 29100,
   },
   {
     id: 'v3-seed-8',
@@ -165,6 +181,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 7.9,
     notional: 14100,
     hedgeHealth: 85,
+    totalVolumeUsd: 76100,
+    volume7dUsd: 3800,
   },
   {
     id: 'v3-seed-9',
@@ -178,6 +196,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 15.5,
     notional: 24000,
     hedgeHealth: 100,
+    totalVolumeUsd: 520800,
+    volume7dUsd: 125000,
   },
   {
     id: 'v3-seed-10',
@@ -191,6 +211,8 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
     fundingEarned: 9.8,
     notional: 18200,
     hedgeHealth: 71,
+    totalVolumeUsd: 294800,
+    volume7dUsd: 56000,
   },
 ];
 
@@ -281,7 +303,6 @@ export function DeltaNeutralVaults3Page() {
           onToggleExpand={() => setExpandedId(expandedId === v.id ? null : v.id)}
           onStop={() => handleStop(v.id)}
           onSaveSettings={next => handleSaveSettings(v.id, next)}
-          showMoreInfo={false}
         />
         <AnimatePresence initial={false}>
           {expandedId === v.id && (

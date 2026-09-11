@@ -68,6 +68,12 @@ const BREAK_EVEN_HELP =
   "How long you have to hold, at the current rate, before income covers the round trip. The close is estimated at the same cost as the open, since a delta-neutral exit unwinds the same two legs the same way round.";
 const COST_HELP =
   "What it costs to get both legs on: the price impact of your size against the book, plus venue taker fees. Open Details for the terms it adds up from.";
+/*
+ * The same explanation for the column layout, minus the sentence that points at a
+ * Details panel it does not have -- the terms it names are printed underneath instead.
+ */
+const COST_HELP_PANEL =
+  "What it costs to get both legs on: the price impact of your size against the book, plus venue taker fees. It adds up like this:";
 
 /*
  * Where each cell's rules go, in both shapes the strip takes.
@@ -82,6 +88,9 @@ const COST_HELP =
  * top one, so the grid keeps drawing exactly the lines that are between cells.
  */
 const RULE = "border-[rgba(255,255,255,0.07)]";
+
+/** Named, because the panel picks this one figure out to hang the cost terms on. */
+const COST_LABEL = "Cost to open";
 const CELL_RULES = [
   "",
   "border-l",
@@ -111,6 +120,7 @@ function Cell({
   sub,
   index,
   row = false,
+  detail,
 }: {
   label: string;
   description: string;
@@ -124,6 +134,14 @@ function Cell({
    * label with nothing beside it.
    */
   row?: boolean;
+  /**
+   * The figure's own arithmetic, shown with its explanation on hover rather than on the
+   * card. Printed on the face it was four more lines of small type under a figure that
+   * already stated its total -- the working on permanent display beside the answer,
+   * competing with the two figures above it for the same glance. Behind the label it is
+   * there for whoever asks how the total is reached, and costs the card nothing.
+   */
+  detail?: ReactNode;
 }) {
   if (row) {
     return (
@@ -131,6 +149,7 @@ function Cell({
         <VaultMetricLabel
           label={label}
           description={description}
+          detail={detail}
           className={CELL_LABEL}
         />
         <div className="flex min-w-0 flex-col items-end gap-0.5">
@@ -173,8 +192,37 @@ function Cell({
  * gutter column so the labels still align down a single left edge -- an operator glued
  * to the term it applies to reads as a bullet, not as addition.
  */
-function CostTerms({ summary }: { summary: PositionSummary }) {
-  const terms: { label: string; pct?: string; value: string }[] = [
+function CostTerms({
+  summary,
+  shape = "ledger",
+}: {
+  summary: PositionSummary;
+  /**
+   * How the terms are written out.
+   *
+   * "ledger" — the details popover. The total is stated directly above the terms
+   * there, so a leading "+" on every line but the first shows them adding up to it.
+   *
+   * "plain" — the hover on Cost to open. The figure it explains is the row the hover
+   * is attached to, inches away and already on screen, so the arithmetic needs no
+   * operators to be followed: the terms are simply what the total is made of. Dropping
+   * the gutter also buys the labels back the width it was spending.
+   */
+  shape?: "ledger" | "plain";
+}) {
+  const ledger = shape === "ledger";
+  /*
+   * A term's qualifier is carried apart from its name so the plain shape can set it
+   * back a shade. "DEX fees" is the thing; "(taker/maker)" says which fees they are,
+   * and at the same weight the parenthesis reads as part of the name and doubles the
+   * length of the longest label in a 320px tooltip.
+   */
+  const terms: {
+    label: string;
+    qualifier?: string;
+    pct?: string;
+    value: string;
+  }[] = [
     {
       // "Spread", not "price impact": the same quantity under the name a perp
       // trader already uses.
@@ -185,7 +233,8 @@ function CostTerms({ summary }: { summary: PositionSummary }) {
       value: formatUsd(summary.costToOpenUsd.priceImpact),
     },
     {
-      label: "DEX fees (taker/maker)",
+      label: "DEX fees",
+      qualifier: "(taker/maker)",
       pct: formatCostPct(summary.long.openFeePct + summary.short.openFeePct),
       value: formatUsd(summary.costToOpenUsd.fees),
     },
@@ -197,17 +246,34 @@ function CostTerms({ summary }: { summary: PositionSummary }) {
   }
 
   return (
-    <div className="grid grid-cols-[0.6rem_minmax(0,1fr)_auto_auto] items-baseline gap-x-3 gap-y-1.5">
+    <div
+      className={clsx(
+        "grid items-baseline gap-x-2.5 gap-y-1.5",
+        ledger
+          ? "grid-cols-[0.6rem_minmax(0,1fr)_auto_auto]"
+          : "grid-cols-[minmax(0,1fr)_auto_auto]",
+      )}
+    >
       {terms.map((term, index) => (
         <Fragment key={term.label}>
+          {ledger && (
+            <span
+              className="font-mono text-[10px] text-[#63646f]"
+              aria-hidden={index === 0}
+            >
+              {index === 0 ? "" : "+"}
+            </span>
+          )}
           <span
-            className="font-mono text-[10px] text-[#63646f]"
-            aria-hidden={index === 0}
+            className="truncate text-[11px] text-[#8b8b98]"
+            title={term.qualifier ? `${term.label} ${term.qualifier}` : term.label}
           >
-            {index === 0 ? "" : "+"}
-          </span>
-          <span className="truncate text-[11px] text-[#8b8b98]" title={term.label}>
             {term.label}
+            {term.qualifier && (
+              <span className={ledger ? "" : "ml-1 text-[#5e5f6a]"}>
+                {ledger ? ` ${term.qualifier}` : term.qualifier}
+              </span>
+            )}
           </span>
           <span className="text-right font-mono text-[10px] text-[#63646f]">
             {term.pct ?? ""}
@@ -359,7 +425,7 @@ function figuresFor(summary: PositionSummary) {
       sub: `${formatUsd(summary.roundTripCostUsd.total)} round-trip`,
     },
     {
-      label: "Cost to open",
+      label: COST_LABEL,
       description: COST_HELP,
       value: formatUsd(summary.costToOpenUsd.total),
       tone: undefined as string | undefined,
@@ -373,7 +439,7 @@ function figuresFor(summary: PositionSummary) {
 const EMPTY_FIGURES = [
   { label: "Est. income", description: INCOME_HELP },
   { label: "Break-even", description: BREAK_EVEN_HELP },
-  { label: "Cost to open", description: COST_HELP },
+  { label: COST_LABEL, description: COST_HELP },
 ];
 
 const EMPTY_TONE = "text-[#4b4c56]";
@@ -395,11 +461,6 @@ function panelShell(variant: SummaryVariant, className?: string) {
   );
 }
 
-/** The full-width footer a column card hangs its disclosure trigger in. */
-function PanelFooter({ children }: { children: ReactNode }) {
-  return <div className={clsx("flex h-[34px] border-t", RULE)}>{children}</div>;
-}
-
 /**
  * The market's own economics, as a card for the column layout.
  *
@@ -412,16 +473,22 @@ function PanelFooter({ children }: { children: ReactNode }) {
  *
  * It lives in this file because it has to match the card below it exactly, and the
  * cell, the rules and the shell that make that match are all here.
+ *
+ * `breakdown` is where the figures come from, stated under them rather than behind a
+ * hover. The column has the room, and a rate whose derivation is one interaction away
+ * is a rate most people never check -- which on a page whose whole claim is "show the
+ * math" is the wrong default. It sits below a rule and at a smaller size, so it reads
+ * as the working under the answers and never competes with them.
  */
 export function MarketMetricsPanel({
   metrics,
-  footer,
+  breakdown,
   variant = "default",
   className,
 }: {
   metrics: MarketMetric[];
-  /** The disclosure trigger, given the card's full width. Optional. */
-  footer?: ReactNode;
+  /** Where the figures above come from. Rendered under a rule, subordinate to them. */
+  breakdown?: ReactNode;
   variant?: SummaryVariant;
   className?: string;
 }) {
@@ -432,7 +499,9 @@ export function MarketMetricsPanel({
           <Cell key={metric.label} row index={index} {...metric} />
         ))}
       </div>
-      {footer && <PanelFooter>{footer}</PanelFooter>}
+      {breakdown && (
+        <div className={clsx("mt-3 border-t pt-3", RULE)}>{breakdown}</div>
+      )}
     </section>
   );
 }
@@ -489,24 +558,57 @@ function SummaryPanel({
 
   const profitable = summary.netAprOnCapitalPct > 0;
 
+  /*
+    No Details disclosure. The strip layout needs one -- it is a 48px row and has
+    nowhere to put a cost breakdown -- but the column has the room, and the panel behind
+    the trigger held only three things: the terms Cost to open adds up from, and two
+    figures the screen already states. Capital required and Net APY on capital were the
+    two, and the APY is the very first line of the card above this one. So the terms
+    come out onto the face, under the total they add up to, and the trigger goes with
+    the panel it opened.
+  */
   return (
     <section className={shell} aria-label="Position summary">
       <div className={clsx("divide-y", RULE)}>
-        {figuresFor(summary).map((figure, index) => (
-          <Cell key={figure.label} row index={index} {...figure} />
-        ))}
+        {figuresFor(summary).map((figure, index) => {
+          const isCost = figure.label === COST_LABEL;
+          return (
+            <Cell
+              key={figure.label}
+              row
+              index={index}
+              {...figure}
+              /*
+                Cost to open is the one figure here that is a sum rather than a
+                reading, so it is the one that can show its terms. The strip's wording
+                sends you to Details for them; this layout has no Details, and the
+                terms are in the tooltip you are already reading.
+              */
+              description={isCost ? COST_HELP_PANEL : figure.description}
+              detail={isCost ? <CostTerms summary={summary} shape="plain" /> : undefined}
+            />
+          );
+        })}
       </div>
       {/*
-        The same trigger the strip carries, given the panel's full width so it reads as
-        the card's own footer rather than as a button parked in a corner.
+        A position that does not clear its own entry costs has to say so somewhere. It
+        used to be the warning colour on the Details trigger and the first line of the
+        panel behind it; with both gone it is stated on the card, which is where a
+        warning belonged anyway -- one that only shows itself once you open something is
+        a warning the people who most need it never see.
       */}
-      <PanelFooter>
-        <PositionDetailsPanel
-          summary={summary}
-          warning={!profitable ? summary.reasons[0] : undefined}
-          className="w-full justify-center border-l-0"
-        />
-      </PanelFooter>
+      {!profitable && summary.reasons[0] && (
+        <p
+          className={clsx(
+            "mt-3 flex items-start gap-1.5 border-t pt-2.5 text-[11px] leading-relaxed",
+            RULE,
+            NEGATIVE,
+          )}
+        >
+          <AlertTriangle className="mt-[3px] h-3 w-3 shrink-0" aria-hidden />
+          <span>{summary.reasons[0]}</span>
+        </p>
+      )}
     </section>
   );
 }
