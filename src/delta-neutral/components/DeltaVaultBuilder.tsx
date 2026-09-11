@@ -580,6 +580,20 @@ function leverageProfile(value: number) {
   return "Aggressive";
 }
 
+/**
+ * The split layout's two tracks, named because two separate grids have to agree on
+ * them: the controls-and-summary row, and the CTA row beneath it that re-runs the
+ * same template so the button ends on the control column's edge rather than the
+ * card's. Change the number here and the CTA follows -- it is the whole reason the
+ * button is in a grid at all instead of carrying a width of its own.
+ *
+ * 440 rather than the original 380: the summary is the densest thing in the builder
+ * -- three label/value rows per venue, plus a figure and its qualifier stacked in the
+ * same cell -- and it was the column being squeezed while the controls beside it had
+ * room to spare.
+ */
+const SPLIT_COLUMNS = "min-[1180px]:grid-cols-[minmax(0,1fr)_440px]";
+
 type BuilderUiVariant = "default" | "v2";
 
 type DexPairSetupCardProps = {
@@ -1816,21 +1830,23 @@ export function DeltaVaultBuilder({
     <section
       className={clsx(
         /*
-          850px is the right measure for a single column of controls, and the only
-          reason to go past it is the two-column split: at 850 the split left 422px
-          for the left half, which squeezes the two venue cards it holds side by side
-          and makes that column taller than the summary beside it -- the opposite of
-          the point. So the wider cap applies at exactly the breakpoint where the
-          split happens, and only in the layout that splits. 1180 also sits inside
-          the page's own max-w-[1280px] main, so nothing else has to move.
+          850px is the right measure for a single column of controls: stretched past it
+          a form gets a 15px figure adrift in a third of a metre of dark card, and a
+          label a screen away from its input. Both layouts hold that cap while they
+          are one column, and the strip layout -- which is one column at every width --
+          keeps it outright.
 
-          The strip layout keeps 850 at every width. It is one column, and a single
-          column of controls does not get better by being stretched to 1116px -- it
-          gets a 15px figure adrift in a third of a metre of dark card, and a form
-          whose label and its input are a screen apart.
+          The panel layout drops the cap at the width where it stops being one column.
+          From 1180 up it splits into controls and summary, and there it takes the
+          page's full measure rather than a cap of its own: the platform stats above it
+          and the active vault cards below both run to the `max-w-[1280px]` main, so a
+          builder that stopped at 1180 sat as a narrower box between two wider ones,
+          its left and right edges stepping in and back out again. Sharing the main's
+          cap puts all three on one line. Nothing changes below 1180, where the column
+          still wants its 850.
         */
         "font-['Onest',sans-serif] relative mx-auto w-full max-w-[850px] overflow-hidden p-3.5 tablet:p-4",
-        !summaryInStrip && "min-[1180px]:max-w-[1180px]",
+        !summaryInStrip && "min-[1180px]:max-w-none",
         isV2Shell
           ? "rounded-[12px] border border-[#2a2418] bg-[#000000] shadow-none max-tablet:rounded-[14px] max-tablet:p-2.5"
           : clsx(
@@ -1913,7 +1929,10 @@ export function DeltaVaultBuilder({
       <div className="relative z-[1] flex flex-col gap-4 max-tablet:gap-3">
         <MaybeBox
           when={!summaryInStrip}
-          className="grid grid-cols-1 items-start gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_380px]"
+          className={clsx(
+            "grid grid-cols-1 items-start gap-4 max-tablet:gap-3",
+            SPLIT_COLUMNS,
+          )}
         >
           <MaybeBox
             when={!summaryInStrip}
@@ -2088,12 +2107,12 @@ export function DeltaVaultBuilder({
           The CTA is last in both shapes -- the step that acts on everything above
           it, in the order the decision is made.
 
-          In the split layout it used to be as wide as the card, which ran it 380px
-          on under the summary panel, past the last control it acts on and ending on
-          an edge nothing else in the form shares. Re-running the grid template for
+          In the split layout it used to be as wide as the card, which ran it the width
+          of the summary panel on under it, past the last control it acts on and ending
+          on an edge nothing else in the form shares. Re-running the grid template for
           this one row drops it into the first column, so it lines up with the Margin
-          and Leverage cards directly above it -- and is exact rather than a width
-          computed against the 380px by hand.
+          and Leverage cards directly above it -- and stays exact when that track is
+          resized, rather than being a width computed against it by hand.
 
           A wrapper rather than a second copy inside the control column: below 1180px
           the grid collapses and the CTA has to stay after the summary, which is where
@@ -2102,7 +2121,7 @@ export function DeltaVaultBuilder({
         */}
         <MaybeBox
           when={!summaryInStrip}
-          className="grid grid-cols-1 gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_380px]"
+          className={clsx("grid grid-cols-1 gap-4 max-tablet:gap-3", SPLIT_COLUMNS)}
         >
           {primaryCta}
         </MaybeBox>
