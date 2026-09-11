@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { clsx } from "clsx";
 import { AlertTriangle, ChevronDown } from "lucide-react";
 import { Popover, PopoverAnchor, PopoverContent } from "./ui/popover";
@@ -33,6 +33,24 @@ import {
  * there is no single token, no resolved legs and no cost to open, so the strip is not
  * rendered rather than rendered empty -- see the call site.
  */
+
+/**
+ * One readout in a column card: what it is called, what it explains, what it says.
+ *
+ * Declared here, beside the cell that renders it, so the caller that assembles the
+ * market's figures is stating them in the shape the card already reads.
+ */
+export type MarketMetric = {
+  label: string;
+  description: string;
+  value: string;
+  /** Colour carries the sign; the value is never re-weighted for it. */
+  tone?: string;
+};
+
+/** Which builder layout the summary is being rendered into. */
+type SummaryLayout = "strip" | "panel";
+type SummaryVariant = "default" | "v2";
 
 const POSITIVE = "text-[#4ade80]";
 const NEGATIVE = "text-[#f87171]";
@@ -92,6 +110,7 @@ function Cell({
   tone,
   sub,
   index,
+  row = false,
 }: {
   label: string;
   description: string;
@@ -99,7 +118,31 @@ function Cell({
   tone?: string;
   sub?: string;
   index: number;
+  /**
+   * Panel shape: label on the left, figure on the right, one per line. A 380px column
+   * is too narrow to put three of these across and too wide to spend a whole line on a
+   * label with nothing beside it.
+   */
+  row?: boolean;
 }) {
+  if (row) {
+    return (
+      <div className="flex items-baseline justify-between gap-3 py-2">
+        <VaultMetricLabel
+          label={label}
+          description={description}
+          className={CELL_LABEL}
+        />
+        <div className="flex min-w-0 flex-col items-end gap-0.5">
+          <p className={clsx("min-w-0 truncate", CELL_VALUE, tone ?? "text-[#e6e7ef]")}>
+            {value}
+          </p>
+          {sub && <p className={CELL_SUB}>{sub}</p>}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={clsx(
@@ -182,9 +225,11 @@ function CostTerms({ summary }: { summary: PositionSummary }) {
 function PositionDetailsPanel({
   summary,
   warning,
+  className,
 }: {
   summary: PositionSummary;
   warning?: string;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const pctOfNotional =
@@ -208,6 +253,7 @@ function PositionDetailsPanel({
               : open
                 ? "bg-[rgba(214,176,106,0.12)] text-[#e2c68b]"
                 : "text-[#9f875c] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e2c68b]",
+            className,
           )}
         >
           {warning && <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />}
@@ -291,13 +337,202 @@ function PositionDetailsPanel({
  * that pops into existence moves everything under it, and the empty strip is also how
  * the user learns which three numbers the amount is about to produce.
  */
-export function PositionSummaryStrip({
+/**
+ * The three figures, once. Both shapes read this list rather than each writing out
+ * its own -- the whole point of one component with two layouts is that the versions
+ * cannot drift into quoting different things.
+ */
+function figuresFor(summary: PositionSummary) {
+  return [
+    {
+      label: "Est. income",
+      description: INCOME_HELP,
+      value: `${formatSignedUsd(summary.incomeUsd.daily)} /day`,
+      tone: summary.incomeUsd.daily >= 0 ? POSITIVE : NEGATIVE,
+      sub: `≈ ${formatSignedUsd(summary.incomeUsd.monthly)} / 30d`,
+    },
+    {
+      label: "Break-even",
+      description: BREAK_EVEN_HELP,
+      value: formatDuration(summary.breakEvenDays),
+      tone: "text-[#c9a962]",
+      sub: `${formatUsd(summary.roundTripCostUsd.total)} round-trip`,
+    },
+    {
+      label: "Cost to open",
+      description: COST_HELP,
+      value: formatUsd(summary.costToOpenUsd.total),
+      tone: undefined as string | undefined,
+      sub: `${formatCostPct(
+        (summary.costToOpenUsd.total / summary.notionalUsd) * 100,
+      )} of notional`,
+    },
+  ];
+}
+
+const EMPTY_FIGURES = [
+  { label: "Est. income", description: INCOME_HELP },
+  { label: "Break-even", description: BREAK_EVEN_HELP },
+  { label: "Cost to open", description: COST_HELP },
+];
+
+const EMPTY_TONE = "text-[#4b4c56]";
+
+/**
+ * The shell every card in the column wears.
+ *
+ * The column holds two of them now -- the market's rates, then the position they
+ * produce -- and a card is only read as the sibling of the one above it if the border,
+ * the ground and the padding are the same to the pixel. One function, so they are.
+ */
+function panelShell(variant: SummaryVariant, className?: string) {
+  return clsx(
+    "rounded-[11px] border p-4 max-tablet:p-3.5",
+    variant === "v2"
+      ? "border-[#1f1f1f] bg-[#121212]"
+      : "border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(13,12,10,0.88)_0%,rgba(9,9,10,0.93)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),inset_0_-6px_18px_rgba(0,0,0,0.3)]",
+    className,
+  );
+}
+
+/** The full-width footer a column card hangs its disclosure trigger in. */
+function PanelFooter({ children }: { children: ReactNode }) {
+  return <div className={clsx("flex h-[34px] border-t", RULE)}>{children}</div>;
+}
+
+/**
+ * The market's own economics, as a card for the column layout.
+ *
+ * The same three figures the strip layout keeps under the token selector -- the rate
+ * on offer, the spread it is earned from, and the ceiling that spread is read against.
+ * In the column layout they belong here rather than in the control column: they are
+ * readouts, not inputs, and the left column is what you set while the right column is
+ * what it gets you. Stacked above the position summary they also read in the order the
+ * arithmetic runs -- what the market pays, then what a position in it comes to.
+ *
+ * It lives in this file because it has to match the card below it exactly, and the
+ * cell, the rules and the shell that make that match are all here.
+ */
+export function MarketMetricsPanel({
+  metrics,
+  footer,
+  variant = "default",
+  className,
+}: {
+  metrics: MarketMetric[];
+  /** The disclosure trigger, given the card's full width. Optional. */
+  footer?: ReactNode;
+  variant?: SummaryVariant;
+  className?: string;
+}) {
+  return (
+    <section className={panelShell(variant, className)} aria-label="Market rates">
+      <div className={clsx("divide-y", RULE)}>
+        {metrics.map((metric, index) => (
+          <Cell key={metric.label} row index={index} {...metric} />
+        ))}
+      </div>
+      {footer && <PanelFooter>{footer}</PanelFooter>}
+    </section>
+  );
+}
+
+/**
+ * The summary as a column card, for the builder layout that keeps a column to put it
+ * in.
+ *
+ * Same three figures, same words, same Details panel as the strip -- only the
+ * arrangement differs, because 380px is too narrow to put three money figures across
+ * and the strip's own wrapped fallback (two up, two down) leaves a hole where its
+ * fourth cell would be.
+ *
+ * No heading. It had one while it was the only card in the column and the strip
+ * layout's own summary was a nameless 48px row under the market; now it is the second
+ * of two cards that both state figures for the pair named at the top of the builder,
+ * and a title over one of them labelled the wrong thing -- the column, not the card.
+ * The three row labels already say what each figure is, which is what a heading over
+ * them could only repeat. The accessible name stays on the section.
+ */
+function SummaryPanel({
   summary,
+  variant,
   className,
 }: {
   summary: PositionSummary | null;
+  variant: SummaryVariant;
   className?: string;
 }) {
+  const shell = panelShell(variant, className);
+
+  if (!summary || !summary.valid) {
+    return (
+      <section className={shell} aria-label="Position summary">
+        <div className={clsx("divide-y", RULE)}>
+          {EMPTY_FIGURES.map((figure, index) => (
+            <Cell
+              key={figure.label}
+              row
+              index={index}
+              label={figure.label}
+              description={figure.description}
+              value="—"
+              tone={EMPTY_TONE}
+            />
+          ))}
+        </div>
+        <p className={clsx("border-t pt-2.5 text-[10px] text-[#63646f]", RULE)}>
+          {summary?.reasons[0] ?? "Set an amount"}
+        </p>
+      </section>
+    );
+  }
+
+  const profitable = summary.netAprOnCapitalPct > 0;
+
+  return (
+    <section className={shell} aria-label="Position summary">
+      <div className={clsx("divide-y", RULE)}>
+        {figuresFor(summary).map((figure, index) => (
+          <Cell key={figure.label} row index={index} {...figure} />
+        ))}
+      </div>
+      {/*
+        The same trigger the strip carries, given the panel's full width so it reads as
+        the card's own footer rather than as a button parked in a corner.
+      */}
+      <PanelFooter>
+        <PositionDetailsPanel
+          summary={summary}
+          warning={!profitable ? summary.reasons[0] : undefined}
+          className="w-full justify-center border-l-0"
+        />
+      </PanelFooter>
+    </section>
+  );
+}
+
+export function PositionSummaryStrip({
+  summary,
+  layout = "strip",
+  variant = "default",
+  className,
+}: {
+  summary: PositionSummary | null;
+  /**
+   * Which builder layout is asking. "strip" is the 48px readout under the market row;
+   * "panel" is the column card beside the controls. The figures are identical either
+   * way -- see `figuresFor`.
+   */
+  layout?: SummaryLayout;
+  variant?: SummaryVariant;
+  className?: string;
+}) {
+  if (layout === "panel") {
+    return (
+      <SummaryPanel summary={summary} variant={variant} className={className} />
+    );
+  }
+
   /*
    * Two elements, not one: `container-type` only sizes an element's *descendants*, so
    * the grid whose own columns depend on the width has to sit inside the container
@@ -315,27 +550,16 @@ export function PositionSummaryStrip({
     return (
       <div className={clsx("@container w-full", className)}>
         <div className={shell} aria-label="Position summary">
-        <Cell
-          index={0}
-          label="Est. income"
-          description={INCOME_HELP}
-          value="—"
-          tone="text-[#4b4c56]"
-        />
-        <Cell
-          index={1}
-          label="Break-even"
-          description={BREAK_EVEN_HELP}
-          value="—"
-          tone="text-[#4b4c56]"
-        />
-        <Cell
-          index={2}
-          label="Cost to open"
-          description={COST_HELP}
-          value="—"
-          tone="text-[#4b4c56]"
-        />
+          {EMPTY_FIGURES.map((figure, index) => (
+            <Cell
+              key={figure.label}
+              index={index}
+              label={figure.label}
+              description={figure.description}
+              value="—"
+              tone={EMPTY_TONE}
+            />
+          ))}
           <p
             className={clsx(
               "flex shrink-0 items-center px-3 text-[10px] leading-[12px] text-[#63646f]",
@@ -355,31 +579,9 @@ export function PositionSummaryStrip({
   return (
     <div className={clsx("@container w-full", className)}>
       <div className={shell} aria-label="Position summary">
-        <Cell
-          index={0}
-        label="Est. income"
-        description={INCOME_HELP}
-        value={`${formatSignedUsd(summary.incomeUsd.daily)} /day`}
-        tone={summary.incomeUsd.daily >= 0 ? POSITIVE : NEGATIVE}
-        sub={`≈ ${formatSignedUsd(summary.incomeUsd.monthly)} / 30d`}
-      />
-      <Cell
-        index={1}
-        label="Break-even"
-        description={BREAK_EVEN_HELP}
-        value={formatDuration(summary.breakEvenDays)}
-        tone="text-[#c9a962]"
-        sub={`${formatUsd(summary.roundTripCostUsd.total)} round-trip`}
-      />
-      <Cell
-        index={2}
-        label="Cost to open"
-        description={COST_HELP}
-        value={formatUsd(summary.costToOpenUsd.total)}
-        sub={`${formatCostPct(
-          (summary.costToOpenUsd.total / summary.notionalUsd) * 100,
-        )} of notional`}
-      />
+        {figuresFor(summary).map((figure, index) => (
+          <Cell key={figure.label} index={index} {...figure} />
+        ))}
         <PositionDetailsPanel
           summary={summary}
           warning={!profitable ? summary.reasons[0] : undefined}

@@ -25,8 +25,11 @@ import {
 } from "./ui/dialog";
 import { DexLabel } from "./DexLogo";
 import { VaultMetricLabel } from "./VaultMetricLabel";
-import { PositionSummaryPanel } from "./PositionSummaryPanel";
-import { PositionSummaryStrip } from "./PositionSummaryStrip";
+import {
+  MarketMetricsPanel,
+  PositionSummaryStrip,
+  type MarketMetric,
+} from "./PositionSummaryStrip";
 import {
   THEME_CATALOG,
   filterTokens,
@@ -159,6 +162,68 @@ type VenueReadout = {
   apr: number;
 };
 
+/** The market's three headline figures, preformatted. */
+type StrategyMetrics = {
+  /** Preformatted — the strip renders it, the summary owns the arithmetic. */
+  apy: string;
+  apyPositive: boolean;
+  /** Live cross-venue funding spread, %/8h. */
+  currentSpread: string;
+  spreadPositive: boolean;
+  /** The lookback ceiling the live spread is read against. */
+  maxFundingSpread: string;
+};
+
+const POSITIVE = "text-[#4ade80]";
+/*
+  Not --vault-pnl-positive/negative. Those two tokens are muted (#9eada2 / #a88884) so
+  that a table of many P&L cells does not strobe; three metrics in one readout is not
+  that table, and half of them at full saturation next to half at a quarter of it reads
+  as two different kinds of number.
+*/
+const NEGATIVE = "text-[#f87171]";
+
+/**
+ * The market's three figures, as one list for both shapes.
+ *
+ * The rate on offer, the spread it is earned from, and the ceiling that spread is read
+ * against. A spread means little without the band it has been moving in.
+ *
+ * All three are stated at significant figures rather than at a fixed 6dp (see
+ * formatCompactPct). The predecessor padded every one to six decimal places, which is
+ * how "0.000005" and "0.014000" ended up in the same row — one all zeros, the other all
+ * padding, neither scannable.
+ *
+ * One list because the two layouts now render these in different places — a 48px strip
+ * under the token selector in one, a card in the right column in the other — and two
+ * copies of the labels is how the same figure ends up called two things.
+ */
+function marketMetrics(metrics: StrategyMetrics): MarketMetric[] {
+  return [
+    {
+      label: "APY",
+      description:
+        "The return on the cash you actually post, annualised at the current funding spread and net of every cost. It moves with the spread, so it is a rate on offer now rather than a rate you are promised.",
+      value: metrics.apy,
+      tone: metrics.apyPositive ? POSITIVE : NEGATIVE,
+    },
+    {
+      label: "Current Spread",
+      description:
+        "The funding the two legs pull apart by right now, per 8h — what the position is paid before entry costs. On a spot/perp pair only one leg quotes funding, so the perp's own rate is the whole capture.",
+      value: metrics.currentSpread,
+      tone: metrics.spreadPositive ? POSITIVE : NEGATIVE,
+    },
+    {
+      label: "Max Funding Spread",
+      description:
+        "The widest those two rates pulled apart at any point in the venues' lookback window, per 8h — the ceiling the live spread above is read against.",
+      value: metrics.maxFundingSpread,
+      tone: NEGATIVE,
+    },
+  ];
+}
+
 /**
  * The strip's escape hatch. Opens on hover for mouse users (cheap to peek at) and pins
  * on click so the numbers can be read without holding the pointer still — the panel
@@ -170,12 +235,15 @@ function StrategyBreakdownPanel({
   netCapture,
   hedgeIntegrity,
   fundingSettlement,
+  className,
 }: {
   contextLabel: string;
   venues: VenueReadout[];
   netCapture: string;
   hedgeIntegrity: string;
   fundingSettlement: string;
+  /** Lets the card layout hand it the footer's full width, as Details gets. */
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -251,6 +319,7 @@ function StrategyBreakdownPanel({
             open
               ? "bg-[rgba(214,176,106,0.12)] text-[#e2c68b]"
               : "text-[#9f875c] hover:bg-[rgba(214,176,106,0.08)] hover:text-[#e2c68b]",
+            className,
           )}
         >
           More Info
@@ -385,15 +454,7 @@ type DexPairSetupCardProps = {
   onModeChange: (mode: MarketMode) => void;
   onThemesChange: (themes: ThemeOption[]) => void;
   onTokenChange: (token: TokenOption) => void;
-  strategyMetrics: {
-    /** Preformatted — the strip renders it, the summary owns the arithmetic. */
-    apy: string;
-    apyPositive: boolean;
-    /** Live cross-venue funding spread, %/8h. */
-    currentSpread: string;
-    spreadPositive: boolean;
-    /** The lookback ceiling the live spread is read against. */
-    maxFundingSpread: string;
+  strategyMetrics: StrategyMetrics & {
     /** In the order the user picked them — DEX A, then DEX B. */
     venues: VenueReadout[];
     netCapture: string;
@@ -470,6 +531,16 @@ function DexPairSetupCard({
       : "border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(25,22,18,0.98)_0%,rgba(14,12,10,0.99)_100%)] text-[#f1dfbf]",
   );
   const marketDisabled = dexA === "" || dexB === "";
+  /*
+   * Whether the market's own figures sit beside the token selector.
+   *
+   * Only in the strip layout, and for the same reason the position summary is a strip
+   * there: one column, so a readout belongs under the thing it describes. The column
+   * layout moved them to the right column instead, where the readouts live -- so the
+   * row is the selector alone and the selector takes all of it, exactly as it does
+   * before any venues are picked.
+   */
+  const metricsInRow = showSummaryStrip;
   const renderDexSelector = (
     slot: "a" | "b",
     value: DexSelection,
@@ -875,55 +946,23 @@ function DexPairSetupCard({
                 // the metric strip beside it takes the rest of the row. With no strip to
                 // sit next to, it spans the row.
                 className={
-                  marketDisabled ? "w-full" : "shrink-0 min-[1100px]:w-[240px]"
+                  marketDisabled || !metricsInRow
+                    ? "w-full"
+                    : "shrink-0 min-[1100px]:w-[240px]"
                 }
               />
             )}
 
-            {market.mode === "tokens" && !marketDisabled && (
+            {metricsInRow && market.mode === "tokens" && !marketDisabled && (
               /*
-                Three metrics: the rate on offer, the spread it is earned from, and the
-                ceiling that spread is read against. A spread means little without the
-                band it has been moving in.
-
-                All three are stated at significant figures rather than at a fixed 6dp
-                (see formatCompactPct). The predecessor padded every one to six decimal
-                places, which is how "0.000005" and "0.014000" ended up in the same row
-                — one all zeros, the other all padding, neither scannable.
+                The market's three figures beside the selector they belong to. The list
+                and the labels come from `marketMetrics`; only the arrangement is here.
 
                 The settlement clock moved into Strategy details, beside the per-venue
                 funding intervals that set it.
               */
               <div className="grid h-[48px] min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
-                {[
-                  {
-                    label: "APY",
-                    value: strategyMetrics.apy,
-                    tone: strategyMetrics.apyPositive
-                      ? "text-[#4ade80]"
-                      : "text-[#f87171]",
-                  },
-                  {
-                    /*
-                      The same greens and reds as the APY beside it, rather than
-                      --vault-pnl-positive/negative. Those two tokens are muted
-                      (#9eada2 / #a88884) so that a table of many P&L cells does not
-                      strobe; three metrics in one strip is not that table, and half
-                      a row at full saturation next to half at a quarter of it reads
-                      as two different kinds of number.
-                    */
-                    label: "Current Spread",
-                    value: strategyMetrics.currentSpread,
-                    tone: strategyMetrics.spreadPositive
-                      ? "text-[#4ade80]"
-                      : "text-[#f87171]",
-                  },
-                  {
-                    label: "Max Funding Spread",
-                    value: strategyMetrics.maxFundingSpread,
-                    tone: "text-[#f87171]",
-                  },
-                ].map((metric, index) => (
+                {marketMetrics(strategyMetrics).map((metric, index) => (
                   <div
                     key={metric.label}
                     className={clsx(
@@ -1545,6 +1584,67 @@ export function DeltaVaultBuilder({
       ? formatThemesSelection(market.themes)
       : market.token;
   const spreadSubtitleKey = `${bridgeKey}-${marketLabel}`;
+
+  /*
+    The market's figures, built once. The setup card renders them as a strip in the
+    v1 layout and the right column renders them as a card in v2, and the two must be
+    the same numbers -- they are the same market.
+  */
+  const strategyMetrics = {
+    /*
+      Gated on `valid`, not just on `summary` being present. With venues picked but no
+      amount entered the summary still computes, and rendering that as "0.00%" quotes a
+      rate the user was never offered — the same fabrication as the old fallback-venue
+      APY, one step further along.
+    */
+    apy: summary?.valid ? `${formatPct(summary.netAprOnCapitalPct)} APY` : "—",
+    apyPositive: (summary?.valid && summary.netAprOnCapitalPct > 0) ?? false,
+    /*
+      The spread and its ceiling come off the resolved legs, not off the summary: they
+      are venue economics, so they stand before an amount is entered — unlike the APY
+      above, which is a return on capital the user has not yet posted.
+    */
+    currentSpread: sides ? formatCompactPct(spreadFunding8h) : "—",
+    spreadPositive: spreadFunding8h >= 0,
+    maxFundingSpread: sides ? formatCompactPct(maxSpreadFunding8h) : "—",
+    venues: venueReadouts,
+    netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
+    hedgeIntegrity: hedgeIntegrityLabel,
+    fundingSettlement: formatHms(secondsToRent),
+  };
+
+
+  /*
+    The CTA is built once and placed by the layout, not written twice: the two
+    shapes disagree only about which box it belongs to, and a second copy of a
+    button this stateful is a second copy to keep in step.
+  */
+  const primaryCta = (
+    <button
+      type="button"
+      disabled={!dualValid || isPreparing}
+      onClick={handlePrimaryAction}
+      className={clsx(
+        "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
+        isV2Shell
+          ? !dualValid || isPreparing
+            ? "cursor-not-allowed rounded-[10px] border border-[#5c4d38] bg-transparent text-[#c9a962] opacity-95"
+            : "rounded-[10px] border border-[#c9a962] bg-gradient-to-b from-[#3a3024] to-[#14110d] text-[#f5ead6] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:brightness-110 active:translate-y-[1px]"
+          : "rounded-[11px] border border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(43,34,24,0.98)_0%,rgba(19,15,11,0.99)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] hover:-translate-y-[1px] hover:border-[rgba(206,163,95,0.74)] hover:bg-[linear-gradient(180deg,rgba(49,39,29,1)_0%,rgba(22,18,13,1)_100%)] active:shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)] disabled:pointer-events-none disabled:border-[rgba(173,134,73,0.28)] disabled:text-[#b8a78a] disabled:opacity-90",
+      )}
+    >
+      <span className="inline-flex items-center gap-2">
+        {firstDisconnectedVenue &&
+          (requiresCookieAuth(firstDisconnectedVenue) ? (
+            <Cookie className="h-3.5 w-3.5" />
+          ) : (
+            <Wallet className="h-3.5 w-3.5" />
+          ))}
+        {primaryLabel}
+      </span>
+    </button>
+  );
+
   return (
     <section
       className={clsx(
@@ -1643,18 +1743,15 @@ export function DeltaVaultBuilder({
         `items-start` in the split layout keeps each column its own height; without it
         the shorter one stretches and its bottom card grows a dead gap.
       */}
-      <div
-        className={clsx(
-          "relative z-[1] gap-4 max-tablet:gap-3",
-          summaryInStrip
-            ? "flex flex-col"
-            : "grid grid-cols-1 items-start min-[1180px]:grid-cols-[minmax(0,1fr)_380px]",
-        )}
-      >
+      <div className="relative z-[1] flex flex-col gap-4 max-tablet:gap-3">
         <MaybeBox
           when={!summaryInStrip}
-          className="flex flex-col gap-4 max-tablet:gap-3"
+          className="grid grid-cols-1 items-start gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_380px]"
         >
+          <MaybeBox
+            when={!summaryInStrip}
+            className="flex flex-col gap-4 max-tablet:gap-3"
+          >
         <DexPairSetupCard
           dexA={dexA}
           dexB={dexB}
@@ -1698,31 +1795,7 @@ export function DeltaVaultBuilder({
           onModeChange={handleModeChange}
           onThemesChange={handleThemesChange}
           onTokenChange={handleTokenChange}
-          strategyMetrics={{
-            /*
-              Gated on `valid`, not just on `summary` being present. With venues
-              picked but no amount entered the summary still computes, and rendering
-              that as "0.00%" quotes a rate the user was never offered — the same
-              fabrication as the old fallback-venue APY, one step further along.
-            */
-            apy: summary?.valid
-              ? `${formatPct(summary.netAprOnCapitalPct)} APY`
-              : "—",
-            apyPositive: (summary?.valid && summary.netAprOnCapitalPct > 0) ?? false,
-            /*
-              The spread and its ceiling come off the resolved legs, not off the
-              summary: they are venue economics, so they stand before an amount is
-              entered — unlike the APY above, which is a return on capital the user
-              has not yet posted.
-            */
-            currentSpread: sides ? formatCompactPct(spreadFunding8h) : "—",
-            spreadPositive: spreadFunding8h >= 0,
-            maxFundingSpread: sides ? formatCompactPct(maxSpreadFunding8h) : "—",
-            venues: venueReadouts,
-            netCapture: `${formatSignedPct(spreadFunding8h)} / 8h`,
-            hedgeIntegrity: hedgeIntegrityLabel,
-            fundingSettlement: formatHms(secondsToRent),
-          }}
+          strategyMetrics={strategyMetrics}
           legSlippage={
             summary
               ? {
@@ -1801,53 +1874,80 @@ export function DeltaVaultBuilder({
             />
 
           </div>
+          </MaybeBox>
+
+          {/*
+            The same component the strip layout renders, asked for its column shape.
+            v2 keeps its left/right split, and the figures it states are now the ones
+            v1 states -- three, with everything they were derived from behind Details
+            -- rather than the older card that also printed the cost-terms table
+            inline. One component, one field set, so the two versions cannot drift into
+            quoting different things.
+          */}
+          {!summaryInStrip && (
+            <div className="flex flex-col gap-4 max-tablet:gap-3">
+              {/*
+                The market's rates, above the position they produce.
+
+                They used to sit in the left column, in a 48px strip beside the token
+                selector -- three readouts in among the controls, on a row whose other
+                half was an input. The split layout already draws that line down the
+                middle: the left column is what you set, the right is what it gets you.
+                So the figures move to the side they belong on, and the column reads in
+                the order the arithmetic runs -- what the market pays, then what a
+                position in it comes to.
+
+                Same gate as the strip it replaces: a token pair with both venues
+                resolved. Categories are a basket, not a position, and before both
+                venues resolve there is no spread to quote -- absent rather than
+                present and empty, on both counts.
+              */}
+              {market.mode === "tokens" && dualValid && (
+                <MarketMetricsPanel
+                  variant={variant}
+                  metrics={marketMetrics(strategyMetrics)}
+                  footer={
+                    <StrategyBreakdownPanel
+                      contextLabel={market.token}
+                      venues={strategyMetrics.venues}
+                      netCapture={strategyMetrics.netCapture}
+                      hedgeIntegrity={strategyMetrics.hedgeIntegrity}
+                      fundingSettlement={strategyMetrics.fundingSettlement}
+                      className="w-full justify-center border-l-0"
+                    />
+                  }
+                />
+              )}
+              <PositionSummaryStrip
+                summary={summary}
+                layout="panel"
+                variant={variant}
+              />
+            </div>
+          )}
         </MaybeBox>
 
         {/*
-          Where the CTA ends up, in both shapes: last, after everything that decides
-          what it opens. In the panel layout that is the foot of the right column,
-          directly beneath the numbers that justify pressing it; as a strip, the foot
-          of the single column.
+          The CTA is last in both shapes -- the step that acts on everything above
+          it, in the order the decision is made.
 
-          Full width in both, and in the strip layout that means the full 761px column.
-          It was capped at 520 and centred for a while on the theory that a wide gold
-          bar reads as a banner; at this measure it does not. It lines up with the
-          Margin and Leverage cards above it, which is what makes it read as the last
-          step of the same form rather than as a floating badge under one -- and a
-          centred button leaves two ragged gaps in a column whose every other edge is
-          flush.
+          In the split layout it used to be as wide as the card, which ran it 380px
+          on under the summary panel, past the last control it acts on and ending on
+          an edge nothing else in the form shares. Re-running the grid template for
+          this one row drops it into the first column, so it lines up with the Margin
+          and Leverage cards directly above it -- and is exact rather than a width
+          computed against the 380px by hand.
+
+          A wrapper rather than a second copy inside the control column: below 1180px
+          the grid collapses and the CTA has to stay after the summary, which is where
+          the DOM already puts it. In the strip layout there is no second column and
+          the template never applies, so the button is simply full width.
         */}
         <MaybeBox
           when={!summaryInStrip}
-          className="flex flex-col gap-4 max-tablet:gap-3"
+          className="grid grid-cols-1 gap-4 max-tablet:gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_380px]"
         >
-        {!summaryInStrip && (
-          <PositionSummaryPanel summary={summary} variant={variant} />
-        )}
-
-        <button
-          type="button"
-          disabled={!dualValid || isPreparing}
-          onClick={handlePrimaryAction}
-          className={clsx(
-            "h-[46px] w-full text-[12px] font-semibold uppercase tracking-[0.7px] transition-all max-tablet:h-[44px]",
-              isV2Shell
-                ? !dualValid || isPreparing
-                  ? "cursor-not-allowed rounded-[10px] border border-[#5c4d38] bg-transparent text-[#c9a962] opacity-95"
-                  : "rounded-[10px] border border-[#c9a962] bg-gradient-to-b from-[#3a3024] to-[#14110d] text-[#f5ead6] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:brightness-110 active:translate-y-[1px]"
-                : "rounded-[11px] border border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(43,34,24,0.98)_0%,rgba(19,15,11,0.99)_100%)] text-[#f0ddb9] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] hover:-translate-y-[1px] hover:border-[rgba(206,163,95,0.74)] hover:bg-[linear-gradient(180deg,rgba(49,39,29,1)_0%,rgba(22,18,13,1)_100%)] active:shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)] disabled:pointer-events-none disabled:border-[rgba(173,134,73,0.28)] disabled:text-[#b8a78a] disabled:opacity-90",
-          )}
-        >
-          <span className="inline-flex items-center gap-2">
-            {firstDisconnectedVenue &&
-              (requiresCookieAuth(firstDisconnectedVenue) ? (
-                <Cookie className="h-3.5 w-3.5" />
-              ) : (
-                <Wallet className="h-3.5 w-3.5" />
-              ))}
-            {primaryLabel}
-          </span>
-        </button>
+          {primaryCta}
         </MaybeBox>
       </div>
     </section>
