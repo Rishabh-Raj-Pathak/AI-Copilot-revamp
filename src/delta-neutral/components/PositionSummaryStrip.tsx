@@ -55,12 +55,32 @@ type SummaryVariant = "default" | "v2";
 const POSITIVE = "text-[#4ade80]";
 const NEGATIVE = "text-[#f87171]";
 
-/** Matches the metric strip above, so the two read as one stack of readouts. */
-const CELL_LABEL =
+/*
+ * The three lines of a readout cell, exported because the market strip that sits
+ * directly above this one in the strip layout builds its cells from them too.
+ *
+ * They were duplicated there as matching literals, with a comment on each side saying
+ * the two "read as one stack" -- which held only for as long as nobody edited one of
+ * them. Shared, the two strips cannot disagree about type, and cannot disagree about
+ * height either: three lines of fixed leading is what makes both rows 51px without
+ * either of them being told a number.
+ */
+export const CELL_LABEL =
   "min-w-0 truncate text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] text-[#9b9cad]";
-const CELL_VALUE = "font-mono text-[15px] font-semibold leading-[18px]";
+export const CELL_VALUE = "font-mono text-[15px] font-semibold leading-[18px]";
 /** The derivation under a value -- never competing with it. */
-const CELL_SUB = "min-w-0 truncate font-mono text-[10px] leading-[12px] text-[#63646f]";
+export const CELL_SUB =
+  "min-w-0 truncate font-mono text-[10px] leading-[12px] text-[#63646f]";
+/**
+ * The box those three lines sit in, shared for the same reason.
+ *
+ * Padding and gaps are deliberately thin. The three lines are already 42px of fixed
+ * leading -- 10px type in 12px, 15px in 18px -- which is the breathing room; adding
+ * 20px of padding and 4px of gaps on top of it spent a third of the row on nothing
+ * and made two stacked readouts 134px of chrome above the controls. 4px top and
+ * bottom holds the text off the rule without the row reading as a card.
+ */
+export const CELL_BOX = "flex min-w-0 flex-col justify-center px-2.5 py-1";
 
 const INCOME_HELP =
   "Funding, plus any staking yield on a spot leg, at the current rate. Entry costs are listed separately rather than netted off here, so that income, cost and payback reconcile.";
@@ -78,7 +98,7 @@ const COST_HELP_PANEL =
 /*
  * Where each cell's rules go, in both shapes the strip takes.
  *
- * Wide it is one 48px row of four; below 420px of container it wraps to two rows of
+ * Wide it is one 51px row of four; below 420px of container it wraps to two rows of
  * two, which is the only honest thing to do at that width -- three money figures at
  * 15px do not fit across a phone, and the row above this one shows what happens when
  * you make them: "+$18.1..." next to "BREAK-EV...". A truncated figure is not a
@@ -102,15 +122,17 @@ const CELL_RULES = [
  * One cell: label, then value over its derivation.
  *
  * The derivation used to trail the value on the same line, to hold the strip to a
- * 48px row. It does not fit. "+$9.06 /day" beside "≈ +$271.77 / 30d" needs ~210px of
+ * two-line row. It does not fit. "+$9.06 /day" beside "≈ +$271.77 / 30d" needs ~210px of
  * the ~224 a cell has at this measure, so the pair survived only while the numbers
  * stayed small -- push the margin up and it became "+$18.12 /day ≈ +$543..." with the
  * figure that matters cut off. A truncated number is not a smaller number, it is a
  * wrong one.
  *
  * Stacked, each line is as long as it needs to be, the eye reads down one column of
- * values instead of across pairs, and the row costs 66px instead of 48. That is the
- * whole price, and it buys back the third line the old summary card charged 260px for.
+ * values instead of across pairs, and the row costs 51px rather than the 48 two lines
+ * came to -- 3px, once the padding around them was cut back to what the leading did
+ * not already provide. That is the whole price, and it buys back the third line the
+ * old summary card charged 260px for.
  */
 function Cell({
   label,
@@ -165,7 +187,7 @@ function Cell({
   return (
     <div
       className={clsx(
-        "flex min-w-0 flex-col justify-center gap-0.5 px-2.5 py-2.5",
+        CELL_BOX,
         RULE,
         CELL_RULES[index],
       )}
@@ -516,7 +538,7 @@ export function MarketMetricsPanel({
  * fourth cell would be.
  *
  * No heading. It had one while it was the only card in the column and the strip
- * layout's own summary was a nameless 48px row under the market; now it is the second
+ * layout's own summary was a nameless one-line row under the market; now it is the second
  * of two cards that both state figures for the pair named at the top of the builder,
  * and a title over one of them labelled the wrong thing -- the column, not the card.
  * The three row labels already say what each figure is, which is what a heading over
@@ -559,7 +581,7 @@ function SummaryPanel({
   const profitable = summary.netAprOnCapitalPct > 0;
 
   /*
-    No Details disclosure. The strip layout needs one -- it is a 48px row and has
+    No Details disclosure. The strip layout needs one -- it is a single row and has
     nowhere to put a cost breakdown -- but the column has the room, and the panel behind
     the trigger held only three things: the terms Cost to open adds up from, and two
     figures the screen already states. Capital required and Net APY on capital were the
@@ -621,7 +643,7 @@ export function PositionSummaryStrip({
 }: {
   summary: PositionSummary | null;
   /**
-   * Which builder layout is asking. "strip" is the 48px readout under the market row;
+   * Which builder layout is asking. "strip" is the 51px readout under the market row;
    * "panel" is the column card beside the controls. The figures are identical either
    * way -- see `figuresFor`.
    */

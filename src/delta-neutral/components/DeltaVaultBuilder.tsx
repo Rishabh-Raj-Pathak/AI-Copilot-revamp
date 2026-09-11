@@ -26,6 +26,10 @@ import {
 import { DexLabel } from "./DexLogo";
 import { VaultMetricLabel } from "./VaultMetricLabel";
 import {
+  CELL_BOX,
+  CELL_LABEL,
+  CELL_SUB,
+  CELL_VALUE,
   MarketMetricsPanel,
   PositionSummaryStrip,
   type MarketMetric,
@@ -384,12 +388,20 @@ function MarketBreakdown({
 function StrategyBreakdownPanel({
   contextLabel,
   venues,
+  slippage,
   netCapture,
   hedgeIntegrity,
   fundingSettlement,
 }: {
   contextLabel: string;
   venues: VenueReadout[];
+  /**
+   * What getting on at each venue costs, keyed by venue. It used to be printed on the
+   * venue rows in the control column, one leg per card; here it joins the two figures
+   * already stated per venue, so one table answers what a venue pays and what it
+   * charges to enter. The same move the column layout's MarketBreakdown made.
+   */
+  slippage?: LegSlippageMap;
   netCapture: string;
   hedgeIntegrity: string;
   fundingSettlement: string;
@@ -500,7 +512,9 @@ function StrategyBreakdownPanel({
           </p>
         </div>
         <div className="mt-2.5 space-y-2">
-          {venues.map((venue) => (
+          {venues.map((venue) => {
+            const leg = slippage?.[venue.dex];
+            return (
             <div
               key={venue.dex}
               className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-2.5"
@@ -518,9 +532,29 @@ function StrategyBreakdownPanel({
                   <dt className="text-[#8b8b98]">APY</dt>
                   <dd className="text-[#ececf3]">{formatApr(venue.apr)}</dd>
                 </div>
+                {/*
+                  Both figures, because neither answers the question alone: the percent
+                  is how this venue's book compares, the dollars are what it takes out
+                  of this position -- and the two dollar figures are what Cost to open
+                  adds up from. An em dash before an amount is entered, for the same
+                  reason the column layout uses one: the impact arithmetic runs to zero
+                  then, and "0.000%" quotes a slippage nobody was offered.
+                */}
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-[#8b8b98]">Slippage</dt>
+                  <dd className="flex items-baseline gap-1.5 text-[#ececf3]">
+                    {leg ? formatCostPct(leg.pct) : "—"}
+                    {leg && (
+                      <span className="text-[10px] text-[#82838f]">
+                        {formatUsd(leg.usd)}
+                      </span>
+                    )}
+                  </dd>
+                </div>
               </dl>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <dl className="mt-2.5 space-y-2 border-t border-[rgba(255,255,255,0.08)] pt-2.5 font-mono text-[11px]">
@@ -908,44 +942,18 @@ function DexPairSetupCard({
         </div>
 
         {/*
-          Which side this venue takes, and what it costs to get on there.
+          The side badge and the slippage readout that used to sit here are gone.
 
-          It belongs on the venue row rather than in a separate execution panel: this
-          is where the venue is chosen, so it is where the consequence of choosing it
-          should appear. Sides are not a control — funding assigns them (see
-          resolveLegs) — so this is a readout, and the totals roll up into Price
-          impact in the Position Summary, where they add up against the fees rather
-          than floating free of them.
+          The badge restated a fact the form does not let you choose -- funding assigns
+          the sides (see resolveLegs), so "Long Perp" under the venue you just picked
+          was a label for a decision nobody made, and it printed the instrument a second
+          time next to the Perp/Spot toggle that sets it. Slippage was a real figure in
+          the wrong place: one venue's entry cost, on the venue row, while the matching
+          cost for the other leg sat in a different card and the total they roll up into
+          sat in a third. It moves to Strategy details, beside each venue's funding and
+          APY -- one table for what a venue pays and what it charges to enter, which is
+          where the column layout has always kept it.
         */}
-        {readoutsInline && value !== "" && legSlippage?.[value] && (
-          <div
-            className={clsx(
-              "mt-2.5 flex items-center justify-between gap-2 border-t pt-2.5",
-              isV2 ? "border-[#1f1f1f]" : "border-[rgba(255,255,255,0.06)]",
-            )}
-          >
-            <span
-              className={clsx(
-                "rounded-[5px] px-1.5 py-0.5 ds-eyebrow",
-                legSlippage[value]!.side === "long"
-                  ? "bg-[rgba(100,118,102,0.16)] text-[color:var(--vault-leg-long-fg)]"
-                  : "bg-[rgba(112,82,80,0.18)] text-[color:var(--vault-pnl-negative)]",
-              )}
-            >
-              {legSlippage[value]!.side === "long" ? "Long" : "Short"}
-              <span className="ml-1 text-[#82838f]">{instrument}</span>
-            </span>
-            <span className="flex items-baseline gap-2 tabular-nums">
-              <span className="text-meta text-[#63646f]">Est. slippage</span>
-              <span className="text-micro tabular-nums text-[#b4b5c2]">
-                {formatCostPct(legSlippage[value]!.pct)}
-              </span>
-              <span className="text-micro tabular-nums text-[#82838f]">
-                {formatUsd(legSlippage[value]!.usd)}
-              </span>
-            </span>
-          </div>
-        )}
 
         {connected && (
           <div
@@ -1122,35 +1130,41 @@ function DexPairSetupCard({
                 The settlement clock moved into Strategy details, beside the per-venue
                 funding intervals that set it.
               */
-              <div className="grid h-[48px] min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
+              <div className="grid min-w-0 flex-1 grid-cols-[repeat(3,minmax(0,1fr))_auto] overflow-hidden rounded-[10px] border border-[rgba(214,176,106,0.16)] bg-[#080808] min-[1100px]:max-w-[720px]">
                 {marketMetrics(strategyMetrics).map((metric, index) => (
                   <div
                     key={metric.label}
                     className={clsx(
-                      "flex min-w-0 flex-col justify-center gap-1 px-2.5",
+                      CELL_BOX,
                       index > 0 &&
                         "border-l border-[rgba(255,255,255,0.07)]",
                     )}
                   >
-                    <p
-                      className="min-w-0 truncate text-[10px] font-medium uppercase leading-[12px] tracking-[0.45px] text-[#9b9cad]"
-                      title={metric.label}
-                    >
+                    <p className={CELL_LABEL} title={metric.label}>
                       {metric.label}
                     </p>
-                    <p
-                      className={clsx(
-                        "min-w-0 truncate font-mono text-[15px] font-semibold leading-[18px]",
-                        metric.tone,
-                      )}
-                    >
+                    <p className={clsx("min-w-0 truncate", CELL_VALUE, metric.tone)}>
                       {metric.value}
                     </p>
+                    {/*
+                      The period a funding rate is quoted over, which this strip used to
+                      drop: "per 8h", "lookback high / 8h". The column layout has always
+                      printed them, and a rate without its period is not a shorter fact
+                      than a rate with one -- it is an ambiguous one.
+
+                      APY has no qualifier and keeps the blank line anyway. Same reason
+                      the summary strip below does it: without it the cells in a row
+                      stop agreeing on where the value sits -- and the two strips stop
+                      agreeing on their own height, which is the thing that made this
+                      one 48px against the other's 66px. Both are 51px now.
+                    */}
+                    <p className={CELL_SUB}>{metric.sub ?? " "}</p>
                   </div>
                 ))}
                 <StrategyBreakdownPanel
                   contextLabel={market.token}
                   venues={strategyMetrics.venues}
+                  slippage={summary?.valid ? legSlippage : undefined}
                   netCapture={strategyMetrics.netCapture}
                   hedgeIntegrity={strategyMetrics.hedgeIntegrity}
                   fundingSettlement={strategyMetrics.fundingSettlement}
@@ -1234,7 +1248,7 @@ function DexPairSetupCard({
 
           {/*
             Row 3 — what the position itself comes to, directly under the market it is
-            taken in and the rates it is taken at. Same 48px readout as the strip above
+            taken in and the rates it is taken at. Same 51px readout as the strip above, off the same shared cell,
             so the two stack as one block: market economics, then position economics.
 
             Tokens only, and only once both venues resolve, which is the same gate the
@@ -1274,7 +1288,7 @@ type DeltaVaultBuilderProps = {
    * "panel" is the original: two columns at 1180px, controls stacked on the left and
    * a tall summary card with the CTA under it on the right.
    *
-   * "market-strip" folds the summary into a 48px readout under the market row, which
+   * "market-strip" folds the summary into a 51px readout under the market row, which
    * lets the builder collapse to one column and pair Margin with Leverage.
    *
    * A prop rather than a swap because the two Delta Neutral versions are separate
@@ -1915,7 +1929,7 @@ export function DeltaVaultBuilder({
         and its consequence are visible together. 1180px, not the 834px `tablet` step,
         because the left column alone holds two venue cards abreast.
 
-        "market-strip" — v1. With the summary folded into a 48px readout under the
+        "market-strip" — v1. With the summary folded into a 51px readout under the
         market row, the split stops buying anything: the figures are already beside
         the token they describe and a short scroll from every control. So it collapses
         to one column, in the order the decision is made — pick the venues and the
