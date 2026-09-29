@@ -7,6 +7,7 @@ import type { ManagedDexId } from './ActiveVaultCard';
 import { WalletAddressLabel } from './WalletAddressLabel';
 import { walletForDex } from '../utils/wallet';
 import type { InstrumentType } from '../utils/markets';
+import { formatClock, formatDayTime, formatElapsed, formatIsoDuration, formatTimeRange } from '../utils/format';
 
 type BottomTab = 'positions' | 'history';
 
@@ -57,6 +58,36 @@ const POSITIONS_GRID =
 const HISTORY_GRID =
   'grid grid-cols-[minmax(88px,0.9fr)_minmax(100px,1fr)_minmax(148px,1.35fr)_repeat(5,minmax(88px,1fr))]';
 
+/*
+ * Duration sits directly after Market on both tabs. It belongs to the pair, not to a
+ * leg — both legs open and close together as one vault action — so it goes with the
+ * pair's identity before the per-leg columns start, at the same place on both tabs.
+ */
+const DURATION_COLUMN = 'Duration';
+
+function withDurationColumn(columns: string[]) {
+  return columns.flatMap(column => (column === 'Market' ? [column, DURATION_COLUMN] : [column]));
+}
+
+const POSITIONS_GRID_WITH_DURATION =
+  'grid grid-cols-[minmax(148px,1.35fr)_minmax(120px,1fr)_repeat(11,minmax(88px,1fr))]';
+
+// Wider on History: it has to hold a from → to range, not just a start.
+const HISTORY_GRID_WITH_DURATION =
+  'grid grid-cols-[minmax(88px,0.9fr)_minmax(100px,1fr)_minmax(160px,1.2fr)_minmax(148px,1.35fr)_repeat(5,minmax(88px,1fr))]';
+
+/*
+ * Mock timestamps are pinned to a clock time on a day relative to today rather than to
+ * a fixed date. Live durations count against the real clock, and a fixed date would
+ * leave every position reading as months old; pinning the clock time keeps the history
+ * rows showing the same times they always have.
+ */
+function daysAgoAt(daysAgo: number, clock: string) {
+  const [h, m, s] = clock.split(':').map(Number);
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysAgo, h, m, s).getTime();
+}
+
 type PositionLeg = {
   dex: ManagedDexId;
   instrument: InstrumentType;
@@ -78,6 +109,8 @@ type PositionLeg = {
 type DeltaNeutralPosition = {
   coin: string;
   category?: string;
+  /** When the pair was opened (ms). Both legs fill as one vault action. */
+  openedAt: number;
   long: PositionLeg;
   short: PositionLeg;
 };
@@ -95,18 +128,31 @@ type HistoryLeg = {
   pnlValue: number;
 };
 
+/**
+ * A history row is one event, but it carries the lifecycle of the trade the event
+ * belongs to, and the row's own time is read off that rather than stored beside it.
+ * A Close always knows when its trade opened. An Open knows when its trade closed
+ * only once it has — until then the trade is live and its duration is still running.
+ */
 type HistoryPair = {
-  time: string;
   coin: string;
   category?: string;
-  event: 'Open' | 'Close';
   long: HistoryLeg;
   short: HistoryLeg;
-};
+} & (
+  | { event: 'Open'; openedAt: number; closedAt?: number }
+  | { event: 'Close'; openedAt: number; closedAt: number }
+);
+
+function eventAt(row: HistoryPair) {
+  return row.event === 'Close' ? row.closedAt : row.openedAt;
+}
 
 const POSITION_PAIRS: DeltaNeutralPosition[] = [
   {
     coin: 'BTC/USDC',
+    // Rolled straight back in after the BTC close in history.
+    openedAt: daysAgoAt(1, '17:26:18'),
     long: {
       dex: 'Hyperliquid',
       // Cash-and-carry: the long leg is held on the spot book, so it is
@@ -147,6 +193,8 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
   {
     coin: 'ETH/USDC',
     category: 'Bluechip',
+    // Minutes old, beside the day-long ones.
+    openedAt: Date.now() - (47 * 60 + 12) * 1000,
     long: {
       dex: 'Hyperliquid',
       instrument: 'Perp',
@@ -185,6 +233,8 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
   {
     coin: 'SOL/USDC',
     category: 'Trending',
+    // The same trade as the SOL Open in history, which is why that row is still live.
+    openedAt: daysAgoAt(1, '18:59:47'),
     long: {
       dex: 'Nado',
       instrument: 'Perp',
@@ -224,9 +274,10 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
 
 const HISTORY_PAIRS: HistoryPair[] = [
   {
-    time: '19:42:11',
     coin: 'ETH/USDC',
     event: 'Close',
+    openedAt: daysAgoAt(2, '23:17:40'),
+    closedAt: daysAgoAt(1, '19:42:11'),
     long: {
       dex: 'Hyperliquid',
       instrument: 'Perp',
@@ -253,10 +304,10 @@ const HISTORY_PAIRS: HistoryPair[] = [
     },
   },
   {
-    time: '18:59:47',
     coin: 'SOL/USDC',
     category: 'Equities',
     event: 'Open',
+    openedAt: daysAgoAt(1, '18:59:47'),
     long: {
       dex: 'Nado',
       instrument: 'Perp',
@@ -283,10 +334,11 @@ const HISTORY_PAIRS: HistoryPair[] = [
     },
   },
   {
-    time: '17:24:09',
     coin: 'BTC/USDC',
     category: 'Bluechip',
     event: 'Close',
+    openedAt: daysAgoAt(4, '11:06:52'),
+    closedAt: daysAgoAt(1, '17:24:09'),
     long: {
       dex: 'Hyperliquid',
       instrument: 'Spot',
@@ -507,9 +559,69 @@ function MarketCell({
   );
 }
 
+/** The clock, for a trade still open. Minute precision, so a 30s re-read is plenty. */
+function useNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now;
+}
+
+function Elapsed({ ms }: { ms: number }) {
+  return (
+    <time dateTime={formatIsoDuration(ms)} className="text-[11px] leading-tight">
+      {formatElapsed(ms)}
+    </time>
+  );
+}
+
+/** Split out so the re-render stays inside the cell that counts. */
+function LiveElapsed({ openedAt }: { openedAt: number }) {
+  return <Elapsed ms={useNow() - openedAt} />;
+}
+
+/**
+ * The span on top, and under it when it ran: "Since …" on a live position, "from →
+ * to" on History. Same sizes, gap and inks as DualCell, so both lines sit level with
+ * the long/short lines of the cells beside it.
+ */
+function DurationCell({
+  openedAt,
+  closedAt,
+  caption,
+  captionClassName,
+}: {
+  openedAt: number;
+  closedAt?: number;
+  caption: string;
+  captionClassName: string;
+}) {
+  return (
+    <div className="flex min-h-[34px] flex-col justify-center gap-[5px] pr-2 tabular-nums">
+      {closedAt === undefined ? <LiveElapsed openedAt={openedAt} /> : <Elapsed ms={closedAt - openedAt} />}
+      <span className={clsx('whitespace-nowrap text-[10px] leading-tight', captionClassName)}>{caption}</span>
+    </div>
+  );
+}
+
 type PerpPanelVariant = 'default' | 'v2';
 
-export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVariant }) {
+export function PerpBottomPanel({
+  variant = 'default',
+  showTradeDuration = false,
+}: {
+  variant?: PerpPanelVariant;
+  /**
+   * Adds the Duration column to both tabs.
+   *
+   * A prop rather than a change to the panel because both Delta Neutral versions
+   * render it: v2 opts in, v1 keeps the table it shipped with. Not keyed off `variant`
+   * — that one is the v2 palette, and nothing here is a colour decision.
+   */
+  showTradeDuration?: boolean;
+}) {
   const isV2 = variant === 'v2';
   const [activeTab, setActiveTab] = useState<BottomTab>('positions');
   const [expanded, setExpanded] = useState(false);
@@ -576,10 +688,15 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
   const headerBorder = isV2 ? 'border-[#1f1f1f]' : 'border-[rgba(255,255,255,0.08)]';
   const headerText = isV2 ? 'text-[#6a6a6a]' : 'text-[#838492]';
 
-  const minTableWidth = useMemo(
-    () => (activeTab === 'positions' ? 'min-w-[1580px]' : 'min-w-[1080px]'),
-    [activeTab],
-  );
+  const minTableWidth = useMemo(() => {
+    if (activeTab === 'positions') return showTradeDuration ? 'min-w-[1700px]' : 'min-w-[1580px]';
+    return showTradeDuration ? 'min-w-[1240px]' : 'min-w-[1080px]';
+  }, [activeTab, showTradeDuration]);
+
+  const positionsGrid = showTradeDuration ? POSITIONS_GRID_WITH_DURATION : POSITIONS_GRID;
+  const historyGrid = showTradeDuration ? HISTORY_GRID_WITH_DURATION : HISTORY_GRID;
+  const positionsColumns = showTradeDuration ? withDurationColumn(POSITIONS_COLUMNS) : POSITIONS_COLUMNS;
+  const historyColumns = showTradeDuration ? withDurationColumn(HISTORY_COLUMNS) : HISTORY_COLUMNS;
 
   return (
     <div
@@ -674,12 +791,12 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
               <div
                 className={clsx(
                   'sticky top-0 z-[2] border-b px-3 py-2.5 tablet:px-4',
-                  activeTab === 'positions' ? POSITIONS_GRID : HISTORY_GRID,
+                  activeTab === 'positions' ? positionsGrid : historyGrid,
                   headerBorder,
                   headerBg,
                 )}
               >
-                {(activeTab === 'positions' ? POSITIONS_COLUMNS : HISTORY_COLUMNS).map(column => (
+                {(activeTab === 'positions' ? positionsColumns : historyColumns).map(column => (
                   <span
                     key={column}
                     className={clsx('pr-2 text-[10px] uppercase tracking-[0.75px]', headerText)}
@@ -697,7 +814,7 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                     return (
                       <div
                         key={pair.coin}
-                        className={clsx(POSITIONS_GRID, 'border-b py-2.5 text-[12px]', rowBorder, rowText)}
+                        className={clsx(positionsGrid, 'border-b py-2.5 text-[12px]', rowBorder, rowText)}
                       >
                         <MarketCell
                           coin={pair.coin}
@@ -711,6 +828,13 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                           longWallet={pair.long.wallet}
                           shortWallet={pair.short.wallet}
                         />
+                        {showTradeDuration && (
+                          <DurationCell
+                            openedAt={pair.openedAt}
+                            caption={`Since ${formatDayTime(pair.openedAt)}`}
+                            captionClassName={headerText}
+                          />
+                        )}
                         <DualCell longVal={pair.long.size} shortVal={pair.short.size} />
                         <DualCell longVal={pair.long.positionValue} shortVal={pair.short.positionValue} />
                         <DualCell longVal={pair.long.entryPrice} shortVal={pair.short.entryPrice} />
@@ -752,10 +876,10 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                     const net = row.long.pnlValue + row.short.pnlValue;
                     return (
                       <div
-                        key={`${row.time}-${row.coin}-${row.event}`}
-                        className={clsx(HISTORY_GRID, 'border-b py-2.5 text-[12px]', rowBorder, rowText)}
+                        key={`${eventAt(row)}-${row.coin}-${row.event}`}
+                        className={clsx(historyGrid, 'border-b py-2.5 text-[12px]', rowBorder, rowText)}
                       >
-                        <span className="flex min-h-[52px] items-center pr-2">{row.time}</span>
+                        <span className="flex min-h-[52px] items-center pr-2">{formatClock(eventAt(row))}</span>
                         <div className="flex min-h-[52px] flex-col justify-center gap-1 pr-2">
                           <span className="font-medium text-[#e8d5b5]">{row.coin}</span>
                           {row.category && (
@@ -764,6 +888,14 @@ export function PerpBottomPanel({ variant = 'default' }: { variant?: PerpPanelVa
                             </span>
                           )}
                         </div>
+                        {showTradeDuration && (
+                          <DurationCell
+                            openedAt={row.openedAt}
+                            closedAt={row.closedAt}
+                            caption={formatTimeRange(row.openedAt, row.closedAt)}
+                            captionClassName={headerText}
+                          />
+                        )}
                         <div className="flex min-h-[52px] flex-col justify-center gap-2 pr-2">
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-1">

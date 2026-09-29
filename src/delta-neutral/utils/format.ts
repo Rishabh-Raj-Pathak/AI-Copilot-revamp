@@ -84,6 +84,70 @@ export function formatDuration(days: number | null): string {
   return `~${(days / 365).toFixed(1)}y`;
 }
 
+function splitSpan(ms: number) {
+  const total = Number.isFinite(ms) ? Math.max(0, Math.floor(ms / 1000)) : 0;
+  return {
+    d: Math.floor(total / 86400),
+    h: Math.floor((total % 86400) / 3600),
+    m: Math.floor((total % 3600) / 60),
+    s: total % 60,
+  };
+}
+
+const pad2 = (n: number) => n.toString().padStart(2, "0");
+
+/**
+ * How long a trade has been, or was, on — to its two largest units, down to the
+ * minute. Not the same job as `formatDuration`, which estimates a payback period and
+ * rounds it to one "~" unit; this states a measured span, so it is never approximate.
+ */
+export function formatElapsed(ms: number): string {
+  if (!Number.isFinite(ms)) return "—";
+  const { d, h, m } = splitSpan(ms);
+  if (d > 0) return h ? `${d}d ${h}h` : `${d}d`;
+  if (h > 0) return m ? `${h}h ${m}m` : `${h}h`;
+  return m > 0 ? `${m}m` : "<1m";
+}
+
+/** The same span as an ISO 8601 duration, for a `<time dateTime>` attribute. */
+export function formatIsoDuration(ms: number): string {
+  const { d, h, m, s } = splitSpan(ms);
+  const time = `${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}`;
+  if (!d && !time) return "PT0S";
+  return `P${d ? `${d}D` : ""}${time ? `T${time}` : ""}`;
+}
+
+/** Local 24-hour clock time: "19:42:11", or "19:42" without seconds. */
+export function formatClock(ts: number, withSeconds = true): string {
+  const t = new Date(ts);
+  const hm = `${pad2(t.getHours())}:${pad2(t.getMinutes())}`;
+  return withSeconds ? `${hm}:${pad2(t.getSeconds())}` : hm;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** Local calendar day: "28 Sep". */
+export function formatDayMonth(ts: number): string {
+  const t = new Date(ts);
+  return `${t.getDate()} ${MONTHS[t.getMonth()]}`;
+}
+
+/** "28 Sep 17:26" */
+export function formatDayTime(ts: number): string {
+  return `${formatDayMonth(ts)} ${formatClock(ts, false)}`;
+}
+
+/**
+ * When a trade ran: "27 Sep 23:17 → 28 Sep 19:42". The second date is dropped when
+ * both ends fall on the same day, and a trade with no end yet runs "→ Now".
+ */
+export function formatTimeRange(from: number, to?: number): string {
+  const start = formatDayTime(from);
+  if (to === undefined) return `${start} → Now`;
+  const sameDay = new Date(from).toDateString() === new Date(to).toDateString();
+  return `${start} → ${sameDay ? formatClock(to, false) : formatDayTime(to)}`;
+}
+
 /** Digits 0-9 as Unicode subscripts, indexed by value. */
 const SUBSCRIPT_DIGITS = "₀₁₂₃₄₅₆₇₈₉";
 

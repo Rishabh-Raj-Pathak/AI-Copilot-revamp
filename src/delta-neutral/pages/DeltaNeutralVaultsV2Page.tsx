@@ -470,7 +470,11 @@ export function DeltaNeutralVaultsV2Page() {
         </div>
       </section>
       </main>
-      <PerpBottomPanel />
+      {/*
+        v2 only. Positions shows how long each pair has been open and History how long
+        each trade was held; v1 keeps the panel without the Duration column.
+      */}
+      <PerpBottomPanel showTradeDuration />
     </>
   );
 }
