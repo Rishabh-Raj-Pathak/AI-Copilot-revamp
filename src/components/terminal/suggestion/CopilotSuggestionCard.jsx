@@ -3,110 +3,12 @@ import SetupChip from "./SetupChip.jsx";
 import SetupRadio from "./SetupRadio.jsx";
 import SuggestionPriceChart from "./SuggestionPriceChart.jsx";
 import ViewThesisButton from "./ViewThesisButton.jsx";
-
-function ChevronRight({ className }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
-  );
-}
-
-function MobileCopilotCard({
-  setup,
-  selected,
-  onSelect,
-  onViewThesis,
-  strategyLabel,
-}) {
-  const tagChips = setup.chips.filter(
-    (c) => c.kind === "side" || c.kind === "win",
-  );
-  const rrChip = setup.chips.find((c) => c.kind === "rr");
-  const rangeChip = setup.chips.find((c) => c.kind === "range");
-
-  return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect?.(setup.id)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect?.(setup.id);
-        }
-      }}
-      className={`cursor-pointer rounded-lg border bg-[#0a0a0a] p-3.5 transition-colors duration-200 ${
-        selected
-          ? "border-[#6b5200]"
-          : "border-[#242424] hover:border-[#333333]"
-      }`}
-    >
-      <div className="flex items-center gap-2.5">
-        <img
-          src={setup.tokenIcon}
-          alt=""
-          className="size-6 shrink-0 rounded-full object-cover"
-          width={24}
-          height={24}
-          draggable={false}
-        />
-        <h2 className="min-w-0 flex-1 text-control font-medium text-ink">
-          {setup.title}
-        </h2>
-        <ChevronRight className="size-[18px] shrink-0 text-ink-faint" />
-      </div>
-
-      {tagChips.length > 0 || strategyLabel ? (
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          {strategyLabel ? (
-            <SetupChip chip={{ kind: "muted", label: strategyLabel }} />
-          ) : null}
-          {tagChips.map((c, i) => (
-            <SetupChip key={`${setup.id}-tag-${i}`} chip={c} />
-          ))}
-        </div>
-      ) : null}
-
-      {rrChip || rangeChip ? (
-        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
-          {rrChip ? <SetupChip chip={rrChip} /> : null}
-          {rangeChip ? (
-            <span className="min-w-0 max-w-full truncate">
-              <SetupChip chip={rangeChip} />
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* Full-width here, and `py-2.5` keeps a 40px touch target — the desktop
-          row's 28px is a pointer size, not a thumb size. */}
-      <ViewThesisButton
-        className="mt-3 w-full py-2.5"
-        dataTour={selected ? "copilot-view-thesis" : undefined}
-        onClick={(e) => {
-          e.stopPropagation();
-          onViewThesis?.();
-        }}
-      />
-    </article>
-  );
-}
+import CopilotIdeaCard from "../../mobile/copilot/CopilotIdeaCard.jsx";
 
 /**
  * Copilot setup row — collapsed (header only) vs expanded (chart + thesis).
- * Desktop: Figma 4039:11883. Mobile feed: Figma 1017:24652 (list cards, no inline chart).
+ * Desktop: Figma 4039:11883. Mobile feed: the phone kit's trade-idea card
+ * (HE App Figma 939:1308), no inline chart.
  */
 export default function CopilotSuggestionCard({
   setup,
@@ -122,12 +24,12 @@ export default function CopilotSuggestionCard({
 
   if (mobileFeed) {
     return (
-      <MobileCopilotCard
+      <CopilotIdeaCard
         setup={setup}
         selected={selected}
-        onSelect={onSelect}
-        onViewThesis={onViewThesis}
-        strategyLabel={strategyLabel}
+        onOpen={onSelect}
+        onBacktest={() => onViewThesis?.()}
+        backtestTourTarget={selected}
       />
     );
   }

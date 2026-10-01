@@ -1,4 +1,4 @@
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import {
   useEffect,
   useId,
@@ -8,6 +8,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
+import AppIcon from "../mobile/AppIcon.jsx";
+import BottomSheet from "../mobile/BottomSheet.jsx";
+import { appIcons } from "../mobile/mobileAssets.js";
 
 const RISK_STYLES = {
   Low: "border-[rgba(0,188,125,0.25)] bg-[rgba(0,188,125,0.1)] text-[#00d492]",
@@ -21,8 +24,6 @@ const MENU_GAP_PX = 6;
 const Z_MENU = 240;
 const Z_POPOVER_TRIGGER = 230;
 const Z_POPOVER_MENU = 250;
-const Z_SHEET_BACKDROP = 56;
-const Z_SHEET = 57;
 
 function useNarrowViewport() {
   const [narrow, setNarrow] = useState(() => {
@@ -41,11 +42,11 @@ function useNarrowViewport() {
   return narrow;
 }
 
-function StrategyRiskBadge({ risk }) {
+function StrategyRiskBadge({ risk, className = "py-0.5" }) {
   const riskClass = RISK_STYLES[risk] ?? RISK_STYLES.Medium;
   return (
     <span
-      className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.4px] ${riskClass}`}
+      className={`shrink-0 rounded-full border px-2 text-[9px] font-semibold uppercase tracking-[0.4px] ${riskClass} ${className}`}
     >
       {risk} risk
     </span>
@@ -97,10 +98,8 @@ function StrategyInfoPopover({
   const [pos, setPos] = useState(null);
 
   useLayoutEffect(() => {
-    if (!open || !anchorEl) {
-      setPos(null);
-      return undefined;
-    }
+    // Closed: render bails on `!open`; the next open re-measures before paint.
+    if (!open || !anchorEl) return undefined;
 
     const update = () => {
       const rect = anchorEl.getBoundingClientRect();
@@ -174,6 +173,11 @@ function StrategyInfoPopover({
   );
 }
 
+/**
+ * Phone strategy picker / details, on the app kit's BottomSheet (drag, scrim,
+ * hardware back). "← Back" returns from a strategy's details to the list it
+ * was opened from; close always dismisses the sheet.
+ */
 function VaultStrategyMobileSheet({
   open,
   mode,
@@ -186,114 +190,25 @@ function VaultStrategyMobileSheet({
   onClose,
   onConfirm,
 }) {
-  const sheetRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open, onClose]);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      document.documentElement.style.removeProperty(
-        "--vault-strategy-sheet-height",
-      );
-      return undefined;
-    }
-
-    const el = sheetRef.current;
-    if (!el) return undefined;
-
-    const sync = () => {
-      document.documentElement.style.setProperty(
-        "--vault-strategy-sheet-height",
-        `${el.getBoundingClientRect().height}px`,
-      );
-    };
-
-    sync();
-    const ro = new ResizeObserver(sync);
-    ro.observe(el);
-    window.addEventListener("resize", sync);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", sync);
-      document.documentElement.style.removeProperty(
-        "--vault-strategy-sheet-height",
-      );
-    };
-  }, [open]);
-
-  if (!open) return null;
-
   const highlighted =
     strategies.find((s) => s.id === highlightId) ?? strategies[0];
   const isPicker = mode === "picker";
 
-  return createPortal(
-    <div className="vaults-root max-tablet:block tablet:hidden">
-      <button
-        type="button"
-        aria-label="Close strategy panel"
-        className="ds-scrim fixed inset-0"
-        style={{ zIndex: Z_SHEET_BACKDROP }}
-        onClick={onClose}
-      />
-      <div
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={isPicker ? "Choose vault strategy" : "Strategy details"}
-        className="fixed inset-x-0 bottom-0 flex max-h-[min(88dvh,720px)] flex-col overflow-hidden rounded-t-[20px] border border-[rgba(255,255,255,0.08)] bg-[#0a0908] shadow-[0_-12px_40px_rgba(0,0,0,0.55)]"
-        style={{ zIndex: Z_SHEET }}
-      >
-        <div className="flex shrink-0 flex-col items-center border-b border-[rgba(255,255,255,0.06)] px-4 pb-3 pt-2">
-          <div
-            className="mb-3 h-1 w-10 shrink-0 rounded-full bg-[#454545]"
-            aria-hidden
-          />
-          <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2">
-            {!isPicker && returnToPicker ? (
-              <button
-                type="button"
-                onClick={onBackToPicker}
-                className="text-sm font-medium text-[#ccb17f] transition-opacity hover:opacity-90"
-              >
-                ← Back
-              </button>
-            ) : (
-              <span className="size-9" aria-hidden />
-            )}
-            <h3 className="text-center text-base font-semibold text-[#e8d5b5]">
-              {isPicker ? "Choose strategy" : "Strategy details"}
-            </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#bfbfbf] hover:bg-white/5 hover:text-white"
-              aria-label="Close"
-            >
-              <X className="size-5" strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-        </div>
-
-        <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          {isPicker ? (
-            <>
-              <p className="mb-3 text-xs leading-relaxed text-[#717182]">
-                Tap a strategy to select it, or open Details to read more first.
-              </p>
-              <ul className="flex flex-col gap-3" role="listbox" aria-label="Vault strategies">
+  return (
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={isPicker ? "Choose strategy" : "Strategy details"}
+      onBack={!isPicker && returnToPicker ? onBackToPicker : undefined}
+      className="vaults-root"
+    >
+      <div className="px-4 pt-4">
+        {isPicker ? (
+          <>
+            <p className="mb-3 text-app-caption text-[#717182]">
+              Tap a strategy to select it, or open Details to read more first.
+            </p>
+            <ul className="flex flex-col gap-3" role="listbox" aria-label="Vault strategies">
               {strategies.map((strategy) => {
                 const selected = strategy.id === selectedId;
                 return (
@@ -313,20 +228,23 @@ function VaultStrategyMobileSheet({
                         className="w-full px-4 pb-3 pt-4 text-left transition-colors active:bg-[rgba(255,255,255,0.03)]"
                       >
                         <div className="flex items-center justify-between gap-3">
-                          <p className="min-w-0 text-sm font-semibold leading-5 text-[#e8d5b5]">
-                            {strategy.name}
+                          <p className="flex min-w-0 items-center gap-2 text-app-body font-semibold text-[#e8d5b5]">
+                            {selected ? (
+                              <AppIcon src={appIcons.check12} size={12} className="text-[#ccb17f]" />
+                            ) : null}
+                            <span className="truncate">{strategy.name}</span>
                           </p>
                           <StrategyRiskBadge risk={strategy.risk} />
                         </div>
-                        <p className="mt-2 line-clamp-2 text-xs leading-[1.55] text-[#717182]">
+                        <p className="mt-2 line-clamp-2 text-app-caption text-[#717182]">
                           {strategy.description}
                         </p>
                       </button>
-                      <div className="flex justify-end border-t border-[rgba(255,255,255,0.05)] px-4 py-2.5">
+                      <div className="flex justify-end border-t border-[rgba(255,255,255,0.05)] px-2 py-0.5">
                         <button
                           type="button"
                           onClick={() => onViewDetails(strategy.id)}
-                          className="text-[10px] font-medium uppercase tracking-[0.35px] text-[#ccb17f] transition-opacity hover:opacity-90"
+                          className="flex min-h-10 items-center px-2 text-[10px] font-medium uppercase tracking-[0.35px] text-[#ccb17f] active:opacity-70"
                         >
                           Details
                         </button>
@@ -336,16 +254,14 @@ function VaultStrategyMobileSheet({
                 );
               })}
             </ul>
-            </>
-          ) : (
-            <div className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#0c0a08] p-4">
-              <StrategyDetailBody strategy={highlighted} />
-            </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#0c0a08] p-4">
+            <StrategyDetailBody strategy={highlighted} />
+          </div>
+        )}
       </div>
-    </div>,
-    document.body,
+    </BottomSheet>
   );
 }
 
@@ -377,8 +293,8 @@ export default function VaultStrategySelector({
   const [sheetHighlightId, setSheetHighlightId] = useState(null);
   const [sheetReturnToPicker, setSheetReturnToPicker] = useState(false);
 
-  const controlHeight = inline ? "h-[37px]" : "h-8";
-  const controlRadius = inline ? "rounded-[10px]" : "rounded-lg";
+  const controlHeight = isNarrow ? "h-[39px]" : inline ? "h-[37px]" : "h-8";
+  const controlRadius = isNarrow || inline ? "rounded-[10px]" : "rounded-lg";
   const menuWidth = inline ? 168 : 200;
 
   const clearCloseTimer = () => {
@@ -426,10 +342,8 @@ export default function VaultStrategySelector({
   };
 
   useLayoutEffect(() => {
-    if (!menuOpen || isNarrow) {
-      setMenuPos(null);
-      return undefined;
-    }
+    // Closed: render bails on `!menuOpen`; the next open re-measures before paint.
+    if (!menuOpen || isNarrow) return undefined;
     updateMenuPosition();
     window.addEventListener("resize", updateMenuPosition);
     window.addEventListener("scroll", updateMenuPosition, true);
@@ -482,11 +396,6 @@ export default function VaultStrategySelector({
   };
 
   const closeMobileSheet = () => {
-    if (sheetMode === "details" && sheetReturnToPicker) {
-      setSheetMode("picker");
-      setSheetReturnToPicker(false);
-      return;
-    }
     setSheetOpen(false);
   };
 
@@ -535,7 +444,7 @@ export default function VaultStrategySelector({
       className={`flex min-w-0 flex-col gap-1.5 ${inline ? "shrink-0 tablet:w-[130px]" : "w-full"}`}
     >
       {isNarrow ? (
-        <span className="text-[10px] font-semibold uppercase tracking-[0.35px] text-[#717182]">
+        <span className="text-[10px] font-semibold uppercase leading-[13px] tracking-[0.35px] text-[#717182]">
           Strategy
         </span>
       ) : null}
@@ -576,34 +485,40 @@ export default function VaultStrategySelector({
         }`}
       >
         <span className="truncate">{active.name}</span>
-        <ChevronDown
-          className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#717182] transition-transform ${
-            menuOpen || sheetOpen ? "rotate-180" : ""
-          } ${disabled ? "opacity-50" : ""}`}
-          strokeWidth={2}
-          aria-hidden
-        />
+        {isNarrow ? (
+          <AppIcon
+            src={appIcons.chevronDown14}
+            size={14}
+            className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] transition-transform ${
+              sheetOpen ? "rotate-180" : ""
+            } ${disabled ? "opacity-50" : ""}`}
+          />
+        ) : (
+          <ChevronDown
+            className={`pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#717182] transition-transform ${
+              menuOpen || sheetOpen ? "rotate-180" : ""
+            } ${disabled ? "opacity-50" : ""}`}
+            strokeWidth={2}
+            aria-hidden
+          />
+        )}
       </button>
 
       {!disabled && isNarrow && selectedId ? (
-        <div className="rounded-[10px] border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 py-2.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <StrategyRiskBadge risk={active.risk} />
-              </div>
-              <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.45] text-[#717182]">
-                {active.description}
-              </p>
-            </div>
+        <div className="flex flex-col gap-1.5 rounded-[10px] border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 py-[11px]">
+          <div className="flex items-center justify-between gap-2">
+            <StrategyRiskBadge risk={active.risk} className="py-[3px] leading-[11px]" />
             <button
               type="button"
               onClick={() => openMobileSheet("details")}
-              className="shrink-0 text-[11px] font-medium uppercase tracking-[0.3px] text-[#ccb17f] transition-opacity hover:opacity-90"
+              className="relative shrink-0 text-[11px] font-medium uppercase leading-[14px] tracking-[0.3px] text-[#ccb17f] after:absolute after:-inset-3 active:opacity-70"
             >
               Details
             </button>
           </div>
+          <p className="line-clamp-2 max-w-[200px] text-[11px] leading-[15.95px] text-[#717182]">
+            {active.description}
+          </p>
         </div>
       ) : null}
 

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { MOCK_WALLET_ADDRESS } from "../../lib/wallet.js";
-import { readProfile, writeProfile } from "../../lib/profileSession.js";
+import { clearProfile, readProfile, writeProfile } from "../../lib/profileSession.js";
 import { computeProfileProgress } from "./profileSteps.js";
 
 const ProfileContext = createContext(null);
@@ -78,6 +78,16 @@ export function ProfileProvider({
   );
 
   /**
+   * Account deletion (the phone flow): drops this wallet's record from the
+   * store and from state, so reconnecting the same wallet starts from an empty
+   * profile instead of the one held in this render.
+   */
+  const eraseProfile = useCallback(
+    () => setRecord(clearProfile(address)),
+    [address],
+  );
+
+  /**
    * Whichever account speaks for the user's identity — X first, because it
    * carries the display name the avatar and header render. Both are required
    * steps now, but they don't land at the same time, so this still has to cope
@@ -116,6 +126,7 @@ export function ProfileProvider({
       sharePnl,
       dismissBanner,
       markCelebrated,
+      eraseProfile,
     }),
     [
       address,
@@ -130,6 +141,7 @@ export function ProfileProvider({
       connectSocial,
       dismissBanner,
       markCelebrated,
+      eraseProfile,
     ],
   );
 

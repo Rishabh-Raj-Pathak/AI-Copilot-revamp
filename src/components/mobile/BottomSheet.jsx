@@ -95,6 +95,7 @@ export default function BottomSheet({
   fullHeight = false,
   className = "",
   bodyClassName = "",
+  footerClassName = "",
   ariaLabel,
 }) {
   const reduceMotion = useReducedMotion();
@@ -200,7 +201,11 @@ export default function BottomSheet({
               {children}
             </div>
             {footer ? (
-              <div className="shrink-0 border-t border-app-line bg-app-surface px-4 pb-[var(--app-safe-bottom)] pt-3">
+              <div
+                className={`shrink-0 border-t px-4 pb-[var(--app-safe-bottom)] pt-3 ${
+                  footerClassName || "border-app-line bg-app-surface"
+                }`}
+              >
                 {footer}
               </div>
             ) : null}

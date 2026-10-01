@@ -10,9 +10,10 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import CopilotMobileHeader from "../terminal/CopilotMobileHeader.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import MobileSupportPage from "../mobile/profile/MobileSupportPage.jsx";
+import useIsMobile from "../mobile/useIsMobile.js";
 import { DOC_LINKS } from "../../lib/docs.js";
 import { SUPPORT_CHANNELS, SUPPORT_RESPONSE_NOTE } from "./supportContent.js";
 
@@ -48,6 +49,12 @@ export default function SupportPage({
   onOpenCompete,
   onVaultViewChange,
 }) {
+  const isMobile = useIsMobile();
+
+  // Phone: a pushed screen with the kit nav bar ("Help & Support" + back)
+  // under the shared tab bar, same content on the app card pattern.
+  if (isMobile) return <MobileSupportPage />;
+
   const walletHeaderProps = {
     walletConnected,
     onWalletConnected,
@@ -99,20 +106,6 @@ export default function SupportPage({
           <ResourcesCard />
         </div>
       </main>
-
-      <CopilotBottomNav
-        activeId="support"
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-        onOpenSupport={onOpenSupport}
-        onOpenCompete={onOpenCompete}
-        onNavClick={(id) => {
-          if (id === "copilot") onOpenCopilot?.();
-          if (id === "trade") onOpenTrade?.();
-          if (id === "rewards") onOpenRewards?.();
-          if (id === "kol") onOpenRewards?.("kol");
-        }}
-      />
     </div>
   );
 }

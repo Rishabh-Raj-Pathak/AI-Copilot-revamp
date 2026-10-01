@@ -60,6 +60,8 @@ import {
   EPOCHS_PER_YEAR,
   type PositionSummary,
 } from "../utils/positionSummary";
+import useIsMobile from "../../components/mobile/useIsMobile.js";
+import MobileDnBuilder from "../../components/mobile/agents/MobileDnBuilder.jsx";
 import {
   formatApr,
   formatCompactPct,
@@ -1331,6 +1333,8 @@ export function DeltaVaultBuilder({
 }: DeltaVaultBuilderProps) {
   const isV2Shell = variant === "v2";
   const summaryInStrip = summaryPlacement === "market-strip";
+  // Phone renders its own layout (MobileDnBuilder) off the same state below.
+  const isMobile = useIsMobile();
   // Opens on a working Perp <> Perp pair rather than an empty form, so the metrics
   // strip and the picker have something to show on first paint.
   const [dexA, setDexA] = useState<DexSelection>("Hyperliquid");
@@ -1340,11 +1344,13 @@ export function DeltaVaultBuilder({
   const [legA, setLegA] = useState<InstrumentType>("Perp");
   const [legB, setLegB] = useState<InstrumentType>("Perp");
   const structure = legStructureFor(legA, legB);
-  const [market, setMarket] = useState<MarketSelection>({
-    mode: "tokens",
-    themes: [],
-    token: "BTC-USDC",
-  });
+  // The phone opens on Categories / Top Picks, the landing state of Figma
+  // "Agents / Delta Neutral" (951:4142); desktop keeps its token-pair start.
+  const [market, setMarket] = useState<MarketSelection>(() =>
+    isMobile
+      ? { mode: "themes", themes: ["Top Picks"], token: "BTC-USDC" }
+      : { mode: "tokens", themes: [], token: "BTC-USDC" },
+  );
   const [dexConnected, setDexConnected] = useState<
     Record<ManagedDexId, boolean>
   >(() => ({ ...INITIAL_DEX_CONNECTED }));
@@ -1645,9 +1651,44 @@ export function DeltaVaultBuilder({
     setMarket((prev) => ({ ...prev, mode: "tokens", token }));
   };
 
+  const handleConnectDex = (dex: ManagedDexId) => {
+    // Variational connects via the cookie onboarding modal, not the instant
+    // mock-connect. Opened from the leg's Connect button → authenticate only.
+    if (requiresCookieAuth(dex)) {
+      setActivateAfterConnect(false);
+      setVariationalModalOpen(true);
+      return;
+    }
+    setDexConnected((prev) => ({ ...prev, [dex]: true }));
+    setDexWallets((prev) => ({
+      ...prev,
+      [dex]: prev[dex] ?? createMockWalletAddress(dex),
+    }));
+    setDexBalances((prev) => ({
+      ...prev,
+      [dex]: prev[dex] > 0 ? prev[dex] : 500,
+    }));
+  };
+
+  const handleDepositDex = (dex: ManagedDexId) =>
+    setDexBalances((prev) => ({ ...prev, [dex]: prev[dex] + 500 }));
+
+  const handleChangeWalletDex = (dex: ManagedDexId) => {
+    setDexWallets((prev) => ({
+      ...prev,
+      [dex]: createMockWalletAddress(dex),
+    }));
+  };
+
   const handleInitialize = () => {
     if (!sides || isPreparing || !allSelectedVenuesConnected) return;
     const { longDex: resolvedLong, shortDex: resolvedShort } = sides;
+    // The legs as the summary sized them: each leg's notional, both added (what the
+    // vault card halves back into a leg), and the residual direction between them.
+    const longN = summary?.long.notionalUsd ?? 0;
+    const shortN = summary?.short.notionalUsd ?? 0;
+    const notional = summary?.grossExposureUsd ?? longN + shortN;
+    const delta = summary?.netDeltaUsd ?? longN - shortN;
     const payload: DeltaVaultBuilderResult = {
       longDex: resolvedLong,
       shortDex: resolvedShort,
@@ -1840,6 +1881,118 @@ export function DeltaVaultBuilder({
     </button>
   );
 
+  /*
+    Portalled to the body: this section is `overflow-hidden` and sits under
+    transformed ancestors, either of which would trap a fixed child inside the card.
+    Built once and placed by both layouts, phone and desktop.
+  */
+  const openingOverlay = createPortal(
+    <AnimatePresence>
+      {isPreparing && dexA !== "" && dexB !== "" && (
+        <motion.div
+          key="vault-opening"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {/* The page recedes behind the vault while it opens. */}
+          <div
+            className="ds-scrim absolute inset-0"
+            aria-hidden
+          />
+          <motion.div
+            className="relative z-[201] w-full max-w-[520px]"
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <VaultOpeningOverlay
+              venueA={dexA}
+              venueB={dexB}
+              variant={variant}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+
+  const variationalModal = (
+    <VariationalOnboardingModal
+      open={variationalModalOpen}
+      onOpenChange={setVariationalModalOpen}
+      onConnected={handleVariationalConnected}
+      pairedDex={selectedVenues.find((id) => id !== "Variational")}
+    />
+  );
+
+  const leverageInfoText =
+    `${leverage}x · ${leverageProfile(leverage)}\n\n` +
+    (structure === "Spot <> Perp"
+      ? "Sets the position size of both legs. The perp posts your margin against it; the spot has to hold that size in coin. "
+      : "Multiplies both legs equally, so the hedge stays delta-neutral. ") +
+    "Higher leverage captures more funding but liquidates on a smaller adverse move.";
+
+  /*
+    Phone: one stacked column per Figma "Agents / Delta Neutral" (Cross-DEX Setup,
+    Margin, Leverage, CTA), drawn by MobileDnBuilder off the state above. Both
+    `summaryPlacement` shapes collapse to it -- the summary readouts are a desktop
+    layout decision, and the phone frame carries neither.
+  */
+  if (isMobile) {
+    return (
+      <>
+        {openingOverlay}
+        {variationalModal}
+        <MobileDnBuilder
+          dexOptions={Object.keys(DEX_PROFILES) as ManagedDexId[]}
+          dexA={dexA}
+          dexB={dexB}
+          onDexAChange={setDexA}
+          onDexBChange={setDexB}
+          legA={legA}
+          legB={legB}
+          onLegInstrumentChange={handleLegInstrumentChange}
+          dexConnected={dexConnected}
+          dexBalances={dexBalances}
+          dexWallets={dexWallets}
+          onConnectDex={handleConnectDex}
+          onDepositDex={handleDepositDex}
+          onChangeWalletDex={handleChangeWalletDex}
+          market={market}
+          marketDisabled={dexA === "" || dexB === ""}
+          structure={structure}
+          themeCatalog={THEME_CATALOG}
+          metrics={dualValid ? marketMetrics(strategyMetrics) : []}
+          onModeChange={handleModeChange}
+          onThemesChange={handleThemesChange}
+          onTokenChange={handleTokenChange}
+          amount={amount}
+          percent={participationRate}
+          maxAmount={deployableMaxUsd}
+          marginDisabled={!dualValid}
+          marginInfo={vaultMarginTooltip}
+          onAmountChange={handleAmountChange}
+          onPercentChange={handlePercentChange}
+          leverage={leverage}
+          minLeverage={MIN_LEVERAGE}
+          maxLeverage={MAX_LEVERAGE}
+          leverageDisabled={!dualValid}
+          leverageInfo={leverageInfoText}
+          onLeverageChange={setLeverage}
+          showPairWarning={hasBothDexSelected && !dualValid}
+          primaryLabel={primaryLabel}
+          primaryDisabled={!dualValid || isPreparing}
+          onPrimary={handlePrimaryAction}
+        />
+      </>
+    );
+  }
+
   return (
     <section
       className={clsx(
@@ -1875,49 +2028,9 @@ export function DeltaVaultBuilder({
       {isV2Shell && (
         <div className="pointer-events-none absolute inset-0 rounded-[12px] ring-1 ring-[#c9a962]/20" />
       )}
-      {/* Portalled to the body: this section is `overflow-hidden` and sits under
-          transformed ancestors, either of which would trap a fixed child inside the card. */}
-      {createPortal(
-        <AnimatePresence>
-          {isPreparing && dexA !== "" && dexB !== "" && (
-            <motion.div
-              key="vault-opening"
-              className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {/* The page recedes behind the vault while it opens. */}
-              <div
-                className="ds-scrim absolute inset-0"
-                aria-hidden
-              />
-              <motion.div
-                className="relative z-[201] w-full max-w-[520px]"
-                initial={{ opacity: 0, scale: 0.96, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <VaultOpeningOverlay
-                  venueA={dexA}
-                  venueB={dexB}
-                  variant={variant}
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body,
-      )}
+      {openingOverlay}
 
-      <VariationalOnboardingModal
-        open={variationalModalOpen}
-        onOpenChange={setVariationalModalOpen}
-        onConnected={handleVariationalConnected}
-        pairedDex={selectedVenues.find((id) => id !== "Variational")}
-      />
+      {variationalModal}
 
       {/*
         Two shapes, one set of blocks. `summaryPlacement` picks between them.
@@ -1957,33 +2070,9 @@ export function DeltaVaultBuilder({
           dexB={dexB}
           onDexAChange={setDexA}
           onDexBChange={setDexB}
-          onConnectDex={(dex) => {
-            // Variational connects via the cookie onboarding modal, not the instant
-            // mock-connect. Opened from the leg's Connect button → authenticate only.
-            if (requiresCookieAuth(dex)) {
-              setActivateAfterConnect(false);
-              setVariationalModalOpen(true);
-              return;
-            }
-            setDexConnected((prev) => ({ ...prev, [dex]: true }));
-            setDexWallets((prev) => ({
-              ...prev,
-              [dex]: prev[dex] ?? createMockWalletAddress(dex),
-            }));
-            setDexBalances((prev) => ({
-              ...prev,
-              [dex]: prev[dex] > 0 ? prev[dex] : 500,
-            }));
-          }}
-          onDepositDex={(dex) =>
-            setDexBalances((prev) => ({ ...prev, [dex]: prev[dex] + 500 }))
-          }
-          onChangeWalletDex={(dex) => {
-            setDexWallets((prev) => ({
-              ...prev,
-              [dex]: createMockWalletAddress(dex),
-            }));
-          }}
+          onConnectDex={handleConnectDex}
+          onDepositDex={handleDepositDex}
+          onChangeWalletDex={handleChangeWalletDex}
           dexConnectionMap={dexConnected}
           dexBalanceMap={dexBalances}
           dexWalletMap={dexWallets}
@@ -2046,15 +2135,7 @@ export function DeltaVaultBuilder({
               disabled={!dualValid}
               disabledSliderTooltip="Select both the dex before setting leverage"
               variant={variant}
-              infoTooltip={
-                `${leverage}x · ${leverageProfile(leverage)}
-
-` +
-                (structure === "Spot <> Perp"
-                  ? "Sets the position size of both legs. The perp posts your margin against it; the spot has to hold that size in coin. "
-                  : "Multiplies both legs equally, so the hedge stays delta-neutral. ") +
-                "Higher leverage captures more funding but liquidates on a smaller adverse move."
-              }
+              infoTooltip={leverageInfoText}
               onChange={setLeverage}
             />
 

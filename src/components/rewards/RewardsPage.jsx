@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import CopilotMobileHeader from "../terminal/CopilotMobileHeader.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import { Toast, ToastViewport } from "../ui/toast.jsx";
+import MobileRewardsPage from "../mobile/rewards/MobileRewardsPage.jsx";
+import useIsMobile from "../mobile/useIsMobile.js";
 import ReferralActivityPanel from "./ReferralActivityPanel.jsx";
 import ReferralTiersPanel from "./ReferralTiersPanel.jsx";
 import { RewardsHeroRow, RewardsStatsRow } from "./RewardsSummary.jsx";
@@ -14,8 +15,11 @@ const FEEDBACK_MS = 2000;
  * Rewards / referral dashboard — Figma Terminal `referral` (1023:15418).
  *
  * A primary nav destination, so it uses the page shell without the back arrow:
- * mobile header, desktop nav, scrolling content, bottom nav. No backend behind
- * any of the numbers (see `rewardsMockData.js`).
+ * mobile header, desktop nav, scrolling content. No backend behind any of the
+ * numbers (see `rewardsMockData.js`).
+ *
+ * Below the tablet breakpoint the phone layout (Figma 955:4978) replaces the
+ * whole page — see `mobile/rewards/MobileRewardsPage.jsx`.
  */
 export default function RewardsPage({
   variant = "rewards",
@@ -37,6 +41,8 @@ export default function RewardsPage({
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
+  const isMobile = useIsMobile();
+
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   const notify = useCallback((message, variant = "success") => {
@@ -44,6 +50,17 @@ export default function RewardsPage({
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), FEEDBACK_MS);
   }, []);
+
+  if (isMobile) {
+    return (
+      <MobileRewardsPage
+        variant={variant}
+        onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onTerminalPlatformChange={onTerminalPlatformChange}
+      />
+    );
+  }
 
   const walletHeaderProps = {
     walletConnected,
@@ -102,21 +119,6 @@ export default function RewardsPage({
           {!isKol ? <ReferralTiersPanel variant={variant} /> : null}
         </div>
       </main>
-
-      <CopilotBottomNav
-        activeId="rewards"
-        rewardView={variant}
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-        onOpenSupport={onOpenSupport}
-        onOpenCompete={onOpenCompete}
-        onNavClick={(id) => {
-          if (id === "copilot") onOpenCopilot?.();
-          if (id === "trade") onOpenTrade?.();
-          if (id === "kol") onOpenRewards?.("kol");
-          if (id === "rewards") onOpenRewards?.("rewards");
-        }}
-      />
 
       {toast ? (
         <ToastViewport>

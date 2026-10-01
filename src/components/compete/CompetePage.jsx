@@ -1,7 +1,8 @@
 import { useState } from "react";
-import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import CopilotMobileHeader from "../terminal/CopilotMobileHeader.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import MobileCompetePage from "../mobile/compete/MobileCompetePage.jsx";
+import useIsMobile from "../mobile/useIsMobile.js";
 import CompeteEntryModal from "./CompeteEntryModal.jsx";
 import CompeteEntryPrompt from "./CompeteEntryPrompt.jsx";
 import CompetitionCard from "./CompetitionCard.jsx";
@@ -38,8 +39,12 @@ function autoPromptTarget() {
  * Compete — the competition hub.
  *
  * A primary nav destination, so it uses the same shell as `RewardsPage`: mobile
- * header, desktop nav, scrolling content, bottom nav. Nothing here is backed by
- * a service (see `competeMockData.js`).
+ * header, desktop nav, scrolling content. Nothing here is backed by a service
+ * (see `competeMockData.js`).
+ *
+ * On a phone it is a pushed screen (Figma 956:5275) rendered by
+ * `mobile/compete/MobileCompetePage.jsx` from the same state below, with the
+ * entry flow as a bottom sheet.
  *
  * Two across, ordered live-first, following the Figma section (7098:2). The
  * cards carry key art and a full stat row now, so they get half a row each
@@ -77,6 +82,7 @@ export default function CompetePage({
    */
   const [entryFor, setEntryFor] = useState(autoPromptTarget);
   const [enteredIds, setEnteredIds] = useState(readEnteredCompetitions);
+  const isMobile = useIsMobile();
 
   /** Closing is the answer "not now", and it is remembered for the session. */
   const closeEntry = () => {
@@ -95,6 +101,19 @@ export default function CompetePage({
 
   /** What the banner offers, and `null` once there is nothing left to join. */
   const pendingEntry = liveUnentered(enteredIds);
+
+  if (isMobile) {
+    return (
+      <MobileCompetePage
+        competitions={COMPETITIONS}
+        enteredIds={enteredIds}
+        entryFor={entryFor}
+        onOpenEntry={openEntry}
+        onCloseEntry={closeEntry}
+        onEntered={(id) => setEnteredIds(enterCompetition(id))}
+      />
+    );
+  }
 
   const walletHeaderProps = {
     walletConnected,
@@ -157,20 +176,6 @@ export default function CompetePage({
           </div>
         </div>
       </main>
-
-      <CopilotBottomNav
-        activeId="compete"
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-        onOpenSupport={onOpenSupport}
-        onOpenCompete={onOpenCompete}
-        onNavClick={(id) => {
-          if (id === "copilot") onOpenCopilot?.();
-          if (id === "trade") onOpenTrade?.();
-          if (id === "rewards") onOpenRewards?.("rewards");
-          if (id === "kol") onOpenRewards?.("kol");
-        }}
-      />
 
       {/* Mounted only while open, so each visit starts from a clean state. */}
       {entryFor ? (

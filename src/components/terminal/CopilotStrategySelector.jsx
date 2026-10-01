@@ -1,4 +1,4 @@
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import {
   useEffect,
   useId,
@@ -8,6 +8,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
+import AppIcon from "../mobile/AppIcon.jsx";
+import { appIcons } from "../mobile/mobileAssets.js";
+import CopilotStrategySheet from "../mobile/copilot/CopilotStrategySheet.jsx";
 
 const RISK_STYLES = {
   Low: "border-[#0a2917] bg-[#05150c] text-[#269755]",
@@ -20,8 +23,6 @@ const MENU_GAP_PX = 6;
 const Z_MENU = 240;
 const Z_POPOVER_TRIGGER = 230;
 const Z_POPOVER_MENU = 250;
-const Z_SHEET_BACKDROP = 56;
-const Z_SHEET = 57;
 
 function useNarrowViewport() {
   const [narrow, setNarrow] = useState(() => {
@@ -208,192 +209,9 @@ function StrategyInfoPopover({
   );
 }
 
-function CopilotStrategyMobileSheet({
-  open,
-  mode,
-  strategies,
-  highlightId,
-  selectedId,
-  returnToPicker,
-  onViewDetails,
-  onBackToPicker,
-  onClose,
-  onConfirm,
-}) {
-  const sheetRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open, onClose]);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      document.documentElement.style.removeProperty(
-        "--copilot-strategy-sheet-height",
-      );
-      return undefined;
-    }
-
-    const el = sheetRef.current;
-    if (!el) return undefined;
-
-    const sync = () => {
-      document.documentElement.style.setProperty(
-        "--copilot-strategy-sheet-height",
-        `${el.getBoundingClientRect().height}px`,
-      );
-    };
-
-    sync();
-    const ro = new ResizeObserver(sync);
-    ro.observe(el);
-    window.addEventListener("resize", sync);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", sync);
-      document.documentElement.style.removeProperty(
-        "--copilot-strategy-sheet-height",
-      );
-    };
-  }, [open]);
-
-  if (!open) return null;
-
-  const highlighted =
-    strategies.find((s) => s.id === highlightId) ?? strategies[0];
-  const isPicker = mode === "picker";
-
-  return createPortal(
-    <div className="max-tablet:block tablet:hidden">
-      <button
-        type="button"
-        aria-label="Close strategy panel"
-        className="ds-scrim fixed inset-0"
-        style={{ zIndex: Z_SHEET_BACKDROP }}
-        onClick={onClose}
-      />
-      <div
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={isPicker ? "Choose AI strategy" : "Strategy details"}
-        className="fixed inset-x-0 bottom-0 flex max-h-[min(88dvh,720px)] flex-col overflow-hidden rounded-t-[20px] border border-[#242424] bg-[#0a0a0a] shadow-[0_-12px_40px_rgba(0,0,0,0.55)]"
-        style={{ zIndex: Z_SHEET }}
-      >
-        <div className="flex shrink-0 flex-col items-center border-b border-[#242424] px-4 pb-3 pt-2">
-          <div
-            className="mb-3 h-1 w-10 shrink-0 rounded-full bg-[#454545]"
-            aria-hidden
-          />
-          <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2">
-            {!isPicker && returnToPicker ? (
-              <button
-                type="button"
-                onClick={onBackToPicker}
-                className="text-control font-medium text-[#f2b500] transition-opacity hover:opacity-90"
-              >
-                ← Back
-              </button>
-            ) : (
-              <span className="size-9" aria-hidden />
-            )}
-            <h3 className="text-center text-control font-medium text-ink">
-              {isPicker ? "Choose strategy" : "Strategy details"}
-            </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-muted hover:bg-white/5 hover:text-ink"
-              aria-label="Close"
-            >
-              <X className="size-5" strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-        </div>
-
-        <div className="minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          {isPicker ? (
-            <>
-              <p className="mb-3 text-data text-ink-faint">
-                Tap a strategy to select it, or open Details to read more first.
-              </p>
-              <ul
-                className="flex flex-col gap-3"
-                role="listbox"
-                aria-label="AI strategies"
-              >
-                {strategies.map((strategy) => {
-                  const selected = strategy.id === selectedId;
-                  return (
-                    <li key={strategy.id}>
-                      <div
-                        className={`overflow-hidden rounded-[14px] border transition-colors ${
-                          selected
-                            ? "border-[#3e2e00] bg-[#171200]"
-                            : "border-[#242424] bg-[#050505]"
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          role="option"
-                          aria-selected={selected}
-                          onClick={() => onConfirm(strategy.id)}
-                          className="w-full px-4 pb-3 pt-4 text-left transition-colors active:bg-white/[0.03]"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="min-w-0 text-control font-medium text-ink">
-                              {strategy.shortLabel ?? strategy.name}
-                            </p>
-                            <StrategyRiskBadge risk={strategy.risk} />
-                          </div>
-                          {strategy.tagline ? (
-                            <p className="mt-1.5 text-data text-ink-muted">
-                              {strategy.tagline}
-                            </p>
-                          ) : null}
-                          <p className="mt-2 line-clamp-2 text-data text-ink-faint">
-                            {strategy.description}
-                          </p>
-                        </button>
-                        <div className="flex justify-end border-t border-[#242424] px-4 py-2.5">
-                          <button
-                            type="button"
-                            onClick={() => onViewDetails(strategy.id)}
-                            className="ds-eyebrow text-[#f2b500] transition-opacity hover:opacity-90"
-                          >
-                            Details
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          ) : (
-            <div className="rounded-[14px] border border-[#242424] bg-[#050505] p-4">
-              <StrategyDetailBody strategy={highlighted} />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
 /**
- * AI strategy dropdown — desktop hover preview; mobile bottom sheet picker.
+ * AI strategy dropdown — desktop hover preview; phone bottom sheet picker
+ * (Figma "Strategy Dropdown" 938:1192 → "Choose strategy" sheet 943:2495).
  */
 export default function CopilotStrategySelector({
   strategies,
@@ -544,6 +362,10 @@ export default function CopilotStrategySelector({
     setSheetOpen(false);
   };
 
+  /* X, scrim, drag and hardware back close outright — the sheet header has
+     its own "← Back" for returning to the list. */
+  const dismissMobileSheet = () => setSheetOpen(false);
+
   const handleBackToPicker = () => {
     setSheetMode("picker");
     setSheetReturnToPicker(false);
@@ -582,6 +404,49 @@ export default function CopilotStrategySelector({
     onSelect(strategyId);
     closeMobileSheet();
   };
+
+  if (isNarrow) {
+    const label = active.shortLabel ?? active.name;
+    return (
+      <div ref={rootRef} className="min-w-0 shrink">
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          aria-haspopup="dialog"
+          aria-expanded={sheetOpen}
+          aria-label={`Change strategy, currently ${label}`}
+          onClick={handleToggleMenu}
+          className={`app-pressable flex h-9 max-w-full items-center gap-1 rounded-[10px] border px-2.5 ${
+            disabled
+              ? "cursor-default border-app-line text-ink-faint opacity-60"
+              : "border-app-accent text-app-accent active:bg-app-accent/10"
+          }`}
+        >
+          <span className="truncate text-app-caption font-medium leading-[15px]">
+            {label}
+          </span>
+          <AppIcon
+            src={appIcons.chevronDown14}
+            size={14}
+            className={`transition-transform duration-200 ${sheetOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        <CopilotStrategySheet
+          open={sheetOpen}
+          mode={sheetMode}
+          strategies={strategies}
+          highlightId={resolvedHighlightId}
+          selectedId={selectedId ?? active.id}
+          returnToPicker={sheetReturnToPicker}
+          onViewDetails={handleMobileViewDetails}
+          onBackToPicker={handleBackToPicker}
+          onClose={dismissMobileSheet}
+          onConfirm={handleMobileConfirm}
+        />
+      </div>
+    );
+  }
 
   const triggerWidthClass = inline
     ? "w-fit max-w-[9.5rem] shrink-0 sm:max-w-[11rem]"
@@ -658,21 +523,6 @@ export default function CopilotStrategySelector({
           />
         ) : null}
       </div>
-
-      {isNarrow ? (
-        <CopilotStrategyMobileSheet
-          open={sheetOpen}
-          mode={sheetMode}
-          strategies={strategies}
-          highlightId={resolvedHighlightId}
-          selectedId={selectedId ?? active.id}
-          returnToPicker={sheetReturnToPicker}
-          onViewDetails={handleMobileViewDetails}
-          onBackToPicker={handleBackToPicker}
-          onClose={closeMobileSheet}
-          onConfirm={handleMobileConfirm}
-        />
-      ) : null}
 
       {!isNarrow && menuOpen && menuPos
         ? createPortal(

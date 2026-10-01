@@ -49,7 +49,9 @@ function AppToastViewport({ toast, onDismiss }) {
   return createPortal(
     <div
       className="pointer-events-none fixed inset-x-0 z-[95] flex justify-center px-4 tablet:hidden"
-      style={{ bottom: `calc(var(--app-tab-bar-h) + 12px)` }}
+      // A screen without the tab bar (the delete flow) sets `--app-toast-bottom`
+      // on <html> so the toast clears its own pinned footer instead.
+      style={{ bottom: "var(--app-toast-bottom, calc(var(--app-tab-bar-h) + 12px))" }}
       aria-live="polite"
     >
       <AnimatePresence>

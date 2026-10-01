@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import CopilotMobileHeader from "../terminal/CopilotMobileHeader.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
+import MobileProfilePage from "../mobile/profile/MobileProfilePage.jsx";
+import useIsMobile from "../mobile/useIsMobile.js";
 import { Toast, ToastViewport } from "../ui/toast.jsx";
 import ConnectionsCard from "./ConnectionsCard.jsx";
 import ProfileChecklistCard from "./ProfileChecklistCard.jsx";
@@ -40,6 +41,7 @@ export default function ProfilePage({
   onOpenCompete,
   onVaultViewChange,
 }) {
+  const isMobile = useIsMobile();
   const { progress } = useProfile();
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
@@ -57,6 +59,10 @@ export default function ProfilePage({
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), FEEDBACK_MS);
   }, []);
+
+  // The phone app shell: Figma "Profile / Connected", a pushed screen under the
+  // shared tab bar. Wallet, back and navigation come from `useMobileApp()`.
+  if (isMobile) return <MobileProfilePage />;
 
   const walletHeaderProps = {
     walletConnected,
@@ -122,20 +128,6 @@ export default function ProfilePage({
           )}
         </div>
       </main>
-
-      <CopilotBottomNav
-        activeId="profile"
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-        onOpenSupport={onOpenSupport}
-        onOpenCompete={onOpenCompete}
-        onNavClick={(id) => {
-          if (id === "copilot") onOpenCopilot?.();
-          if (id === "trade") onOpenTrade?.();
-          if (id === "rewards") onOpenRewards?.();
-          if (id === "kol") onOpenRewards?.("kol");
-        }}
-      />
 
       <ProfileCompleteModal />
 

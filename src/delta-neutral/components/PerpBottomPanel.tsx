@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
-import { ChevronDown } from 'lucide-react';
+import AppIcon from '../../components/mobile/AppIcon.jsx';
+import { appIcons } from '../../components/mobile/mobileAssets.js';
 import { DexLogo } from './DexLogo';
 import { formatSignedUsd, PnlCompositionCell, pnlTextClass } from './PnlCompositionCell';
 import type { ManagedDexId } from './ActiveVaultCard';
@@ -700,7 +701,7 @@ export function PerpBottomPanel({
 
   return (
     <div
-      className={`pointer-events-none fixed inset-x-0 bottom-[var(--delta-neutral-panel-bottom,0px)] z-[70] transition-transform duration-300 ease-out max-tablet:bottom-[var(--delta-neutral-panel-bottom-mobile,calc(4.25rem+env(safe-area-inset-bottom)))] tablet:bottom-[var(--delta-neutral-panel-bottom,0px)] ${
+      className={`pointer-events-none fixed inset-x-0 bottom-[var(--delta-neutral-panel-bottom,0px)] z-[70] transition-transform duration-300 ease-out max-tablet:bottom-[var(--app-tab-bar-h)] tablet:bottom-[var(--delta-neutral-panel-bottom,0px)] ${
         hiddenByScroll && !hovered && !isNarrow ? 'translate-y-full' : 'translate-y-0'
       }`}
     >
@@ -717,7 +718,7 @@ export function PerpBottomPanel({
       >
         <div
           className={clsx(
-            'flex items-center justify-between gap-3 border-b px-3 py-2.5 max-tablet:cursor-pointer tablet:px-5',
+            'flex items-center justify-between gap-3 border-b px-3 py-2.5 max-tablet:cursor-pointer max-tablet:px-4 max-tablet:py-3 tablet:px-5',
             isV2 ? 'border-[#1f1f1f]' : 'border-[rgba(255,255,255,0.08)]',
           )}
           onClick={handleHeaderToggle}
@@ -736,7 +737,7 @@ export function PerpBottomPanel({
               type="button"
               onClick={() => setActiveTab('positions')}
               className={clsx(
-                'rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors max-tablet:min-h-[44px] max-tablet:px-4',
+                'rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors max-tablet:relative max-tablet:after:absolute max-tablet:after:-inset-y-2 max-tablet:after:inset-x-0',
                 activeTab === 'positions'
                   ? isV2
                     ? 'h-[30px] border border-[#c9a962] bg-transparent text-[#c9a962]'
@@ -752,7 +753,7 @@ export function PerpBottomPanel({
               type="button"
               onClick={() => setActiveTab('history')}
               className={clsx(
-                'rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors max-tablet:min-h-[44px] max-tablet:px-4',
+                'rounded-[8px] px-3 text-[11px] font-semibold uppercase tracking-[0.8px] transition-colors max-tablet:relative max-tablet:after:absolute max-tablet:after:-inset-y-2 max-tablet:after:inset-x-0',
                 activeTab === 'history'
                   ? isV2
                     ? 'h-[30px] border border-[#c9a962] bg-transparent text-[#c9a962]'
@@ -771,26 +772,33 @@ export function PerpBottomPanel({
                 ? 'One row per token — each leg tagged spot or perp, hedged across DEXs'
                 : 'Paired long + short fills per vault action'}
             </p>
-            <ChevronDown
+            {/* Phone only: Figma "Icon / Chevron Up 16" -- points at where the drawer goes. */}
+            <AppIcon
+              src={appIcons.chevronUp16}
+              size={16}
               className={clsx(
-                'h-4 w-4 text-[#8f90a1] transition-transform max-tablet:block tablet:hidden',
+                'text-[#838492] transition-transform tablet:hidden',
                 expanded && 'rotate-180',
               )}
-              aria-hidden
             />
           </div>
         </div>
 
         <div
           className={`transition-[height] duration-300 ease-out ${
-            expanded ? 'h-[42vh]' : 'h-[140px] max-tablet:h-[120px]'
+            expanded ? 'h-[42vh]' : 'h-[140px] max-tablet:h-[34px]'
           }`}
         >
-          <div className="h-full overflow-x-auto overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div
+            className={clsx(
+              'h-full overflow-x-auto overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+              !expanded && 'max-tablet:overflow-y-hidden',
+            )}
+          >
             <div className={minTableWidth}>
               <div
                 className={clsx(
-                  'sticky top-0 z-[2] border-b px-3 py-2.5 tablet:px-4',
+                  'sticky top-0 z-[2] border-b px-3 py-2.5 max-tablet:px-4 tablet:px-4',
                   activeTab === 'positions' ? positionsGrid : historyGrid,
                   headerBorder,
                   headerBg,
@@ -807,7 +815,7 @@ export function PerpBottomPanel({
                 ))}
               </div>
 
-              <div className="px-3 py-1.5 tablet:px-4">
+              <div className="px-3 py-1.5 max-tablet:px-4 tablet:px-4">
                 {activeTab === 'positions' &&
                   POSITION_PAIRS.map(pair => {
                     const net = pair.long.pnlValue + pair.short.pnlValue;

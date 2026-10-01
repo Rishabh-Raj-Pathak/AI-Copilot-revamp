@@ -7,9 +7,10 @@ import {
   useState,
 } from "react";
 import "../../design-system/vaults/index.css";
-import CopilotBottomNav from "../terminal/CopilotBottomNav.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
-import VaultsMobileNavBar from "../terminal/VaultsMobileNavBar.jsx";
+import AppTopBar from "../mobile/AppTopBar.jsx";
+import useIsMobile from "../mobile/useIsMobile.js";
+import MobileAlphaAgents from "../mobile/agents/MobileAlphaAgents.jsx";
 import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
 import VaultsHero from "./VaultsHero.jsx";
@@ -82,9 +83,12 @@ export default function VaultsPage({
   const [dexId, setDexId] = useState("all");
   const [rowUi, setRowUi] = useState(buildInitialRowUi);
   const { getVaultHealthSync, openAgentLogs } = useAgentLogs();
+  const isMobile = useIsMobile();
 
   const dexIdRef = useRef(dexId);
-  dexIdRef.current = dexId;
+  useLayoutEffect(() => {
+    dexIdRef.current = dexId;
+  });
 
   const pendingVaultTourAdvanceRef = useRef(false);
 
@@ -107,7 +111,7 @@ export default function VaultsPage({
   useEffect(() => {
     if (isVaultsTourCompleted()) return;
     let cancelled = false;
-    setViewMode("list");
+    // Mount-only, and viewMode starts as "list" -- nothing to switch.
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (cancelled) return;
@@ -123,7 +127,9 @@ export default function VaultsPage({
   useEffect(() => {
     if (!runProductTourOnEnter) return;
     onProductTourEnterConsumed?.();
-    runVaultsProductTour();
+    // Next frame, so the list-mode switch inside is not a synchronous effect update.
+    // Not cancelled on cleanup: consuming the flag re-runs this effect at once.
+    requestAnimationFrame(runVaultsProductTour);
   }, [
     runProductTourOnEnter,
     onProductTourEnterConsumed,
@@ -205,12 +211,33 @@ export default function VaultsPage({
     [filteredAvailable, rowUi],
   );
 
+  /*
+   * Phone: Figma "Agents / Alpha Agents -- Full Page" (953:4116) -- app top bar over a
+   * scroll area that clears the global tab bar. Same state and handlers as below, so
+   * the product tour, venue filter and activation flow are shared with desktop.
+   */
+  if (isMobile) {
+    return (
+      <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0c0a08] text-white">
+        <AppTopBar />
+        <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
+          <MobileAlphaAgents
+            dexTabs={dexTabs}
+            dexId={dexId}
+            onDexChange={handleDexChange}
+            activated={activatedVaultsOrdered}
+            featured={inactiveFeatured}
+            available={inactiveAvailable}
+            rowUi={rowUi}
+            onPatch={patchRow}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
-      <VaultsMobileNavBar
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-      />
+    <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">
       <HeaderTerminal
         activeNavItem="Vaults"
         vaultView="featured"
@@ -316,20 +343,6 @@ export default function VaultsPage({
         </div>
       </div>
 
-      <CopilotBottomNav
-        activeId="vaults"
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-        onOpenCompete={onOpenCompete}
-        onNavClick={(id) => {
-          if (id === "copilot") onOpenCopilot?.();
-          if (id === "rewards") onOpenRewards?.();
-          if (id === "kol") onOpenRewards?.("kol");
-        }}
-        onOpenSupport={onOpenSupport}
-        onCopilotTutorial={onOpenCopilotTutorial}
-        onVaultTutorial={runVaultsProductTour}
-      />
     </div>
   );
 }

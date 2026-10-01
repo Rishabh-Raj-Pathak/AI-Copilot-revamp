@@ -61,7 +61,12 @@ function IconExitLead() {
   );
 }
 
-const ABOUT_STRATEGY =
+/*
+ * Thesis content. Exported so the phone backtest sheet
+ * (`mobile/copilot/CopilotBacktestSheet.jsx`) reads the same copy and figures
+ * instead of keeping a second copy that drifts.
+ */
+export const ABOUT_STRATEGY =
   "A 15-minute trend-continuation strategy that enters long after a confirmed breakout on rising volume, with momentum, OI growth, and funding all aligned. Entries cluster within a tight range so slippage stays predictable. Exits use a 1×ATR stop on the 1h close and a partial take-profit when 4h RSI cools below 70. Best in trending regimes — it skips ranging tape and reduces size when broader-market signals diverge.";
 
 const METRICS = [
@@ -75,9 +80,42 @@ const METRICS = [
   { label: "Stop Loss", value: "$0.104842", valueClass: "text-[#E04444]" },
 ] as const;
 
+export const THESIS_SUMMARY =
+  "Strong uptrend with OI growth and positive funding";
+
+export const THESIS_JUSTIFICATIONS = [
+  "24h OI increased 103.25% showing capital inflow",
+  "1h MACD histogram positive (+0.00086)",
+  "7.5% above 20-EMA with parabolic structure",
+  "$1M bid liquidity at 0.25% depth",
+];
+
+export const THESIS_EXIT_TRIGGERS = [
+  "1h close below 0.105 (1×ATR stop)",
+  "4h RSI crosses below 70",
+];
+
+export const THESIS_SETUP_DETAILS = {
+  strategyType: "Trend continuation",
+  timeframe: "15m",
+  leverage: "10× Isolated",
+  orderType: "Market",
+  takeProfitPct: "+26.43%",
+  stopLossPct: "-45.06%",
+  projectedRR: "1 : 0.55",
+};
+
+export const THESIS_BACKTEST_STATS = {
+  totalTrades: "2,184",
+  avgRealisedRR: "1 : 0.71",
+  winRate: "65.2%",
+  sharpe: "1.62",
+  expectedReturnPer1000: "+$3.42",
+};
+
 type WinRateRange = "1D" | "7D" | "ALL";
 
-const WIN_RATE_BY_RANGE: Record<WinRateRange, string> = {
+export const WIN_RATE_BY_RANGE: Record<WinRateRange, string> = {
   "1D": "72.4%",
   "7D": "68.0%",
   ALL: "65.2%",
@@ -89,7 +127,7 @@ const WIN_RATE_RANGE_OPTIONS = [
   { key: "ALL", label: "All" },
 ] as const;
 
-const CHART_POINTS = [
+export const CHART_POINTS = [
   { x: 40, v: 55.0, label: "Dec 19" },
   { x: 180, v: 58.5, label: "Jan 16" },
   { x: 320, v: 62.0, label: "Feb 20" },
@@ -263,7 +301,7 @@ function AiCopilotThesisPanel({
             Winning thesis
           </h2>
           <p className="text-data leading-relaxed text-[#D1D5DB]">
-            Strong uptrend with OI growth and positive funding
+            {THESIS_SUMMARY}
           </p>
         </section>
 
@@ -275,12 +313,7 @@ function AiCopilotThesisPanel({
               Justification
             </h3>
             <ul className="flex flex-col gap-2.5">
-              {[
-                "24h OI increased 103.25% showing capital inflow",
-                "1h MACD histogram positive (+0.00086)",
-                "7.5% above 20-EMA with parabolic structure",
-                "$1M bid liquidity at 0.25% depth",
-              ].map((t) => (
+              {THESIS_JUSTIFICATIONS.map((t) => (
                 <li
                   key={t}
                   className="flex items-start gap-2 text-data leading-snug text-[#bfbfbf]"
@@ -298,10 +331,7 @@ function AiCopilotThesisPanel({
               Exit triggers
             </h3>
             <ul className="flex flex-col gap-2.5">
-              {[
-                "1h close below 0.105 (1×ATR stop)",
-                "4h RSI crosses below 70",
-              ].map((t) => (
+              {THESIS_EXIT_TRIGGERS.map((t) => (
                 <li
                   key={t}
                   className="flex items-start gap-2 text-data leading-snug text-[#bfbfbf]"
@@ -324,23 +354,23 @@ function AiCopilotThesisPanel({
             <dl className="flex flex-col gap-2.5 text-data">
               <Row
                 label="Strategy type"
-                value="Trend continuation"
+                value={THESIS_SETUP_DETAILS.strategyType}
                 valueClass="font-medium text-white"
               />
-              <Row label="Timeframe" value="15m" />
-              <Row label="Leverage" value="10× Isolated" />
-              <Row label="Order type" value="Market" />
+              <Row label="Timeframe" value={THESIS_SETUP_DETAILS.timeframe} />
+              <Row label="Leverage" value={THESIS_SETUP_DETAILS.leverage} />
+              <Row label="Order type" value={THESIS_SETUP_DETAILS.orderType} />
               <Row
                 label="Take Profit (%)"
-                value="+26.43%"
+                value={THESIS_SETUP_DETAILS.takeProfitPct}
                 valueClass="text-[#18F2A3]"
               />
               <Row
                 label="Stop Loss (%)"
-                value="-45.06%"
+                value={THESIS_SETUP_DETAILS.stopLossPct}
                 valueClass="text-[#E04444]"
               />
-              <Row label="Projected R:R" value="1 : 0.55" />
+              <Row label="Projected R:R" value={THESIS_SETUP_DETAILS.projectedRR} />
             </dl>
           </div>
           <div
@@ -385,21 +415,24 @@ function AiCopilotThesisPanel({
                   </dd>
                 </div>
               </div>
-              <Row label="Backtest total trades" value="2,184" />
+              <Row
+                label="Backtest total trades"
+                value={THESIS_BACKTEST_STATS.totalTrades}
+              />
               <Row
                 label="Avg realised R:R"
-                value="1 : 0.71"
+                value={THESIS_BACKTEST_STATS.avgRealisedRR}
                 valueClass="text-[#18F2A3]"
               />
               <Row
                 label="Backtest win rate"
-                value="65.2%"
+                value={THESIS_BACKTEST_STATS.winRate}
                 valueClass="text-[#18F2A3]"
               />
-              <Row label="Backtest Sharpe" value="1.62" />
+              <Row label="Backtest Sharpe" value={THESIS_BACKTEST_STATS.sharpe} />
               <Row
                 label="Expected Return / $1000"
-                value="+$3.42"
+                value={THESIS_BACKTEST_STATS.expectedReturnPer1000}
                 valueClass="text-[#18F2A3]"
               />
             </dl>

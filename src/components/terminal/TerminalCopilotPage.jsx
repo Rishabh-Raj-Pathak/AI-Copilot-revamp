@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProfileCompletionBanner from "../profile/ProfileCompletionBanner.jsx";
 import { useProfile } from "../profile/ProfileContext.jsx";
-import { openSetupShare } from "../../lib/share.js";
+import { openSetupShare, setupShareText } from "../../lib/share.js";
 import HeaderTerminal from "./HeaderTerminal.jsx";
 import CopilotMobileHeader from "./CopilotMobileHeader.jsx";
-import CopilotBottomNav from "./CopilotBottomNav.jsx";
 import MarketFiltersBar from "./MarketFiltersBar.jsx";
 import CopilotSuggestionsEmpty from "./CopilotSuggestionsEmpty.jsx";
 import CopilotSuggestionCard from "./suggestion/CopilotSuggestionCard.jsx";
@@ -15,11 +14,20 @@ import { AiCopilotThesisModal } from "./AiCopilotThesisModal.tsx";
 import CopilotTutorialToast from "./CopilotTutorialToast.jsx";
 import CopilotMobileTourBar from "./CopilotMobileTourBar.jsx";
 import { isStrategyCopilotView } from "./strategyTrading/CopilotNavDropdown.jsx";
-import {
-  StrategyCopilotProvider,
-  useStrategyCopilot,
-} from "./strategyTrading/StrategyCopilotContext.jsx";
+import { StrategyCopilotProvider } from "./strategyTrading/StrategyCopilotContext.jsx";
 import StrategyTradingPage from "./strategyTrading/StrategyTradingPage.jsx";
+import useIsMobile from "../mobile/useIsMobile.js";
+import { useAppToast } from "../mobile/appToastContext.js";
+import TradeTicketSheet from "../mobile/trade/TradeTicketSheet.jsx";
+import MobileCopilotFeed, {
+  MOBILE_POSITIONS_ANCHOR_ID,
+} from "../mobile/copilot/MobileCopilotFeed.jsx";
+import CopilotBacktestSheet from "../mobile/copilot/CopilotBacktestSheet.jsx";
+import {
+  ideaTicketBalance,
+  ideaTicketDefaults,
+  ideaTicketMarket,
+} from "../mobile/copilot/copilotIdeaData.js";
 import {
   NARROW_VIEWPORT_MEDIA,
   queryVisibleTourTarget,
@@ -91,7 +99,10 @@ export default function TerminalCopilotPage({
     /** @type {null | typeof COPILOT_TOUR_VARIANT_2} */ (null),
   );
   const [tutorialToastOpen, setTutorialToastOpen] = useState(false);
-  const [mobilePositionToastOpen, setMobilePositionToastOpen] = useState(false);
+  /* Phone shell (< 834px): the feed, trade ticket and backtest sheet. */
+  const isMobile = useIsMobile();
+  const toast = useAppToast();
+  const [mobileBacktestId, setMobileBacktestId] = useState(null);
   const [highlightMoreForTutorial, setHighlightMoreForTutorial] =
     useState(false);
   const [showMoreTutorialHint, setShowMoreTutorialHint] = useState(false);
@@ -121,7 +132,7 @@ export default function TerminalCopilotPage({
   const [listRefreshing, setListRefreshing] = useState(false);
   const lensChangeRef = useRef(false);
   const [expireSec, setExpireSec] = useState(0);
-  const [stats, setStats] = useState({
+  const [, setStats] = useState({
     volume: 27_960_000,
     trades: 10_180,
     rewards: 8_580,
@@ -209,6 +220,9 @@ export default function TerminalCopilotPage({
       strategyId: selectedStrategyId,
       categoryId: activeFilter,
     })[0]?.id;
+    // The tour (driver.js) is the external system here: its trade steps own
+    // the phone ticket, so the effect mirrors the step into page state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!selectedId && tourSetupId) setSelectedId(tourSetupId);
     setMobileDetailsSheetDismissed(false);
   }, [
@@ -575,15 +589,24 @@ export default function TerminalCopilotPage({
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (isNarrowViewport) {
-          setMobilePositionToastOpen(true);
-          window.setTimeout(() => setMobilePositionToastOpen(false), 6000);
+          toast.show({
+            title: "Demo position added",
+            message: "Track it under Positions below the trade ideas.",
+            action: {
+              label: "View",
+              onPress: () =>
+                document
+                  .getElementById(MOBILE_POSITIONS_ANCHOR_ID)
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            },
+          });
         } else {
           setHighlightOpenedPositionRow(true);
           window.setTimeout(() => setHighlightOpenedPositionRow(false), 2800);
         }
       });
     });
-  }, [tourFirstTradeDemo, isNarrowViewport]);
+  }, [tourFirstTradeDemo, isNarrowViewport, toast]);
 
   const handleOpenTradeCtaClick = useCallback(() => {
     advanceCopilotTourToPositionsFromOpenTradeClick();
@@ -622,8 +645,78 @@ export default function TerminalCopilotPage({
     }));
   };
 
+  /*
+   * Phone: a card tap always opens the trade ticket (a second tap re-opens it
+   * rather than deselecting, as a native list does). During the feed steps of
+   * the tour the card is only selected, so the spotlight stays on the list.
+   */
+  const handleMobileIdeaOpen = (id) => {
+    const onMobileFeedTourStep =
+      copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
+      copilotTourStepIndex >= 2 &&
+      copilotTourStepIndex <= 3;
+    setSelectedId(id);
+    if (!onMobileFeedTourStep) setMobileDetailsSheetDismissed(false);
+    if (
+      copilotTourVariant === COPILOT_TOUR_VARIANT_2 &&
+      copilotTourStepIndex >= 2 &&
+      copilotTourStepIndex <= 4
+    ) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => refreshCopilotTourIfActive());
+      });
+    }
+  };
+
+  /* Goes through `handleThesisOpenChange` so closing the sheet on the
+     Backtest tour step advances the tour. */
+  const handleMobileBacktest = (setup) => {
+    setMobileBacktestId(setup.id);
+    setThesisInstrumentTitle(`${setup.symbol}/USDC`);
+    handleThesisOpenChange(true);
+  };
+
+  /* The tour opens the sheet by title alone; fall back to the matching idea. */
+  const mobileBacktestSetup = (() => {
+    const byTitle = (s) => s && `${s.symbol}/USDC` === thesisInstrumentTitle;
+    const explicit = mobileBacktestId
+      ? COPILOT_SETUPS.find((s) => s.id === mobileBacktestId)
+      : null;
+    if (byTitle(explicit)) return explicit;
+    if (byTitle(selectedSetup)) return selectedSetup;
+    return visibleSetups.find(byTitle) ?? COPILOT_SETUPS.find(byTitle) ?? null;
+  })();
+
+  const handleMobileShare = async () => {
+    const text = setupShareText({ coin: selectedSetup?.symbol });
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "HyprEarn AI Copilot",
+          text,
+          url: window.location.origin,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${text} ${window.location.origin}`);
+      toast.show({
+        title: "Link copied",
+        message: "Paste it anywhere to share these ideas.",
+      });
+    } catch {
+      openSetupShare({ coin: selectedSetup?.symbol });
+    }
+  };
+
+  const mobileTicketOpen =
+    isMobile && !!selectedSetup && !mobileDetailsSheetDismissed;
+
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-x-hidden bg-black text-white max-tablet:pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+    <div className="flex h-dvh min-h-0 flex-col overflow-x-hidden bg-black text-white">
       <CopilotMobileHeader
         walletConnected={walletConnected}
         onWalletConnected={handleWalletConnected}
@@ -673,7 +766,32 @@ export default function TerminalCopilotPage({
             copilotView={copilotView}
             terminalPlatform={terminalPlatform}
           />
-          {!isStrategyCopilotView(copilotView) ? (
+          {!isStrategyCopilotView(copilotView) && isMobile ? (
+            <div
+              className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+              data-tour="copilot-suggestion-and-setup"
+            >
+              <MobileCopilotFeed
+                strategies={COPILOT_STRATEGIES}
+                selectedStrategyId={selectedStrategyId}
+                onStrategySelect={setSelectedStrategyId}
+                activeFilter={activeFilter}
+                onFilterChange={setActiveFilter}
+                expireSeconds={expireSec}
+                onRefresh={handleRefresh}
+                onShare={handleMobileShare}
+                setups={visibleSetups}
+                selectedId={selectedId}
+                listRefreshing={listRefreshing}
+                onOpenIdea={handleMobileIdeaOpen}
+                onBacktest={handleMobileBacktest}
+                emptyStrategyName={activeStrategy?.name ?? "AI"}
+                onSwitchStrategy={handleCycleStrategy}
+                walletConnected={walletConnected}
+              />
+            </div>
+          ) : null}
+          {!isStrategyCopilotView(copilotView) && !isMobile ? (
       <div
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden tablet:flex-row"
         data-tour="copilot-suggestion-and-setup"
@@ -828,11 +946,48 @@ export default function TerminalCopilotPage({
         onViewPortfolio={dismissTradeSuccessModal}
         onShareSetup={handleShareSetup}
       />
-      <AiCopilotThesisModal
-        open={thesisOpen}
-        onOpenChange={handleThesisOpenChange}
-        instrumentTitle={thesisInstrumentTitle}
-      />
+      {isMobile ? (
+        <>
+          {/* Phone trade ticket — replaces the full-screen DetailsPanel overlay. */}
+          <TradeTicketSheet
+            open={mobileTicketOpen}
+            onClose={() => setMobileDetailsSheetDismissed(true)}
+            market={selectedSetup ? ideaTicketMarket(selectedSetup) : undefined}
+            defaults={
+              selectedSetup
+                ? ideaTicketDefaults(selectedSetup, { walletConnected })
+                : undefined
+            }
+            balance={
+              selectedSetup
+                ? ideaTicketBalance(selectedSetup, walletConnected)
+                : undefined
+            }
+            walletConnected={walletConnected}
+            onConnect={handleWalletConnected}
+            onSubmit={() => {
+              setMobileDetailsSheetDismissed(true);
+              handleOpenTradeCtaClick();
+            }}
+          />
+          <CopilotBacktestSheet
+            open={thesisOpen}
+            onClose={() => handleThesisOpenChange(false)}
+            setup={mobileBacktestSetup}
+            strategy={
+              mobileBacktestSetup
+                ? getCopilotStrategyById(mobileBacktestSetup.strategyId)
+                : null
+            }
+          />
+        </>
+      ) : (
+        <AiCopilotThesisModal
+          open={thesisOpen}
+          onOpenChange={handleThesisOpenChange}
+          instrumentTitle={thesisInstrumentTitle}
+        />
+      )}
       {isNarrowViewport &&
       isCopilotProductTourActive() &&
       copilotTourStepIndex >= 0 ? (
@@ -847,25 +1002,6 @@ export default function TerminalCopilotPage({
       <CopilotTutorialToast
         open={tutorialToastOpen}
         onDismiss={() => setTutorialToastOpen(false)}
-      />
-      <CopilotTutorialToast
-        open={mobilePositionToastOpen}
-        variant="position-added"
-        onDismiss={() => setMobilePositionToastOpen(false)}
-      />
-      <CopilotBottomNav
-        activeId="copilot"
-        vaultView="featured"
-        onVaultViewChange={onVaultViewChange}
-        onNavClick={(id) => {
-          if (id === "vaults") onOpenVaults?.();
-          if (id === "rewards") onOpenRewards?.();
-          if (id === "kol") onOpenRewards?.("kol");
-        }}
-        onOpenSupport={onOpenSupport}
-        onOpenCompete={onOpenCompete}
-        onCopilotTutorial={runCopilotTutorial}
-        onVaultTutorial={onOpenVaultTutorial}
       />
     </div>
   );

@@ -1,6 +1,8 @@
 import { CandlestickChart, Gem, Sparkles, TrendingUp } from 'lucide-react'
 import CopilotDiscoveryPanel from './CopilotDiscoveryPanel.jsx'
 import SuggestionToolbar from './SuggestionToolbar.jsx'
+import useIsMobile from '../mobile/useIsMobile.js'
+import CopilotStrategyBar from '../mobile/copilot/CopilotStrategyBar.jsx'
 
 const categoryFilterDefs = [
   { id: 'bluechip', label: 'Bluechip', icon: Gem },
@@ -142,7 +144,9 @@ export default function MarketFiltersBar({
   strategies,
   selectedStrategyId,
   onStrategySelect,
+  onShare,
 }) {
+  const isMobile = useIsMobile()
   const showUtilities =
     expireSeconds !== undefined && typeof onRefresh === 'function'
   const showStrategy =
@@ -163,24 +167,21 @@ export default function MarketFiltersBar({
 
   return (
     <div className="flex w-full shrink-0 flex-col">
-      {/* Mobile */}
-      <div className="flex flex-col max-tablet:flex tablet:hidden">
-        <div className="sticky top-0 z-20 border-b border-[#242424] bg-black">
-          <div className="px-3 py-2.5">
-            {showStrategy ? (
-              renderDiscoveryPanel(panelProps)
-            ) : (
-              <MarketsRow
-                defs={categoryFilterDefs}
-                activeFilter={activeFilter}
-                onFilterChange={onFilterChange}
-                expireSeconds={expireSeconds}
-                onRefresh={onRefresh}
-              />
-            )}
-          </div>
+      {/* Phone — Figma "Strategy Bar" (938:1190), from the mobile kit */}
+      {isMobile ? (
+        <div className="tablet:hidden">
+          <CopilotStrategyBar
+            strategies={showStrategy ? strategies : undefined}
+            selectedStrategyId={selectedStrategyId}
+            onStrategySelect={onStrategySelect}
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+            expireSeconds={expireSeconds}
+            onRefresh={onRefresh}
+            onShare={onShare}
+          />
         </div>
-      </div>
+      ) : null}
 
       {/* Desktop */}
       <div className="hidden border-b border-[#242424] px-3 py-2 sm:px-4 tablet:block">

@@ -4,6 +4,8 @@ import { useProfile } from "../profile/ProfileContext.jsx";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import TradeSuccessModal from "../terminal/TradeSuccessModal.jsx";
 import { openSetupShare } from "../../lib/share.js";
+import useIsMobile from "../mobile/useIsMobile.js";
+import MobileTradePage from "../mobile/trade/MobileTradePage.jsx";
 import TradeAlertsBar from "./TradeAlertsBar.jsx";
 import TradeBottomPanel from "./TradeBottomPanel.jsx";
 import TradeChartPanel from "./TradeChartPanel.jsx";
@@ -29,6 +31,7 @@ export default function TradePage({
   const [coin, setCoin] = useState(DEFAULT_COIN);
   const [successOpen, setSuccessOpen] = useState(false);
   const { socials } = useProfile();
+  const isMobile = useIsMobile();
 
   /* Trading type scale — see design-tokens.css and TerminalCopilotPage. */
   useEffect(() => {
@@ -44,6 +47,22 @@ export default function TradePage({
     if (socials.x) openSetupShare({ coin });
     else onOpenProfile?.();
   };
+
+  /* Phone app layout (Figma "03 Trade"); the desktop terminal below is untouched. */
+  if (isMobile) {
+    return (
+      <MobileTradePage
+        coin={coin}
+        onCoinChange={setCoin}
+        walletConnected={walletConnected}
+        onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onOpenProfile={onOpenProfile}
+        onTerminalPlatformChange={onTerminalPlatformChange}
+        onShareSetup={handleShareSetup}
+      />
+    );
+  }
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-black text-white">

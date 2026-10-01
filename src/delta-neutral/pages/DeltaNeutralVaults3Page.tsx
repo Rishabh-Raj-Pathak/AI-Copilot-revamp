@@ -9,6 +9,11 @@ import { PerpBottomPanel } from '../components/PerpBottomPanel';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
 import { walletForDex } from '../utils/wallet';
+import useIsMobile from '../../components/mobile/useIsMobile.js';
+import { useMobileApp } from '../../components/mobile/MobileAppContext.js';
+import { useAppToast } from '../../components/mobile/appToastContext.js';
+import MobileDnHero from '../../components/mobile/agents/MobileDnHero.jsx';
+import MobileDnActivePositions from '../../components/mobile/agents/MobileDnActivePositions.jsx';
 
 type ActiveVaultTab = 'all' | 'category' | 'token';
 
@@ -231,11 +236,26 @@ const PLATFORM_METRIC_EXPLANATIONS = [
   },
 ];
 
+/** The stat tiles' figures, for the phone's metrics sheet -- Figma hides the tiles there. */
+const PLATFORM_METRIC_VALUES: Record<string, string> = {
+  'Total Volume': '$128.4M',
+  'Yield Distributed': '$6.2M',
+  'Hedge Uptime': '99.94%',
+};
+
+const PLATFORM_STATS_MOBILE = PLATFORM_METRIC_EXPLANATIONS.map(item => ({
+  ...item,
+  value: PLATFORM_METRIC_VALUES[item.title],
+}));
+
 export function DeltaNeutralVaults3Page() {
   const [vaults, setVaults] = useState<ActiveVaultCardModel[]>(() => seedVaults.map(withVaultWallets));
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [platformMetricsOpen, setPlatformMetricsOpen] = useState(false);
   const [activeVaultTab, setActiveVaultTab] = useState<ActiveVaultTab>('all');
+  const isMobile = useIsMobile();
+  const app = useMobileApp();
+  const toast = useAppToast();
 
   const filteredVaults =
     activeVaultTab === 'all'
@@ -247,6 +267,9 @@ export function DeltaNeutralVaults3Page() {
   const handleActivate = (payload: DeltaVaultBuilderResult) => {
     setVaults(prev => [resultToVaultModel(payload), ...prev].slice(0, 6));
     setExpandedId(null);
+    if (isMobile) {
+      toast.show({ title: 'Vault opened', message: `${payload.pair} is now live.`, tone: 'success' });
+    }
   };
 
   const handleStop = (id: string) => {
@@ -324,6 +347,35 @@ export function DeltaNeutralVaults3Page() {
         </AnimatePresence>
       </div>
     ));
+
+  /*
+    Phone: Figma "Agents / Delta Neutral -- Full Page" (951:4048). Same vault state and
+    handlers as below; the hero, active-positions block and builder swap to their phone
+    layouts. A disconnected wallet has no positions to list, so the seeded vaults only
+    appear once one is connected (Figma's empty row, 952:4146).
+  */
+  if (isMobile) {
+    const phoneVaults = app.walletConnected ? filteredVaults : [];
+    return (
+      <>
+        <main className="flex w-full flex-col gap-4 pb-[113px]">
+          <MobileDnHero stats={PLATFORM_STATS_MOBILE} />
+          <DeltaVaultBuilder onActivate={handleActivate} summaryPlacement="market-strip" />
+          <MobileDnActivePositions
+            group={activeVaultTab}
+            onGroupChange={setActiveVaultTab}
+            isEmpty={phoneVaults.length === 0}
+          >
+            {renderVaultRows([
+              ...phoneVaults.filter(v => v.marketType === 'category'),
+              ...phoneVaults.filter(v => v.marketType === 'token'),
+            ])}
+          </MobileDnActivePositions>
+        </main>
+        <PerpBottomPanel />
+      </>
+    );
+  }
 
   return (
     <>
