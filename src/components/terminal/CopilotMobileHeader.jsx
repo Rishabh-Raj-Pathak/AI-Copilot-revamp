@@ -1,50 +1,23 @@
-import ConnectWalletButton from "./ConnectWalletButton.jsx";
-import WalletMenu from "./WalletMenu.jsx";
-import { terminalAssets as a } from "../../figma/terminalAssets.js";
+import AppTopBar from "../mobile/AppTopBar.jsx";
 
-function Logo() {
-  return (
-    <div className="flex h-[29px] shrink-0 items-center gap-2">
-      <div className="relative h-5 w-[15px] shrink-0">
-        <img
-          alt=""
-          className="absolute inset-0 size-full max-w-none"
-          src={a.logoMark}
-        />
-      </div>
-      <p className="whitespace-nowrap text-white">
-        {/* Brand lockup — exempt from the type scale (see TYPE-SCALE.md). */}
-        <span className="text-[18px] font-semibold leading-[1.2]">Hypr</span>
-        <span className="bg-gradient-to-r from-[#f7bb08] from-[65.388%] to-[#2fffce] bg-clip-text text-[18px] font-semibold leading-[1.2] text-transparent">
-          Earn
-        </span>
-      </p>
-    </div>
-  );
-}
-
+/**
+ * Phone header for Copilot, Rewards and the other tab screens — the Figma
+ * "Top Bar" from the mobile app kit (`src/components/mobile`).
+ *
+ * Wallet state and navigation come from the shell context. The page handlers
+ * are still accepted so a page can attach its own side effects (the copilot
+ * tour listens for venue changes); anything not passed uses the shell default.
+ */
 export default function CopilotMobileHeader({
-  walletConnected,
   onWalletConnected,
   onWalletDisconnect,
-  onOpenProfile,
+  onTerminalPlatformChange,
 }) {
   return (
-    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#242424] bg-black px-3 py-3 max-tablet:flex tablet:hidden">
-      <div className="min-w-0 shrink-0" data-tour="copilot-overview">
-        <Logo />
-      </div>
-      <div data-tour="wallet-connect" className="shrink-0">
-        {walletConnected ? (
-          <WalletMenu
-            variant="mobile"
-            onOpenProfile={onOpenProfile}
-            onDisconnect={onWalletDisconnect}
-          />
-        ) : (
-          <ConnectWalletButton onConnect={() => onWalletConnected?.()} />
-        )}
-      </div>
-    </header>
+    <AppTopBar
+      onWalletConnected={onWalletConnected}
+      onWalletDisconnect={onWalletDisconnect}
+      onTerminalPlatformChange={onTerminalPlatformChange}
+    />
   );
 }

@@ -25,8 +25,8 @@ export const SUPPORT_RESPONSE_NOTE =
 
 /**
  * Contact channels, in priority order. Icons are presentation and stay in the
- * page component (see `CHANNEL_ICONS`), matching how `MoreSheet` keeps its
- * `DOC_ICONS` out of the link data.
+ * page component (see `CHANNEL_ICONS`), matching how `AppMoreSheet` keeps its
+ * `DOC_ICON` map out of the link data.
  */
 export const SUPPORT_CHANNELS = [
   {

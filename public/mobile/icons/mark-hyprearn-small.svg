@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="12" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon / Mark/HyprEarn Small">
+<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M0 14.6702C0 15.8906 1.4794 16.464 2.27459 15.5519L7.36688 9.71112C7.80528 9.20832 7.80528 8.45056 7.36688 7.94776L2.27459 2.10701C1.47939 1.19493 0 1.76838 0 2.9887V14.6702Z" fill="url(#paint0_linear_0_354)"/>
+<path id="Vector_2" d="M12 13.0113V1.32979C12 0.109478 10.5206 -0.463977 9.72544 0.448099L4.63312 6.28885C4.19472 6.79168 4.19472 7.54941 4.63312 8.05224L9.72544 13.893C10.5206 14.805 12 14.2316 12 13.0113Z" fill="url(#paint1_linear_0_354)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_354" x1="-2.34273e-07" y1="15.6666" x2="15.9402" y2="8.75864" gradientUnits="userSpaceOnUse">
+<stop offset="0.254832" stop-color="#F7BB08"/>
+<stop offset="1" stop-color="#2FFFCE"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_354" x1="3.4466e-07" y1="15.6666" x2="15.9402" y2="8.75864" gradientUnits="userSpaceOnUse">
+<stop offset="0.254832" stop-color="#F7BB08"/>
+<stop offset="1" stop-color="#2FFFCE"/>
+</linearGradient>
+</defs>
+</svg>

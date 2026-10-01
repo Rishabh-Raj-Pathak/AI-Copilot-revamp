@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { destroyCopilotProductTourIfStillActive } from "./copilot/copilotTour.js";
 import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
 import CompetePage from "./components/compete/CompetePage.jsx";
 import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
+import { pushHistoryLayer, releaseHistoryLayer } from "./components/mobile/appHistory.js";
+import AppTabBar from "./components/mobile/AppTabBar.jsx";
+import { AppToastProvider } from "./components/mobile/AppToast.jsx";
+import { MobileAppProvider, PUSHED_PAGES } from "./components/mobile/MobileAppContext.js";
+import MobilePageTransition from "./components/mobile/MobilePageTransition.jsx";
+import MobilePointsPage from "./components/mobile/points/MobilePointsPage.jsx";
+import DeleteAccountFlow from "./components/mobile/profile/DeleteAccountFlow.jsx";
 import ProfilePage from "./components/profile/ProfilePage.jsx";
 import { ProfileProvider } from "./components/profile/ProfileContext.jsx";
 import RewardsPage from "./components/rewards/RewardsPage.jsx";
@@ -13,6 +20,9 @@ import TradePage from "./components/trade/TradePage.jsx";
 import VaultsPage from "./components/vaults/VaultsPage.jsx";
 import { AgentLogsProvider } from "./components/vaults/agentLogs/AgentLogsContext.jsx";
 import { MOCK_WALLET_ADDRESS } from "./lib/wallet.js";
+
+/** Mock points balance shown once a wallet is connected (Figma "Top Bar / Connected"). */
+const MOCK_POINTS_BALANCE = 77.62;
 
 export default function App() {
   const [page, setPage] = useState("copilot");
@@ -24,6 +34,53 @@ export default function App() {
   const [profileReturnPage, setProfileReturnPage] = useState("copilot");
   /** Where the back arrow on the support page returns to. */
   const [supportReturnPage, setSupportReturnPage] = useState("copilot");
+  /** Phone tabs reopen the last sub-view they showed (Agents → DN or Alpha). */
+  const [lastAgentsPage, setLastAgentsPage] = useState("dn-vaults-1");
+  const [lastRewardsPage, setLastRewardsPage] = useState("rewards");
+  /**
+   * Phone back stack for pushed screens. Each entry owns one browser-history
+   * entry, so Android back / iOS swipe-back pops the screen like a native app.
+   * A ref, not state: it is only read inside event handlers.
+   */
+  const mobileStackRef = useRef([]);
+
+  // Rebuilt every render, so `page` is always the screen being left.
+  const mobileNavigate = (target) => {
+    const resolved =
+      target === "agents" ? lastAgentsPage : target === "rewards" ? lastRewardsPage : target;
+    const from = page;
+    if (resolved === from) return;
+
+    if (PUSHED_PAGES.has(resolved)) {
+      // Neither tour has anchors on a pushed screen; a live overlay would strand.
+      destroyCopilotProductTourIfStillActive();
+      destroyVaultsProductTourIfStillActive();
+      const entry = { page: from, layer: null };
+      entry.layer = pushHistoryLayer({
+        onPop: () => {
+          const stack = mobileStackRef.current;
+          const index = stack.indexOf(entry);
+          if (index === -1) return;
+          stack.splice(index);
+          setPage(entry.page);
+        },
+      });
+      mobileStackRef.current.push(entry);
+    } else {
+      // A tab switch resets the stack, like tapping a tab in a native app.
+      const entries = mobileStackRef.current.splice(0);
+      for (const entry of entries.reverse()) releaseHistoryLayer(entry.layer);
+      if (resolved === "vaults" || resolved.startsWith("dn-vaults")) setLastAgentsPage(resolved);
+      if (resolved === "rewards" || resolved === "kol") setLastRewardsPage(resolved);
+    }
+    setPage(resolved);
+  };
+
+  const mobileGoBack = () => {
+    const entry = mobileStackRef.current.pop();
+    if (entry) releaseHistoryLayer(entry.layer);
+    setPage(entry?.page ?? "copilot");
+  };
 
   /*
    * The nav menus hand back a VAULT_VIEWS id; this is the one place it becomes a page.
@@ -76,8 +133,42 @@ export default function App() {
     setPage(viewId === "kol" ? "kol" : "rewards");
   const openCompete = () => setPage("compete");
 
+  const runCopilotTutorialFromShell = () => {
+    destroyVaultsProductTourIfStillActive();
+    setRunCopilotTourOnEnter(true);
+    mobileNavigate("copilot");
+  };
+  const runVaultTutorialFromShell = () => {
+    destroyCopilotProductTourIfStillActive();
+    setRunVaultTourOnEnter(true);
+    mobileNavigate("vaults");
+  };
+
+  const mobileApp = {
+    page,
+    navigate: mobileNavigate,
+    goBack: mobileGoBack,
+    walletConnected,
+    address: MOCK_WALLET_ADDRESS,
+    connectWallet: () => setWalletConnected(true),
+    disconnectWallet: () => {
+      setWalletConnected(false);
+      // Profile and account screens describe a session that no longer exists.
+      if (page === "profile" || page === "delete-account") mobileGoBack();
+    },
+    terminalPlatform,
+    setTerminalPlatform,
+    pointsBalance: walletConnected ? MOCK_POINTS_BALANCE : 0,
+    runCopilotTutorial: runCopilotTutorialFromShell,
+    runVaultTutorial: runVaultTutorialFromShell,
+  };
+
   const content =
-    page === "support" ? (
+    page === "points" ? (
+      <MobilePointsPage />
+    ) : page === "delete-account" ? (
+      <DeleteAccountFlow />
+    ) : page === "support" ? (
       <SupportPage
         {...sharedWalletProps}
         onBack={leaveSupport}
@@ -200,8 +291,15 @@ export default function App() {
         walletConnected={walletConnected}
         address={MOCK_WALLET_ADDRESS}
       >
-        {content}
-        <InstallAppPrompt page={page} />
+        <MobileAppProvider value={mobileApp}>
+          <AppToastProvider>
+            <MobilePageTransition pageKey={page}>{content}</MobilePageTransition>
+            {/* One persistent phone tab bar (`tablet:hidden`); the delete flow
+                hides it so nothing competes with the destructive footer. */}
+            {page === "delete-account" ? null : <AppTabBar />}
+            <InstallAppPrompt page={page} />
+          </AppToastProvider>
+        </MobileAppProvider>
       </ProfileProvider>
     </AgentLogsProvider>
   );

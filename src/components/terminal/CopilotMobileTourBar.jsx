@@ -19,7 +19,7 @@ export default function CopilotMobileTourBar({
 
   const bottomClass = tradeSheetStep
     ? "bottom-[max(0.5rem,env(safe-area-inset-bottom))]"
-    : "bottom-[calc(4.25rem+env(safe-area-inset-bottom)+0.375rem)]";
+    : "bottom-[calc(var(--app-tab-bar-h)+0.375rem)]";
 
   return (
     <div

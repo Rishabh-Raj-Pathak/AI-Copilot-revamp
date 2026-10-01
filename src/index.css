@@ -1,8 +1,11 @@
 /* Onest is also preloaded in index.html; this import carries the full variable axis. */
 @import url("https://fonts.googleapis.com/css2?family=Onest:wght@100..900&display=swap");
+/* Mobile points balance + season pills only (Figma Points sheet). */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;700&family=JetBrains+Mono:wght@500&display=swap");
 @import "tailwindcss";
 @import "driver.js/dist/driver.css";
 @import "./styles/design-tokens.css";
+@import "./styles/mobile-app.css";
 @import "./delta-neutral/styles/theme.css";
 
 @source "../src/delta-neutral/**/*.{js,jsx,ts,tsx}";

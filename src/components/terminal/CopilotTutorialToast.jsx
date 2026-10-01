@@ -43,7 +43,7 @@ export default function CopilotTutorialToast({
 
   return (
     <div
-      className="pointer-events-auto fixed bottom-5 left-1/2 z-[130] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-[#3e2e00] bg-[#171200] px-4 py-3 shadow-lg max-tablet:bottom-[calc(4.75rem+env(safe-area-inset-bottom))]"
+      className="pointer-events-auto fixed bottom-5 left-1/2 z-[130] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-[#3e2e00] bg-[#171200] px-4 py-3 shadow-lg max-tablet:bottom-[calc(var(--app-tab-bar-h)+0.75rem)]"
       role="status"
       aria-live="polite"
     >

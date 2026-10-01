@@ -1,0 +1,158 @@
+/*
+ * HyprEarn mobile app shell — phone layout (< 834px) only.
+ *
+ * Source of truth: Figma `DoY28sP7SwidihlLGoGrEa`, page "HE App Web View"
+ * (707:1111). Colour names follow that file's variable collection
+ * ("bg/surface" → `app-surface`, "border/default" → `app-line`, ...) so a
+ * value can be traced back to the design without a lookup table.
+ *
+ * Only the `src/components/mobile/**` kit consumes these. Nothing here changes
+ * a desktop rule: the tokens are new names, and every behavioural rule sits
+ * inside the narrow-viewport media query.
+ */
+
+@theme inline {
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --color-app-bg: #000000; /* bg/app */
+  --color-app-surface: #0a0a0a; /* bg/surface */
+  --color-app-raised: #131313; /* bg/raised */
+  --color-app-subtle: #121212; /* bg/subtle */
+  --color-app-accent-faint: #171200; /* bg/accent-faint */
+  --color-app-accent-subtle: #3e2e00; /* bg/accent-subtle */
+  --color-app-points: #18130b; /* bg/points */
+  --color-app-positive-subtle: #05150c; /* bg/positive-subtle */
+  --color-app-negative-subtle: #260808; /* bg/negative-subtle */
+
+  /* ── Lines ────────────────────────────────────────────────── */
+  --color-app-line: #242424; /* border/default */
+  --color-app-line-strong: #454545; /* border/strong */
+  --color-app-line-accent: #584200; /* border/accent */
+  --color-app-line-accent-subtle: #2e2200; /* border/accent-subtle */
+  --color-app-line-points: #3a2a10; /* border/points */
+
+  /* ── Status / accent ──────────────────────────────────────── */
+  --color-app-accent: #f2b500; /* accent/primary */
+  --color-app-positive: #269755; /* status/positive */
+  --color-app-negative: #d53d3d; /* status/negative */
+  --color-app-sell: #e0484a; /* app/sell — destructive row label */
+  --color-app-mint: #00efa8; /* venue "active" dot + venue logo ring */
+
+  /* Ink ladder is shared with the trading scale: text-ink (#fff),
+     text-ink-muted (#bfbfbf), text-ink-subtle (#8f8f8f), text-ink-faint (#757575). */
+
+  /* ── App type scale (Figma "App/…" styles) ────────────────── */
+  --text-app-display: 1.5rem; /* 24 — page title (Compete, Delete your account?) */
+  --text-app-display--line-height: 1.2;
+  --text-app-title: 1.25rem; /* 20 — section title */
+  --text-app-title--line-height: 1.3;
+  --text-app-headline: 1rem; /* 16 — nav/sheet title, card title */
+  --text-app-headline--line-height: 1.5rem;
+  --text-app-button: 0.9375rem; /* 15 — Button / Large */
+  --text-app-button--line-height: 1.25rem;
+  --text-app-body: 0.875rem; /* 14 — App/Subhead, list rows */
+  --text-app-body--line-height: 1.1875rem;
+  --text-app-callout: 0.8125rem; /* 13 — supporting copy */
+  --text-app-callout--line-height: 1.125rem;
+  --text-app-caption: 0.75rem; /* 12 — pills, nav labels, meta rows */
+  --text-app-caption--line-height: 1rem;
+  --text-app-label: 0.6875rem; /* 11 — metric labels, tags */
+  --text-app-label--line-height: 0.875rem;
+  --text-app-micro: 0.625rem; /* 10 — badge */
+  --text-app-micro--line-height: 0.75rem;
+
+  /* ── Fonts ────────────────────────────────────────────────── */
+  --font-points: "Manrope", var(--ds-font-sans);
+  --font-app-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ── Shell metrics ────────────────────────────────────────── */
+  --radius-app-sheet: 1.25rem; /* 20 — sheet top corners */
+}
+
+:root {
+  /* Space the home indicator needs below a sheet / footer (Figma: 34px). */
+  --app-safe-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  /* Top bar: 56px of content under the status-bar inset (Figma 103 − 47). */
+  --app-top-bar-h: calc(3.5rem + env(safe-area-inset-top));
+  /* Tab bar: 6px top pad + 50.4px item + home-indicator pad. */
+  --app-tab-bar-h: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
+}
+
+@media (max-width: 833px) {
+  html {
+    /* No grey flash on tap — every control draws its own pressed state. */
+    -webkit-tap-highlight-color: transparent;
+    /* Stop iOS inflating text after a rotation. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    /* The shell owns scrolling; the document itself must not rubber-band
+       the tab bar off the bottom of the screen. */
+    overscroll-behavior-y: none;
+    background: #000;
+  }
+
+  /* Double-tap-to-zoom delays every tap by ~300ms on some webviews. */
+  button,
+  a,
+  [role="button"],
+  [role="tab"],
+  label {
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  /* Press feedback for app controls — a quick scale, like a native button. */
+  .app-pressable {
+    transition:
+      transform 120ms ease-out,
+      background-color 150ms ease-out,
+      opacity 150ms ease-out;
+  }
+  .app-pressable:active {
+    transform: scale(0.97);
+  }
+
+  /* Hide a horizontal scroller's bar but keep it scrollable. */
+  .app-no-scrollbar {
+    scrollbar-width: none;
+  }
+  .app-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Right-edge fade on a sideways-scrolling tab strip (Figma: "edge fade"). */
+  .app-edge-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
+
+  /* Monochrome Figma icon drawn through a mask so it takes `currentColor`. */
+  .app-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    background-color: currentColor;
+    -webkit-mask: var(--app-icon) center / contain no-repeat;
+    mask: var(--app-icon) center / contain no-repeat;
+  }
+
+  .app-gradient-brand {
+    background-image: linear-gradient(90deg, #f2b500 0%, #00f3b6 100%);
+  }
+
+  .app-scrim {
+    background: rgb(0 0 0 / 0.6);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-pressable,
+  .app-pressable:active {
+    transition: none;
+    transform: none;
+  }
+}

@@ -1,34 +1,39 @@
-const VAULTS_BOTTOM = "max-tablet:bottom-[max(1rem,env(safe-area-inset-bottom))]";
-
-const BOTTOM_CLASS = {
-  copilot: "max-tablet:bottom-[calc(4.75rem+env(safe-area-inset-bottom))]",
-  vaults: VAULTS_BOTTOM,
-  // Every Delta Neutral version, matched by prefix rather than listed: these ids are
-  // numbered now, and a v3 added to VAULT_VIEWS must not silently fall back to the
-  // copilot offset -- which sits 3rem higher and would float the button mid-page.
-  "dn-vaults-1": VAULTS_BOTTOM,
-  "dn-vaults-2": VAULTS_BOTTOM,
-};
+/**
+ * Floating "Install app" pill (phone only).
+ *
+ * The phone tab bar is now one global, fixed `AppTabBar` on every tab screen,
+ * so the pill always rides 12px above it — the same gap Figma gives toasts —
+ * instead of the old per-page offsets. On Agents it still lifts clear of an
+ * open strategy sheet, which publishes its height as `--vault-strategy-sheet-height`.
+ */
+const ABOVE_TAB_BAR = "calc(var(--app-tab-bar-h) + 0.75rem)";
 
 function isVaultsPage(page) {
   return page === "vaults" || page?.startsWith("dn-vaults");
 }
 
+/** Already running from the home screen — nothing left to install. */
+function isStandalone() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
 export default function InstallAppButton({ page = "copilot", onClick }) {
-  const bottomClass =
-    BOTTOM_CLASS[page] ?? (isVaultsPage(page) ? VAULTS_BOTTOM : BOTTOM_CLASS.copilot);
-  const vaultsStyle = isVaultsPage(page)
-      ? {
-          bottom:
-            "max(calc(var(--vault-strategy-sheet-height, 0px) + 0.75rem), max(1rem, env(safe-area-inset-bottom)))",
-        }
-      : undefined;
+  // The delete flow hides the tab bar and owns the whole screen.
+  if (page === "delete-account" || isStandalone()) return null;
+
+  const bottom = isVaultsPage(page)
+    ? `max(calc(var(--vault-strategy-sheet-height, 0px) + 0.75rem), ${ABOVE_TAB_BAR})`
+    : ABOVE_TAB_BAR;
 
   return (
     <button
       type="button"
-      className={`install-app-prompt-btn fixed right-4 left-auto z-[60] hidden max-tablet:flex items-center rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold text-[#f2b500] transition-[bottom,filter] duration-200 hover:brightness-110 ${isVaultsPage(page) ? "" : bottomClass}`}
-      style={vaultsStyle}
+      className="install-app-prompt-btn fixed right-4 left-auto z-[60] hidden max-tablet:flex items-center rounded-full border border-transparent px-3.5 py-2 text-xs font-semibold text-[#f2b500] transition-[bottom,filter] duration-200 hover:brightness-110"
+      style={{ bottom }}
       onClick={onClick}
       aria-label="Install HyprEarn on your home screen"
     >
