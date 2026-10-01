@@ -433,7 +433,7 @@ export default function MobileDnBuilder({
                     key={metric.label}
                     className={`flex min-w-0 flex-col gap-1 px-2.5 py-2 ${index > 0 ? "border-l border-white/[0.07]" : ""}`}
                   >
-                    <dt className="truncate text-[9px] uppercase leading-[11px] tracking-[0.6px] text-[#838492]">
+                    <dt className="line-clamp-2 min-h-[22px] text-[9px] uppercase leading-[11px] tracking-[0.6px] text-[#838492]">
                       {metric.label}
                     </dt>
                     <dd className={`truncate text-[13px] font-medium leading-4 ${metric.tone ?? "text-[#e8d5b5]"}`}>

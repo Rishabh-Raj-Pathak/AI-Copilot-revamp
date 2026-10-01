@@ -34,7 +34,6 @@ export default defineConfig([
        * how a lint rule gets switched off permanently.
        */
       'src/components/terminal/strategyTrading/**',
-      'src/components/terminal/VaultsMobileNavBar.jsx',
       'src/components/trade/TradeAlertsBar.jsx',
       'src/components/trade/TradeBottomPanel.jsx',
       'src/components/trade/TradeChartPanel.jsx',
