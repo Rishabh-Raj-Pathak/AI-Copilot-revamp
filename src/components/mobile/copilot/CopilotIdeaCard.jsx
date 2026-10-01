@@ -3,11 +3,13 @@ import { appIcons } from "../mobileAssets.js";
 import {
   GRADIENT_OUTLINE,
   chipValue,
-  formatEntryRange,
+  formatCompactRange,
+  formatPrice,
   ideaTokenIcon,
+  reviewHorizon,
 } from "./copilotIdeaData.js";
 
-/** Figma "Signal Pill" (937:1158) — tone picks the fill/ink pair. */
+/** Figma "Signal Pill" (937:1158) — tone picks the fill/ink pair. Used by the backtest sheet. */
 const PILL_TONES = {
   positive: "bg-app-positive-subtle text-app-positive",
   negative: "bg-app-negative-subtle text-app-negative",
@@ -53,29 +55,71 @@ export function TokenDisc({ setup, size = 24 }) {
 }
 
 /**
- * Figma "Trade Idea" card (939:1308; selected state 941:1463).
+ * Compact direction tag beside the symbol (18px, 11/500 — the positions panel's
+ * tag spec). Short text is lifted to #f06464 so 11–13px red on the #260808 tint
+ * clears 4.5:1; the token red (#d53d3d) measures ~4.0:1 there.
+ */
+function SideTag({ direction }) {
+  const short = direction === "short";
+  return (
+    <span
+      className={`inline-flex h-[18px] items-center rounded px-1.5 text-app-label font-medium ${
+        short ? "bg-app-negative-subtle text-[#f06464]" : "bg-app-positive-subtle text-app-positive"
+      }`}
+    >
+      {short ? "Short" : "Long"}
+    </span>
+  );
+}
+
+/** Label over value. The value carries the emphasis; the label stays quiet. */
+function Metric({ label, value, tone = "default", className = "" }) {
+  return (
+    <div className={`flex min-w-0 flex-col gap-0.5 ${className}`}>
+      <dt className="text-app-label text-ink-subtle">{label}</dt>
+      <dd
+        className={`truncate text-app-callout font-medium ${
+          tone === "positive" ? "text-app-positive" : tone === "accent" ? "text-app-accent" : "text-ink"
+        }`}
+      >
+        {value ?? "—"}
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * Phone trade-idea card (AI Copilot pilot).
  *
- * The whole card and its chevron open the trade ticket; Backtest opens the
- * backtest sheet. Selection is the gradient outline only — fill and type never
- * change, so the list doesn't reflow when the ticket closes.
+ * Reads in the order a trader scans: what (token, symbol, direction) and at
+ * what price → why (the AI's one-line thesis) → how good (win rate, R:R) →
+ * where and for how long (entry, review horizon) → act.
+ *
+ * The whole card opens the trade ticket — that is the primary action, now also
+ * spelled out as "Open long/short" in the direction's colour. Backtest is the
+ * quiet secondary action. Selection keeps the brand-gradient outline from the
+ * Figma card so the last-opened idea is findable after the ticket closes.
  */
 export default function CopilotIdeaCard({
   setup,
   selected = false,
+  dimmed = false,
   onOpen,
   onBacktest,
   backtestTourTarget = false,
 }) {
+  const short = setup.direction === "short";
   const win = chipValue(setup, "win");
   const rr = chipValue(setup, "rr");
-  const range = formatEntryRange(setup);
+  const range = formatCompactRange(setup);
+  const review = reviewHorizon(setup);
   const open = () => onOpen?.(setup.id);
 
   return (
     <article
       role="button"
       tabIndex={0}
-      aria-label={`${setup.title}. Open trade ticket`}
+      aria-label={`${setup.symbol} ${short ? "short" : "long"} at ${formatPrice(setup.price)}. ${setup.title}. Open trade ticket`}
       aria-current={selected ? "true" : undefined}
       onClick={open}
       onKeyDown={(e) => {
@@ -85,59 +129,60 @@ export default function CopilotIdeaCard({
           open();
         }
       }}
-      className={`flex cursor-pointer flex-col gap-4 rounded-2xl p-4 outline-none transition-transform duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-app-accent/60 ${
+      className={`flex cursor-pointer flex-col gap-3 rounded-xl p-3.5 outline-none transition-[transform,opacity] duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-app-accent/60 ${
         selected ? "" : "border border-app-line-accent-subtle bg-app-bg"
-      }`}
+      } ${dimmed ? "opacity-55" : ""}`}
       style={selected ? GRADIENT_OUTLINE : undefined}
     >
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start gap-3">
-          <TokenDisc setup={setup} />
-          <h3 className="min-w-0 flex-1 text-app-headline font-bold leading-6 tracking-[0.2px] text-ink">
-            {setup.title}
-          </h3>
-          <button
-            type="button"
-            aria-label={`Open ${setup.symbol} chart and trade ticket`}
-            onClick={(e) => {
-              e.stopPropagation();
-              open();
-            }}
-            className="app-pressable -my-2.5 -mx-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink active:bg-white/[0.06]"
-          >
-            <AppIcon src={appIcons.chevronRight24} size={24} />
-          </button>
+      <div className="flex items-center gap-2.5">
+        <TokenDisc setup={setup} size={28} />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <h3 className="truncate text-app-button font-semibold text-ink">{setup.symbol}</h3>
+          <SideTag direction={setup.direction} />
         </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-2">
-            <SidePill direction={setup.direction} />
-            {win ? <SignalPill tone="positive">Win rate {win}</SignalPill> : null}
-            {rr ? <SignalPill tone="warning">R:R {rr}</SignalPill> : null}
-          </div>
-          {range ? (
-            <div className="flex min-w-0">
-              <SignalPill tone="neutral" className="max-w-full truncate">
-                Range {range}
-              </SignalPill>
-            </div>
-          ) : null}
-        </div>
+        <span className="shrink-0 text-app-callout font-medium text-ink">
+          {formatPrice(setup.price)}
+        </span>
+        <AppIcon src={appIcons.chevronRight16} size={16} className="-mr-0.5 text-ink-subtle" />
       </div>
 
-      <button
-        type="button"
-        data-tour={backtestTourTarget ? "copilot-view-thesis" : undefined}
-        onClick={(e) => {
-          e.stopPropagation();
-          onBacktest?.(setup);
-        }}
-        className="app-pressable flex h-9 w-full items-center justify-center gap-1.5 rounded-md text-ink"
-        style={GRADIENT_OUTLINE}
-      >
-        <AppIcon src={appIcons.backtest16} size={16} />
-        <span className="text-app-body font-semibold leading-[18px]">Backtest</span>
-      </button>
+      <p className="line-clamp-2 text-app-callout text-ink-muted">{setup.title}</p>
+
+      <dl className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] gap-x-4 border-t border-app-line pt-3">
+        <Metric label="Win rate" value={win} tone="positive" />
+        <Metric label="R:R" value={rr} tone="accent" />
+        <Metric label="Entry" value={range} />
+        <Metric label="Review" value={review} className="text-right" />
+      </dl>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          data-tour={backtestTourTarget ? "copilot-view-thesis" : undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            onBacktest?.(setup);
+          }}
+          className="app-pressable flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-app-line bg-app-surface text-app-callout font-medium text-ink active:bg-white/[0.05]"
+        >
+          <AppIcon src={appIcons.backtest16} size={16} className="text-ink-muted" />
+          Backtest
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            open();
+          }}
+          className={`app-pressable flex h-10 flex-1 items-center justify-center rounded-lg border text-app-callout font-medium ${
+            short
+              ? "border-[#4a1414] bg-app-negative-subtle text-[#f06464]"
+              : "border-[#0f3a22] bg-app-positive-subtle text-app-positive"
+          }`}
+        >
+          Open {short ? "short" : "long"}
+        </button>
+      </div>
     </article>
   );
 }

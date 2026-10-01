@@ -220,6 +220,9 @@ export default function CopilotStrategySelector({
   onSelect,
   inline = false,
   onViewDetails,
+  /* Phone only: replace the bordered trigger (e.g. the copilot screen title menu).
+     Receives { label, strategy, open, disabled, onPress }. */
+  renderTrigger,
 }) {
   const isNarrow = useNarrowViewport();
   const listId = useId();
@@ -409,6 +412,15 @@ export default function CopilotStrategySelector({
     const label = active.shortLabel ?? active.name;
     return (
       <div ref={rootRef} className="min-w-0 shrink">
+        {renderTrigger ? (
+          renderTrigger({
+            label,
+            strategy: active,
+            open: sheetOpen,
+            disabled,
+            onPress: handleToggleMenu,
+          })
+        ) : (
         <button
           ref={triggerRef}
           type="button"
@@ -432,6 +444,7 @@ export default function CopilotStrategySelector({
             className={`transition-transform duration-200 ${sheetOpen ? "rotate-180" : ""}`}
           />
         </button>
+        )}
         <CopilotStrategySheet
           open={sheetOpen}
           mode={sheetMode}

@@ -16,6 +16,7 @@ import {
   openOrdersMock,
   orderHistoryMock,
   positionsMock,
+  SHOW_MOCK_WHEN_DISCONNECTED,
   tradeHistoryMock,
 } from "./positionsMockData.js";
 import {
@@ -249,11 +250,14 @@ export default function MobilePositionsPanel({
   walletConnected,
   source = "copilot",
   onPlaceOrder,
+  /** Optional: told the tab counts whenever they change (copilot segment badge). */
+  onCountsChange,
   className = "",
 }) {
   const app = useMobileApp();
   const toast = useAppToast();
-  const connected = walletConnected ?? app.walletConnected;
+  // Mock lists preview even signed out (see SHOW_MOCK_WHEN_DISCONNECTED).
+  const connected = (walletConnected ?? app.walletConnected) || SHOW_MOCK_WHEN_DISCONNECTED;
 
   const [tab, setTab] = useState("positions");
   const [positions, setPositions] = useState(positionsMock);
@@ -301,6 +305,13 @@ export default function MobilePositionsPanel({
         balance: balances.length,
       }
     : { positions: 0, openOrders: 0, orderHistory: 0, tradeHistory: 0, balance: 0 };
+
+  const countsKey = Object.values(counts).join(",");
+  useEffect(() => {
+    onCountsChange?.(counts);
+    // `counts` is rebuilt each render; `countsKey` is its value identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countsKey, onCountsChange]);
 
   /* -------------------------------------------------------------- actions */
 

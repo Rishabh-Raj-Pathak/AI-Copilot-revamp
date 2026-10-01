@@ -100,7 +100,48 @@ export const positionsMock = [
     sl: null,
     openedAt: at(0, "14:02:18"),
   },
+  {
+    id: "pos-avax",
+    coin: "AVAX",
+    direction: "short",
+    leverage: 5,
+    source: "copilot",
+    marginMode: "Isolated",
+    size: 60,
+    entryPrice: 10.42,
+    currentPrice: 10.27,
+    liqPrice: 12.45,
+    margin: 125.04,
+    funding: 0.08,
+    tp: 9.6,
+    sl: 11.1,
+    openedAt: at(1, "09:12:44"),
+  },
+  {
+    id: "pos-sp500",
+    coin: "SP500",
+    direction: "long",
+    leverage: 10,
+    source: "manual",
+    marginMode: "Cross",
+    size: 0.12,
+    entryPrice: 6604.2,
+    currentPrice: 6618.5,
+    liqPrice: 5976.8,
+    margin: 79.25,
+    funding: -0.04,
+    tp: 6800,
+    sl: null,
+    openedAt: at(0, "09:10:02"),
+  },
 ];
+
+/**
+ * Show the populated lists (Figma section 07) even before a wallet connects,
+ * so the panel previews with data. Set to `false` to restore the
+ * "Connect your wallet to view positions" state (Figma 938:1278).
+ */
+export const SHOW_MOCK_WHEN_DISCONNECTED = true;
 
 /* ------------------------------------------------------------ open orders */
 

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   AnimatePresence,
@@ -67,6 +67,33 @@ export function SheetHeader({
   );
 }
 
+/**
+ * Keyboard avoidance: while a sheet is open, track how much of the layout
+ * viewport the software keyboard covers (iOS overlays it instead of resizing),
+ * so the sheet can sit on top of the keyboard like a native form sheet —
+ * the "keyboard layout guide" idea from Apple's HIG. Returns 0 with no keyboard.
+ */
+function useKeyboardInset(active) {
+  const [inset, setInset] = useState({ bottom: 0, height: 0 });
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!active || !vv) return undefined;
+    const sync = () => {
+      const bottom = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      // Ignore sub-keyboard jitter (URL bar collapsing, rounding).
+      setInset(bottom > 80 ? { bottom, height: Math.round(vv.height) } : { bottom: 0, height: 0 });
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+    };
+  }, [active]);
+  return inset;
+}
+
 const SHEET_SPRING = { type: "spring", damping: 34, stiffness: 380, mass: 0.9 };
 const DISMISS_OFFSET = 96;
 const DISMISS_VELOCITY = 520;
@@ -99,6 +126,7 @@ export default function BottomSheet({
   ariaLabel,
 }) {
   const reduceMotion = useReducedMotion();
+  const keyboard = useKeyboardInset(open);
   const dragControls = useDragControls();
   const titleId = useId();
   const panelRef = useRef(null);
@@ -177,6 +205,15 @@ export default function BottomSheet({
                 ? "h-[calc(100dvh-env(safe-area-inset-top)-2.5rem)]"
                 : "max-h-[calc(100dvh-env(safe-area-inset-top)-2.5rem)]"
             } ${className}`}
+            style={
+              keyboard.bottom
+                ? {
+                    bottom: keyboard.bottom,
+                    // Whatever is left above the keyboard, minus a sliver of page.
+                    [fullHeight ? "height" : "maxHeight"]: `${keyboard.height - 16}px`,
+                  }
+                : undefined
+            }
             initial={{ y: reduceMotion ? 0 : "100%" }}
             animate={{ y: 0 }}
             exit={{ y: reduceMotion ? 0 : "100%" }}

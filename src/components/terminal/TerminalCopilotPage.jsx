@@ -20,7 +20,7 @@ import useIsMobile from "../mobile/useIsMobile.js";
 import { useAppToast } from "../mobile/appToastContext.js";
 import TradeTicketSheet from "../mobile/trade/TradeTicketSheet.jsx";
 import MobileCopilotFeed, {
-  MOBILE_POSITIONS_ANCHOR_ID,
+  SHOW_POSITIONS_EVENT,
 } from "../mobile/copilot/MobileCopilotFeed.jsx";
 import CopilotBacktestSheet from "../mobile/copilot/CopilotBacktestSheet.jsx";
 import {
@@ -591,13 +591,10 @@ export default function TerminalCopilotPage({
         if (isNarrowViewport) {
           toast.show({
             title: "Demo position added",
-            message: "Track it under Positions below the trade ideas.",
+            message: "Track it in the Positions tab.",
             action: {
               label: "View",
-              onPress: () =>
-                document
-                  .getElementById(MOBILE_POSITIONS_ANCHOR_ID)
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              onPress: () => window.dispatchEvent(new Event(SHOW_POSITIONS_EVENT)),
             },
           });
         } else {

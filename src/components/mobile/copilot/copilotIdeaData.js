@@ -86,6 +86,26 @@ export function formatEntryRange(setup) {
 }
 
 /**
+ * Entry range sized for a metric cell: `0.1129–0.1134`, `2,641–2,650`,
+ * `83,468–83,984`. The `$` and the cents above $1,000 are dropped — the cell
+ * label says "Entry" and the full figure is one tap away in the ticket.
+ */
+export function formatCompactRange(setup) {
+  const range = entryRange(setup);
+  if (!range) return null;
+  const price = Math.abs(Number(setup.price) || range[0]);
+  const decimals = price >= 1000 ? 0 : priceDecimals(price);
+  const fmt = (n) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return `${fmt(range[0])}–${fmt(range[1])}`;
+}
+
+/** `6h` from the "Review: 6h" chip — how long the setup is meant to be held. */
+export function reviewHorizon(setup) {
+  return chipValue(setup, "review");
+}
+
+/**
  * Entry, take-profit and stop-loss for an idea. The 4% / 2% offsets are the
  * seeds DetailsPanel puts in its TP/SL fields, mirrored for longs (DetailsPanel
  * seeds the short side for both directions).
@@ -149,4 +169,10 @@ export function formatMovePct(from, to) {
   if (!from) return "—";
   const pct = ((to - from) / from) * 100;
   return `${pct >= 0 ? "+" : "-"}${Math.abs(pct).toFixed(2)}%`;
+}
+
+/** `10:28` */
+export function formatClock(totalSec) {
+  const s = Math.max(0, Math.floor(totalSec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }

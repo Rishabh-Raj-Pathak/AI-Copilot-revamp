@@ -147,6 +147,38 @@
     -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
   }
+
+  /* A view that just became visible (segment switch) settles in, it doesn't pop. */
+  .app-fade-in {
+    animation: app-fade-in 160ms ease-out;
+  }
+
+  /* Skeleton placeholder while AI content is being generated. */
+  .app-skeleton {
+    background: linear-gradient(90deg, #121212 0%, #1c1c1c 50%, #121212 100%);
+    background-size: 200% 100%;
+    animation: app-skeleton 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes app-skeleton {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -154,5 +186,9 @@
   .app-pressable:active {
     transition: none;
     transform: none;
+  }
+  .app-fade-in,
+  .app-skeleton {
+    animation: none;
   }
 }
