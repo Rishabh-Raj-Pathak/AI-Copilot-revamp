@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { destroyCopilotProductTourIfStillActive } from "./copilot/copilotTour.js";
 import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
 import CompetePage from "./components/compete/CompetePage.jsx";
-import InstallAppPrompt from "./components/install/InstallAppPrompt.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
 import { pushHistoryLayer, releaseHistoryLayer } from "./components/mobile/appHistory.js";
 import AppTabBar from "./components/mobile/AppTabBar.jsx";
@@ -297,7 +296,6 @@ export default function App() {
             {/* One persistent phone tab bar (`tablet:hidden`); the delete flow
                 hides it so nothing competes with the destructive footer. */}
             {page === "delete-account" ? null : <AppTabBar />}
-            <InstallAppPrompt page={page} />
           </AppToastProvider>
         </MobileAppProvider>
       </ProfileProvider>
