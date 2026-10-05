@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import MobilePositionsPanel from "../positions/MobilePositionsPanel.jsx";
-import { useMobileApp } from "../MobileAppContext.js";
-import CopilotAboutSheet from "./CopilotAboutSheet.jsx";
 import CopilotIdeasView from "./CopilotIdeasView.jsx";
 import CopilotScreenHeader from "./CopilotScreenHeader.jsx";
 
@@ -27,7 +25,7 @@ const SCAN_MS = 650;
  *   │ Strategy · Medium risk                  │  app top bar on this screen
  *   │ Strategies 2  Portfolio 5    ⇪  ⟳ 9:50 │
  *   ├─────────────────────────────────────────┤
- *   │ chips · setups · disclaimer             │  Strategies: own scroll, pull to refresh
+ *   │ chips · setups                          │  Strategies: own scroll, pull to refresh
  *   │   — or —                                │
  *   │ positions panel (sticky sub-tabs)       │  Positions: own scroll, keeps state
  *   └ global tab bar ─────────────────────────┘
@@ -57,10 +55,8 @@ export default function MobileCopilotFeed({
   onWalletDisconnect,
   onTerminalPlatformChange,
 }) {
-  const app = useMobileApp();
   const [view, setView] = useState("ideas");
   const [scanning, setScanning] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
   const [positionsCount, setPositionsCount] = useState(null);
   const ideasScrollRef = useRef(null);
   const scanTimer = useRef(null);
@@ -124,7 +120,6 @@ export default function MobileCopilotFeed({
         onOpenIdea={onOpenIdea}
         onBacktest={onBacktest}
         onSwitchStrategy={onSwitchStrategy}
-        onAbout={() => setAboutOpen(true)}
       />
 
       <div
@@ -143,12 +138,6 @@ export default function MobileCopilotFeed({
           className="grow border-t-0!"
         />
       </div>
-
-      <CopilotAboutSheet
-        open={aboutOpen}
-        onClose={() => setAboutOpen(false)}
-        onRunTutorial={app.runCopilotTutorial}
-      />
     </div>
   );
 }

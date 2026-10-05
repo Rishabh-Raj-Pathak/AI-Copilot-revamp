@@ -99,9 +99,9 @@ function EmptyIdeas({ strategyName, categoryLabel, onSwitchCategory, onSwitchStr
 }
 
 /**
- * The Strategies segment of the phone AI Copilot: chips, the setups, and a
- * one-line disclaimer — one scroll view with pull-to-refresh. Batch freshness
- * lives on the header's refresh button, so there is no status line here.
+ * The Strategies segment of the phone AI Copilot: chips and the setups — one
+ * scroll view with pull-to-refresh. Batch freshness lives on the header's
+ * refresh button, so there is no status line here.
  *
  * States: refreshing (outline skeletons), expired (list dims, an inline banner
  * offers the refresh), empty (phone empty state), normal.
@@ -120,7 +120,6 @@ export default function CopilotIdeasView({
   onOpenIdea,
   onBacktest,
   onSwitchStrategy,
-  onAbout,
 }) {
   const { pull, armed } = usePullToRefresh(scrollRef, onRefresh, { disabled: !active || refreshing });
   const expired = expireSeconds <= 0;
@@ -221,17 +220,6 @@ export default function CopilotIdeasView({
           })
         )}
       </section>
-
-      <p className="px-6 pt-5 text-center text-app-label text-ink-faint">
-        AI setups can be wrong and are not financial advice.{" "}
-        <button
-          type="button"
-          onClick={onAbout}
-          className="app-pressable relative font-medium text-ink-subtle before:absolute before:-inset-x-2 before:-inset-y-3 before:content-[''] active:text-ink"
-        >
-          How it works
-        </button>
-      </p>
     </div>
   );
 }
