@@ -1,12 +1,10 @@
 import AppIcon from "../AppIcon.jsx";
 import { appIcons } from "../mobileAssets.js";
 import {
-  GRADIENT_OUTLINE,
   chipValue,
   formatCompactRange,
   formatPrice,
   ideaTokenIcon,
-  reviewHorizon,
 } from "./copilotIdeaData.js";
 
 /** Figma "Signal Pill" (937:1158) — tone picks the fill/ink pair. Used by the backtest sheet. */
@@ -63,7 +61,7 @@ function SideTag({ direction }) {
   const short = direction === "short";
   return (
     <span
-      className={`inline-flex h-[18px] items-center rounded px-1.5 text-app-label font-medium ${
+      className={`inline-flex h-[18px] items-center rounded-[5px] px-1.5 text-app-label font-medium ${
         short ? "bg-app-negative-subtle text-[#f06464]" : "bg-app-positive-subtle text-app-positive"
       }`}
     >
@@ -79,7 +77,7 @@ function Metric({ label, value, tone = "default", className = "" }) {
       <dt className="text-app-label text-ink-subtle">{label}</dt>
       <dd
         className={`truncate text-app-callout font-medium ${
-          tone === "positive" ? "text-app-positive" : tone === "accent" ? "text-app-accent" : "text-ink"
+          tone === "positive" ? "text-app-positive" : "text-ink"
         }`}
       >
         {value ?? "—"}
@@ -88,17 +86,27 @@ function Metric({ label, value, tone = "default", className = "" }) {
   );
 }
 
+/** Live price closing the metrics row: right-aligned, one step larger, quieter label. */
+function PriceMetric({ value }) {
+  return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+      <dt className="text-app-label text-ink-faint">Current Price</dt>
+      <dd className="text-app-body font-medium leading-[18px] text-ink">{value}</dd>
+    </div>
+  );
+}
+
 /**
- * Phone trade-idea card (AI Copilot pilot).
+ * Phone strategy card (AI Copilot — Figma 1209:7070).
  *
- * Reads in the order a trader scans: what (token, symbol, direction) and at
- * what price → why (the AI's one-line thesis) → how good (win rate, R:R) →
- * where and for how long (entry, review horizon) → act.
+ * Reads in the order a trader scans: what (token, symbol, direction) → why
+ * (the AI's one-line thesis) → how good (win rate, R:R) → where (entry range
+ * against the current price).
  *
- * The whole card opens the trade ticket — that is the primary action, now also
- * spelled out as "Open long/short" in the direction's colour. Backtest is the
- * quiet secondary action. Selection keeps the brand-gradient outline from the
- * Figma card so the last-opened idea is findable after the ticket closes.
+ * Outline only: no fill, one #2e2200 hairline shared by every card, so colour
+ * is left to win rate and direction. The whole card opens the trade ticket
+ * (the chevron says so); Backtest is the card's one button. No highlight on
+ * the selected idea — the ticket sheet already shows which one is open.
  */
 export default function CopilotIdeaCard({
   setup,
@@ -112,7 +120,6 @@ export default function CopilotIdeaCard({
   const win = chipValue(setup, "win");
   const rr = chipValue(setup, "rr");
   const range = formatCompactRange(setup);
-  const review = reviewHorizon(setup);
   const open = () => onOpen?.(setup.id);
 
   return (
@@ -129,60 +136,40 @@ export default function CopilotIdeaCard({
           open();
         }
       }}
-      className={`flex cursor-pointer flex-col gap-3 rounded-xl p-3.5 outline-none transition-[transform,opacity] duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-app-accent/60 ${
-        selected ? "" : "border border-app-line-accent-subtle bg-app-bg"
-      } ${dimmed ? "opacity-55" : ""}`}
-      style={selected ? GRADIENT_OUTLINE : undefined}
+      className={`flex cursor-pointer flex-col gap-3 rounded-[16px] border border-app-line-accent-subtle p-3.5 outline-none transition-[transform,opacity,background-color] duration-150 active:scale-[0.99] active:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-white/40 ${
+        dimmed ? "opacity-55" : ""
+      }`}
     >
       <div className="flex items-center gap-2.5">
-        <TokenDisc setup={setup} size={28} />
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <TokenDisc setup={setup} size={32} />
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <h3 className="truncate text-app-button font-semibold text-ink">{setup.symbol}</h3>
           <SideTag direction={setup.direction} />
         </div>
-        <span className="shrink-0 text-app-callout font-medium text-ink">
-          {formatPrice(setup.price)}
-        </span>
-        <AppIcon src={appIcons.chevronRight16} size={16} className="-mr-0.5 text-ink-subtle" />
+        <AppIcon src={appIcons.chevronRight16} size={16} className="text-ink-subtle" />
       </div>
 
       <p className="line-clamp-2 text-app-callout text-ink-muted">{setup.title}</p>
 
-      <dl className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] gap-x-4 border-t border-app-line pt-3">
-        <Metric label="Win rate" value={win} tone="positive" />
-        <Metric label="R:R" value={rr} tone="accent" />
-        <Metric label="Entry" value={range} />
-        <Metric label="Review" value={review} className="text-right" />
+      <dl className="flex items-start gap-4 max-[374px]:gap-2">
+        <Metric label="Win rate" value={win} tone="positive" className="shrink-0" />
+        <Metric label="R:R" value={rr} className="shrink-0" />
+        <Metric label="Entry" value={range} className="flex-1" />
+        <PriceMetric value={formatPrice(setup.price)} />
       </dl>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          data-tour={backtestTourTarget ? "copilot-view-thesis" : undefined}
-          onClick={(e) => {
-            e.stopPropagation();
-            onBacktest?.(setup);
-          }}
-          className="app-pressable flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-app-line bg-app-surface text-app-callout font-medium text-ink active:bg-white/[0.05]"
-        >
-          <AppIcon src={appIcons.backtest16} size={16} className="text-ink-muted" />
-          Backtest
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            open();
-          }}
-          className={`app-pressable flex h-10 flex-1 items-center justify-center rounded-lg border text-app-callout font-medium ${
-            short
-              ? "border-[#4a1414] bg-app-negative-subtle text-[#f06464]"
-              : "border-[#0f3a22] bg-app-positive-subtle text-app-positive"
-          }`}
-        >
-          Open {short ? "short" : "long"}
-        </button>
-      </div>
+      <button
+        type="button"
+        data-tour={backtestTourTarget ? "copilot-view-thesis" : undefined}
+        onClick={(e) => {
+          e.stopPropagation();
+          onBacktest?.(setup);
+        }}
+        className="app-pressable flex h-[38px] w-full items-center justify-center gap-1.5 rounded-full bg-app-control text-app-callout font-medium text-ink active:bg-white/[0.1]"
+      >
+        <AppIcon src={appIcons.backtest16} size={14} />
+        Backtest
+      </button>
     </article>
   );
 }

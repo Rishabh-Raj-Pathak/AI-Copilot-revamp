@@ -137,11 +137,12 @@ export const positionsMock = [
 ];
 
 /**
- * Show the populated lists (Figma section 07) even before a wallet connects,
- * so the panel previews with data. Set to `false` to restore the
- * "Connect your wallet to view positions" state (Figma 938:1278).
+ * `true` shows the populated lists (Figma section 07) even before a wallet
+ * connects, so the panel previews with data. `false` (current) shows the
+ * signed-out empty state, "Connect a wallet" (Figma Copilot B1, 1222:7000);
+ * the mock lists appear once the mock Connect flow completes.
  */
-export const SHOW_MOCK_WHEN_DISCONNECTED = true;
+export const SHOW_MOCK_WHEN_DISCONNECTED = false;
 
 /* ------------------------------------------------------------ open orders */
 

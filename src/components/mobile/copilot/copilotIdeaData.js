@@ -11,18 +11,6 @@ import { tokenIconFor } from "../trade/tradeData.js";
  * values out once and every phone surface formats from here.
  */
 
-/**
- * 1px brand-gradient outline (gold → mint) over a black fill. Figma draws the
- * Backtest button and the selected card with a gradient stroke; CSS borders
- * can't take a gradient, so the gradient paints the border box and the fill
- * paints the padding box on top of it.
- */
-export const GRADIENT_OUTLINE = {
-  border: "1px solid transparent",
-  background:
-    "linear-gradient(#000, #000) padding-box, linear-gradient(90deg, #f2b500 0%, #00f3b6 100%) border-box",
-};
-
 /** DetailsPanel's leverage ceiling and seed — the desktop ticket's defaults. */
 export const COPILOT_MAX_LEVERAGE = 40;
 export const COPILOT_DEFAULT_LEVERAGE = 10;

@@ -7,10 +7,8 @@ import { useMobileApp } from "../MobileAppContext.js";
 import { useAppToast } from "../appToastContext.js";
 import { copyText } from "../../../lib/clipboard.js";
 import { WALLET_CHAIN, addressExplorerUrl, truncateAddress } from "../../../lib/wallet.js";
-import ProfileCompleteModal from "../../profile/ProfileCompleteModal.jsx";
 import { useProfile } from "../../profile/ProfileContext.jsx";
 import ConnectXSheet from "./ConnectXSheet.jsx";
-import PointsOverviewSheet from "./PointsOverviewSheet.jsx";
 import { ActionRow, Card, DividedRows, Pill, Section } from "./profileUi.jsx";
 
 /**
@@ -30,21 +28,9 @@ export default function MobileProfilePage() {
   const notify = (message, variant = "success") =>
     toast.show({ title: message, tone: variant === "error" ? "error" : "success" });
 
-  const pointsButton = app.walletConnected ? (
-    <button
-      type="button"
-      onClick={() => setSheet("points")}
-      aria-label="Points overview"
-      aria-haspopup="dialog"
-      className="app-pressable flex size-11 items-center justify-center rounded-full text-ink-subtle active:bg-white/[0.06]"
-    >
-      <AppIcon src={appIcons.morePoints} size={20} />
-    </button>
-  ) : null;
-
   return (
     <div className="flex h-dvh flex-col bg-app-bg">
-      <AppNavBar title="My Profile" trailing={pointsButton} />
+      <AppNavBar title="My Profile" />
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
         {app.walletConnected ? (
           <ConnectedProfile
@@ -73,8 +59,6 @@ export default function MobileProfilePage() {
           notify(`X connected as ${account.handle}`);
         }}
       />
-      <PointsOverviewSheet open={sheet === "points"} onClose={closeSheet} onNotify={notify} />
-      <ProfileCompleteModal />
     </div>
   );
 }

@@ -20,12 +20,15 @@ function RiskBadge({ risk }) {
   );
 }
 
-/** Figma "Strategy Option" (942:2464 default · 942:2473 selected). */
+/**
+ * Figma "Strategy Option" (942:2464 default · 942:2473 selected). Outline
+ * only — selection is a brighter outline, not a fill (Copilot border-only pass).
+ */
 function StrategyOption({ strategy, selected, onSelect, onDetails }) {
   return (
     <li
       className={`overflow-hidden rounded-xl border ${
-        selected ? "border-app-accent-subtle bg-app-accent-faint" : "border-app-line bg-[#050505]"
+        selected ? "border-app-line-strong" : "border-app-line"
       }`}
     >
       <button
@@ -68,7 +71,7 @@ function StrategyDetails({ strategy }) {
   ].filter(([, value]) => value);
 
   return (
-    <div className="flex flex-col gap-2 rounded-[14px] border border-app-line bg-[#050505] p-4">
+    <div className="flex flex-col gap-2 rounded-[14px] border border-app-line p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="min-w-0 truncate text-app-body font-semibold leading-5 text-ink">
           {strategy.shortLabel ?? strategy.name}

@@ -29,7 +29,11 @@ of drawing them.
   in `mobileAssets.js` (`appIcons`). Render line icons with
   `<AppIcon src={appIcons.x} size={16} />` — it masks the SVG so it takes
   `currentColor`. Full-colour art (logos, coins, tier badges) is `appImages`,
-  rendered with `<img>`.
+  rendered with `<img>`. For an icon Figma doesn't vendor, use `lucide-react`
+  (`import { Wallet } from "lucide-react"`, `size={16}`, default stroke) and
+  draw the same Lucide paths in Figma. The connected wallet button in
+  `AppTopBar` is the Lucide `Wallet` icon; `appImages.walletAvatar` (gradient)
+  is only the identity picture in the Wallet sheet and Profile.
 - **Lint:** files under `src/components/terminal/**` and `src/components/trade/**`
   run the trading type-scale lint (no `text-[Npx]`, no `font-semibold/bold`).
   Keep phone UI in this folder and only *mount* it from those files.
@@ -46,6 +50,7 @@ of drawing them.
 | Large button (primary / destructive / secondary / ghost / buy) | `AppButton.jsx` | Button / Large 1036:5128 |
 | Grouped list rows | `AppList.jsx` | List Row / Action 1036:5147 |
 | Toast (`useAppToast().show({...})`) | `AppToast.jsx`, `appToastContext.js` | Toast / Success 1064:5584 |
+| Empty state (icon disc, title, message, stacked 44px actions) | `AppEmptyState.jsx` | Copilot A5 1189:12683 · B1 1222:7000 |
 | Screen transitions | `MobilePageTransition.jsx` | — |
 | Hardware/gesture back | `appHistory.js` (`useHistoryBack`) | — |
 

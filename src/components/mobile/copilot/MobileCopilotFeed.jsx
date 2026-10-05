@@ -22,12 +22,12 @@ const SCAN_MS = 650;
  * Phone AI Copilot screen (mobile-native pilot — see
  * docs/mobile/HYPREARN_MOBILE_APP_UX.md).
  *
- *   ┌ global top bar (app shell) ─────────────┐
- *   │ AI strategy · risk      [share] [ring]  │  pinned header
- *   │ High Conviction ⌄                        │
- *   │ [ Ideas 2 | Positions 5 ]               │
+ *   ┌─────────────────────────────────────────┐
+ *   │ High Conviction ⌄     (venue)(pts)(wal) │  pinned header — replaces the
+ *   │ Strategy · Medium risk                  │  app top bar on this screen
+ *   │ Strategies 2  Portfolio 5    ⇪  ⟳ 9:50 │
  *   ├─────────────────────────────────────────┤
- *   │ chips · AI status · setups · disclaimer │  Ideas: own scroll, pull to refresh
+ *   │ chips · setups · disclaimer             │  Strategies: own scroll, pull to refresh
  *   │   — or —                                │
  *   │ positions panel (sticky sub-tabs)       │  Positions: own scroll, keeps state
  *   └ global tab bar ─────────────────────────┘
@@ -53,6 +53,9 @@ export default function MobileCopilotFeed({
   emptyStrategyName,
   onSwitchStrategy,
   walletConnected,
+  onWalletConnected,
+  onWalletDisconnect,
+  onTerminalPlatformChange,
 }) {
   const app = useMobileApp();
   const [view, setView] = useState("ideas");
@@ -82,7 +85,8 @@ export default function MobileCopilotFeed({
     }, SCAN_MS);
   }, [scanning, onRefresh]);
 
-  const onCountsChange = useCallback((counts) => setPositionsCount(counts.positions), []);
+  // `counts` is null while signed out — the Portfolio tab then shows no count.
+  const onCountsChange = useCallback((counts) => setPositionsCount(counts?.positions ?? null), []);
   const refreshing = scanning || listRefreshing;
   const strategy = strategies?.find((s) => s.id === selectedStrategyId);
   const strategyName = strategy?.shortLabel ?? emptyStrategyName;
@@ -101,6 +105,9 @@ export default function MobileCopilotFeed({
         onViewChange={setView}
         ideasCount={refreshing ? null : setups.length}
         positionsCount={positionsCount}
+        onWalletConnected={onWalletConnected}
+        onWalletDisconnect={onWalletDisconnect}
+        onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
       <CopilotIdeasView
@@ -125,14 +132,15 @@ export default function MobileCopilotFeed({
         hidden={view !== "positions"}
         role="tabpanel"
         aria-label="Positions"
-        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-app-bg pb-[var(--app-tab-bar-h)] app-fade-in"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain bg-app-bg pb-[var(--app-tab-bar-h)] app-fade-in"
       >
+        {/* `grow` lets the signed-out empty state centre in the free space. */}
         <MobilePositionsPanel
           walletConnected={walletConnected}
           source="copilot"
           onCountsChange={onCountsChange}
           onPlaceOrder={() => setView("ideas")}
-          className="border-t-0!"
+          className="grow border-t-0!"
         />
       </div>
 

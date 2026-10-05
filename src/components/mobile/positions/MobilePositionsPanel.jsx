@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Wallet } from "lucide-react";
+import AppEmptyState from "../AppEmptyState.jsx";
 import AppIcon from "../AppIcon.jsx";
 import { appIcons } from "../mobileAssets.js";
 import { useMobileApp } from "../MobileAppContext.js";
@@ -306,9 +308,10 @@ export default function MobilePositionsPanel({
       }
     : { positions: 0, openOrders: 0, orderHistory: 0, tradeHistory: 0, balance: 0 };
 
-  const countsKey = Object.values(counts).join(",");
+  const countsKey = `${connected}:${Object.values(counts).join(",")}`;
   useEffect(() => {
-    onCountsChange?.(counts);
+    // `null` while signed out: the caller shows no count rather than a 0.
+    onCountsChange?.(connected ? counts : null);
     // `counts` is rebuilt each render; `countsKey` is its value identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countsKey, onCountsChange]);
@@ -645,15 +648,18 @@ export default function MobilePositionsPanel({
       ref={rootRef}
       data-source={source}
       aria-label="Positions and orders"
-      className={`border-t border-app-line-accent-subtle bg-app-bg ${className}`}
+      className={`flex flex-col border-t border-app-line-accent-subtle bg-app-bg ${className}`}
     >
-      <PositionsTabs
-        compact={connected}
-        active={tab}
-        counts={counts}
-        onSelect={selectTab}
-        barRef={barRef}
-      />
+      {/* Signed out there is nothing to switch between or count, so no sub-tabs. */}
+      {connected ? (
+        <PositionsTabs
+          compact={connected}
+          active={tab}
+          counts={counts}
+          onSelect={selectTab}
+          barRef={barRef}
+        />
+      ) : null}
 
       {connected ? (
         <motion.div
@@ -666,16 +672,19 @@ export default function MobilePositionsPanel({
           {renderTab()}
         </motion.div>
       ) : (
-        <div className="px-4 py-4">
-          {/* Figma "Positions Panel" 938:1278 — tap to start the connect flow. */}
-          <button
-            type="button"
-            onClick={() => setConnectOpen(true)}
-            className="app-pressable flex h-12 w-full items-center justify-center rounded-xl border border-app-line px-4 text-app-body leading-[16.8px] text-ink-muted active:bg-white/[0.03]"
-          >
-            Connect your wallet to view positions
-          </button>
-        </div>
+        // Figma Copilot B1 (1222:7000): the shared phone empty state. Centres in
+        // the space it is given (Copilot Portfolio); on Trade it sits under the
+        // ticket button at its natural height, and stays secondary there so
+        // the page's main action, "Open Position", keeps the gradient.
+        <AppEmptyState
+          className="px-8 pb-16 pt-10"
+          icon={<Wallet size={20} />}
+          title="Connect a wallet"
+          message="Your positions, open orders and trade history show up here once a wallet is connected."
+          actions={[
+            { label: "Connect wallet", onClick: () => setConnectOpen(true), primary: source !== "trade" },
+          ]}
+        />
       )}
 
       <ClosePositionSheet

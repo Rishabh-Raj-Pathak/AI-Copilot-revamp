@@ -1,6 +1,13 @@
 # HyprEarn Mobile App UX System
 
-**v0.1 — AI Copilot pilot.** Branch `mobile-native-ai-copilot`.
+**v0.2 — AI Copilot pilot.** Branch `mobile-native-ai-copilot`.
+
+> **v0.2 (2026-10-05) — border-only pass.** The Copilot screen now follows Figma
+> reference `1209:6991` and section `1172:6988` ("v3.1 · Border-only pass"):
+> outline-only cards, "Strategies" tab, underline tabs, countdown on the refresh
+> button, one Backtest button per card. Rules it replaced are marked
+> **SUPERSEDED** below with what replaced them; the case study (§32) keeps the
+> v0.1 rows as history and adds rows 15–19.
 
 This is not yet a universal spec. Every rule is tagged:
 
@@ -44,15 +51,16 @@ components.
 What the pilot taught:
 
 - **Find the screen's one job first.** AI Copilot's job is "show me a trade worth taking now, and let me act". Everything else (strategy, filters, positions, share) is context or a secondary job. (VALIDATED)
-- **Order a card the way a trader scans it:** *what* (token, symbol, direction) and *at what price* → *why* (AI thesis line) → *how good* (win rate, R:R) → *where / how long* (entry, review horizon) → *act*. (VALIDATED)
-- **Separate jobs that compete for one scroll.** Discovery (Ideas) and management (Portfolio) were stacked into a 1.5k-px scroll; they became peer segments. (VALIDATED)
+- **Order a card the way a trader scans it:** *what* (token, symbol, direction) → *why* (AI thesis line) → *how good* (win rate, R:R) → *where* (entry range against the current price, right-aligned at the end of the metrics row) → *act*. (VALIDATED at 390px. v0.1 put the price in the card head and ended on a review horizon; v0.2 drops the horizon.)
+- **Separate jobs that compete for one scroll.** Discovery (Strategies) and management (Portfolio) were stacked into a 1.5k-px scroll; they became peer tabs. (VALIDATED)
 - **Context that drives the content belongs in the title.** The AI strategy decides every setup, so it is the screen title (§7). (VALIDATED)
 - **Values over labels.** Labels are quiet (11px, `ink-subtle`); values carry the weight (13px, medium, semantic colour). (VALIDATED)
 
 ## 4. Layout and spacing
 
-- 16px screen gutter; 12–14px inside cards; 8px between sibling controls; 12px between cards. (VALIDATED)
+- 16px screen gutter app-wide; **20px on the Copilot screen** (header, chips, cards) per the v3 Figma. 12–14px inside cards; 8px between sibling controls; 12px between cards. (VALIDATED)
 - **One container per cluster.** The old strategy area was a card inside a bordered band; it is now a plain pinned header with a hairline. Cards are kept only where an item is a tappable unit (an idea). (VALIDATED)
+- **Outline, not fill.** Copilot cards, skeletons, the expired banner and strategy-sheet options have no fill — a 1px hairline only (`app-line-accent-subtle` #2E2200 for strategy cards, `app-line` elsewhere). Fill is reserved for controls: the soft `app-control` (#1C1C1F) on Backtest, the active chip and secondary buttons. Selection is a brighter outline, never a fill. (VALIDATED at 390px; design decision, Figma 1209:6991)
 - Pinned chrome is budgeted: global top bar (56) + screen header (~100) on Copilot; content gets the rest. Everything else scrolls. (VALIDATED)
 - Spacing uses 4/8 multiples. (VALIDATED)
 
@@ -62,10 +70,11 @@ Same typeface (Onest). Hierarchy from a small set of steps:
 
 | Role | Size / weight | Used for |
 |---|---|---|
-| Screen title | 16 / 600 | strategy title menu |
+| Screen title | 17 / 600 (`text-app-heading`) | strategy title menu |
 | Item title | 15 / 600 | token symbol on a card |
-| Body / value | 13 / 400–500 | thesis line, metric values, buttons, chips |
-| Label / meta | 11 / 400–500 | metric labels, status line, eyebrow |
+| Tab | 14 / 600 active, 500 idle | Strategies / Portfolio |
+| Body / value | 13 / 400–500 | thesis line, metric values, buttons, chips (14 / 500 for the card's current price) |
+| Label / meta | 11 / 400–500 | metric labels, "Strategy · risk" meta |
 
 - Four sizes, three weights (400/500/600) on the redesigned surface — down from 11 size/weight pairs before. (VALIDATED)
 - **No bold (700) for content.** The old 16/700 idea title read as marketing; weight now marks only the title and the symbol. (VALIDATED)
@@ -75,7 +84,7 @@ Same typeface (Onest). Hierarchy from a small set of steps:
 ## 6. Navigation
 
 - **App level:** one persistent tab bar (Copilot / Agents / Trade / Rewards / More), owned by the app shell, never re-mounted per screen. (VALIDATED in the kit, before this pilot)
-- **Within a screen:** peer views use a **segmented control** (Ideas | Portfolio); each keeps its own scroll position and state. (VALIDATED)
+- **Within a screen:** peer views use **underline tabs** with a trailing count (`Strategies 2 · Portfolio 3`); each keeps its own scroll position and state. (VALIDATED. v0.1 used an iOS segmented control labelled "Ideas"; SUPERSEDED by the v3 Figma.)
 - Name segments by what they contain, and avoid echoing a child label: "Portfolio" (positions, orders, history, balance) instead of "Positions" sitting on top of a "Positions" sub-tab. (VALIDATED)
 - **Back:** sheets and pushed screens close on hardware/gesture back via history layers. Tab switches don't push history. (VALIDATED in the kit)
 - Do not add navigation layers without checking the product architecture; e.g. the conversational *Strategy Copilot* is a separate view with no phone route today — that is a product decision, not something to patch into this screen. (PROVISIONAL — finding)
@@ -84,8 +93,8 @@ Same typeface (Onest). Hierarchy from a small set of steps:
 
 - The **global top bar** (brand, venue, points, wallet) is app chrome and stays generic. (VALIDATED)
 - A **screen header** sits under it and carries only screen context and screen actions. (VALIDATED)
-- **Title menu pattern:** when one setting defines everything on the screen, make it the title (`eyebrow · risk` over `Name ⌄`), and open its chooser from there. It reads as "where am I", not as a form field. (VALIDATED)
-- Toolbar actions: at most two icon buttons (share, refresh), 44pt each, neutral. (VALIDATED)
+- **Title menu pattern:** when one setting defines everything on the screen, make it the title (`Name ⌄` over a quiet `Strategy · Medium risk`), and open its chooser from there. It reads as "where am I", not as a form field. (VALIDATED; v0.1 had the meta above the name with a risk dot.)
+- Toolbar actions: at most two (share, refresh), outline-free, 32px visual / 44pt hit. Refresh carries the batch's time left as text beside its icon. (VALIDATED)
 
 ## 8. Bottom navigation
 
@@ -98,7 +107,7 @@ Use a sheet when a **contextual choice or short task** needs room the inline UI 
 - Grabber + drag-to-dismiss + scrim tap + Escape + hardware back. One sheet at a time. (VALIDATED, kit)
 - Complex, long content (backtest report, full ticket) uses the **full-height** variant. (VALIDATED)
 - Detail inside a chooser uses "← Back" within the same sheet rather than a second sheet. (VALIDATED, strategy details)
-- **Not** for: four peer filters (inline chips), two peer views (segmented control), a binary choice. (VALIDATED)
+- **Not** for: four peer filters (inline chips), two peer views (tabs), a binary choice. (VALIDATED)
 - Sheets rise above the software keyboard (§19). (PROVISIONAL — needs a real device)
 
 ## 10. Dialogs / confirmations
@@ -111,11 +120,11 @@ Decide by count, need for description, and frequency:
 
 | Situation | Pattern | Example |
 |---|---|---|
-| 2 peer views | segmented control | Ideas / Portfolio |
+| 2 peer views | underline tabs | Strategies / Portfolio |
 | 3–6 peer filters, short labels, frequent | horizontal chip selector (radio group) | market category |
 | Options need descriptions / risk / details | bottom sheet | AI strategy |
 
-Chips are 32px visually with a 44px hit area; the active chip scrolls into view when changed from elsewhere. (VALIDATED)
+Chips are 32px visually (9px radius) with a 44px hit area; idle chips are outline only, the active one takes the `app-control` fill. The active chip scrolls into view when changed from elsewhere. (VALIDATED)
 
 ## 12. Forms
 
@@ -125,11 +134,11 @@ The pilot's only form is the trade ticket (pre-existing sheet). Rules carried fr
 
 The pilot screen is a **generated feed**, not a chat. Learned:
 
-- **Disclose AI, in-line and specific.** Status line: "✦ AI-generated · 2 setups · valid 10:29", plus a "How it works" sheet: generated by the chosen strategy, they expire, nothing is placed for you, can be wrong / not advice. (VALIDATED — HIG Generative AI: transparency + expectations)
-- **Freshness is part of the content.** Generated setups decay. Show it at a glance (refresh ring that drains green → gold → red) and precisely in text (the status line). (VALIDATED)
-- **Expired is a state, not a colour.** Cards dim, an inline banner says "These setups expired. Refresh for a new batch." with the action right there. (VALIDATED in code; the 10-minute expiry wasn't waited out in the browser — see §12 of the change log)
-- **Say what the AI is doing.** "Scanning Trending with High Conviction…" over skeleton cards, not a faded list. (VALIDATED — HIG: specific progress messages)
-- **Keep the person in control.** Every setup offers Backtest (evidence) before Open (action); the ticket shows everything editable before anything is placed. (VALIDATED)
+- **Disclose AI, in-line and specific.** A "How it works" sheet: generated by the chosen strategy, they expire, nothing is placed for you, can be wrong / not advice. Its entry point is the footer line "AI setups can be wrong and are not financial advice. How it works". (VALIDATED. v0.1 also had a "✦ AI-generated · n setups · valid m:ss" status line under the chips; SUPERSEDED — the v3 Figma removed it.)
+- **Freshness is part of the content.** Generated setups decay. Show the exact time left on the refresh button itself (`⟳ 9:50`): green while fresh, gold in the last minute, "Expired" in red, "Scanning" while refreshing. (VALIDATED at 390px. v0.1's draining ring + status-line time is SUPERSEDED.)
+- **Expired is a state, not a colour.** Cards dim, an inline outline-only banner says "These setups expired. Refresh for a new batch." with the action right there. (VALIDATED in code; the 10-minute expiry wasn't waited out in the browser — see §12 of the change log)
+- **Say what the AI is doing.** Outline skeleton cards plus "Scanning" on the refresh button; the full sentence ("Scanning Trending with High Conviction") is announced to screen readers through a live region. (VALIDATED. v0.1 showed the sentence on screen in the status line.)
+- **Keep the person in control.** Every setup offers Backtest (evidence) as its one button; tapping the card (chevron) opens the ticket, which shows everything editable before anything is placed. (VALIDATED. v0.1's explicit "Open short/long" button is SUPERSEDED — see §17.)
 - **Make the strategy (the AI's "lens") obvious and switchable** from the title. (VALIDATED)
 - Disclaimer at the end of the feed, quiet, always present. (VALIDATED)
 
@@ -139,10 +148,10 @@ Not exercised: this screen has no composer. The conversational Strategy Copilot 
 
 ## 15. Trading and financial data density
 
-- Keep density; change **priority**. One price, one direction, four metrics, two actions per idea card — all visible without a tap. (VALIDATED)
-- **Label-over-value metric rows** separated from the header by a hairline are denser and more scannable than a wrap of equal pills. (VALIDATED)
+- Keep density; change **priority**. One direction, four metrics (win rate, R:R, entry, current price) and one button per idea card — all visible without a tap. (VALIDATED)
+- **Label-over-value metric rows** are denser and more scannable than a wrap of equal pills. No hairline above them in v0.2 — the outline card already groups them. (VALIDATED)
 - Compact formats where the label provides the unit: Entry `83,468–83,984` (no `$`, no cents above $1k); full precision lives in the ticket. (VALIDATED)
-- Semantic colour only: green = favourable stat / long, red = short / loss, gold = R:R / accent. Never colour alone — text says "Long/Short". (VALIDATED)
+- Semantic colour only: green = favourable stat / long, red = short / loss. R:R is plain ink in v0.2 (it was gold). Never colour alone — text says "Long/Short". (VALIDATED)
 - Numbers inherit tabular figures from the trading body scope; don't fight it per element. (VALIDATED)
 
 ## 16. Charts
@@ -151,9 +160,9 @@ Moved deeper, not shrunk: the desktop's inline chart lives in the trade ticket o
 
 ## 17. Primary / secondary actions
 
-- **Make the primary action explicit.** The old card hid it behind a chevron while a full-width gradient "Backtest" shouted. Now: secondary "Backtest" (neutral outline) + primary "Open short/long" (direction-tinted), side by side, both 40px, both on every card. (VALIDATED)
-- **Concentrate boldness.** The brand gradient was on Refresh, Backtest, the selected card and Connect at once. It now marks only the selected card outline (and the global Connect). Refresh became neutral. (VALIDATED — HIG craft: "boldness in one place")
-- The whole card remains a tap target for the primary action. (VALIDATED)
+- **SUPERSEDED (v0.2):** *Make the primary action explicit* — v0.1 put a direction-tinted "Open short/long" beside Backtest. The v3 Figma removed it: the whole card opens the ticket, signalled by a chevron, and the card's one button is a neutral full-width Backtest (38px, `app-control` fill). Trade-off: opening a trade is less explicit than in v0.1; the audit's original complaint was a *loud* Backtest hiding the primary, and Backtest is now quiet. Watch for "how do I trade this?" in testing. (PROVISIONAL)
+- **Concentrate boldness.** The brand gradient was on Refresh, Backtest, the selected card and Connect at once. It now marks only primary buttons in a state that needs one — Connect, "Switch strategy" (empty) and "Refresh" (expired banner). No card is highlighted. (VALIDATED — HIG craft: "boldness in one place")
+- The whole card is the tap target for opening the ticket. (VALIDATED)
 
 ## 18. Touch targets
 
@@ -193,11 +202,14 @@ Can't be validated in a web prototype. Suggested for native: light impact on seg
 
 ## 25. Loading / processing states
 
-Skeleton cards shaped like the real card + a sentence describing the work. Counts in the segment badge are withheld while scanning (no stale numbers). (VALIDATED)
+Outline skeleton cards shaped like the real card; "Scanning" on the refresh button; the sentence describing the work goes to a live region. The Strategies tab count shows "–" while scanning (no stale numbers). (VALIDATED)
 
 ## 26. Empty states
 
-Say what happened in the user's terms ("No High Conviction setups in Trade[XYZ]"), why ("Nothing passed this strategy's filters right now"), and give two 44pt ways out (another market, switch strategy). The status line changes to "no matches for this filter" instead of "0 setups". (VALIDATED)
+One component, `AppEmptyState` (Figma A5 / B1): centred in the visible space above the tab bar, a touch above the middle; 48px icon disc; 17/22 title saying what happened in the user's terms ("No setups in Trade[XYZ]", "Connect a wallet"); a 13/18 message of one or two even lines (`text-balance`, max 280) saying why; full-width 44px pill actions stacked 10px apart, primary first. No container box. When a list is empty its footer (disclaimer) moves to the bottom of the screen. (VALIDATED at 390px, 2026-10-05)
+
+- **Signed out is an empty state, not a disabled UI.** Portfolio signed out shows no sub-tabs and no counts (header tab reads "Portfolio", not "Portfolio 0") — just "Connect a wallet" with one action. (VALIDATED)
+- **One gradient per page.** On Trade, where "Open Position" is the page's action, the same empty state's "Connect wallet" is the secondary (grey) style. (VALIDATED)
 
 ## 27. Error and recovery states
 
@@ -210,7 +222,7 @@ Placing an order closes the ticket, shows the existing success flow, and a toast
 ## 29. Accessibility
 
 - Contrast checked on the new surface: short red on its tint was ~4.0:1 with the token red, so card text uses #f06464 (≥4.5:1). Labels `#8f8f8f` on black ≈ 6.2:1. (VALIDATED)
-- Segments are `tablist`/`tab` with spoken counts ("Portfolio, 5 open positions"); chips are a `radiogroup`; the refresh ring announces remaining validity or "Setups expired"; the card's label reads symbol, direction, price and thesis. (VALIDATED)
+- Tabs are `tablist`/`tab` with spoken counts ("Portfolio, 5 open positions"); chips are a `radiogroup`; the refresh button announces remaining validity, "Setups expired" or "Scanning for new setups"; the card's label reads symbol, direction, price and thesis. (VALIDATED)
 - Text sizes: 11px is used only for labels/meta, never for actionable or primary values. (VALIDATED)
 
 ## 30. Responsive engineering isolation
@@ -254,3 +266,8 @@ How phone and desktop stay separate — the pattern to keep when porting:
 | 12 | Desktop empty state component | Phone empty state with two 44pt actions; status line "no matches" | Clear way out on a phone | Empty state = what/why/next | Validated |
 | 13 | "Demo position added" toast scrolled to a panel | Toast "View" switches to Portfolio | Matches the new structure | Success leads to the result | Validated |
 | 14 | Sheets ignored the keyboard | Sheets sit above the keyboard (visualViewport) + Android resize hint | Ticket inputs stay visible | Keyboard layout guide | Provisional |
+| 15 | (v0.1) #111113-filled cards, two buttons, price in the head | Outline-only cards (#2E2200 hairline, r16); chevron; metrics end in "Current Price"; one full-width Backtest | Minimal surface; colour left to the data | Outline, not fill | Validated at 390px |
+| 16 | (v0.1) "Ideas" in an iOS segmented control | "Strategies n / Portfolio n" underline tabs | Matches the v3 Figma; the list is a list of strategy setups | Tabs for peer views | Validated at 390px |
+| 17 | (v0.1) Draining refresh ring + status line with the time | `⟳ 9:50` refresh button, colour-coded; status line removed | One place for freshness, one fewer row | Freshness on the control that resets it | Validated at 390px |
+| 18 | (v0.1) Filled / accent strategy options | Outline options; selected = brighter outline | Same rule as the cards | Selection by outline | Validated at 390px |
+| 19 | (v0.1) Status line was the "How it works" entry | Footer line "…not financial advice. How it works" | Keeps the About sheet reachable without the status line | Disclose AI in context | Validated at 390px |

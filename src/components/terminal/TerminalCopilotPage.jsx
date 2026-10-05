@@ -532,7 +532,9 @@ export default function TerminalCopilotPage({
   );
 
   useEffect(() => {
-    if (!walletConnected || !shouldAutoStartCopilotTutorial()) return;
+    // No first-run onboarding on the phone; the tour stays reachable from
+    // "How it works" and More → Tutorials.
+    if (isMobile || !walletConnected || !shouldAutoStartCopilotTutorial()) return;
     let cancelled = false;
     const engagement = getCopilotTutorialEngagement();
     const startStep =
@@ -559,7 +561,7 @@ export default function TerminalCopilotPage({
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [walletConnected, copilotTourHandlers, prepareSuggestionTourStep]);
+  }, [isMobile, walletConnected, copilotTourHandlers, prepareSuggestionTourStep]);
 
   const handleThesisOpenChange = useCallback((open) => {
     setThesisOpen(open);
@@ -714,6 +716,8 @@ export default function TerminalCopilotPage({
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-x-hidden bg-black text-white">
+      {/* The phone Ideas feed draws its own top bar (strategy as the title). */}
+      {isMobile && !isStrategyCopilotView(copilotView) ? null : (
       <CopilotMobileHeader
         walletConnected={walletConnected}
         onWalletConnected={handleWalletConnected}
@@ -724,6 +728,7 @@ export default function TerminalCopilotPage({
         copilotView={copilotView}
         onCopilotViewChange={setCopilotView}
       />
+      )}
       <HeaderTerminal
         onCopilotTutorial={runCopilotTutorial}
         onVaultTutorial={onOpenVaultTutorial}
@@ -752,10 +757,13 @@ export default function TerminalCopilotPage({
         onTerminalPlatformChange={handleTerminalPlatformChange}
       />
 
-      <ProfileCompletionBanner
-        onOpenProfile={() => onOpenProfile?.()}
-        suppressed={profileBannerSuppressed}
-      />
+      {/* No "Finish your profile" nudge on the phone. */}
+      {isMobile ? null : (
+        <ProfileCompletionBanner
+          onOpenProfile={() => onOpenProfile?.()}
+          suppressed={profileBannerSuppressed}
+        />
+      )}
 
       <StrategyCopilotProvider key={copilotView} copilotView={copilotView}>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -785,6 +793,9 @@ export default function TerminalCopilotPage({
                 emptyStrategyName={activeStrategy?.name ?? "AI"}
                 onSwitchStrategy={handleCycleStrategy}
                 walletConnected={walletConnected}
+                onWalletConnected={handleWalletConnected}
+                onWalletDisconnect={handleWalletDisconnected}
+                onTerminalPlatformChange={handleTerminalPlatformChange}
               />
             </div>
           ) : null}
