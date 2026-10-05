@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ChevronLeft } from "lucide-react";
 import {
   AnimatePresence,
   motion,
@@ -14,6 +15,10 @@ import { useHistoryBack } from "./appHistory.js";
  * Figma "Sheet / Header" (993:5861): grab handle, centred title, optional
  * "← Back" leading action and a close button. 73px tall.
  *
+ * `backIcon` swaps the "← Back" link for a bare chevron, for a sheet that
+ * drills into a sub-list of itself (Figma "More / Legal & Support — Open",
+ * 1245:6988).
+ *
  * `dragHandleProps` comes from `BottomSheet` — the header is the drag zone, so
  * a downward pull on it dismisses the sheet while the body keeps scrolling.
  */
@@ -21,6 +26,7 @@ export function SheetHeader({
   title,
   titleId,
   onBack,
+  backIcon = false,
   onClose,
   showClose = true,
   dragHandleProps,
@@ -34,7 +40,16 @@ export function SheetHeader({
       <div className="h-1 w-10 shrink-0 rounded-full bg-app-line-strong" aria-hidden />
       <div className="flex w-full items-center">
         <div className="flex h-9 w-[46px] shrink-0 items-center">
-          {onBack ? (
+          {onBack && backIcon ? (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Back"
+              className="app-pressable -ml-2 flex size-9 items-center justify-center rounded-xl text-ink active:bg-white/[0.06]"
+            >
+              <ChevronLeft size={20} strokeWidth={1.75} aria-hidden />
+            </button>
+          ) : onBack ? (
             <button
               type="button"
               onClick={onBack}
@@ -115,6 +130,7 @@ export default function BottomSheet({
   onClose,
   title,
   onBack,
+  backIcon = false,
   showClose = true,
   header,
   footer,
@@ -171,6 +187,7 @@ export default function BottomSheet({
         title={title}
         titleId={titleId}
         onBack={onBack}
+        backIcon={backIcon}
         onClose={onClose}
         showClose={showClose}
         dragHandleProps={dragHandleProps}

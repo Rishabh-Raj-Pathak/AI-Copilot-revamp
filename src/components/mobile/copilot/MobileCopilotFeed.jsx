@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import MobilePositionsPanel from "../positions/MobilePositionsPanel.jsx";
 import CopilotIdeasView from "./CopilotIdeasView.jsx";
 import CopilotScreenHeader from "./CopilotScreenHeader.jsx";
+import {
+  SHOW_POSITIONS_EVENT,
+  clearPortfolioRequest,
+  isPortfolioPending,
+} from "./copilotPortfolio.js";
 
 /** Kept for callers that still reference the old scroll anchor. */
 export const MOBILE_POSITIONS_ANCHOR_ID = "copilot-mobile-positions";
-
-/** Fired (on `window`) to bring the Positions segment forward, e.g. from a toast's "View". */
-export const SHOW_POSITIONS_EVENT = "copilot:show-positions";
 
 /**
  * How long the refresh shows its "scanning" state. The prototype's refresh is
@@ -55,14 +57,18 @@ export default function MobileCopilotFeed({
   onWalletDisconnect,
   onTerminalPlatformChange,
 }) {
-  const [view, setView] = useState("ideas");
+  const [view, setView] = useState(() => (isPortfolioPending() ? "positions" : "ideas"));
   const [scanning, setScanning] = useState(false);
   const [positionsCount, setPositionsCount] = useState(null);
   const ideasScrollRef = useRef(null);
   const scanTimer = useRef(null);
 
   useEffect(() => {
-    const show = () => setView("positions");
+    clearPortfolioRequest();
+    const show = () => {
+      clearPortfolioRequest();
+      setView("positions");
+    };
     window.addEventListener(SHOW_POSITIONS_EVENT, show);
     return () => {
       window.removeEventListener(SHOW_POSITIONS_EVENT, show);

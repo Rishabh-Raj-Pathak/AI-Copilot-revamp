@@ -19,9 +19,8 @@ import StrategyTradingPage from "./strategyTrading/StrategyTradingPage.jsx";
 import useIsMobile from "../mobile/useIsMobile.js";
 import { useAppToast } from "../mobile/appToastContext.js";
 import TradeTicketSheet from "../mobile/trade/TradeTicketSheet.jsx";
-import MobileCopilotFeed, {
-  SHOW_POSITIONS_EVENT,
-} from "../mobile/copilot/MobileCopilotFeed.jsx";
+import MobileCopilotFeed from "../mobile/copilot/MobileCopilotFeed.jsx";
+import { SHOW_POSITIONS_EVENT } from "../mobile/copilot/copilotPortfolio.js";
 import CopilotBacktestSheet from "../mobile/copilot/CopilotBacktestSheet.jsx";
 import {
   ideaTicketBalance,
