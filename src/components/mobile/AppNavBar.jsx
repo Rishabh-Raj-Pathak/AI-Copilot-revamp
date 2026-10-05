@@ -3,9 +3,13 @@ import { appIcons } from "./mobileAssets.js";
 import { useMobileApp } from "./MobileAppContext.js";
 
 /**
- * Figma "Nav Bar / Back" (994:16833): back chevron, centred 16px title,
- * 44px balancing slot on the right. Used on pushed screens (Compete, Points,
+ * Figma "Nav Bar / Back" (994:16833): back chevron, centred title, 44px
+ * balancing slot on the right. Used on pushed screens (Compete, Points,
  * Profile, Delete account) instead of the top bar.
+ *
+ * Matches `AppTopBar`: same 56px row and hairline, a 17/22 title, and the
+ * back glyph on the 20px content edge (10px padding + the 44px button's 10px
+ * inset).
  *
  * `onBack` defaults to the shell's back stack, so it returns to whichever
  * screen the user came from.
@@ -14,7 +18,7 @@ export default function AppNavBar({ title, onBack, trailing = null, className = 
   const app = useMobileApp();
   return (
     <header
-      className={`flex h-[var(--app-top-bar-h)] shrink-0 items-center border-b border-app-line bg-app-bg px-2 pt-[env(safe-area-inset-top)] tablet:hidden ${className}`}
+      className={`flex h-[var(--app-top-bar-h)] shrink-0 items-center border-b border-app-line bg-app-bg px-2.5 pt-[env(safe-area-inset-top)] tablet:hidden ${className}`}
     >
       <button
         type="button"
@@ -24,7 +28,7 @@ export default function AppNavBar({ title, onBack, trailing = null, className = 
       >
         <AppIcon src={appIcons.back24} size={24} />
       </button>
-      <h1 className="min-w-0 flex-1 truncate text-center text-app-headline font-semibold text-ink">
+      <h1 className="min-w-0 flex-1 truncate text-center text-app-heading font-semibold text-ink">
         {title}
       </h1>
       <div className="flex size-11 shrink-0 items-center justify-center">{trailing}</div>

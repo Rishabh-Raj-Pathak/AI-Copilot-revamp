@@ -8,7 +8,7 @@ import { getMarket } from "../../trade/tradeMockData.js";
 import AppChartCard from "./AppChartCard.jsx";
 import PairSelectorSheet from "./PairSelectorSheet.jsx";
 import TradeTicketSheet from "./TradeTicketSheet.jsx";
-import { formatGrouped, ticketMarketFor, tokenIconFor } from "./tradeData.js";
+import { formatGrouped, ticketMarketFor } from "./tradeData.js";
 
 /** One "Market Stats" row (954:4549): faint label, semibold value. */
 function StatRow({ label, children }) {
@@ -46,7 +46,6 @@ export default function MobileTradePage({
   const close = () => setSheet(null);
 
   const m = getMarket(coin);
-  const icon = tokenIconFor(m.coin);
   const up = m.change24hPct >= 0;
   const sign = up ? "+" : "-";
   const quote = m.symbol.split("-")[1] ?? "USDC";
@@ -64,7 +63,14 @@ export default function MobileTradePage({
   return (
     // Figma sets figures proportional; the trading scale on <body> would make them tabular.
     <div className="flex h-dvh min-h-0 flex-col bg-app-bg text-ink proportional-nums">
+      {/* The market is the screen's title menu (like the strategy on Copilot);
+          it replaces the pair-selector card that used to open the page. */}
       <AppTopBar
+        title={`${m.coin}-${quote}`}
+        meta={`Perpetual · ${m.maxLeverage}x max`}
+        onTitlePress={() => setSheet("pair")}
+        titleExpanded={sheet === "pair"}
+        titleLabel={`Market ${m.coin}-${quote}. Change market`}
         onTerminalPlatformChange={onTerminalPlatformChange}
         onWalletConnected={onWalletConnected}
         onWalletDisconnect={onWalletDisconnect}
@@ -72,23 +78,7 @@ export default function MobileTradePage({
       />
 
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
-        <div className="flex flex-col gap-4 p-4">
-          {/* Pair Selector (954:4541) */}
-          <button
-            type="button"
-            onClick={() => setSheet("pair")}
-            aria-haspopup="dialog"
-            aria-label={`Market ${m.coin} - ${quote}. Change market`}
-            className="app-pressable flex w-full items-center gap-2 rounded-lg border border-app-line bg-app-bg p-3 text-left active:bg-white/[0.03]"
-          >
-            {icon ? (
-              <img alt="" src={icon} className="size-5 shrink-0 rounded-full bg-white object-cover" />
-            ) : null}
-            <span className="min-w-0 flex-1 truncate text-app-headline font-medium leading-[19.2px] text-ink">
-              {m.coin} - {quote}
-            </span>
-            <AppIcon src={appIcons.chevronDown20} size={20} className="text-ink" />
-          </button>
+        <div className="flex flex-col gap-4 px-5 py-4 max-[374px]:px-4">
 
           {/* Market Stats (954:4547) */}
           <dl className="flex flex-col gap-3 rounded-lg bg-app-subtle p-4">

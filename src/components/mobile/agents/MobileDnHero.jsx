@@ -2,7 +2,6 @@ import { useState } from "react";
 import AppIcon from "../AppIcon.jsx";
 import BottomSheet from "../BottomSheet.jsx";
 import { appIcons } from "../mobileAssets.js";
-import { GOLD_TITLE_CLASS } from "./agentsTheme.js";
 
 /**
  * Figma "Hero" (951:4068) on "Agents / Delta Neutral — Full Page".
@@ -16,8 +15,8 @@ export default function MobileDnHero({ stats = [] }) {
   const [open, setOpen] = useState(false);
 
   return (
+    // No "Delta Neutral" heading: the active header tab already names the page.
     <section className="flex flex-col gap-2">
-      <h1 className={GOLD_TITLE_CLASS}>Delta Neutral</h1>
       <div className="flex items-end gap-1">
         <p className="min-w-0 flex-1 text-[13px] leading-5 text-[#b4b5c2]">
           Funding yield, engineered to be directionless. HyprEarn continuously routes into the

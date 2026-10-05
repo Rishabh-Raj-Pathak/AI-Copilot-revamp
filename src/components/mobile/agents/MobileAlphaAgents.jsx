@@ -3,10 +3,8 @@ import AppIcon from "../AppIcon.jsx";
 import { appIcons } from "../mobileAssets.js";
 import VaultsActivatedSection from "../../vaults/VaultsActivatedSection.jsx";
 import AgentVenueSheet, { AgentVenueMark } from "./AgentVenueSheet.jsx";
-import AgentsSwitcher from "./AgentsSwitcher.jsx";
 import MobileAgentCard from "./MobileAgentCard.jsx";
 import MobileAgentPositions from "./MobileAgentPositions.jsx";
-import { GOLD_PILL_FILL, GOLD_TITLE_AGENTS_CLASS } from "./agentsTheme.js";
 
 /** Figma "Section Divider (Gold)" (950:4040). */
 function SectionDivider({ label }) {
@@ -90,23 +88,9 @@ export default function MobileAlphaAgents({
   const activeTab = dexTabs.find((t) => t.id === dexId) ?? dexTabs[0];
 
   return (
-    <div className="flex flex-col gap-4 px-4 pb-5 pt-4">
-      <AgentsSwitcher />
-
+    <div className="flex flex-col gap-4 px-5 pb-5 pt-4 max-[374px]:px-4">
+      {/* "Agents · Fully non-custodial" is the header title + meta now. */}
       <section className="flex flex-col gap-4" data-tour="vaults-overview">
-        <div className="flex items-center gap-3">
-          <h1 className={GOLD_TITLE_AGENTS_CLASS}>
-            Agents
-          </h1>
-          <span
-            className={`flex h-[34px] min-w-0 items-center gap-2 rounded-full border border-[#785a28] px-4 ${GOLD_PILL_FILL}`}
-          >
-            <AppIcon src={appIcons.shieldCheck16} size={16} className="text-[#e8d5b5]" />
-            <span className="truncate text-[12px] font-medium uppercase leading-[15px] tracking-[0.3px] text-[#e8d5b5]">
-              Fully non-custodial
-            </span>
-          </span>
-        </div>
         <p className="text-[13px] leading-5 text-[#b4b5c2]">
           AI agents trade perps for you, live, 24/7. Your agent trades on your behalf, but your
           funds stay fully in your control non-custodial, no lock-in. Withdraw anytime.

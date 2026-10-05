@@ -41,17 +41,19 @@ export default function DeltaNeutralVaultsPage({
   const isMobile = useIsMobile();
 
   /*
-   * Phone: Figma "Agents / Delta Neutral -- Full Page" (951:4048) -- app top bar, the
-   * Agents switcher, then the version body. The global tab bar is fixed, so the scroll
+   * Phone: Figma "Agents / Delta Neutral -- Full Page" (951:4048) -- app top bar with
+   * the "Agents" title and the Delta Neutral / Alpha Agents header tabs, then the
+   * version body. The global tab bar is fixed, so the scroll
    * area clears it; the positions drawer the body pins above it is cleared by the body.
    */
   if (isMobile) {
     return (
       <div className="delta-neutral-root flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-white">
-        <AppTopBar />
+        <AppTopBar title="Agents" meta="Fully non-custodial">
+          <AgentsSwitcher />
+        </AppTopBar>
         <div className="delta-neutral-minimal-scrollbar vaults-root min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
-          <div className="flex w-full flex-col gap-4 px-4 pt-4">
-            <AgentsSwitcher />
+          <div className="flex w-full flex-col gap-4 px-5 pt-4 max-[374px]:px-4">
             <VersionPage />
           </div>
         </div>

@@ -91,7 +91,7 @@ Same typeface (Onest). Hierarchy from a small set of steps:
 
 ## 7. App bars / headers
 
-- The **global top bar** (brand, venue, points, wallet) is app chrome and stays generic. (VALIDATED)
+- **One header on every tab** (`AppTopBar`, Figma 1227:13431 / 1189:11730): screen title + meta on the left (Copilot: strategy menu; Agents: "Agents" + header tabs; Trade: market as title menu "BTC-USDC ⌄"; Rewards), the same 32px venue / points / Connect-or-wallet controls on the right, 20px gutters, proportional figures. The brand mark only remains as a fallback for screens without a title. (VALIDATED at 390px, 2026-10-05)
 - A **screen header** sits under it and carries only screen context and screen actions. (VALIDATED)
 - **Title menu pattern:** when one setting defines everything on the screen, make it the title (`Name ⌄` over a quiet `Strategy · Medium risk`), and open its chooser from there. It reads as "where am I", not as a form field. (VALIDATED; v0.1 had the meta above the name with a risk dot.)
 - Toolbar actions: at most two (share, refresh), outline-free, 32px visual / 44pt hit. Refresh carries the batch's time left as text beside its icon. (VALIDATED)

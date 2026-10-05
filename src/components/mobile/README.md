@@ -43,7 +43,9 @@ of drawing them.
 | Piece | File | Figma |
 |---|---|---|
 | Shell context: `navigate`, `goBack`, wallet, venue, points, tutorials | `MobileAppContext.js` → `useMobileApp()` | — |
-| Top bar (logo, venue, points, Connect / wallet chip + their sheets) | `AppTopBar.jsx` | Top Bar 936:1112, Top Bar / Connected 1036:5080 |
+| Screen header on every tab: title (+ meta, optional title menu) left; venue, points, Connect / Lucide wallet right; optional row below (tabs) | `AppTopBar.jsx` | Copilot Header 1227:13431 (signed out) · 1189:11730 (signed in) |
+| Header title (17/22 + 11px meta; chevron = title menu) | `AppScreenTitle.jsx` | Strategy Title 1227:13448 |
+| Header tabs (underline, optional count) — Copilot views, Agents types | `AppHeaderTabs.jsx` | Segmented 1227:13468 |
 | Back nav bar for pushed screens | `AppNavBar.jsx` | Nav Bar / Back 994:16833 |
 | Tab bar (persistent, rendered once by `App`) | `AppTabBar.jsx` | Bottom Nav 936:1240 |
 | Bottom sheet + header (drag to dismiss, back closes) | `BottomSheet.jsx` | Sheet / Header 993:5861 |

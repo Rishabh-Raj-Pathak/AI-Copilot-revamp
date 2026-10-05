@@ -57,13 +57,15 @@ export default function MobileRewardsPage({
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-ink">
       <AppTopBar
+        title="Rewards"
+        meta={isKol ? "Community rewards" : "Referral program"}
         onWalletConnected={onWalletConnected}
         onWalletDisconnect={onWalletDisconnect}
         onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
       <main className="app-no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
-        <div className="flex flex-col gap-4 px-4 pb-6 pt-4">
+        <div className="flex flex-col gap-4 px-5 pb-6 pt-4 max-[374px]:px-4">
           {isKol ? (
             <header className="flex flex-col gap-1.5">
               <h1 className="text-app-display font-semibold text-ink">Gautam Community Rewards</h1>

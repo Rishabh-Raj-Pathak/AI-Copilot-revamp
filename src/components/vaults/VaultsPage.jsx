@@ -10,6 +10,7 @@ import "../../design-system/vaults/index.css";
 import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import AppTopBar from "../mobile/AppTopBar.jsx";
 import useIsMobile from "../mobile/useIsMobile.js";
+import AgentsSwitcher from "../mobile/agents/AgentsSwitcher.jsx";
 import MobileAlphaAgents from "../mobile/agents/MobileAlphaAgents.jsx";
 import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 import VaultsDexTabs from "./VaultsDexTabs.jsx";
@@ -219,7 +220,9 @@ export default function VaultsPage({
   if (isMobile) {
     return (
       <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0c0a08] text-white">
-        <AppTopBar />
+        <AppTopBar title="Agents" meta="Fully non-custodial">
+          <AgentsSwitcher />
+        </AppTopBar>
         <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
           <MobileAlphaAgents
             dexTabs={dexTabs}
