@@ -63,19 +63,25 @@ const HISTORY_GRID =
  * Duration sits directly after Market on both tabs. It belongs to the pair, not to a
  * leg — both legs open and close together as one vault action — so it goes with the
  * pair's identity before the per-leg columns start, at the same place on both tabs.
+ *
+ * On History it also replaces Time: the from → to caption under the span already
+ * carries the event's clock time, so a Time column beside it only repeats it.
  */
 const DURATION_COLUMN = 'Duration';
 
 function withDurationColumn(columns: string[]) {
-  return columns.flatMap(column => (column === 'Market' ? [column, DURATION_COLUMN] : [column]));
+  return columns.flatMap(column => {
+    if (column === 'Time') return [];
+    return column === 'Market' ? [column, DURATION_COLUMN] : [column];
+  });
 }
 
 const POSITIONS_GRID_WITH_DURATION =
   'grid grid-cols-[minmax(148px,1.35fr)_minmax(120px,1fr)_repeat(11,minmax(88px,1fr))]';
 
-// Wider on History: it has to hold a from → to range, not just a start.
+// Wider on History: it has to hold a from → to range, not just a start. No Time track.
 const HISTORY_GRID_WITH_DURATION =
-  'grid grid-cols-[minmax(88px,0.9fr)_minmax(100px,1fr)_minmax(160px,1.2fr)_minmax(148px,1.35fr)_repeat(5,minmax(88px,1fr))]';
+  'grid grid-cols-[minmax(100px,1fr)_minmax(160px,1.2fr)_minmax(148px,1.35fr)_repeat(5,minmax(88px,1fr))]';
 
 /*
  * Mock timestamps are pinned to a clock time on a day relative to today rather than to
@@ -691,7 +697,7 @@ export function PerpBottomPanel({
 
   const minTableWidth = useMemo(() => {
     if (activeTab === 'positions') return showTradeDuration ? 'min-w-[1700px]' : 'min-w-[1580px]';
-    return showTradeDuration ? 'min-w-[1240px]' : 'min-w-[1080px]';
+    return showTradeDuration ? 'min-w-[1152px]' : 'min-w-[1080px]';
   }, [activeTab, showTradeDuration]);
 
   const positionsGrid = showTradeDuration ? POSITIONS_GRID_WITH_DURATION : POSITIONS_GRID;
@@ -887,7 +893,9 @@ export function PerpBottomPanel({
                         key={`${eventAt(row)}-${row.coin}-${row.event}`}
                         className={clsx(historyGrid, 'border-b py-2.5 text-[12px]', rowBorder, rowText)}
                       >
-                        <span className="flex min-h-[52px] items-center pr-2">{formatClock(eventAt(row))}</span>
+                        {!showTradeDuration && (
+                          <span className="flex min-h-[52px] items-center pr-2">{formatClock(eventAt(row))}</span>
+                        )}
                         <div className="flex min-h-[52px] flex-col justify-center gap-1 pr-2">
                           <span className="font-medium text-[#e8d5b5]">{row.coin}</span>
                           {row.category && (
