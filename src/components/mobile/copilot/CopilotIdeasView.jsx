@@ -73,7 +73,10 @@ function SkeletonCard() {
           <span key={i} className="app-skeleton h-8 rounded" />
         ))}
       </div>
-      <span className="app-skeleton h-[38px] rounded-full" />
+      <div className="flex gap-2">
+        <span className="app-skeleton h-[38px] flex-1 rounded-full" />
+        <span className="app-skeleton h-[38px] flex-1 rounded-full" />
+      </div>
     </div>
   );
 }

@@ -105,8 +105,10 @@ function PriceMetric({ value }) {
  *
  * Outline only: no fill, one #2e2200 hairline shared by every card, so colour
  * is left to win rate and direction. The whole card opens the trade ticket
- * (the chevron says so); Backtest is the card's one button. No highlight on
- * the selected idea — the ticket sheet already shows which one is open.
+ * (the chevron says so); the actions row (Figma v3.2, 1276:6757) splits it
+ * into a neutral Backtest and a brand-gradient View Setup, which opens the
+ * same ticket. No highlight on the selected idea — the ticket sheet already
+ * shows which one is open.
  */
 export default function CopilotIdeaCard({
   setup,
@@ -158,18 +160,30 @@ export default function CopilotIdeaCard({
         <PriceMetric value={formatPrice(setup.price)} />
       </dl>
 
-      <button
-        type="button"
-        data-tour={backtestTourTarget ? "copilot-view-thesis" : undefined}
-        onClick={(e) => {
-          e.stopPropagation();
-          onBacktest?.(setup);
-        }}
-        className="app-pressable flex h-[38px] w-full items-center justify-center gap-1.5 rounded-full bg-app-control text-app-callout font-medium text-ink active:bg-white/[0.1]"
-      >
-        <AppIcon src={appIcons.backtest16} size={14} />
-        Backtest
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          data-tour={backtestTourTarget ? "copilot-view-thesis" : undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            onBacktest?.(setup);
+          }}
+          className="app-pressable flex h-[38px] min-w-0 flex-1 items-center justify-center rounded-full bg-app-control text-app-callout font-medium text-ink active:bg-white/[0.1]"
+        >
+          Backtest
+        </button>
+        <button
+          type="button"
+          aria-label={`View ${setup.symbol} setup`}
+          onClick={(e) => {
+            e.stopPropagation();
+            open();
+          }}
+          className="app-pressable app-gradient-brand flex h-[38px] min-w-0 flex-1 items-center justify-center rounded-full text-app-callout font-medium text-black"
+        >
+          View Setup
+        </button>
+      </div>
     </article>
   );
 }

@@ -8,6 +8,11 @@
 > button, one Backtest button per card. Rules it replaced are marked
 > **SUPERSEDED** below with what replaced them; the case study (§32) keeps the
 > v0.1 rows as history and adds rows 15–19.
+>
+> **2026-10-07 — v3.2 card actions.** Each card's single Backtest became a
+> two-button row from the final Figma screen `1261:10945` (actions `1276:6757`):
+> neutral **Backtest** + brand-gradient **View Setup**, which opens the ticket.
+> See §17 and case-study row 20.
 
 This is not yet a universal spec. Every rule is tagged:
 
@@ -138,7 +143,7 @@ The pilot screen is a **generated feed**, not a chat. Learned:
 - **Freshness is part of the content.** Generated setups decay. Show the exact time left on the refresh button itself (`⟳ 9:50`): green while fresh, gold in the last minute, "Expired" in red, "Scanning" while refreshing. (VALIDATED at 390px. v0.1's draining ring + status-line time is SUPERSEDED.)
 - **Expired is a state, not a colour.** Cards dim, an inline outline-only banner says "These setups expired. Refresh for a new batch." with the action right there. (VALIDATED in code; the 10-minute expiry wasn't waited out in the browser — see §12 of the change log)
 - **Say what the AI is doing.** Outline skeleton cards plus "Scanning" on the refresh button; the full sentence ("Scanning Trending with High Conviction") is announced to screen readers through a live region. (VALIDATED. v0.1 showed the sentence on screen in the status line.)
-- **Keep the person in control.** Every setup offers Backtest (evidence) as its one button; tapping the card (chevron) opens the ticket, which shows everything editable before anything is placed. (VALIDATED. v0.1's explicit "Open short/long" button is SUPERSEDED — see §17.)
+- **Keep the person in control.** Every setup offers Backtest (evidence) and View Setup; View Setup and the card itself (chevron) open the ticket, which shows everything editable before anything is placed. (VALIDATED at 390px and 320px, 2026-10-07. v0.1's explicit "Open short/long" button is SUPERSEDED — see §17.)
 - **Make the strategy (the AI's "lens") obvious and switchable** from the title. (VALIDATED)
 - ~~Disclaimer at the end of the feed, quiet, always present.~~ SUPERSEDED 2026-10-05: removed from the feed at the user's request; the not-advice copy now lives only in the About sheet. Check with legal before shipping. (PROVISIONAL)
 
@@ -160,8 +165,9 @@ Moved deeper, not shrunk: the desktop's inline chart lives in the trade ticket o
 
 ## 17. Primary / secondary actions
 
-- **SUPERSEDED (v0.2):** *Make the primary action explicit* — v0.1 put a direction-tinted "Open short/long" beside Backtest. The v3 Figma removed it: the whole card opens the ticket, signalled by a chevron, and the card's one button is a neutral full-width Backtest (38px, `app-control` fill). Trade-off: opening a trade is less explicit than in v0.1; the audit's original complaint was a *loud* Backtest hiding the primary, and Backtest is now quiet. Watch for "how do I trade this?" in testing. (PROVISIONAL)
-- **Concentrate boldness.** The brand gradient was on Refresh, Backtest, the selected card and Connect at once. It now marks only primary buttons in a state that needs one — Connect, "Switch strategy" (empty) and "Refresh" (expired banner). No card is highlighted. (VALIDATED — HIG craft: "boldness in one place")
+- **SUPERSEDED (v0.2):** *Make the primary action explicit* — v0.1 put a direction-tinted "Open short/long" beside Backtest. The v3 Figma removed it: the whole card opens the ticket, signalled by a chevron, and the card's one button is a neutral full-width Backtest (38px, `app-control` fill). Trade-off: opening a trade is less explicit than in v0.1; the audit's original complaint was a *loud* Backtest hiding the primary, and Backtest is now quiet. Watch for "how do I trade this?" in testing. (SUPERSEDED 2026-10-07, see the next rule.)
+- **Explicit primary on every card (v3.2).** The actions row is two equal pills, 38px, r19, 8px apart, 13/18 Medium, no icons: **Backtest** (`app-control` #1C1C1F, white) and **View Setup** (brand gradient #F2B500→#00F3B6, black), which opens the same ticket as the card. This answers the v0.2 trade-off above: the way to trade is a labelled button again, not only a chevron. Figma `1261:10945`. (VALIDATED at 390px and 320px)
+- **Concentrate boldness.** The brand gradient was on Refresh, Backtest, the selected card and Connect at once. It now marks only primary buttons — Connect, each card's View Setup, "Switch strategy" (empty) and "Refresh" (expired banner). No card is highlighted. (VALIDATED — HIG craft: "boldness in one place". Note the v3.2 Figma accepts one gradient per card, so a two-card list shows three gradients with Connect.)
 - The whole card is the tap target for opening the ticket. (VALIDATED)
 
 ## 18. Touch targets
@@ -271,3 +277,4 @@ How phone and desktop stay separate — the pattern to keep when porting:
 | 17 | (v0.1) Draining refresh ring + status line with the time | `⟳ 9:50` refresh button, colour-coded; status line removed | One place for freshness, one fewer row | Freshness on the control that resets it | Validated at 390px |
 | 18 | (v0.1) Filled / accent strategy options | Outline options; selected = brighter outline | Same rule as the cards | Selection by outline | Validated at 390px |
 | 19 | (v0.1) Status line was the "How it works" entry | Footer line "…not financial advice. How it works" — then removed (2026-10-05) | User wanted the list without it | — | Removed; About sheet has no entry point |
+| 20 | (v0.2) One full-width neutral Backtest; trade only via the chevron | Backtest + gradient View Setup, side by side (Figma v3.2 `1261:10945`) | Opening a trade is explicit again | Explicit primary, quiet secondary | Validated at 390px / 320px |
