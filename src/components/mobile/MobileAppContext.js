@@ -17,6 +17,7 @@ export const MobileAppProvider = MobileAppContext.Provider;
 export const PUSHED_PAGES = new Set([
   "compete",
   "points",
+  "pnl-calendar",
   "profile",
   "support",
   "delete-account",

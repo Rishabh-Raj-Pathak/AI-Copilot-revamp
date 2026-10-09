@@ -5,7 +5,6 @@ import BottomSheet from "../BottomSheet.jsx";
 import AppIcon from "../AppIcon.jsx";
 import { appIcons } from "../mobileAssets.js";
 import { useMobileApp } from "../MobileAppContext.js";
-import { useAppToast } from "../appToastContext.js";
 import { useHistoryBack } from "../appHistory.js";
 import { showCopilotPortfolio } from "../copilot/copilotPortfolio.js";
 import { DOC_LINKS } from "../../../lib/docs.js";
@@ -72,7 +71,6 @@ function SectionLabel({ children }) {
  */
 export default function AppMoreSheet({ open, onClose }) {
   const app = useMobileApp();
-  const toast = useAppToast();
   const reduceMotion = useReducedMotion();
   // `dir` slides the list in from the side it came from; 0 (a fresh open) doesn't animate.
   const [nav, setNav] = useState({ view: "root", dir: 0 });
@@ -134,9 +132,7 @@ export default function AppMoreSheet({ open, onClose }) {
             <Row
               icon={appIcons.morePnlCalendar}
               label="PnL Calendar"
-              onClick={go(() =>
-                toast.show({ title: "PnL Calendar is coming soon", message: "Daily PnL will show here once it ships." }),
-              )}
+              onClick={go(() => app.navigate("pnl-calendar"))}
             />
             <Row icon={appIcons.moreCompete} label="Compete" onClick={go(() => app.navigate("compete"))} />
             <Row icon={appIcons.morePoints} label="Points" onClick={go(() => app.navigate("points"))} />

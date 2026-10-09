@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import AppChip from "../AppChip.jsx";
 import AppEmptyState from "../AppEmptyState.jsx";
 import AppIcon from "../AppIcon.jsx";
 import { appIcons } from "../mobileAssets.js";
@@ -33,27 +34,15 @@ function CategoryChips({ value, onChange, chips = COPILOT_CATEGORY_CHIPS }) {
       aria-label="Market category"
       className="app-no-scrollbar flex gap-2 overflow-x-auto overscroll-x-contain px-5 py-1 max-[374px]:px-4"
     >
-      {chips.map((chip) => {
-        const active = chip.id === value;
-        return (
-          <button
-            key={chip.id}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            data-active={active || undefined}
-            onClick={() => onChange(chip.id)}
-            className={`app-pressable relative flex h-8 shrink-0 items-center gap-[5px] rounded-[9px] border px-3 text-app-callout leading-4 before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] ${
-              active
-                ? "border-white/10 bg-app-control font-semibold text-ink"
-                : "border-white/[0.07] font-medium text-ink-subtle active:bg-white/[0.04]"
-            }`}
-          >
-            <AppIcon src={chip.icon} size={13} />
-            <span className="whitespace-nowrap">{chip.label}</span>
-          </button>
-        );
-      })}
+      {chips.map((chip) => (
+        <AppChip
+          key={chip.id}
+          active={chip.id === value}
+          icon={chip.icon}
+          label={chip.label}
+          onClick={() => onChange(chip.id)}
+        />
+      ))}
     </div>
   );
 }

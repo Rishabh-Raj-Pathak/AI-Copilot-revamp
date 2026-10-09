@@ -53,6 +53,7 @@ of drawing them.
 | Grouped list rows | `AppList.jsx` | List Row / Action 1036:5147 |
 | Toast (`useAppToast().show({...})`) | `AppToast.jsx`, `appToastContext.js` | Toast / Success 1064:5584 |
 | Empty state (icon disc, title, message, stacked 44px actions) | `AppEmptyState.jsx` | Copilot A5 1189:12683 · B1 1222:7000 |
+| Chip (32px, 44px hit; Copilot categories, PnL Calendar months) | `AppChip.jsx` | Category Chip 937:1163 |
 | Screen transitions | `MobilePageTransition.jsx` | — |
 | Hardware/gesture back | `appHistory.js` (`useHistoryBack`) | — |
 
@@ -60,7 +61,7 @@ of drawing them.
 
 `useMobileApp().navigate(id)` with a tab (`copilot` `agents` `trade` `rewards`)
 or a page (`vaults` `dn-vaults-1` `dn-vaults-2` `kol`). Pushed screens
-(`compete` `points` `profile` `support` `delete-account`) get a back-stack entry
+(`compete` `points` `pnl-calendar` `profile` `support` `delete-account`) get a back-stack entry
 and a browser-history entry, so Android back / iOS swipe-back pops them.
 `goBack()` returns to the previous screen.
 

@@ -8,6 +8,7 @@ import AppTabBar from "./components/mobile/AppTabBar.jsx";
 import { AppToastProvider } from "./components/mobile/AppToast.jsx";
 import { MobileAppProvider, PUSHED_PAGES } from "./components/mobile/MobileAppContext.js";
 import MobilePageTransition from "./components/mobile/MobilePageTransition.jsx";
+import MobilePnlCalendarPage from "./components/mobile/pnl/MobilePnlCalendarPage.jsx";
 import MobilePointsPage from "./components/mobile/points/MobilePointsPage.jsx";
 import DeleteAccountFlow from "./components/mobile/profile/DeleteAccountFlow.jsx";
 import ProfilePage from "./components/profile/ProfilePage.jsx";
@@ -165,6 +166,8 @@ export default function App() {
   const content =
     page === "points" ? (
       <MobilePointsPage />
+    ) : page === "pnl-calendar" ? (
+      <MobilePnlCalendarPage />
     ) : page === "delete-account" ? (
       <DeleteAccountFlow />
     ) : page === "support" ? (

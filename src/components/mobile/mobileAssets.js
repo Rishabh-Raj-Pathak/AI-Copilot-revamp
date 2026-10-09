@@ -117,6 +117,8 @@ export const appImages = {
   /** Gold→mint gradient disc used as the wallet avatar (Figma "Avatar"). */
   walletAvatar: icon("avatar-gradient"),
   activeDot: icon("active-dot"),
+  /** 4px gold dot beside today's date in the PnL Calendar (Figma "Today Dot"). */
+  todayDot: icon("today-dot"),
   coinBronze: logo("coin-bronze.png"),
   tokenEth: logo("token-eth.png"),
   tokenBtc: logo("token-btc.png"),
