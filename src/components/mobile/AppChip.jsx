@@ -11,8 +11,9 @@ import { appIcons } from "./mobileAssets.js";
  * the active chip into view.
  *
  * Pass `expanded` to make it a disclosure instead (the PnL Calendar year
- * chip): white SemiBold label, a chevron that flips while open, filled while
- * open. `disabled` drops the chevron — there is nothing to open.
+ * chip): white SemiBold label, a chevron that turns to point right — at the
+ * list that opens beside it — while open, filled while open. `disabled` drops
+ * the chevron — there is nothing to open.
  */
 export default function AppChip({ active, label, icon, onClick, ariaLabel, expanded, disabled = false }) {
   const disclosure = expanded !== undefined;
@@ -40,7 +41,7 @@ export default function AppChip({ active, label, icon, onClick, ariaLabel, expan
         <AppIcon
           src={appIcons.chevronDown14}
           size={14}
-          className={`-mr-1 text-ink-subtle transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
+          className={`-mr-1 text-ink-subtle transition-transform duration-150 ${expanded ? "-rotate-90" : ""}`}
         />
       ) : null}
     </button>
