@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, ChevronDown, Cookie, TriangleAlert, Wallet } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Cookie, TriangleAlert, Wallet } from "lucide-react";
 import { THEME_CATALOG } from "../../../delta-neutral/utils/markets.ts";
 import {
   formatCompactUsd,
@@ -14,7 +14,7 @@ import {
 import { formatWalletAddress } from "../../../delta-neutral/utils/wallet.ts";
 import AppNavBar from "../AppNavBar.jsx";
 import { useHistoryBack } from "../appHistory.js";
-import { Divider, Dn2Button, GroupToggle, InfoButton, StackRow, TokenIcon, VenueDisc, VenueMark } from "./Dn2Ui.jsx";
+import { Divider, Dn2Button, GroupToggle, InfoButton, StackRow, TokenIcon, VenueDisc, VenuePair } from "./Dn2Ui.jsx";
 import { LeverageField, MarginField } from "./Dn2SizeFields.jsx";
 import { venueFunding, withMinus } from "./dn2Data.js";
 import {
@@ -29,6 +29,7 @@ import {
   HERO_EDGE,
   HERO_FILL,
   LABEL,
+  TILE,
 } from "./dn2Theme.js";
 
 /**
@@ -245,109 +246,150 @@ function SetupCard({ p }) {
 }
 
 /**
- * Figma "Rates" (4493:119): the web's right-hand card, untitled as on web, in
- * its order — APY, the two spreads, each venue's funding / APY / slippage,
- * then hedge integrity and the funding settlement countdown.
+ * Figma "Rates" (4536:2, open state 4537:72): the web's right-hand card, the
+ * same fields grouped by what is decided on first.
+ *
+ *   APY (large)                    Funding settlement
+ *   [ Current spread | Max funding spread ]
+ *   [ Hedge integrity            ● 100.0% ]
+ *   ───────────────────────────────────────
+ *   (venues)  Per-venue rates             ⌄   ← funding / APY / slippage, folded
  */
+const MICRO_LABEL = "text-[10px] font-medium uppercase leading-[13px] tracking-[0.4px] text-[#717182]";
+const RULE = "border-white/[0.06]";
+
 function RatesCard({ p }) {
   const { summary, metrics, legSlippage, dexA, dexB } = p;
+  const [venuesOpen, setVenuesOpen] = useState(false);
   const venues = [dexA, dexB].filter(Boolean);
   const apyValid = Boolean(summary?.valid);
-  const hedge = metrics.hedgeIntegrity === "–" ? "—" : metrics.hedgeIntegrity;
+  const hedgeOk = metrics.hedgeIntegrity !== "–" && metrics.hedgeIntegrity !== "—";
+
+  const venueRows = [
+    { label: "Funding", cells: venues.map((dex) => ({ key: dex, value: venueFunding(dex).funding })) },
+    {
+      label: "APY",
+      cells: venues.map((dex) => {
+        const rate = venueFunding(dex);
+        return { key: dex, value: rate.aprLabel, tone: rate.apr >= 0 ? GREEN : RED };
+      }),
+    },
+    {
+      label: "Slippage",
+      cells: venues.map((dex) => {
+        const leg = summary?.valid ? legSlippage?.[dex] : null;
+        return { key: dex, value: leg ? `${formatCostPct(leg.pct)} · ${formatUsd(leg.usd)}` : "—", tone: leg ? undefined : MUTED };
+      }),
+    },
+  ];
 
   return (
-    <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label="Rates">
-      <dl className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <dt className={LABEL}>APY</dt>
-          <dd
-            className={`text-right text-[15px] font-semibold leading-5 ${
+    <section className={`${CARD} ${CARD_EDGE} gap-3.5!`} style={CARD_FILL} aria-label="Rates">
+      {/* 1 · The return, and when funding next settles. */}
+      <div className="flex items-start justify-between gap-3 whitespace-nowrap">
+        <div className="flex flex-col gap-0.5">
+          <p className={LABEL}>APY</p>
+          <p
+            className={`text-[26px] font-semibold leading-8 ${
               !apyValid ? MUTED : summary.netAprOnCapitalPct > 0 ? GREEN : RED
             }`}
           >
             {apyValid ? withMinus(formatPct(summary.netAprOnCapitalPct)) : "—"}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-0.5">
+          <p className={LABEL}>Funding settlement</p>
+          <p className="text-right text-[15px] font-medium leading-5 text-[#ccb17f]">{metrics.fundingSettlement}</p>
+        </div>
+      </div>
+
+      {/* 2 · The spread the hedge captures, its ceiling, and the hedge's health. */}
+      <dl className={`${TILE} overflow-hidden`}>
+        <div className="grid grid-cols-2">
+          <SpreadCell
+            label="Current spread"
+            value={metrics.currentSpread}
+            sub="per 8h"
+            tone={metrics.spreadPositive ? GREEN : RED}
+          />
+          <SpreadCell
+            label="Max funding spread"
+            value={metrics.maxFundingSpread}
+            sub="lookback high / 8h"
+            tone={RED}
+            className={`border-l ${RULE}`}
+          />
+        </div>
+        <div className={`flex items-center justify-between gap-3 border-t px-3 py-2.5 ${RULE}`}>
+          <dt className={MICRO_LABEL}>Hedge integrity</dt>
+          <dd className="flex items-center gap-1.5">
+            <span className={`size-1.5 shrink-0 rounded-full ${hedgeOk ? "bg-[#00d492]" : "bg-[#6b7280]"}`} aria-hidden />
+            <span className={`text-[12px] font-medium leading-4 ${hedgeOk ? "text-[#dcdce8]" : MUTED}`}>
+              {hedgeOk ? metrics.hedgeIntegrity : "—"}
+            </span>
           </dd>
         </div>
-        <RateRow
-          label="Current spread"
-          value={metrics.currentSpread}
-          sub="per 8h"
-          tone={metrics.spreadPositive ? GREEN : RED}
-        />
-        <RateRow label="Max funding spread" value={metrics.maxFundingSpread} sub="lookback high / 8h" tone={RED} />
       </dl>
+
+      {/* 3 · Per-venue detail, folded until asked for. */}
       <Divider />
-      {/* Per venue, side by side: the two rates the spread is the gap between. */}
-      <div className="flex flex-col gap-[9px]" role="table" aria-label="Rates per venue">
-        <div className="flex items-center gap-2" role="row">
-          <span className="w-[84px] shrink-0" role="columnheader" aria-label="Figure" />
-          {venues.map((dex) => (
-            <span key={dex} role="columnheader" className="flex min-w-0 flex-1 items-center justify-end gap-[5px]">
-              <VenueMark dex={dex} size={12} />
-              <span className="truncate text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#8f90a1]">
-                {dex}
+      <button
+        type="button"
+        aria-expanded={venuesOpen}
+        aria-controls="dn2-venue-rates"
+        onClick={() => setVenuesOpen((open) => !open)}
+        className="relative flex h-6 w-full items-center gap-2.5 text-left after:absolute after:-inset-y-2.5 after:inset-x-0"
+      >
+        {venues.length === 2 ? <VenuePair a={venues[0]} b={venues[1]} size={22} logo={13} /> : null}
+        <span className="min-w-0 flex-1 truncate text-[12px] font-medium leading-4 text-[#dcdce8]">Per-venue rates</span>
+        {venuesOpen ? (
+          <ChevronUp size={14} className="shrink-0 text-[#8f90a1]" aria-hidden />
+        ) : (
+          <ChevronDown size={14} className="shrink-0 text-[#8f90a1]" aria-hidden />
+        )}
+      </button>
+      {venuesOpen ? (
+        <div id="dn2-venue-rates" className={`${TILE} flex flex-col gap-2.5 p-3`} role="table" aria-label="Rates per venue">
+          <div className="flex items-center gap-2" role="row">
+            <span className="w-16 shrink-0" role="columnheader" aria-label="Figure" />
+            {venues.map((dex) => (
+              <span key={dex} role="columnheader" className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
+                <VenueDisc dex={dex} size={16} logo={10} className="" />
+                <span className="truncate text-[11px] font-medium leading-[14px] text-[#dcdce8]">{dex}</span>
               </span>
-            </span>
+            ))}
+          </div>
+          <span className="h-px w-full shrink-0 bg-white/[0.06]" aria-hidden />
+          {venueRows.map((row) => (
+            <div key={row.label} className="flex items-center gap-2" role="row">
+              <span role="rowheader" className={`w-16 shrink-0 ${MICRO_LABEL}`}>
+                {row.label}
+              </span>
+              {row.cells.map((cell) => (
+                <span
+                  key={cell.key}
+                  role="cell"
+                  className={`min-w-0 flex-1 truncate text-right text-[12px] leading-4 ${cell.tone ?? "text-[#dcdce8]"}`}
+                >
+                  {cell.value}
+                </span>
+              ))}
+            </div>
           ))}
         </div>
-        <VenueRow label="Funding" cells={venues.map((dex) => ({ key: dex, value: venueFunding(dex).funding }))} />
-        <VenueRow
-          label="APY"
-          cells={venues.map((dex) => {
-            const rate = venueFunding(dex);
-            return { key: dex, value: rate.aprLabel, tone: rate.apr >= 0 ? GREEN : RED };
-          })}
-        />
-        <VenueRow
-          label="Slippage"
-          cells={venues.map((dex) => {
-            const leg = summary?.valid ? legSlippage?.[dex] : null;
-            return {
-              key: dex,
-              value: leg ? `${formatCostPct(leg.pct)} · ${formatUsd(leg.usd)}` : "—",
-              tone: leg ? undefined : MUTED,
-            };
-          })}
-        />
-      </div>
-      <Divider />
-      <dl className="flex flex-col gap-3">
-        <RateRow label="Hedge integrity" value={hedge} tone="text-[#dcdce8]" />
-        <RateRow label="Funding settlement" value={metrics.fundingSettlement} tone="text-[#ccb17f]" />
-      </dl>
+      ) : null}
     </section>
   );
 }
 
-function VenueRow({ label, cells }) {
-  return (
-    <div className="flex items-center gap-2" role="row">
-      <span role="rowheader" className={`w-[84px] shrink-0 ${LABEL}`}>
-        {label}
-      </span>
-      {cells.map((cell) => (
-        <span
-          key={cell.key}
-          role="cell"
-          className={`min-w-0 flex-1 truncate text-right text-[12px] leading-4 ${cell.tone ?? "text-[#dcdce8]"}`}
-        >
-          {cell.value}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-/** Label left; value right with the web's period line under it ("per 8h"). "—" is muted. */
-function RateRow({ label, value, sub, tone }) {
+/** One half of the spread tile: label, value, and the web's period line under it. "—" is muted. */
+function SpreadCell({ label, value, sub, tone, className = "" }) {
   const empty = value === "—";
   return (
-    <div className={`flex justify-between gap-3 ${sub && !empty ? "items-start" : "items-center"}`}>
-      <dt className={`${LABEL} ${sub && !empty ? "pt-px" : ""}`}>{label}</dt>
-      <dd className="flex flex-col items-end gap-0.5 text-right">
-        <span className={`text-[12px] leading-4 ${empty ? MUTED : tone}`}>{withMinus(value)}</span>
-        {sub && !empty ? <span className="text-[10px] leading-[13px] text-[#717182]">{sub}</span> : null}
-      </dd>
+    <div className={`flex min-w-0 flex-col gap-[3px] px-3 py-[11px] ${className}`}>
+      <dt className={`truncate ${MICRO_LABEL}`}>{label}</dt>
+      <dd className={`text-[15px] font-medium leading-5 ${empty ? MUTED : tone}`}>{withMinus(value)}</dd>
+      <dd className="truncate text-[10px] leading-[13px] text-[#717182]">{sub}</dd>
     </div>
   );
 }
