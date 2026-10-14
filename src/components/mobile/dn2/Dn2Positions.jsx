@@ -9,9 +9,9 @@ import { CARD, CARD_EDGE, CARD_EDGE_OPEN, CARD_FILL, TILE } from "./dn2Theme.js"
 /**
  * Positions & History as their own Delta Neutral 2 sub-tabs — Figma D1–D4
  * (4476:8). One card per pair, from the same rows the web bottom panel lists,
- * in the web's order. Expanding a card swaps its leg lines for one Long | Short
- * table holding every web column, grouped by hairlines: who (type, wallet),
- * the trade, then risk.
+ * in the web's order. The collapsed card already names each leg (venue, side,
+ * instrument, size, P&L); expanding keeps it as it is and adds a Details tile
+ * with the rest of the web's columns — nothing repeated, nothing new.
  */
 
 const pnlTone = (n) => (n >= 0 ? "text-[#00d492]" : "text-[#e5484d]");
@@ -72,48 +72,53 @@ function instrumentOf(leg) {
 }
 
 const HAIRLINE = "h-px w-full shrink-0 bg-white/[0.06]";
+const LONG_INK = "text-[#00d492]";
+const SHORT_INK = "text-[#ff6467]";
 
 /**
- * Long | Short table — every web column for the pair, `labelWidth` wide labels.
- * `"rule"` in `rows` draws a hairline between groups.
+ * Figma "Details" (D2 4561:137, D4 4562:2): what an expanded card adds under
+ * the card it already is. A plain Long | Short head, then sentence-case rows in
+ * hairline-split groups. Value columns are 92px and give way before the labels
+ * do on the narrowest phones.
+ *
+ * `head` — one node per leg column; `groups` — arrays of { label, cells: [{ value, tone }] }.
  */
-function SplitTable({ head, rows, labelWidth }) {
+function DetailsTile({ head, groups, label }) {
   return (
-    <div className={`${TILE} flex flex-col gap-2.5 p-3`} role="table">
+    <div className={`${TILE} flex flex-col gap-2 p-3`} role="table" aria-label={label}>
       <div className="flex items-center gap-2" role="row">
-        <span className="shrink-0" style={{ width: labelWidth }} role="columnheader" aria-label="Figure" />
-        {head.map((cell) => (
-          <span key={cell.key} role="columnheader" className="flex min-w-0 flex-1 items-center justify-end gap-[5px]">
-            <VenueMark dex={cell.dex} size={12} />
-            <SideBadge side={cell.side}>{cell.label}</SideBadge>
+        <span className="min-w-[84px] flex-1" role="columnheader" aria-label="Figure" />
+        {head.map((cell, i) => (
+          <span
+            key={i}
+            role="columnheader"
+            className="flex w-[92px] min-w-0 shrink items-center justify-end gap-[5px] text-[11px] font-semibold leading-[14px]"
+          >
+            {cell}
           </span>
         ))}
       </div>
-      <span className={HAIRLINE} aria-hidden />
-      {rows.map((row, index) =>
-        row === "rule" ? (
-          <span key={`rule-${index}`} className={HAIRLINE} aria-hidden />
-        ) : (
-          <div key={row.label} className="flex items-center gap-2" role="row">
-            <span
-              role="rowheader"
-              className="shrink-0 text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]"
-              style={{ width: labelWidth }}
-            >
-              {row.label}
-            </span>
-            {row.cells.map((cell, i) => (
-              <span
-                key={i}
-                role="cell"
-                className={`min-w-0 flex-1 truncate text-right text-[12px] leading-4 ${cell.tone ?? "text-[#dcdce8]"}`}
-              >
-                {cell.value}
+      {groups.map((rows, gi) => (
+        <div key={gi} className="flex flex-col gap-2" role="rowgroup">
+          <span className={HAIRLINE} aria-hidden />
+          {rows.map((row) => (
+            <div key={row.label} className="flex items-center gap-2" role="row">
+              <span role="rowheader" className="min-w-[84px] flex-1 truncate text-[12px] leading-4 text-[#8f90a1]">
+                {row.label}
               </span>
-            ))}
-          </div>
-        ),
-      )}
+              {row.cells.map((cell, i) => (
+                <span
+                  key={i}
+                  role="cell"
+                  className={`w-[92px] min-w-0 shrink truncate text-right text-[12px] leading-4 ${cell.tone ?? "text-[#dcdce8]"}`}
+                >
+                  {cell.value}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
@@ -154,44 +159,38 @@ function PairCard({ position, now, expanded, onToggle, onClose, onChart }) {
         expanded={expanded}
         onToggle={onToggle}
       />
+      <div className={`${TILE} flex flex-col gap-2 p-2.5`}>
+        <LegLines position={position} />
+      </div>
       {expanded ? (
-        <SplitTable
-          labelWidth={92}
+        <DetailsTile
+          label={`${position.coin} legs`}
           head={[
-            { key: "long", dex: long.dex, side: "long" },
-            { key: "short", dex: short.dex, side: "short" },
+            <span key="long" className={LONG_INK}>Long</span>,
+            <span key="short" className={SHORT_INK}>Short</span>,
           ]}
-          rows={[
-            { label: "Type", cells: [legCell(instrumentOf(long)), legCell(instrumentOf(short))] },
-            { label: "Wallet", cells: [legCell(formatWalletAddress(long.wallet)), legCell(formatWalletAddress(short.wallet))] },
-            "rule",
-            { label: "Size", cells: [legCell(long.size), legCell(short.size)] },
-            { label: "Position value", cells: [legCell(long.positionValue), legCell(short.positionValue)] },
-            { label: "Entry price", cells: [legCell(long.entryPrice), legCell(short.entryPrice)] },
-            { label: "Current price", cells: [legCell(long.currentPrice), legCell(short.currentPrice)] },
-            {
-              label: "P&L",
-              cells: [
-                { value: signedWholeUsd(long.pnlValue), tone: `${pnlTone(long.pnlValue)} font-medium` },
-                { value: signedWholeUsd(short.pnlValue), tone: `${pnlTone(short.pnlValue)} font-medium` },
-              ],
-            },
-            "rule",
-            { label: "Liq. price", cells: [legCell(long.liqPrice), legCell(short.liqPrice)] },
-            { label: "Margin", cells: [legCell(long.margin), legCell(short.margin)] },
-            {
-              label: "Funding",
-              cells: [legCell(long.funding, fundingTone(long.funding)), legCell(short.funding, fundingTone(short.funding))],
-            },
-            { label: "TP / SL", cells: [legCell(long.tpSl), legCell(short.tpSl)] },
-            { label: "Exp. P/L", cells: [legCell(long.expected), legCell(short.expected)] },
+          groups={[
+            [{ label: "Wallet", cells: [legCell(formatWalletAddress(long.wallet)), legCell(formatWalletAddress(short.wallet))] }],
+            [
+              { label: "Position value", cells: [legCell(long.positionValue), legCell(short.positionValue)] },
+              { label: "Entry price", cells: [legCell(long.entryPrice), legCell(short.entryPrice)] },
+              { label: "Current price", cells: [legCell(long.currentPrice), legCell(short.currentPrice)] },
+            ],
+            [
+              { label: "Liq. price", cells: [legCell(long.liqPrice), legCell(short.liqPrice)] },
+              { label: "Margin", cells: [legCell(long.margin), legCell(short.margin)] },
+              {
+                label: "Funding",
+                cells: [legCell(long.funding, fundingTone(long.funding)), legCell(short.funding, fundingTone(short.funding))],
+              },
+            ],
+            [
+              { label: "TP / SL", cells: [legCell(long.tpSl), legCell(short.tpSl)] },
+              { label: "Exp. P/L", cells: [legCell(long.expected), legCell(short.expected)] },
+            ],
           ]}
         />
-      ) : (
-        <div className={`${TILE} flex flex-col gap-2 p-2.5`}>
-          <LegLines position={position} />
-        </div>
-      )}
+      ) : null}
       <div className="flex gap-2">
         <Dn2Button className="flex-1" onClick={onClose}>
           Close pair
@@ -287,20 +286,29 @@ function HistoryCard({ row, now, expanded, onToggle }) {
         onToggle={onToggle}
       />
       {expanded ? (
-        <SplitTable
-          labelWidth={78}
+        <DetailsTile
+          label={`${row.coin} fills`}
           head={[
-            { key: "long", dex: long.dex, side: "long", label: long.action },
-            { key: "short", dex: short.dex, side: "short", label: short.action },
+            <span key="long" className={`flex min-w-0 items-center gap-[5px] ${LONG_INK}`}>
+              <VenueMark dex={long.dex} size={12} />
+              <span className="truncate">{long.action}</span>
+            </span>,
+            <span key="short" className={`flex min-w-0 items-center gap-[5px] ${SHORT_INK}`}>
+              <VenueMark dex={short.dex} size={12} />
+              <span className="truncate">{short.action}</span>
+            </span>,
           ]}
-          rows={[
-            { label: "Type", cells: [legCell(long.instrument), legCell(short.instrument)] },
-            { label: "Wallet", cells: [legCell(formatWalletAddress(long.wallet)), legCell(formatWalletAddress(short.wallet))] },
-            "rule",
-            { label: "Price", cells: [legCell(long.price), legCell(short.price)] },
-            { label: "Size", cells: [legCell(long.size), legCell(short.size)] },
-            { label: "Trade value", cells: [legCell(long.tradeValue), legCell(short.tradeValue)] },
-            { label: "Fee", cells: [legCell(long.fee), legCell(short.fee)] },
+          groups={[
+            [
+              { label: "Type", cells: [legCell(long.instrument), legCell(short.instrument)] },
+              { label: "Wallet", cells: [legCell(formatWalletAddress(long.wallet)), legCell(formatWalletAddress(short.wallet))] },
+            ],
+            [
+              { label: "Price", cells: [legCell(long.price), legCell(short.price)] },
+              { label: "Size", cells: [legCell(long.size), legCell(short.size)] },
+              { label: "Trade value", cells: [legCell(long.tradeValue), legCell(short.tradeValue)] },
+              { label: "Fee", cells: [legCell(long.fee), legCell(short.fee)] },
+            ],
           ]}
         />
       ) : null}

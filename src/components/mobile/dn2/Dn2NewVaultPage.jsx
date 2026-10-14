@@ -33,7 +33,7 @@ import {
 } from "./dn2Theme.js";
 
 /**
- * Figma B1–B3 "New vault" (4493:30, 4494:2, 4494:257): the web Delta Neutral 2
+ * Figma B1–B3 "Set up vault" (4493:30, 4494:2, 4494:257): the web Delta Neutral 2
  * builder as a pushed page, with the web's fields and nothing else. Web left →
  * right order kept top → bottom, each output under the inputs that drive it:
  *
@@ -532,14 +532,14 @@ export default function Dn2NewVaultPage({ open, onClose, cta, ...p }) {
           key="dn2-new-vault"
           role="dialog"
           aria-modal="true"
-          aria-label="New vault"
+          aria-label="Set up vault"
           className="fixed inset-0 z-[60] flex flex-col bg-black text-white proportional-nums tablet:hidden"
           initial={{ x: reduceMotion ? 0 : "100%" }}
           animate={{ x: 0 }}
           exit={{ x: reduceMotion ? 0 : "100%" }}
           transition={reduceMotion ? { duration: 0 } : { type: "spring", damping: 34, stiffness: 340, mass: 0.9 }}
         >
-          <AppNavBar title="New vault" onBack={onClose} />
+          <AppNavBar title="Set up vault" onBack={onClose} />
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
             <div className="flex flex-col gap-3 px-5 pb-6 pt-4 max-[374px]:px-4">
               <SetupCard p={p} />

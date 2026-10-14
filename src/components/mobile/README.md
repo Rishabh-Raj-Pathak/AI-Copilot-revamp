@@ -55,7 +55,7 @@ of drawing them.
 | Empty state (icon disc, title, message, stacked 44px actions) | `AppEmptyState.jsx` | Copilot A5 1189:12683 · B1 1222:7000 |
 | Chip (32px, 44px hit; Copilot categories, PnL Calendar months) | `AppChip.jsx` | Category Chip 937:1163 |
 | Screen transitions | `MobilePageTransition.jsx` | — |
-| Delta Neutral 2 phone screens (Vaults / Positions / History tabs, New vault page, vault sheets) | `dn2/` — see below | Terminal `kN9AkNRzaxmg4mhFVkt1Bo` 4476:2 |
+| Delta Neutral 2 phone screens (Vaults / Positions / History tabs, Set up vault page, vault sheets) | `dn2/` — see below | Terminal `kN9AkNRzaxmg4mhFVkt1Bo` 4476:2 |
 | Hardware/gesture back | `appHistory.js` (`useHistoryBack`) | — |
 
 ### Navigation

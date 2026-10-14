@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { formatPct } from "../../../delta-neutral/utils/format.ts";
 import { useMobileApp } from "../MobileAppContext.js";
 import ConnectNetworkSheet from "../sheets/ConnectNetworkSheet.jsx";
@@ -11,9 +12,9 @@ import { CARD, EYEBROW, HERO_EDGE, HERO_FILL } from "./dn2Theme.js";
 /**
  * Delta Neutral 2 on a phone — the builder's face (Figma 4476:2).
  *
- *  - Vaults tab: the Cross-DEX setup hero (A1) — the pair being built, its
- *    APY, and "New vault".
- *  - "New vault" opens the builder as a pushed page (B1–B3) with its sheets:
+ *  - Vaults tab: the Cross-DEX setup hero (A1) — what the product does, the
+ *    pre-filled pair and its estimated APY, and "Set up vault →".
+ *  - "Set up vault" opens the builder as a pushed page (B1–B3) with its sheets:
  *    DEX (B4), market (B5), cost to open (B6), ⓘ explainers. Only the web
  *    builder's fields: Deposit and Change wallet sit on each DEX card, as on
  *    web, and the token field has no chart button (the chart, A6, is on the
@@ -37,19 +38,34 @@ function marketLabel(market) {
   return market.themes.length ? market.themes.join(" + ") : "Pick a category";
 }
 
-/** Figma "Cross-DEX Setup" (4492:93) on the Vaults tab. */
-function SetupHero({ dexA, dexB, legA, legB, market, summary, onNewVault }) {
+/**
+ * Figma "Cross-DEX Setup" (4492:93) on the Vaults tab: an entry point, not an
+ * action. One line says what the product does, the pre-filled pair sits in a
+ * preview tile (its APY is an estimate at live rates), and the button names
+ * the next step, "Set up vault →", over a line saying nothing opens yet.
+ */
+function SetupHero({ dexA, dexB, legA, legB, market, summary, onSetUp }) {
   const apyValid = Boolean(summary?.valid);
-  const venues = dexA && dexB ? `${dexA} ⇄ ${dexB} · ${legA} / ${legB}` : "Pick two venues to start";
+  const venuesPicked = Boolean(dexA && dexB);
   return (
-    <section className={`${CARD} ${HERO_EDGE}`} style={HERO_FILL} aria-label="Cross-DEX setup">
-      <p className={EYEBROW}>Cross-DEX setup</p>
-      <div className="flex items-center gap-3">
-        {dexA && dexB ? <VenuePair a={dexA} b={dexB} size={30} logo={17} /> : null}
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5 whitespace-nowrap">
+    <section className={`${CARD} ${HERO_EDGE} gap-3.5!`} style={HERO_FILL} aria-label="Cross-DEX setup">
+      <div className="flex flex-col gap-1">
+        <p className={EYEBROW}>Cross-DEX setup</p>
+        <p className="text-[12px] leading-4 text-[#b4b5c2]">Earn the funding spread, hedged across two DEXs.</p>
+      </div>
+
+      <div className="flex items-center gap-3 rounded-[12px] border border-white/[0.06] bg-black/[0.28] p-3">
+        {venuesPicked ? <VenuePair a={dexA} b={dexB} size={30} logo={17} /> : null}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="truncate text-[15px] font-medium leading-5 text-[#e8d5b5]">{marketLabel(market)}</p>
-          {/* Not truncated: as in Figma it may run a few px under the APY column's empty left side. */}
-          <p className="text-[11px] leading-[14px] text-[#8f90a1]">{venues}</p>
+          <p className="truncate text-[11px] leading-[14px] text-[#8f90a1]">
+            {venuesPicked ? `${dexA} ⇄ ${dexB}` : "Pick two venues to start"}
+          </p>
+          {venuesPicked ? (
+            <p className="truncate text-[11px] leading-[14px] text-[#717182]">
+              {legA} / {legB}
+            </p>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-0.5 whitespace-nowrap">
           <p
@@ -59,12 +75,17 @@ function SetupHero({ dexA, dexB, legA, legB, market, summary, onNewVault }) {
           >
             {apyValid ? formatPct(summary.netAprOnCapitalPct) : "—"}
           </p>
-          <p className="text-[11px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]">APY</p>
+          <p className="text-[11px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]">Est. APY</p>
         </div>
       </div>
-      <Dn2Button variant="primary" size="md" className="w-full" onClick={onNewVault}>
-        New vault
-      </Dn2Button>
+
+      <div className="flex flex-col items-center gap-2">
+        <Dn2Button variant="primary" size="md" className="w-full" onClick={onSetUp}>
+          Set up vault
+          <ArrowRight size={16} aria-hidden />
+        </Dn2Button>
+        <p className="text-center text-[11px] leading-[14px] text-[#717182]">Nothing opens until you review and confirm.</p>
+      </div>
     </section>
   );
 }
@@ -197,7 +218,7 @@ export default function Dn2Builder(props) {
           legB={legB}
           market={market}
           summary={summary}
-          onNewVault={() => setPageOpen(true)}
+          onSetUp={() => setPageOpen(true)}
         />
       ) : null}
 
