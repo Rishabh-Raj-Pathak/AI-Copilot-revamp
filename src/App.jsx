@@ -34,8 +34,13 @@ export default function App() {
   const [profileReturnPage, setProfileReturnPage] = useState("copilot");
   /** Where the back arrow on the support page returns to. */
   const [supportReturnPage, setSupportReturnPage] = useState("copilot");
-  /** Phone tabs reopen the last sub-view they showed (Agents → DN or Alpha). */
-  const [lastAgentsPage, setLastAgentsPage] = useState("dn-vaults-1");
+  /**
+   * Phone tabs reopen the last sub-view they showed (Agents → DN or Alpha).
+   * Agents starts on Delta Neutral 2, the mobile-native build (Figma 4476:2);
+   * DN1 stays one re-tap away in the tab bar's picker. Desktop menus route
+   * through `handleVaultViewChange` and are unaffected.
+   */
+  const [lastAgentsPage, setLastAgentsPage] = useState("dn-vaults-2");
   const [lastRewardsPage, setLastRewardsPage] = useState("rewards");
   /**
    * Phone back stack for pushed screens. Each entry owns one browser-history

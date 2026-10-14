@@ -7,9 +7,9 @@ import { useMobileApp } from "../MobileAppContext.js";
  * (Figma "02 Agents · v3.1 consistent"). It used to be a gold pill segmented
  * control at the top of each Agents body.
  *
- * Delta Neutral goes to v1 unless v2 is already showing: v2 stays a real route,
- * reached from the tab bar's re-tap picker, and this control must not bounce
- * the user out of it.
+ * Delta Neutral goes to v2, the mobile-native build, unless a Delta Neutral
+ * page is already showing: v1 stays a real route, reached from the tab bar's
+ * re-tap picker, and this control must not bounce the user out of it.
  */
 export default function AgentsSwitcher() {
   const app = useMobileApp();
@@ -21,7 +21,7 @@ export default function AgentsSwitcher() {
         ariaLabel="Agent type"
         value={onDeltaNeutral ? "delta-neutral" : "alpha-agents"}
         onChange={(id) => {
-          if (id === "delta-neutral" && !onDeltaNeutral) app.navigate("dn-vaults-1");
+          if (id === "delta-neutral" && !onDeltaNeutral) app.navigate("dn-vaults-2");
           if (id === "alpha-agents" && onDeltaNeutral) app.navigate("vaults");
         }}
         options={[
