@@ -88,14 +88,22 @@ phone; `DeltaVaultBuilder` draws its phone face with `phoneLayout="page"`
 (`Dn2Builder`), keeping every builder value and handler where they were. DN1
 and desktop are untouched.
 
+**Web field parity (2026-10-14).** The phone shows the web Delta Neutral 2
+page's fields and nothing else: no tab or filter counts, no "New" badge, no
+toasts for opening, editing, deactivating or closing (the copy button's
+"Address copied" is the one feedback toast). Only phone-only pieces: the
+Cross-DEX hero on the Vaults tab, the Close pair / Deactivate confirms (vault
+or pair + action, no extra figures) and the Copilot chart sheet (A6).
+
 - `dn2Theme.js` — the vault recipes (card / hero / bronze fills, tiles, fields,
   toggles, chips, type). `Dn2Ui.jsx` — the shared pieces (venue discs, rows,
   `Dn2Button` on the control scale, `Dn2Sheet` = `BottomSheet` in the vault
   theme). `dn2Data.js` — shaping for the phone copy (funding readouts, chart-feed
   token price, PnL breakdown that sums to its total, the 8h countdown).
-- Screens: `Dn2Screen` (A, C, D), `Dn2NewVaultPage` (B1–B3), `Dn2BuilderSheets`
-  (B4 venue, B5 market, B7 cost, ⓘ), `Dn2ChartSheet` (B6 — the Copilot
-  `AppChartCard`), `Dn2OpeningScreen` (B8), `Dn2VariationalSheet` (E1–E3),
-  `Dn2Vaults` (vault card, C1–C3), `Dn2Positions` (D1–D4).
+- Screens: `Dn2Screen` (A, C, D), `Dn2NewVaultPage` (B1–B3: setup, rates,
+  margin & leverage, estimates), `Dn2BuilderSheets` (B4 DEX, B5 market, B6
+  cost, ⓘ), `Dn2ChartSheet` (A6 — the Copilot `AppChartCard`),
+  `Dn2OpeningScreen` (B7), `Dn2VariationalSheet` (E1–E3), `Dn2Vaults` (vault
+  card, C1–C3), `Dn2Positions` (D1–D4).
 - Toasts here pass `theme: "gold"` to `useAppToast().show`.
 - Inputs are 16px (not Figma's 14) so iOS never zooms on focus.

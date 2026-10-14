@@ -236,7 +236,7 @@ export function GroupToggle({ options, value, onChange, ariaLabel, disabled = fa
 
 /* ── Badges ───────────────────────────────────────────────────────────── */
 
-/** Gold pill: a category, "New", a leverage tag. */
+/** Gold pill: a pair's category. */
 export function GoldBadge({ children, size = "sm" }) {
   return (
     <span
@@ -324,8 +324,8 @@ export function Dn2Sheet({ title, header, children, bodyClassName = "", ...rest 
   );
 }
 
-/** Figma "Vault Summary": the vault a sheet acts on, with its leverage. */
-export function VaultSummaryTile({ vault, leverage }) {
+/** Figma "Vault Summary": the vault a sheet acts on — its name and venues, nothing more. */
+export function VaultSummaryTile({ vault }) {
   return (
     <div className={`${TILE} flex items-center gap-2.5 px-3 py-2.5`}>
       <VenuePair a={vault.longAccount} b={vault.shortAccount} size={24} logo={14} />
@@ -335,7 +335,6 @@ export function VaultSummaryTile({ vault, leverage }) {
           {`${vault.longAccount}  ⇄  ${vault.shortAccount}`}
         </p>
       </div>
-      <GoldBadge size="md">{leverage}x</GoldBadge>
     </div>
   );
 }

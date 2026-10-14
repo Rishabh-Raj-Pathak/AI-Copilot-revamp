@@ -9,7 +9,6 @@ import {
   Dn2Button,
   Dn2Sheet,
   ExpandButton,
-  GoldBadge,
   StackRow,
   VaultSummaryTile,
   VenueMark,
@@ -31,20 +30,17 @@ import {
 import { CARD, CARD_EDGE, CARD_FILL, LABEL, TILE } from "./dn2Theme.js";
 
 /**
- * Active vaults on the Delta Neutral 2 phone tab — Figma A1–A5 (4476:5) and the
- * manage sheets C1–C3 (4476:7). The card is the Alpha Agents card pattern;
- * expanding it shows each venue's wallet and latest funding (the web deep-dive's
- * figures, without its charts), plus the Copilot chart for a token vault.
+ * Active vaults on the Delta Neutral 2 phone tab — Figma A1–A6 (4476:5) and the
+ * manage sheets C1–C3 (4476:7). The card is the Alpha Agents card pattern and
+ * carries the web card's fields only; expanding it shows each venue's wallet
+ * and latest funding (the web deep-dive's figures, without its charts), plus a
+ * link to the Copilot chart (A6) for a token vault.
  */
 
 const LEG_SEPARATOR = "  ⇄  ";
 
-function marginLeverage(vault) {
-  return `${Math.round(capitalUsedPct(vault.hedgeHealth))}% · ${vaultLeverage(vault)}x`;
-}
-
 /** Figma "Vault Card" (4492:120 collapsed, 4492:542 expanded). */
-export function Dn2VaultCard({ vault, expanded, isNew, countdown, onToggle, onPnl, onEdit, onDeactivate, onChart, onCopy }) {
+export function Dn2VaultCard({ vault, expanded, countdown, onToggle, onPnl, onEdit, onDeactivate, onChart, onCopy }) {
   const isToken = vault.marketType === "token";
   const pairLabel = vault.pair.replace("/", "-");
   return (
@@ -57,7 +53,6 @@ export function Dn2VaultCard({ vault, expanded, isNew, countdown, onToggle, onPn
             {`${vault.longAccount}${LEG_SEPARATOR}${vault.shortAccount}`}
           </p>
         </div>
-        {isNew ? <GoldBadge>New</GoldBadge> : null}
         <ExpandButton
           expanded={expanded}
           onPress={onToggle}
@@ -69,7 +64,9 @@ export function Dn2VaultCard({ vault, expanded, isNew, countdown, onToggle, onPn
         <DataRow label="Total volume" value={compactUsd(vault.totalVolumeUsd ?? 0)} />
         <DataRow label="Volume 7D" value={compactUsd(vault.volume7dUsd ?? 0)} />
         <DataRow label="Funding settlement" value={countdown} tone="text-[#ccb17f]" />
-        <DataRow label="Margin · Leverage" value={marginLeverage(vault)} />
+        {/* Two rows, as the web card shows them. */}
+        <DataRow label="Margin" value={`${Math.round(capitalUsedPct(vault.hedgeHealth))}%`} />
+        <DataRow label="Leverage" value={`${vaultLeverage(vault)}x`} />
       </dl>
 
       {expanded ? (
@@ -166,7 +163,7 @@ function EditBody({ vault, onSave, onCancel }) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-4">
-      <VaultSummaryTile vault={vault} leverage={leverage} />
+      <VaultSummaryTile vault={vault} />
       <MarginField
         percent={draftPercent}
         amount={draftAmount}
@@ -234,7 +231,7 @@ export function Dn2PnlSheet({ open, vault, onClose }) {
     <Dn2Sheet open={open} onClose={onClose} title="PnL breakdown">
       {vault ? (
         <div className="flex flex-col gap-4 px-4 pt-4">
-          <VaultSummaryTile vault={vault} leverage={vaultLeverage(vault)} />
+          <VaultSummaryTile vault={vault} />
           <div className="flex flex-col gap-0.5">
             <p className={LABEL}>Net PnL</p>
             <p
@@ -273,19 +270,16 @@ export function Dn2PnlSheet({ open, vault, onClose }) {
 
 /* ── C3 Deactivate vault (4496:925) ───────────────────────────────────── */
 
-/** Phone-only confirm: on the web, Deactivate fires immediately. */
-export function Dn2DeactivateSheet({ open, vault, countdown, onClose, onConfirm }) {
+/**
+ * Phone-only confirm (on the web, Deactivate fires immediately) — so it adds no
+ * figures of its own: the vault, what happens, and the two choices.
+ */
+export function Dn2DeactivateSheet({ open, vault, onClose, onConfirm }) {
   return (
     <Dn2Sheet open={open} onClose={onClose} title="Deactivate vault">
       {vault ? (
         <div className="flex flex-col gap-4 px-4 pt-4">
-          <VaultSummaryTile vault={vault} leverage={vaultLeverage(vault)} />
-          <dl className={`${TILE} flex flex-col gap-2.5 p-3`}>
-            <DataRow label="Total volume" value={compactUsd(vault.totalVolumeUsd ?? 0)} />
-            <DataRow label="Volume 7D" value={compactUsd(vault.volume7dUsd ?? 0)} />
-            <DataRow label="Margin · Leverage" value={marginLeverage(vault)} />
-            <DataRow label="Funding settlement" value={countdown} tone="text-[#ccb17f]" />
-          </dl>
+          <VaultSummaryTile vault={vault} />
           <p className="flex items-start gap-2 text-[12px] leading-[17px] text-[#8f90a1]">
             <TriangleAlert size={14} className="mt-0.5 shrink-0 text-[#f87171]" aria-hidden />
             {vault.pair} stops and its legs on {vault.longAccount} and {vault.shortAccount} are closed at market.

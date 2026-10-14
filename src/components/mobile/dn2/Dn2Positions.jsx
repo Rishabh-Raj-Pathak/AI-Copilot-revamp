@@ -1,23 +1,23 @@
 import { ChartCandlestick, TriangleAlert } from "lucide-react";
 import { NOT_APPLICABLE, eventAt } from "../../../delta-neutral/components/PerpBottomPanel.tsx";
-import {
-  formatDayMonth,
-  formatDayTime,
-  formatElapsed,
-  formatTimeRange,
-} from "../../../delta-neutral/utils/format.ts";
+import { formatDayTime, formatElapsed, formatTimeRange } from "../../../delta-neutral/utils/format.ts";
 import { formatWalletAddress } from "../../../delta-neutral/utils/wallet.ts";
 import { CancelButton, Divider, Dn2Button, Dn2Sheet, ExpandButton, GoldBadge, SideBadge, TokenIcon, VenueMark } from "./Dn2Ui.jsx";
 import { signedWholeUsd, withMinus } from "./dn2Data.js";
-import { CARD, CARD_EDGE, CARD_EDGE_OPEN, CARD_FILL, EYEBROW, HINT, LABEL, TILE } from "./dn2Theme.js";
+import { CARD, CARD_EDGE, CARD_EDGE_OPEN, CARD_FILL, TILE } from "./dn2Theme.js";
 
 /**
  * Positions & History as their own Delta Neutral 2 sub-tabs — Figma D1–D4
- * (4476:8). One card per pair, from the same rows the web bottom panel lists;
- * expanding a card lays every desktop column out as Long | Short.
+ * (4476:8). One card per pair, from the same rows the web bottom panel lists,
+ * in the web's order. Expanding a card swaps its leg lines for one Long | Short
+ * table holding every web column, grouped by hairlines: who (type, wallet),
+ * the trade, then risk.
  */
 
 const pnlTone = (n) => (n >= 0 ? "text-[#00d492]" : "text-[#e5484d]");
+
+/** The web panel's one-line note above its table (10px there too). */
+const PANEL_NOTE = "text-[10px] leading-[14px] text-[#8d8e99]";
 
 /** Header shared by pair and history cards: coin, pair (+ category), timing, PnL. */
 function PairHeader({ pair, category, timing, pnl, pnlLabel, expanded, onToggle }) {
@@ -54,9 +54,7 @@ function LegLines({ position }) {
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
             <VenueMark dex={leg.dex} size={14} />
             <SideBadge side={side} />
-            <span className="truncate text-[12px] leading-4 text-[#b0b0be]">
-              {leg.instrument} {leg.leverage}×
-            </span>
+            <span className="truncate text-[12px] leading-4 text-[#b0b0be]">{instrumentOf(leg)}</span>
           </div>
           <span className="shrink-0 text-right text-[12px] leading-4 text-[#dcdce8]">{leg.size}</span>
           <span className={`w-11 shrink-0 text-right text-[12px] font-medium leading-4 ${pnlTone(leg.pnlValue)}`}>
@@ -68,10 +66,20 @@ function LegLines({ position }) {
   );
 }
 
-/** Long | Short table — every web column for the pair, `labelWidth` wide labels. */
+/** "Spot · 1×" — a leg's book and leverage. */
+function instrumentOf(leg) {
+  return `${leg.instrument} · ${leg.leverage}×`;
+}
+
+const HAIRLINE = "h-px w-full shrink-0 bg-white/[0.06]";
+
+/**
+ * Long | Short table — every web column for the pair, `labelWidth` wide labels.
+ * `"rule"` in `rows` draws a hairline between groups.
+ */
 function SplitTable({ head, rows, labelWidth }) {
   return (
-    <div className={`${TILE} flex flex-col gap-[9px] px-3 py-2.5`} role="table">
+    <div className={`${TILE} flex flex-col gap-2.5 p-3`} role="table">
       <div className="flex items-center gap-2" role="row">
         <span className="shrink-0" style={{ width: labelWidth }} role="columnheader" aria-label="Figure" />
         {head.map((cell) => (
@@ -81,26 +89,31 @@ function SplitTable({ head, rows, labelWidth }) {
           </span>
         ))}
       </div>
-      {rows.map((row) => (
-        <div key={row.label} className="flex items-center gap-2" role="row">
-          <span
-            role="rowheader"
-            className="shrink-0 text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]"
-            style={{ width: labelWidth }}
-          >
-            {row.label}
-          </span>
-          {row.cells.map((cell, i) => (
+      <span className={HAIRLINE} aria-hidden />
+      {rows.map((row, index) =>
+        row === "rule" ? (
+          <span key={`rule-${index}`} className={HAIRLINE} aria-hidden />
+        ) : (
+          <div key={row.label} className="flex items-center gap-2" role="row">
             <span
-              key={i}
-              role="cell"
-              className={`min-w-0 flex-1 truncate text-right text-[12px] leading-4 ${cell.tone ?? "text-[#dcdce8]"}`}
+              role="rowheader"
+              className="shrink-0 text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]"
+              style={{ width: labelWidth }}
             >
-              {cell.value}
+              {row.label}
             </span>
-          ))}
-        </div>
-      ))}
+            {row.cells.map((cell, i) => (
+              <span
+                key={i}
+                role="cell"
+                className={`min-w-0 flex-1 truncate text-right text-[12px] leading-4 ${cell.tone ?? "text-[#dcdce8]"}`}
+              >
+                {cell.value}
+              </span>
+            ))}
+          </div>
+        ),
+      )}
     </div>
   );
 }
@@ -141,9 +154,6 @@ function PairCard({ position, now, expanded, onToggle, onClose, onChart }) {
         expanded={expanded}
         onToggle={onToggle}
       />
-      <div className={`${TILE} flex flex-col gap-2 p-2.5`}>
-        <LegLines position={position} />
-      </div>
       {expanded ? (
         <SplitTable
           labelWidth={92}
@@ -152,11 +162,21 @@ function PairCard({ position, now, expanded, onToggle, onClose, onChart }) {
             { key: "short", dex: short.dex, side: "short" },
           ]}
           rows={[
+            { label: "Type", cells: [legCell(instrumentOf(long)), legCell(instrumentOf(short))] },
             { label: "Wallet", cells: [legCell(formatWalletAddress(long.wallet)), legCell(formatWalletAddress(short.wallet))] },
+            "rule",
             { label: "Size", cells: [legCell(long.size), legCell(short.size)] },
             { label: "Position value", cells: [legCell(long.positionValue), legCell(short.positionValue)] },
             { label: "Entry price", cells: [legCell(long.entryPrice), legCell(short.entryPrice)] },
             { label: "Current price", cells: [legCell(long.currentPrice), legCell(short.currentPrice)] },
+            {
+              label: "P&L",
+              cells: [
+                { value: signedWholeUsd(long.pnlValue), tone: `${pnlTone(long.pnlValue)} font-medium` },
+                { value: signedWholeUsd(short.pnlValue), tone: `${pnlTone(short.pnlValue)} font-medium` },
+              ],
+            },
+            "rule",
             { label: "Liq. price", cells: [legCell(long.liqPrice), legCell(short.liqPrice)] },
             { label: "Margin", cells: [legCell(long.margin), legCell(short.margin)] },
             {
@@ -167,7 +187,11 @@ function PairCard({ position, now, expanded, onToggle, onClose, onChart }) {
             { label: "Exp. P/L", cells: [legCell(long.expected), legCell(short.expected)] },
           ]}
         />
-      ) : null}
+      ) : (
+        <div className={`${TILE} flex flex-col gap-2 p-2.5`}>
+          <LegLines position={position} />
+        </div>
+      )}
       <div className="flex gap-2">
         <Dn2Button className="flex-1" onClick={onClose}>
           Close pair
@@ -184,7 +208,7 @@ export function Dn2PositionsView({ positions, now, expandedKey, onToggle, onClos
   if (!positions.length) return emptyState;
   return (
     <>
-      <p className={HINT}>One card per pair · each leg tagged spot or perp, hedged across DEXs</p>
+      <p className={PANEL_NOTE}>One row per token — each leg tagged spot or perp, hedged across DEXs</p>
       {positions.map((position) => (
         <PairCard
           key={position.coin}
@@ -219,10 +243,6 @@ export function Dn2ClosePairSheet({ open, position, now, onClose, onConfirm }) {
             <Divider />
             <div className="flex flex-col gap-2">
               <LegLines position={position} />
-            </div>
-            <div className="flex items-center justify-between gap-3 whitespace-nowrap">
-              <span className={LABEL}>Position value</span>
-              <span className="text-[12px] leading-4 text-[#dcdce8]">{position.long.positionValue} per leg</span>
             </div>
           </div>
           <p className="flex items-start gap-2 text-[12px] leading-[17px] text-[#8f90a1]">
@@ -274,9 +294,9 @@ function HistoryCard({ row, now, expanded, onToggle }) {
             { key: "short", dex: short.dex, side: "short", label: short.action },
           ]}
           rows={[
-            { label: "Venue", cells: [legCell(long.dex), legCell(short.dex)] },
             { label: "Type", cells: [legCell(long.instrument), legCell(short.instrument)] },
             { label: "Wallet", cells: [legCell(formatWalletAddress(long.wallet)), legCell(formatWalletAddress(short.wallet))] },
+            "rule",
             { label: "Price", cells: [legCell(long.price), legCell(short.price)] },
             { label: "Size", cells: [legCell(long.size), legCell(short.size)] },
             { label: "Trade value", cells: [legCell(long.tradeValue), legCell(short.tradeValue)] },
@@ -288,38 +308,21 @@ function HistoryCard({ row, now, expanded, onToggle }) {
   );
 }
 
-/** Day groups, newest first — the eyebrow is the day the event happened. */
-function groupByDay(rows) {
-  const sorted = [...rows].sort((a, b) => eventAt(b) - eventAt(a));
-  const groups = [];
-  for (const row of sorted) {
-    const day = formatDayMonth(eventAt(row));
-    const last = groups[groups.length - 1];
-    if (last && last.day === day) last.rows.push(row);
-    else groups.push({ day, rows: [row] });
-  }
-  return groups;
-}
-
+/** Rows in the web panel's order; no day headers (the web has none). */
 export function Dn2HistoryView({ rows, now, expandedKey, onToggle, emptyState }) {
   if (!rows.length) return emptyState;
   const keyOf = (row) => `${row.coin}-${row.event}-${eventAt(row)}`;
   return (
     <>
-      <p className={HINT}>Paired long + short fills per vault action</p>
-      {groupByDay(rows).map((group) => (
-        <section key={group.day} className="flex flex-col gap-3" aria-label={group.day}>
-          <h3 className={EYEBROW}>{group.day}</h3>
-          {group.rows.map((row) => (
-            <HistoryCard
-              key={keyOf(row)}
-              row={row}
-              now={now}
-              expanded={expandedKey === keyOf(row)}
-              onToggle={() => onToggle(keyOf(row))}
-            />
-          ))}
-        </section>
+      <p className={PANEL_NOTE}>Paired long + short fills per vault action</p>
+      {rows.map((row) => (
+        <HistoryCard
+          key={keyOf(row)}
+          row={row}
+          now={now}
+          expanded={expandedKey === keyOf(row)}
+          onToggle={() => onToggle(keyOf(row))}
+        />
       ))}
     </>
   );

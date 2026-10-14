@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { formatPct } from "../../../delta-neutral/utils/format.ts";
 import { useMobileApp } from "../MobileAppContext.js";
-import { useAppToast } from "../appToastContext.js";
 import ConnectNetworkSheet from "../sheets/ConnectNetworkSheet.jsx";
 import { Dn2CostSheet, Dn2InfoSheet, Dn2MarketSheet, Dn2VenueSheet } from "./Dn2BuilderSheets.jsx";
 import Dn2NewVaultPage from "./Dn2NewVaultPage.jsx";
@@ -15,10 +14,11 @@ import { CARD, EYEBROW, HERO_EDGE, HERO_FILL } from "./dn2Theme.js";
  *  - Vaults tab: the Cross-DEX setup hero (A1) — the pair being built, its
  *    APY, and "New vault".
  *  - "New vault" opens the builder as a pushed page (B1–B3) with its sheets:
- *    venue (B4), market (B5), cost to open (B7), ⓘ explainers. The token
- *    field shows the coin instead of a chart button; the chart (B6) stays on
- *    the vault and pair cards.
- *  - Opening runs full screen (B8) while the builder prepares the vault.
+ *    DEX (B4), market (B5), cost to open (B6), ⓘ explainers. Only the web
+ *    builder's fields: Deposit and Change wallet sit on each DEX card, as on
+ *    web, and the token field has no chart button (the chart, A6, is on the
+ *    vault and pair cards).
+ *  - Opening runs full screen (B7) while the builder prepares the vault.
  *
  * Stateless about the vault: `DeltaVaultBuilder` keeps owning venues, legs,
  * market, sizing and activation for every layout; this only decides what is
@@ -77,7 +77,6 @@ export default function Dn2Builder(props) {
     dexB,
     onDexAChange,
     onDexBChange,
-    onSwapVenues,
     legA,
     legB,
     onLegInstrumentChange,
@@ -118,7 +117,6 @@ export default function Dn2Builder(props) {
   } = props;
 
   const app = useMobileApp();
-  const toast = useAppToast();
   const [pageOpen, setPageOpen] = useState(false);
   const [venueSlot, setVenueSlot] = useState(null);
   const [marketOpen, setMarketOpen] = useState(false);
@@ -138,21 +136,14 @@ export default function Dn2Builder(props) {
   const walletOn = app.walletConnected;
   const isConnected = (dex) => Boolean(dex) && walletOn && Boolean(dexConnected[dex]);
 
-  const connectVenue = (dex) => {
-    onConnectDex(dex);
-    // Variational authenticates in its own sheet; the rest connect on the spot.
-    if (!needsSession(dex)) {
-      toast.show({ title: `${dex} connected`, message: "This leg is ready to fund.", tone: "success", theme: "gold" });
-    }
-  };
-
+  // Variational authenticates in its own sheet; the rest connect on the spot (web).
   const requestVenue = (dex) => {
     if (!dex) return;
     if (!walletOn) {
       setConnectFor(dex);
       return;
     }
-    connectVenue(dex);
+    onConnectDex(dex);
   };
 
   const venueProps = (slot) => {
@@ -162,19 +153,20 @@ export default function Dn2Builder(props) {
       instrument: slot === "a" ? legA : legB,
       otherInstrument: slot === "a" ? legB : legA,
       connected: isConnected(dex),
-      needsSession: needsSession(dex),
       balance: dex ? dexBalances[dex] : 0,
       wallet: dex ? dexWallets[dex] : null,
       onOpen: () => setVenueSlot(slot),
       onInstrument: (option) => onLegInstrumentChange(slot, option),
       onConnect: () => requestVenue(dex),
+      onDeposit: () => dex && onDepositDex(dex),
+      onChangeWallet: () => dex && onChangeWalletDex(dex),
     };
   };
 
   /*
    * The footer CTA walks the same ladder as the web button -- wallet, then each
-   * venue, then open -- but names the market the phone way: "Open BTC-USDC
-   * vault", "Open Bluechip + Meme vault".
+   * venue ("Connect Nado wallet", "Activate Variational"), then open -- but names
+   * the market the phone way: "Open BTC-USDC vault", "Open Bluechip + Meme vault".
    */
   const tokens = market.mode === "tokens";
   const cta = !walletOn
@@ -183,8 +175,8 @@ export default function Dn2Builder(props) {
       ? { label: "Pick two venues to continue", disabled: true }
       : firstDisconnectedVenue
         ? {
-            label: needsSession(firstDisconnectedVenue) ? `Set up ${firstDisconnectedVenue}` : primaryLabel,
-            icon: needsSession(firstDisconnectedVenue) ? "cookie" : "wallet",
+            label: primaryLabel,
+            icon: needsSession(firstDisconnectedVenue) ? null : "wallet",
             onPress: onPrimary,
             disabled: preparing,
           }
@@ -193,7 +185,7 @@ export default function Dn2Builder(props) {
           : { label: `Open ${marketLabel(market)} vault`, onPress: onPrimary, disabled: preparing };
 
   const otherOf = (slot) => (slot === "b" ? dexA : dexB);
-  const slotLabel = (slot) => (slot === "b" ? "Venue B" : "Venue A");
+  const slotLabel = (slot) => (slot === "b" ? "Select DEX B" : "Select DEX A");
 
   return (
     <>
@@ -216,7 +208,6 @@ export default function Dn2Builder(props) {
         dexA={dexA}
         dexB={dexB}
         venueProps={venueProps}
-        onSwapVenues={onSwapVenues}
         showPairWarning={showPairWarning}
         market={market}
         marketDisabled={marketDisabled}
@@ -245,30 +236,11 @@ export default function Dn2Builder(props) {
         open={venueSlot != null}
         onClose={() => setVenueSlot(null)}
         slotLabel={slotLabel(venueSlot)}
-        otherSlotLabel={slotLabel(venueSlot === "b" ? "a" : "b")}
         options={dexOptions}
         value={venueSlot === "b" ? dexB : dexA}
         other={otherOf(venueSlot)}
         isConnected={isConnected}
-        needsSession={needsSession}
-        balances={dexBalances}
-        wallets={dexWallets}
         onSelect={(dex) => (venueSlot === "b" ? onDexBChange(dex) : onDexAChange(dex))}
-        onConnect={(dex) => {
-          // Connecting a venue from the list also puts it on this leg.
-          if (venueSlot === "b") onDexBChange(dex);
-          else onDexAChange(dex);
-          setVenueSlot(null);
-          requestVenue(dex);
-        }}
-        onDeposit={(dex) => {
-          onDepositDex(dex);
-          toast.show({ title: "Deposit added", message: `$500 added to your ${dex} balance.`, tone: "success", theme: "gold" });
-        }}
-        onChangeWallet={(dex) => {
-          onChangeWalletDex(dex);
-          toast.show({ title: "Wallet changed", message: `${dex} now uses a new wallet.`, tone: "success", theme: "gold" });
-        }}
       />
 
       <Dn2MarketSheet
@@ -295,7 +267,7 @@ export default function Dn2Builder(props) {
           const venue = connectFor;
           setConnectFor(null);
           app.connectWallet();
-          if (typeof venue === "string") connectVenue(venue);
+          if (typeof venue === "string") onConnectDex(venue);
         }}
       />
 

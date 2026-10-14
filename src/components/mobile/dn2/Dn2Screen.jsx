@@ -7,19 +7,22 @@ import Dn2ChartSheet from "./Dn2ChartSheet.jsx";
 import { Dn2ClosePairSheet, Dn2HistoryView, Dn2PositionsView } from "./Dn2Positions.jsx";
 import { Dn2Button, EmptyCard, GroupToggle } from "./Dn2Ui.jsx";
 import { Dn2DeactivateSheet, Dn2EditVaultSheet, Dn2PnlSheet, Dn2VaultCard } from "./Dn2Vaults.jsx";
-import { payoutCountdown, useNow, wholeUsd } from "./dn2Data.js";
+import { payoutCountdown, useNow } from "./dn2Data.js";
 
 /**
  * Delta Neutral 2 on a phone — Figma "Delta Neutral 2 · Mobile-native (390)"
  * (`kN9AkNRzaxmg4mhFVkt1Bo`, 4476:2). Under the Agents header:
  *
- *   VAULTS ⓝ   POSITIONS ⓝ   HISTORY ⓝ          ← DN Tabs (4492:36)
- *   Vaults     Cross-DEX setup → Active vaults (A1–A5, manage sheets C1–C3)
+ *   VAULTS   POSITIONS   HISTORY                  ← DN Tabs (4492:36)
+ *   Vaults     Cross-DEX setup → Active vaults (A1–A6, manage sheets C1–C3)
  *   Positions  one card per pair (D1–D3)
  *   History    paired fills per vault action (D4)
  *
  * The web page's bottom panel becomes the two sub-tabs and its platform stats
- * are not shown on the phone. Vault state and its handlers stay in the page
+ * are not shown on the phone. Every field here is one the web Delta Neutral 2
+ * page shows; the phone adds no counts, badges or toasts of its own (the copy
+ * button's "Address copied" is the one feedback toast, since a copy has no
+ * other visible result). Vault state and its handlers stay in the page
  * (`DeltaNeutralVaultsV2Page`); the builder is rendered through
  * `renderBuilder(heroVisible, onActivate)` at one fixed spot so it stays
  * mounted across tabs.
@@ -31,8 +34,8 @@ const TABS = [
   { id: "history", label: "History" },
 ];
 
-/** Figma "DN Tabs": uppercase, a count pill each, gradient underline. */
-function Dn2SubTabs({ value, onChange, counts }) {
+/** Figma "DN Tabs": uppercase, gradient underline (no counts — the web tabs have none). */
+function Dn2SubTabs({ value, onChange }) {
   return (
     <div
       role="tablist"
@@ -41,7 +44,6 @@ function Dn2SubTabs({ value, onChange, counts }) {
     >
       {TABS.map((tab) => {
         const on = tab.id === value;
-        const count = counts?.[tab.id];
         return (
           <button
             key={tab.id}
@@ -51,23 +53,12 @@ function Dn2SubTabs({ value, onChange, counts }) {
             onClick={() => onChange(tab.id)}
             className="relative flex h-[42px] items-center justify-center"
           >
-            <span className="flex items-center gap-1.5">
-              <span
-                className={`text-[12px] font-semibold uppercase leading-4 tracking-[0.6px] ${
-                  on ? "text-[#f0ddb9]" : "text-[#8f90a1]"
-                }`}
-              >
-                {tab.label}
-              </span>
-              {count != null ? (
-                <span
-                  className={`rounded-full px-1.5 py-px text-[10px] font-semibold leading-[14px] ${
-                    on ? "bg-[rgba(214,177,107,0.14)] text-[#f0ddb9]" : "bg-white/[0.06] text-[#8f90a1]"
-                  }`}
-                >
-                  {count}
-                </span>
-              ) : null}
+            <span
+              className={`text-[12px] font-semibold uppercase leading-4 tracking-[0.6px] ${
+                on ? "text-[#f0ddb9]" : "text-[#8f90a1]"
+              }`}
+            >
+              {tab.label}
             </span>
             {on ? (
               <span
@@ -82,20 +73,26 @@ function Dn2SubTabs({ value, onChange, counts }) {
   );
 }
 
-/** Figma "Section Title": hairlines fading in towards a centred title. */
-function SectionTitle({ children }) {
+/** Figma "Section Head": hairlines fading in towards a centred title, the web caption under it. */
+function SectionTitle({ children, caption }) {
   return (
-    <div className="flex items-center gap-3 pt-2">
-      <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(0,0,0,0)_0%,rgba(255,255,255,0.08)_100%)]" aria-hidden />
-      <h2 className="shrink-0 text-[16px] font-medium leading-[22px] text-[#e8d5b5]">{children}</h2>
-      <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_0%,rgba(0,0,0,0)_100%)]" aria-hidden />
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex w-full items-center gap-3 pt-2">
+        <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(0,0,0,0)_0%,rgba(255,255,255,0.08)_100%)]" aria-hidden />
+        <h2 className="shrink-0 text-[16px] font-medium leading-[22px] text-[#e8d5b5]">{children}</h2>
+        <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_0%,rgba(0,0,0,0)_100%)]" aria-hidden />
+      </div>
+      {caption ? <p className="text-center text-[11px] leading-[14px] text-[#8f90a1]">{caption}</p> : null}
     </div>
   );
 }
 
-function phonePairLabel(pair) {
-  return String(pair).replace("/", "-").replace(/, /g, " + ");
-}
+/** The web Active vaults caption for each filter (DeltaNeutralVaultsV2Page). */
+const GROUP_CAPTION = {
+  all: "All active vaults grouped by category and token.",
+  category: "Showing category-based vaults only.",
+  token: "Showing token-pair vaults only.",
+};
 
 export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, renderBuilder }) {
   const app = useMobileApp();
@@ -121,8 +118,6 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
 
   const history = HISTORY_PAIRS;
   const shownVaults = signedIn ? vaults : [];
-  const categoryCount = shownVaults.filter((v) => v.marketType === "category").length;
-  const tokenCount = shownVaults.length - categoryCount;
   // A vault opened this session leads the list, then categories, then tokens (web grouping).
   const ordered = [
     ...shownVaults.filter((v) => freshIds.has(v.id)),
@@ -140,26 +135,12 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
     scrollEl?.scrollTo({ top: 0 });
   };
 
+  // As on the web, a new vault simply joins the list (at the top here): no toast, no badge.
   const handleActivate = (payload) => {
     const model = onAddVault(payload);
     setFreshIds((prev) => new Set(prev).add(model.id));
     setGroup("all");
     goTo("vaults");
-    const margin = payload.marginUsd ? ` · ${wholeUsd(payload.marginUsd)} margin` : "";
-    const lev = payload.leverage ? ` · ${payload.leverage}x` : "";
-    toast.show({
-      title: `${phonePairLabel(payload.pair)} vault opened`,
-      message: `${model.longAccount} ⇄ ${model.shortAccount}${margin}${lev}`,
-      tone: "success",
-      theme: "gold",
-      action: {
-        label: "View",
-        onPress: () => {
-          setExpandedVault(model.id);
-          goTo("vaults");
-        },
-      },
-    });
   };
 
   const copyWallet = async (wallet, dex) => {
@@ -179,7 +160,7 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
 
   const vaultsBody = (
     <>
-      <SectionTitle>Active vaults</SectionTitle>
+      <SectionTitle caption={signedIn ? GROUP_CAPTION[group] : null}>Active vaults</SectionTitle>
       {!signedIn ? (
         <EmptyCard
           title="No active vaults yet"
@@ -193,22 +174,19 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
             value={group}
             onChange={setGroup}
             options={[
-              { id: "all", label: `All ${shownVaults.length}` },
-              { id: "category", label: `Categories ${categoryCount}` },
-              { id: "token", label: `Tokens ${tokenCount}` },
+              { id: "all", label: "All" },
+              { id: "category", label: "Categories" },
+              { id: "token", label: "Tokens" },
             ]}
           />
           {ordered.length === 0 ? (
-            <EmptyCard
-              title={`No ${group === "token" ? "token " : group === "category" ? "category " : ""}vaults yet`}
-              message="Open one from the Cross-DEX setup above."
-            />
+            // The web empty state, word for word.
+            <EmptyCard title={`No ${group === "category" ? "category" : "token"} vaults are active right now.`} />
           ) : (
             ordered.map((vault) => (
               <Dn2VaultCard
                 key={vault.id}
                 vault={vault}
-                isNew={freshIds.has(vault.id)}
                 expanded={expandedVault === vault.id}
                 countdown={countdown}
                 onToggle={() => setExpandedVault((id) => (id === vault.id ? null : vault.id))}
@@ -235,11 +213,7 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
 
   return (
     <>
-      <Dn2SubTabs
-        value={tab}
-        onChange={goTo}
-        counts={signedIn ? { vaults: vaults.length, positions: positions.length, history: history.length } : null}
-      />
+      <Dn2SubTabs value={tab} onChange={goTo} />
       <div
         ref={setScrollEl}
         className="delta-neutral-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]"
@@ -283,33 +257,18 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
         vault={sheet.kind === "edit" ? sheetVault : null}
         onClose={closeSheet}
         onSave={(next) => {
-          const vault = sheetVault;
-          onSaveSettings(vault.id, next);
+          onSaveSettings(sheetVault.id, next);
           closeSheet();
-          toast.show({
-            title: `${vault.pair} updated`,
-            message: `${wholeUsd(next.marginUsd)} margin · ${next.leverage}x`,
-            tone: "success",
-            theme: "gold",
-          });
         }}
       />
       <Dn2DeactivateSheet
         open={sheet.open && sheet.kind === "deactivate"}
         vault={sheet.kind === "deactivate" ? sheetVault : null}
-        countdown={countdown}
         onClose={closeSheet}
         onConfirm={() => {
-          const vault = sheetVault;
-          onStop(vault.id);
-          if (expandedVault === vault.id) setExpandedVault(null);
+          onStop(sheetVault.id);
+          if (expandedVault === sheetVault.id) setExpandedVault(null);
           closeSheet();
-          toast.show({
-            title: `${vault.pair} deactivated`,
-            message: `Legs on ${vault.longAccount} and ${vault.shortAccount} closed at market.`,
-            tone: "success",
-            theme: "gold",
-          });
         }}
       />
       <Dn2ClosePairSheet
@@ -321,12 +280,6 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
           const position = closing.position;
           setPositions((prev) => prev.filter((p) => p.coin !== position.coin));
           setClosing((prev) => ({ ...prev, open: false }));
-          toast.show({
-            title: `${position.coin} closed`,
-            message: "Both legs closed at market.",
-            tone: "success",
-            theme: "gold",
-          });
         }}
       />
       <Dn2ChartSheet

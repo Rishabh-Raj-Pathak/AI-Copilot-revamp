@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeftRight, Check, ChevronDown, Cookie, Wallet } from "lucide-react";
+import { Check, ChevronDown, Cookie, TriangleAlert, Wallet } from "lucide-react";
 import { THEME_CATALOG } from "../../../delta-neutral/utils/markets.ts";
 import {
   formatCompactUsd,
@@ -16,7 +16,7 @@ import AppNavBar from "../AppNavBar.jsx";
 import { useHistoryBack } from "../appHistory.js";
 import { Divider, Dn2Button, GroupToggle, InfoButton, StackRow, TokenIcon, VenueDisc, VenueMark } from "./Dn2Ui.jsx";
 import { LeverageField, MarginField } from "./Dn2SizeFields.jsx";
-import { formatTokenPrice, tokenPrice, venueFunding, withMinus } from "./dn2Data.js";
+import { venueFunding, withMinus } from "./dn2Data.js";
 import {
   CARD,
   CARD_EDGE,
@@ -29,14 +29,20 @@ import {
   HERO_EDGE,
   HERO_FILL,
   LABEL,
-  TILE,
 } from "./dn2Theme.js";
 
 /**
- * Figma B1–B3 "New vault" (4493:30, 4494:2, 4494:257): the builder as a pushed
- * page. Web left → right order kept top → bottom — each output sits under the
- * inputs that drive it: Cross-DEX setup → Live rates for that pair, Size →
- * its estimates. The CTA is pinned in a footer above the home indicator.
+ * Figma B1–B3 "New vault" (4493:30, 4494:2, 4494:257): the web Delta Neutral 2
+ * builder as a pushed page, with the web's fields and nothing else. Web left →
+ * right order kept top → bottom, each output under the inputs that drive it:
+ *
+ *   Cross-DEX setup   Select DEX A / B (venue, Perp | Spot, Balance + Deposit,
+ *                     wallet + Change wallet) and Market (Categories | Tokens)
+ *   Rates             the web's untitled right-hand card for that pair
+ *   Margin & Leverage sliders with % / $ / MAX
+ *   Estimates         est. income, break-even, cost to open
+ *
+ * The CTA is pinned in a footer above the home indicator.
  *
  * Stateless: `DeltaVaultBuilder` owns every value; `Dn2Builder` owns which
  * sheet is open. This file only lays the page out.
@@ -46,19 +52,25 @@ const GREEN = "text-[#00d492]";
 const RED = "text-[#e5484d]";
 const MUTED = "text-[#717182]";
 
-/** Figma "Venue Select" + balance row for one leg. */
+/** Figma "Account": the web's balance bar joined to its Deposit action (36 tall). */
+const BAR = "flex h-9 items-stretch overflow-hidden rounded-[10px] border border-white/[0.07]";
+const BAR_ACTION =
+  "app-pressable flex shrink-0 items-center border-l border-white/[0.07] bg-white/[0.02] px-4 text-[12px] font-medium leading-4 text-[#ccb17f] disabled:text-[#5f606c]";
+
+/** One leg: "Select DEX A", the venue + Perp | Spot field, then its account. */
 function VenueBlock({
   label,
   dex,
   instrument,
   otherInstrument,
   connected,
-  needsSession,
   balance,
   wallet,
   onOpen,
   onInstrument,
   onConnect,
+  onDeposit,
+  onChangeWallet,
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -74,7 +86,7 @@ function VenueBlock({
           {dex ? (
             <VenueDisc dex={dex} size={28} logo={17} className="border border-white/[0.05]" />
           ) : null}
-          <span className="truncate text-[14px] font-medium leading-[18px] text-[#dcdce8]">{dex || "Select venue"}</span>
+          <span className="truncate text-[14px] font-medium leading-[18px] text-[#dcdce8]">{dex || "Select DEX"}</span>
           <ChevronDown size={14} className="shrink-0 text-[#8f90a1]" aria-hidden />
         </button>
         <div
@@ -105,56 +117,62 @@ function VenueBlock({
           })}
         </div>
       </div>
+
       {connected ? (
-        <div className="flex items-center justify-between gap-3 whitespace-nowrap px-0.5">
-          <p className="flex items-center gap-1.5 font-medium">
-            <span className="text-[10px] uppercase leading-[14px] tracking-[0.4px] text-[#717182]">Balance</span>
-            <span className={`text-[12px] leading-4 ${GREEN}`}>{formatCompactUsd(balance)}</span>
-          </p>
-          <p className="truncate text-[11px] leading-[14px] text-[#717182]">
-            {wallet ? formatWalletAddress(wallet) : "Wallet linked"}
-          </p>
-        </div>
-      ) : dex ? (
-        <div className="flex items-center justify-between gap-3 px-0.5">
-          <p className="flex items-center gap-1.5">
+        <>
+          <div className={BAR}>
+            {/* Green stops at the divider, so Deposit stays neutral (web). */}
+            <p className="flex min-w-0 flex-1 items-center justify-between gap-2 bg-[rgba(0,212,146,0.07)] px-3">
+              <span className="text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]">
+                Balance
+              </span>
+              <span className={`truncate text-[12px] font-medium leading-4 ${GREEN}`}>{formatCompactUsd(balance)}</span>
+            </p>
+            <button type="button" onClick={onDeposit} className={BAR_ACTION}>
+              Deposit
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-3 px-0.5">
+            <p className="flex min-w-0 items-center gap-1.5 text-[11px] leading-[14px] text-[#717182]">
+              <Wallet size={12} className="shrink-0" aria-hidden />
+              <span className="truncate">{wallet ? formatWalletAddress(wallet) : "Wallet linked"}</span>
+            </p>
+            <button
+              type="button"
+              onClick={onChangeWallet}
+              className="relative shrink-0 text-[11px] font-medium leading-[14px] text-[#f87171] after:absolute after:-inset-x-1 after:-inset-y-3 active:text-[#fca5a5]"
+            >
+              Change wallet
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className={BAR}>
+          <p className="flex min-w-0 flex-1 items-center gap-2 bg-white/[0.02] px-3">
             <span className="size-1.5 shrink-0 rounded-full bg-[#6b7280]" aria-hidden />
-            <span className="text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]">
-              Not connected
+            <span className="truncate text-[12px] leading-4 text-[#8f90a1]">
+              {dex ? "Not connected" : "No venue selected"}
             </span>
           </p>
-          <Dn2Button variant="small" size="sm" onClick={onConnect}>
-            {needsSession ? "Set up" : "Connect DEX"}
-          </Dn2Button>
+          <button type="button" disabled={!dex} onClick={onConnect} className={BAR_ACTION}>
+            Connect
+          </button>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
 
 function SetupCard({ p }) {
   const tokens = p.market.mode === "tokens";
-  const selectedThemes = THEME_CATALOG.filter((t) => p.market.themes.includes(t.value));
   return (
-    <section className={`${CARD} ${HERO_EDGE}`} style={HERO_FILL} aria-label="Cross-DEX setup">
+    <section className={`${CARD} ${HERO_EDGE} gap-3.5!`} style={HERO_FILL} aria-label="Cross-DEX setup">
       <p className={EYEBROW}>Cross-DEX setup</p>
-      <VenueBlock label="Venue A" {...p.venueProps("a")} />
-      <div className="flex items-center gap-2">
-        <span className="h-px flex-1 bg-[rgba(120,90,40,0.35)]" aria-hidden />
-        <button
-          type="button"
-          onClick={p.onSwapVenues}
-          disabled={!p.dexA || !p.dexB}
-          aria-label="Swap Venue A and Venue B"
-          className="app-pressable relative flex size-6 shrink-0 items-center justify-center rounded-full border border-[rgba(120,90,40,0.5)] bg-[#121212] text-[#ccb17f] after:absolute after:-inset-2.5 disabled:opacity-50"
-        >
-          <ArrowLeftRight size={12} aria-hidden />
-        </button>
-        <span className="h-px flex-1 bg-[rgba(120,90,40,0.35)]" aria-hidden />
-      </div>
-      <VenueBlock label="Venue B" {...p.venueProps("b")} />
+      <VenueBlock label="Select DEX A" {...p.venueProps("a")} />
+      <Divider />
+      <VenueBlock label="Select DEX B" {...p.venueProps("b")} />
       {p.showPairWarning ? (
-        <p className={`text-[11px] leading-[15px] ${RED}`}>Pick two different venues to unlock the cross-venue spread.</p>
+        <p className={`text-[11px] leading-[15px] ${RED}`}>Select two different DEX sources to unlock cross-venue spread.</p>
       ) : null}
       <Divider />
 
@@ -166,118 +184,97 @@ function SetupCard({ p }) {
           onChange={p.onModeChange}
           disabled={p.marketDisabled}
           options={[
-            { id: "tokens", label: "Tokens" },
             { id: "themes", label: "Categories" },
+            { id: "tokens", label: "Tokens" },
           ]}
         />
         {tokens ? (
-          // One control: the coin, its pair and price, and the caret that says it opens the picker.
+          // One control: the coin, its pair, and the caret that says it opens the picker.
           <button
             type="button"
             disabled={p.marketDisabled}
             onClick={p.onOpenMarket}
             aria-haspopup="dialog"
             aria-label={`Market pair: ${p.market.token}. Change pair`}
-            className={`flex h-11 w-full items-center gap-2 pl-2.5 pr-2 text-left disabled:opacity-50 ${FIELD}`}
+            className={`flex h-11 w-full items-center gap-2.5 pl-3 pr-2 text-left disabled:opacity-50 ${FIELD}`}
           >
-            <TokenIcon pair={p.market.token} size={24} />
-            <span className="flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap">
-              <span className="text-[15px] font-medium leading-5 text-[#e8d5b5]">{p.market.token}</span>
-              <span className="truncate text-[12px] leading-4 text-[#8f90a1]">
-                {formatTokenPrice(tokenPrice(p.market.token))}
-              </span>
+            <TokenIcon pair={p.market.token} size={22} />
+            <span className="min-w-0 flex-1 truncate text-[15px] font-medium leading-5 text-[#e8d5b5]">
+              {p.market.token}
             </span>
             <ChevronDown size={14} className="shrink-0 text-[#8f90a1]" aria-hidden />
           </button>
         ) : (
-          <>
-            <div
-              role="group"
-              aria-label="Market categories. Pick one or more."
-              className={`grid grid-cols-3 gap-1 rounded-[12px] border border-white/[0.09] bg-[rgba(10,10,11,0.94)] p-1 ${
-                p.marketDisabled ? "opacity-50" : ""
-              }`}
-            >
-              {THEME_CATALOG.map(({ value: theme, icon: Icon }) => {
-                const on = p.market.themes.includes(theme);
-                return (
-                  <button
-                    key={theme}
-                    type="button"
-                    aria-pressed={on}
-                    disabled={p.marketDisabled}
-                    onClick={() =>
-                      p.onThemesChange(on ? p.market.themes.filter((x) => x !== theme) : [...p.market.themes, theme])
-                    }
-                    className={`${CHIP} app-pressable min-w-0 justify-center gap-1.5 ${
-                      on ? CHIP_ON : "border-transparent font-medium text-[#9a9ba8]"
-                    }`}
-                  >
-                    {on ? <Check size={12} aria-hidden /> : <Icon size={13} aria-hidden />}
-                    <span className="truncate">{theme}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {selectedThemes.length ? (
-              <dl className={`${TILE} flex flex-col gap-2 px-3 py-2.5`}>
-                {selectedThemes.map((t) => (
-                  <div key={t.value} className="flex flex-col gap-0.5">
-                    <dt className="text-[11px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#ccb17f]">
-                      {t.value}
-                    </dt>
-                    <dd className="text-[12px] leading-4 text-[#8f90a1]">{t.description}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p className="text-[11px] leading-[15px] text-[#8d8e99]">Pick one or more categories to trade.</p>
-            )}
-          </>
+          <div
+            role="group"
+            aria-label="Market categories. Pick one or more."
+            className={`grid grid-cols-3 gap-1 rounded-[12px] border border-white/[0.09] bg-[rgba(10,10,11,0.94)] p-1 ${
+              p.marketDisabled ? "opacity-50" : ""
+            }`}
+          >
+            {THEME_CATALOG.map(({ value: theme, icon: Icon }) => {
+              const on = p.market.themes.includes(theme);
+              return (
+                <button
+                  key={theme}
+                  type="button"
+                  aria-pressed={on}
+                  disabled={p.marketDisabled}
+                  onClick={() =>
+                    p.onThemesChange(on ? p.market.themes.filter((x) => x !== theme) : [...p.market.themes, theme])
+                  }
+                  className={`${CHIP} app-pressable min-w-0 justify-center gap-1.5 ${
+                    on ? CHIP_ON : "border-transparent font-medium text-[#9a9ba8]"
+                  }`}
+                >
+                  {on ? <Check size={12} aria-hidden /> : <Icon size={13} aria-hidden />}
+                  <span className="truncate">{theme}</span>
+                </button>
+              );
+            })}
+          </div>
         )}
         {p.marketDisabled ? (
-          <p className="text-[11px] leading-[15px] text-[#8d8e99]">Pick both venues to unlock the market.</p>
+          <p className="text-[11px] leading-[15px] text-[#8d8e99]">
+            Select a DEX on both venues to unlock category and token controls.
+          </p>
         ) : null}
       </div>
     </section>
   );
 }
 
-/** Figma "Live Rates" (4493:119) — what the picked pair pays, per venue. */
-function LiveRatesCard({ p }) {
+/**
+ * Figma "Rates" (4493:119): the web's right-hand card, untitled as on web, in
+ * its order — APY, the two spreads, each venue's funding / APY / slippage,
+ * then hedge integrity and the funding settlement countdown.
+ */
+function RatesCard({ p }) {
   const { summary, metrics, legSlippage, dexA, dexB } = p;
   const venues = [dexA, dexB].filter(Boolean);
   const apyValid = Boolean(summary?.valid);
-  const apy = apyValid ? formatPct(summary.netAprOnCapitalPct) : "—";
-  const apyTone = apyValid && summary.netAprOnCapitalPct > 0 ? GREEN : RED;
+  const hedge = metrics.hedgeIntegrity === "–" ? "—" : metrics.hedgeIntegrity;
 
   return (
-    <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label="Live rates">
-      <div className="flex items-center justify-between gap-3 whitespace-nowrap text-[11px] leading-[14px]">
-        <p className={EYEBROW}>Live rates</p>
-        <p className="truncate text-[#8f90a1]">
-          {p.market.token} · {venues.join(" ⇄ ")}
-        </p>
-      </div>
-      <div className="flex items-end justify-between gap-3 whitespace-nowrap">
-        <div className="flex flex-col gap-0.5">
-          <p className={LABEL}>APY</p>
-          <p className={`text-[24px] font-semibold leading-[30px] ${apyTone}`}>{apy}</p>
-        </div>
-        <div className="flex flex-col items-end gap-0.5 font-medium">
-          <p className={LABEL}>Funding settlement</p>
-          <p className="text-[14px] leading-[18px] text-[#ccb17f]">{metrics.fundingSettlement}</p>
-        </div>
-      </div>
-      <Divider />
+    <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label="Rates">
       <dl className="flex flex-col gap-3">
-        <RateRow label="Current spread" value={per8h(metrics.currentSpread)} tone={metrics.spreadPositive ? GREEN : RED} />
-        <RateRow label="Max funding spread" value={per8h(metrics.maxFundingSpread)} tone={RED} />
+        <div className="flex items-center justify-between gap-3">
+          <dt className={LABEL}>APY</dt>
+          <dd
+            className={`text-right text-[15px] font-semibold leading-5 ${
+              !apyValid ? MUTED : summary.netAprOnCapitalPct > 0 ? GREEN : RED
+            }`}
+          >
+            {apyValid ? withMinus(formatPct(summary.netAprOnCapitalPct)) : "—"}
+          </dd>
+        </div>
         <RateRow
-          label="Hedge integrity"
-          value={metrics.hedgeIntegrity === "–" ? "—" : metrics.hedgeIntegrity}
-          tone="text-[#dcdce8]"
+          label="Current spread"
+          value={metrics.currentSpread}
+          sub="per 8h"
+          tone={metrics.spreadPositive ? GREEN : RED}
         />
+        <RateRow label="Max funding spread" value={metrics.maxFundingSpread} sub="lookback high / 8h" tone={RED} />
       </dl>
       <Divider />
       {/* Per venue, side by side: the two rates the spread is the gap between. */}
@@ -313,6 +310,11 @@ function LiveRatesCard({ p }) {
           })}
         />
       </div>
+      <Divider />
+      <dl className="flex flex-col gap-3">
+        <RateRow label="Hedge integrity" value={hedge} tone="text-[#dcdce8]" />
+        <RateRow label="Funding settlement" value={metrics.fundingSettlement} tone="text-[#ccb17f]" />
+      </dl>
     </section>
   );
 }
@@ -336,28 +338,24 @@ function VenueRow({ label, cells }) {
   );
 }
 
-/** Spreads are quoted per 8h on the web strip; "—" stays bare. */
-function per8h(value) {
-  return value === "—" ? value : `${value} / 8h`;
-}
-
-function RateRow({ label, value, tone }) {
+/** Label left; value right with the web's period line under it ("per 8h"). "—" is muted. */
+function RateRow({ label, value, sub, tone }) {
+  const empty = value === "—";
   return (
-    <div className="flex items-center justify-between gap-3">
-      <dt className={LABEL}>{label}</dt>
-      <dd className={`text-right text-[12px] leading-4 ${tone}`}>{withMinus(value)}</dd>
+    <div className={`flex justify-between gap-3 ${sub && !empty ? "items-start" : "items-center"}`}>
+      <dt className={`${LABEL} ${sub && !empty ? "pt-px" : ""}`}>{label}</dt>
+      <dd className="flex flex-col items-end gap-0.5 text-right">
+        <span className={`text-[12px] leading-4 ${empty ? MUTED : tone}`}>{withMinus(value)}</span>
+        {sub && !empty ? <span className="text-[10px] leading-[13px] text-[#717182]">{sub}</span> : null}
+      </dd>
     </div>
   );
 }
 
-/** Figma "Size" (4493:168) — margin, leverage, then what they produce. */
-function SizeCard({ p }) {
-  const { summary } = p;
-  const valid = Boolean(summary?.valid);
-  const pctOfNotional = valid && summary.notionalUsd > 0 ? (summary.costToOpenUsd.total / summary.notionalUsd) * 100 : 0;
+/** Figma "Margin & Leverage": the web's two sizing controls, no heading. */
+function MarginLeverageCard({ p }) {
   return (
-    <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label="Size">
-      <p className={EYEBROW}>Size</p>
+    <section className={`${CARD} ${CARD_EDGE} gap-4!`} style={CARD_FILL} aria-label="Margin and leverage">
       <MarginField
         percent={p.percent}
         amount={p.amount}
@@ -375,8 +373,23 @@ function SizeCard({ p }) {
         disabled={p.leverageDisabled}
         onInfo={() => p.onInfo("leverage")}
       />
-      <Divider />
-      <dl className="flex flex-col gap-2.5">
+    </section>
+  );
+}
+
+/**
+ * Figma "Estimates": the web's summary card. Unsized it shows dashes over the
+ * summary's first reason ("Enter an amount to size the position."); a sized
+ * vault that does not clear its costs states why, as the web card does.
+ */
+function EstimatesCard({ p }) {
+  const { summary } = p;
+  const valid = Boolean(summary?.valid);
+  const pctOfNotional = valid && summary.notionalUsd > 0 ? (summary.costToOpenUsd.total / summary.notionalUsd) * 100 : 0;
+  const unprofitable = valid && summary.netAprOnCapitalPct <= 0 && summary.reasons?.[0];
+  return (
+    <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label="Position summary">
+      <dl className="flex flex-col gap-3">
         <StackRow
           label="Est. income"
           value={valid ? withMinus(`${formatSignedUsd(summary.incomeUsd.daily)} /day`) : "—"}
@@ -397,6 +410,14 @@ function SizeCard({ p }) {
           tone={valid ? "text-[#dcdce8]" : MUTED}
         />
       </dl>
+      {!valid ? (
+        <p className="text-[11px] leading-[14px] text-[#8f90a1]">{summary?.reasons?.[0] ?? "Set an amount"}</p>
+      ) : unprofitable ? (
+        <p className={`flex items-start gap-1.5 text-[11px] leading-[15px] ${RED}`}>
+          <TriangleAlert size={12} className="mt-0.5 shrink-0" aria-hidden />
+          {summary.reasons[0]}
+        </p>
+      ) : null}
     </section>
   );
 }
@@ -449,8 +470,10 @@ export default function Dn2NewVaultPage({ open, onClose, cta, ...p }) {
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
             <div className="flex flex-col gap-3 px-5 pb-6 pt-4 max-[374px]:px-4">
               <SetupCard p={p} />
-              {p.market.mode === "tokens" ? <LiveRatesCard p={p} /> : null}
-              <SizeCard p={p} />
+              {/* Categories mode has no single pair to quote, so the web hides these rates. */}
+              {p.market.mode === "tokens" ? <RatesCard p={p} /> : null}
+              <MarginLeverageCard p={p} />
+              <EstimatesCard p={p} />
             </div>
           </div>
           <footer
@@ -468,4 +491,3 @@ export default function Dn2NewVaultPage({ open, onClose, cta, ...p }) {
     document.body,
   );
 }
-

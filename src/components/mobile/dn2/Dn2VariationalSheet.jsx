@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Check, ClipboardPaste, Cookie, ExternalLink, Link, Monitor, Play, TriangleAlert, X } from "lucide-react";
+import { useState } from "react";
+import { Check, Cookie, ExternalLink, Play, TriangleAlert, X } from "lucide-react";
 import { parseCookieFile, uploadVariationalCookies } from "../../../delta-neutral/utils/variational.ts";
 import {
   COOKIE_EDITOR_URL,
@@ -7,21 +7,20 @@ import {
   VARIATIONAL_URL,
   VARIATIONAL_VIDEO_SRC,
 } from "../../../delta-neutral/components/VariationalOnboardingModal.tsx";
-import { useAppToast } from "../appToastContext.js";
 import { Dn2Button, Dn2Sheet, SheetCloseButton } from "./Dn2Ui.jsx";
 import { BRONZE_SMALL_FILL, FIELD, TILE } from "./dn2Theme.js";
 
 /**
- * Figma E1–E3 "Connect Variational" (4498:2 / 304 / 590) — the phone version
- * of the web `VariationalOnboardingModal`, on the same parser, upload stub and
- * links. Cookie-Editor is a desktop extension, so the sheet leads with a
- * hand-off: copy a link to finish steps 1–3 on a computer, then paste here.
+ * Figma E1–E3 "Connect Variational" (4498:2 / 304 / 590) — the web
+ * `VariationalOnboardingModal` as a sheet, with its copy and fields: intro,
+ * walkthrough, the three steps, the paste box and the step count. Same parser,
+ * upload stub and links. Only the paste hint is reworded for touch.
  */
 
 const STEPS = [
   {
     key: "extension",
-    title: "Add Cookie-Editor",
+    title: "Add Cookie-Editor to your browser",
     detail: "A free Chrome extension that copies your session in one click.",
     href: COOKIE_EDITOR_URL,
     cta: "Add",
@@ -36,9 +35,9 @@ const STEPS = [
   {
     key: "copy",
     title: "Copy your session",
-    detail: "On the market page, open Cookie-Editor, switch to JSON, and hit Copy.",
+    detail: "On the market page, open the Cookie-Editor extension, switch to JSON, and hit Copy. Then paste it below.",
     href: VARIATIONAL_MARKET_URL,
-    cta: "Market",
+    cta: "Open market",
   },
 ];
 
@@ -58,8 +57,6 @@ const FRESH = {
 };
 
 export default function Dn2VariationalSheet({ open, onOpenChange, onConnected, pairedDex }) {
-  const toast = useAppToast();
-  const fieldRef = useRef(null);
   const [state, setState] = useState(FRESH);
   // The flow restarts every time the sheet opens (web modal parity).
   const [wasOpen, setWasOpen] = useState(open);
@@ -94,25 +91,6 @@ export default function Dn2VariationalSheet({ open, onOpenChange, onConnected, p
       pasteError: result ? null : NOT_A_SESSION,
       tasks: result ? { ...prev.tasks, copy: true } : prev.tasks,
     }));
-  };
-
-  const pasteFromClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      onPasteChange(text);
-    } catch {
-      // Clipboard read needs a permission some browsers never grant — fall back to the field.
-      fieldRef.current?.focus();
-    }
-  };
-
-  const copyDesktopLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.show({ title: "Link copied", message: "Open it on a computer to finish steps 1–3.", tone: "success", theme: "gold" });
-    } catch {
-      toast.show({ title: "Couldn’t copy the link", message: window.location.href, tone: "error", theme: "gold" });
-    }
   };
 
   const connect = () => {
@@ -175,39 +153,30 @@ export default function Dn2VariationalSheet({ open, onOpenChange, onConnected, p
     >
       <div className="flex flex-col gap-3.5 p-4">
         <p className="text-[13px] leading-[18px] text-[#b4b5c2]">
-          Variational signs in with your browser session, not a wallet signature.
+          Variational signs in with your browser session, not a wallet signature. Watch the short walkthrough, then
+          follow the steps below.
         </p>
 
-        <section className="flex flex-col gap-2.5 rounded-[12px] border border-[rgba(120,90,40,0.5)] bg-[rgba(204,177,127,0.06)] p-3">
-          <div className="flex items-start gap-2.5">
-            <Monitor size={18} className="shrink-0 text-[#ccb17f]" aria-hidden />
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <p className="text-[13px] font-medium leading-[18px] text-[#e8d5b5]">Copying the session needs a computer</p>
-              <p className="text-[12px] leading-4 text-[#8f90a1]">
-                Cookie-Editor is a desktop Chrome extension. Do steps 1–3 on a computer, then paste the session here.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Dn2Button variant="quiet" size="sm" className="flex-1 gap-[5px]" onClick={copyDesktopLink}>
-              <Link size={12} aria-hidden />
-              Copy desktop link
-            </Dn2Button>
-            <Dn2Button
-              variant="quiet"
-              size="sm"
-              className="flex-1 gap-[5px]"
-              aria-expanded={walkthrough}
-              onClick={() => patch({ walkthrough: !walkthrough })}
-            >
-              <Play size={10} aria-hidden />
-              Walkthrough
-            </Dn2Button>
-          </div>
-          {walkthrough ? <Walkthrough /> : null}
-        </section>
+        {/* The web shows the video up front; on a phone it opens from this row so the steps stay in view. */}
+        <Dn2Button
+          variant="quiet"
+          size="sm"
+          className="w-full gap-[5px]"
+          aria-expanded={walkthrough}
+          onClick={() => patch({ walkthrough: !walkthrough })}
+        >
+          <Play size={10} aria-hidden />
+          <span className="truncate">Walkthrough · copy your Variational session</span>
+        </Dn2Button>
+        {walkthrough ? <Walkthrough /> : null}
 
-        <p className={SECTION_LABEL}>Follow these steps on Variational</p>
+        <p className={SECTION_LABEL}>
+          Follow these steps on Variational
+          {/* Wraps whole, never leaving "here" alone on a line. */}
+          <span className="ml-1.5 inline-block whitespace-nowrap font-normal normal-case tracking-normal text-[#717182]">
+            · then come back here
+          </span>
+        </p>
         <ol className={`${TILE} flex flex-col`}>
           {STEPS.map((step, index) => {
             const isDone = tasks[step.key];
@@ -258,10 +227,9 @@ export default function Dn2VariationalSheet({ open, onOpenChange, onConnected, p
         <p className={SECTION_LABEL}>Paste your session here</p>
         <div className={`flex h-[84px] items-start gap-2 p-3 ${fieldTone}`}>
           <textarea
-            ref={fieldRef}
             value={raw}
             onChange={(e) => onPasteChange(e.target.value)}
-            placeholder="Paste the JSON from Cookie-Editor"
+            placeholder="Paste your copied session here"
             aria-label="Variational session JSON"
             aria-invalid={Boolean(pasteError)}
             spellCheck={false}
@@ -282,12 +250,7 @@ export default function Dn2VariationalSheet({ open, onOpenChange, onConnected, p
             >
               <X size={14} aria-hidden />
             </button>
-          ) : (
-            <Dn2Button variant="quiet" size="xs" className="gap-[5px]" onClick={pasteFromClipboard}>
-              <ClipboardPaste size={12} aria-hidden />
-              Paste
-            </Dn2Button>
-          )}
+          ) : null}
         </div>
 
         {pasteError || uploadError ? (
@@ -301,9 +264,12 @@ export default function Dn2VariationalSheet({ open, onOpenChange, onConnected, p
         ) : parsed ? (
           <p className="flex items-center gap-1.5 text-[12px] font-medium leading-4 text-[#00d492]">
             <Check size={14} aria-hidden />
-            Session ready
+            {parsed.cookies.length} {parsed.cookies.length === 1 ? "cookie" : "cookies"} ready
           </p>
-        ) : null}
+        ) : (
+          // The web hint ("Click the box, then paste (⌘V / Ctrl+V)"), worded for touch.
+          <p className="text-[11px] leading-[14px] text-[#717182]">Tap the box, then paste</p>
+        )}
       </div>
     </Dn2Sheet>
   );
