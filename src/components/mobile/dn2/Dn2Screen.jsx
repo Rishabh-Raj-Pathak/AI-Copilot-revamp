@@ -6,7 +6,7 @@ import ConnectNetworkSheet from "../sheets/ConnectNetworkSheet.jsx";
 import Dn2ChartSheet from "./Dn2ChartSheet.jsx";
 import { Dn2ClosePairSheet, Dn2HistoryView, Dn2PositionsView } from "./Dn2Positions.jsx";
 import { Dn2Button, EmptyCard, GroupToggle } from "./Dn2Ui.jsx";
-import { Dn2DeactivateSheet, Dn2EditVaultSheet, Dn2PnlSheet, Dn2VaultCard } from "./Dn2Vaults.jsx";
+import { Dn2DeactivateSheet, Dn2PnlSheet, Dn2VaultCard } from "./Dn2Vaults.jsx";
 import { payoutCountdown, useNow } from "./dn2Data.js";
 
 /**
@@ -14,7 +14,7 @@ import { payoutCountdown, useNow } from "./dn2Data.js";
  * (`kN9AkNRzaxmg4mhFVkt1Bo`, 4476:2). Under the Agents header:
  *
  *   VAULTS   POSITIONS   HISTORY                  ← DN Tabs (4492:36)
- *   Vaults     Cross-DEX setup → Active vaults (A1–A6, manage sheets C1–C3)
+ *   Vaults     Cross-DEX setup → Active vaults (A1–A6, manage sheets C2–C4)
  *   Positions  one card per pair (D1–D3)
  *   History    paired fills per vault action (D4)
  *
@@ -94,7 +94,7 @@ const GROUP_CAPTION = {
   token: "Showing token-pair vaults only.",
 };
 
-export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, renderBuilder }) {
+export default function Dn2Screen({ vaults, onAddVault, onStop, renderBuilder }) {
   const app = useMobileApp();
   const toast = useAppToast();
   const now = useNow(1000);
@@ -127,7 +127,7 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
 
   const openSheet = (kind, vault) => setSheet({ kind, open: true, vault });
   const closeSheet = () => setSheet((prev) => ({ ...prev, open: false }));
-  // Read the live vault so an edit shows its saved figures; fall back to the snapshot once it is gone.
+  // Read the live vault; fall back to the snapshot once it is gone (a deactivated vault).
   const sheetVault = vaults.find((v) => v.id === sheet.vault?.id) ?? sheet.vault;
 
   const goTo = (next) => {
@@ -191,7 +191,6 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
                 countdown={countdown}
                 onToggle={() => setExpandedVault((id) => (id === vault.id ? null : vault.id))}
                 onPnl={() => openSheet("pnl", vault)}
-                onEdit={() => openSheet("edit", vault)}
                 onDeactivate={() => openSheet("deactivate", vault)}
                 onChart={(pair) => setChart({ open: true, pair, venues: [vault.longAccount, vault.shortAccount] })}
                 onCopy={copyWallet}
@@ -252,23 +251,14 @@ export default function Dn2Screen({ vaults, onAddVault, onSaveSettings, onStop, 
       </div>
 
       <Dn2PnlSheet open={sheet.open && sheet.kind === "pnl"} vault={sheet.kind === "pnl" ? sheetVault : null} onClose={closeSheet} />
-      <Dn2EditVaultSheet
-        open={sheet.open && sheet.kind === "edit"}
-        vault={sheet.kind === "edit" ? sheetVault : null}
-        onClose={closeSheet}
-        onSave={(next) => {
-          onSaveSettings(sheetVault.id, next);
-          closeSheet();
-        }}
-      />
       <Dn2DeactivateSheet
         open={sheet.open && sheet.kind === "deactivate"}
         vault={sheet.kind === "deactivate" ? sheetVault : null}
         onClose={closeSheet}
+        // The sheet stays up and shows its "Vault deactivated" step; Done closes it.
         onConfirm={() => {
           onStop(sheetVault.id);
           if (expandedVault === sheetVault.id) setExpandedVault(null);
-          closeSheet();
         }}
       />
       <Dn2ClosePairSheet

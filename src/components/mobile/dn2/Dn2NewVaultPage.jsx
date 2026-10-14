@@ -164,6 +164,34 @@ function VenueBlock({
   );
 }
 
+/**
+ * What each picked category holds. The web shows these descriptions as hover
+ * tooltips on the chips; a phone has no hover, so every selected category is
+ * spelled out under the grid. All of them, not just the last tap: a vault can
+ * span several categories and each one changes what it trades. Grid order, not
+ * tap order, so rows never jump as chips toggle.
+ */
+function CategoryNotes({ themes }) {
+  const picked = THEME_CATALOG.filter((t) => themes.includes(t.value));
+  if (!picked.length) return null;
+  return (
+    <ul className={`${TILE} flex flex-col px-3`} aria-label="Selected categories" aria-live="polite">
+      {picked.map(({ value, description, icon: Icon }, index) => (
+        <li
+          key={value}
+          className={`flex items-start gap-2.5 py-2.5 ${index > 0 ? "border-t border-white/[0.06]" : ""}`}
+        >
+          <Icon size={14} className="mt-px shrink-0 text-[#ccb17f]" aria-hidden />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="text-[12px] font-medium leading-4 text-[#e8d5b5]">{value}</p>
+            <p className="text-[11px] leading-[15px] text-[#8f90a1]">{description}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function SetupCard({ p }) {
   const tokens = p.market.mode === "tokens";
   return (
@@ -206,34 +234,37 @@ function SetupCard({ p }) {
             <ChevronDown size={14} className="shrink-0 text-[#8f90a1]" aria-hidden />
           </button>
         ) : (
-          <div
-            role="group"
-            aria-label="Market categories. Pick one or more."
-            className={`grid grid-cols-3 gap-1 rounded-[12px] border border-white/[0.09] bg-[rgba(10,10,11,0.94)] p-1 ${
-              p.marketDisabled ? "opacity-50" : ""
-            }`}
-          >
-            {THEME_CATALOG.map(({ value: theme, icon: Icon }) => {
-              const on = p.market.themes.includes(theme);
-              return (
-                <button
-                  key={theme}
-                  type="button"
-                  aria-pressed={on}
-                  disabled={p.marketDisabled}
-                  onClick={() =>
-                    p.onThemesChange(on ? p.market.themes.filter((x) => x !== theme) : [...p.market.themes, theme])
-                  }
-                  className={`${CHIP} app-pressable min-w-0 justify-center gap-1.5 ${
-                    on ? CHIP_ON : "border-transparent font-medium text-[#9a9ba8]"
-                  }`}
-                >
-                  {on ? <Check size={12} aria-hidden /> : <Icon size={13} aria-hidden />}
-                  <span className="truncate">{theme}</span>
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <div
+              role="group"
+              aria-label="Market categories. Pick one or more."
+              className={`grid grid-cols-3 gap-1 rounded-[12px] border border-white/[0.09] bg-[rgba(10,10,11,0.94)] p-1 ${
+                p.marketDisabled ? "opacity-50" : ""
+              }`}
+            >
+              {THEME_CATALOG.map(({ value: theme, icon: Icon }) => {
+                const on = p.market.themes.includes(theme);
+                return (
+                  <button
+                    key={theme}
+                    type="button"
+                    aria-pressed={on}
+                    disabled={p.marketDisabled}
+                    onClick={() =>
+                      p.onThemesChange(on ? p.market.themes.filter((x) => x !== theme) : [...p.market.themes, theme])
+                    }
+                    className={`${CHIP} app-pressable min-w-0 justify-center gap-1.5 ${
+                      on ? CHIP_ON : "border-transparent font-medium text-[#9a9ba8]"
+                    }`}
+                  >
+                    {on ? <Check size={12} aria-hidden /> : <Icon size={13} aria-hidden />}
+                    <span className="truncate">{theme}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <CategoryNotes themes={p.market.themes} />
+          </>
         )}
         {p.marketDisabled ? (
           <p className="text-[11px] leading-[15px] text-[#8d8e99]">

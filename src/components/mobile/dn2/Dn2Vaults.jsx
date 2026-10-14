@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChartCandlestick, ChevronRight, Copy, TriangleAlert, X } from "lucide-react";
+import { ChartCandlestick, Check, ChevronRight, Copy, TriangleAlert } from "lucide-react";
 import { latestFundingFor } from "../../../delta-neutral/components/StrategyDeepDive.tsx";
 import { formatWalletAddress } from "../../../delta-neutral/utils/wallet.ts";
 import {
@@ -9,38 +9,33 @@ import {
   Dn2Button,
   Dn2Sheet,
   ExpandButton,
-  StackRow,
   VaultSummaryTile,
   VenueMark,
   VenuePair,
 } from "./Dn2Ui.jsx";
-import { LeverageField, MarginField } from "./Dn2SizeFields.jsx";
-import { Dn2InfoSheet } from "./Dn2BuilderSheets.jsx";
 import {
   MINUS,
   capitalUsedPct,
   compactUsd,
-  marginCeilingFor,
   signedUsd,
   vaultLeverage,
-  vaultMarginUsd,
   vaultPnlBreakdown,
-  wholeUsd,
 } from "./dn2Data.js";
 import { CARD, CARD_EDGE, CARD_FILL, LABEL, TILE } from "./dn2Theme.js";
 
 /**
  * Active vaults on the Delta Neutral 2 phone tab — Figma A1–A6 (4476:5) and the
- * manage sheets C1–C3 (4476:7). The card is the Alpha Agents card pattern and
- * carries the web card's fields only; expanding it shows each venue's wallet
- * and latest funding (the web deep-dive's figures, without its charts), plus a
- * link to the Copilot chart (A6) for a token vault.
+ * manage sheets C2–C4 (4476:7). The card is the Alpha Agents card pattern with
+ * the web card's fields and two actions, PnL breakdown and Deactivate (no Edit
+ * on phone). Expanding it shows each venue's wallet and latest funding (the web
+ * deep-dive's figures, without its charts), plus a link to the Copilot chart
+ * (A6) for a token vault.
  */
 
 const LEG_SEPARATOR = "  ⇄  ";
 
 /** Figma "Vault Card" (4492:120 collapsed, 4492:542 expanded). */
-export function Dn2VaultCard({ vault, expanded, countdown, onToggle, onPnl, onEdit, onDeactivate, onChart, onCopy }) {
+export function Dn2VaultCard({ vault, expanded, countdown, onToggle, onPnl, onDeactivate, onChart, onCopy }) {
   const isToken = vault.marketType === "token";
   const pairLabel = vault.pair.replace("/", "-");
   return (
@@ -119,107 +114,20 @@ export function Dn2VaultCard({ vault, expanded, countdown, onToggle, onPnl, onEd
         </dl>
       ) : null}
 
-      <div className="flex gap-2">
+      {/*
+        The everyday action gets the wide target; the destructive one sits apart at
+        the edge, smaller, red and labelled, with 12px of dead space between them.
+        It still asks to confirm (C3) before anything closes.
+      */}
+      <div className="flex items-center gap-3">
         <Dn2Button className="flex-1" onClick={onPnl}>
           PnL breakdown
         </Dn2Button>
-        <Dn2Button className="flex-1" onClick={onEdit}>
-          Edit
-        </Dn2Button>
-        <Dn2Button variant="danger" className="w-[38px] px-0!" aria-label={`Deactivate ${vault.pair}`} onClick={onDeactivate}>
-          <X size={16} aria-hidden />
+        <Dn2Button variant="danger" className="px-5" aria-label={`Deactivate ${vault.pair}`} onClick={onDeactivate}>
+          Deactivate
         </Dn2Button>
       </div>
     </article>
-  );
-}
-
-/* ── C1 Edit position (4496:279) ──────────────────────────────────────── */
-
-const MIN_LEVERAGE = 1;
-const MAX_LEVERAGE = 50;
-
-const EDIT_INFO = {
-  margin:
-    "The margin each leg is sized from. The slider runs to a ceiling that always holds the current margin; saving re-sizes both legs at margin × leverage.",
-  leverage:
-    "Multiplies both legs equally, so the hedge stays delta-neutral. Higher leverage captures more funding but liquidates on a smaller adverse move.",
-};
-
-/**
- * The web card's inline editor as a sheet. Values are a draft: the vault keeps
- * running at its saved settings until Save; Cancel costs nothing.
- */
-function EditBody({ vault, onSave, onCancel }) {
-  const leverage = vaultLeverage(vault);
-  const marginUsd = vaultMarginUsd(vault);
-  const ceiling = marginCeilingFor(marginUsd);
-  const [draftAmount, setDraftAmount] = useState(String(marginUsd));
-  const [draftLeverage, setDraftLeverage] = useState(leverage);
-  const [info, setInfo] = useState(null);
-  const draftMargin = Number(String(draftAmount).replace(/[^0-9.]/g, "")) || 0;
-  const draftPercent = Math.round(Math.min(100, Math.max(0, (draftMargin / ceiling) * 100)));
-  const size = draftMargin * draftLeverage;
-
-  return (
-    <div className="flex flex-col gap-4 px-4 pt-4">
-      <VaultSummaryTile vault={vault} />
-      <MarginField
-        percent={draftPercent}
-        amount={draftAmount}
-        maxAmount={ceiling}
-        onPercentChange={(pct) => setDraftAmount(String(Math.round((pct / 100) * ceiling)))}
-        onAmountChange={(val) => {
-          if (!/^\d*\.?\d*$/.test(val)) return;
-          const num = parseFloat(val);
-          setDraftAmount(!Number.isNaN(num) && num > ceiling ? String(ceiling) : val);
-        }}
-        onInfo={() => setInfo("margin")}
-      />
-      <LeverageField
-        leverage={draftLeverage}
-        min={MIN_LEVERAGE}
-        max={MAX_LEVERAGE}
-        onChange={setDraftLeverage}
-        onInfo={() => setInfo("leverage")}
-      />
-      <Divider />
-      <dl>
-        <StackRow
-          label="New position size"
-          value={wholeUsd(size)}
-          sub={`was ${wholeUsd(vault.notional)}`}
-          tone="text-[#e8d5b5]"
-          size="text-[14px]"
-        />
-      </dl>
-      <div className="flex flex-col gap-0.5">
-        <Dn2Button
-          variant="primary"
-          size="lg"
-          className="w-full"
-          disabled={draftMargin <= 0}
-          onClick={() => onSave({ marginUsd: Math.round(draftMargin), leverage: draftLeverage })}
-        >
-          Save
-        </Dn2Button>
-        <CancelButton onPress={onCancel} />
-      </div>
-      <Dn2InfoSheet
-        open={info != null}
-        onClose={() => setInfo(null)}
-        title={info === "leverage" ? "Leverage" : "Margin"}
-        body={EDIT_INFO[info] ?? ""}
-      />
-    </div>
-  );
-}
-
-export function Dn2EditVaultSheet({ open, vault, onClose, onSave }) {
-  return (
-    <Dn2Sheet open={open} onClose={onClose} title="Edit position">
-      {vault ? <EditBody key={vault.id} vault={vault} onSave={onSave} onCancel={onClose} /> : null}
-    </Dn2Sheet>
   );
 }
 
@@ -268,16 +176,52 @@ export function Dn2PnlSheet({ open, vault, onClose }) {
   );
 }
 
-/* ── C3 Deactivate vault (4496:925) ───────────────────────────────────── */
+/* ── C3 Deactivate vault (4496:925) → C4 Vault deactivated ──────────────── */
 
 /**
- * Phone-only confirm (on the web, Deactivate fires immediately) — so it adds no
- * figures of its own: the vault, what happens, and the two choices.
+ * Phone-only, two steps (on the web, Deactivate fires immediately):
+ *
+ *  1. Confirm — the vault, what will happen, and the two choices. No figures of
+ *     its own.
+ *  2. Done — once confirmed the same sheet turns into the receipt: a green
+ *     check, what happened, the vault it happened to, and Done. The card has
+ *     already left the list behind it, so the screen agrees with the sheet.
+ *
+ * Every time the sheet opens it starts at step 1.
  */
 export function Dn2DeactivateSheet({ open, vault, onClose, onConfirm }) {
+  const [done, setDone] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setDone(false);
+  }
+
   return (
-    <Dn2Sheet open={open} onClose={onClose} title="Deactivate vault">
-      {vault ? (
+    <Dn2Sheet open={open} onClose={onClose} title={done ? "Vault deactivated" : "Deactivate vault"}>
+      {!vault ? null : done ? (
+        <div className="flex flex-col gap-4 px-4 pt-4">
+          <div className="flex flex-col items-center gap-3 pt-1 text-center" role="status">
+            <span className="flex size-12 items-center justify-center rounded-full border border-[rgba(0,212,146,0.35)] bg-[rgba(0,212,146,0.1)] text-[#00d492]">
+              <Check size={22} strokeWidth={2.5} aria-hidden />
+            </span>
+            <p className="max-w-[300px] text-[13px] leading-[18px] text-[#b4b5c2]">
+              {vault.pair} has stopped. Its legs on {vault.longAccount} and {vault.shortAccount} were closed at market.
+            </p>
+          </div>
+          <VaultSummaryTile
+            vault={vault}
+            aside={
+              <span className="shrink-0 rounded-full border border-white/[0.1] bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase leading-[13px] tracking-[0.4px] text-[#8f90a1]">
+                Deactivated
+              </span>
+            }
+          />
+          <Dn2Button size="lg" className="w-full" onClick={onClose}>
+            Done
+          </Dn2Button>
+        </div>
+      ) : (
         <div className="flex flex-col gap-4 px-4 pt-4">
           <VaultSummaryTile vault={vault} />
           <p className="flex items-start gap-2 text-[12px] leading-[17px] text-[#8f90a1]">
@@ -285,13 +229,21 @@ export function Dn2DeactivateSheet({ open, vault, onClose, onConfirm }) {
             {vault.pair} stops and its legs on {vault.longAccount} and {vault.shortAccount} are closed at market.
           </p>
           <div className="flex flex-col gap-0.5">
-            <Dn2Button variant="danger" size="lg" className="w-full" onClick={onConfirm}>
+            <Dn2Button
+              variant="danger"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                onConfirm();
+                setDone(true);
+              }}
+            >
               Deactivate vault
             </Dn2Button>
             <CancelButton onPress={onClose} />
           </div>
         </div>
-      ) : null}
+      )}
     </Dn2Sheet>
   );
 }

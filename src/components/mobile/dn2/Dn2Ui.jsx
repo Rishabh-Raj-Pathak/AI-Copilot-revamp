@@ -1,7 +1,5 @@
-import { ChevronDown, ChevronUp, X } from "lucide-react";
-import AppIcon from "../AppIcon.jsx";
+import { ChevronDown, ChevronUp, Info, X } from "lucide-react";
 import BottomSheet from "../BottomSheet.jsx";
-import { appIcons } from "../mobileAssets.js";
 import { TOKEN_PARTS } from "../positions/positionsMockData.js";
 import { TokenIcon as LayeredTokenIcon } from "../positions/PositionsUi.jsx";
 import { tokenIconFor, coinOf, venueLogo } from "./dn2Data.js";
@@ -140,7 +138,11 @@ export function ExpandButton({ expanded, onPress, label }) {
   );
 }
 
-/** 16px gold ring with an "i" (Figma "Info"). */
+/**
+ * Gold Lucide `Info` (Figma "Info"): one drawn glyph, so the "i" is centred in its
+ * ring by construction, and it sits on the label's centre line. 16px, with a
+ * 40px hit area.
+ */
 export function InfoButton({ label, onPress }) {
   return (
     <button
@@ -148,9 +150,9 @@ export function InfoButton({ label, onPress }) {
       onClick={onPress}
       aria-label={label}
       aria-haspopup="dialog"
-      className="app-pressable relative flex size-4 shrink-0 items-center justify-center rounded-full border border-[rgba(204,177,127,0.4)] bg-[rgba(204,177,127,0.1)] text-[#ccb17f] after:absolute after:-inset-3"
+      className="app-pressable relative flex size-4 shrink-0 items-center justify-center text-[#ccb17f]/85 after:absolute after:-inset-3 active:text-[#e8d5b5]"
     >
-      <AppIcon src={appIcons.infoGlyph11} size={11} />
+      <Info size={16} strokeWidth={1.75} aria-hidden />
     </button>
   );
 }
@@ -324,8 +326,8 @@ export function Dn2Sheet({ title, header, children, bodyClassName = "", ...rest 
   );
 }
 
-/** Figma "Vault Summary": the vault a sheet acts on — its name and venues, nothing more. */
-export function VaultSummaryTile({ vault }) {
+/** Figma "Vault Summary": the vault a sheet acts on — its name and venues; `aside` for a status. */
+export function VaultSummaryTile({ vault, aside = null }) {
   return (
     <div className={`${TILE} flex items-center gap-2.5 px-3 py-2.5`}>
       <VenuePair a={vault.longAccount} b={vault.shortAccount} size={24} logo={14} />
@@ -335,6 +337,7 @@ export function VaultSummaryTile({ vault }) {
           {`${vault.longAccount}  ⇄  ${vault.shortAccount}`}
         </p>
       </div>
+      {aside}
     </div>
   );
 }

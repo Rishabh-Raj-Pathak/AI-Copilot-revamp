@@ -104,6 +104,6 @@ or pair + action, no extra figures) and the Copilot chart sheet (A6).
   margin & leverage, estimates), `Dn2BuilderSheets` (B4 DEX, B5 market, B6
   cost, ⓘ), `Dn2ChartSheet` (A6 — the Copilot `AppChartCard`),
   `Dn2OpeningScreen` (B7), `Dn2VariationalSheet` (E1–E3), `Dn2Vaults` (vault
-  card, C1–C3), `Dn2Positions` (D1–D4).
+  card with PnL breakdown + Deactivate, C2–C4), `Dn2Positions` (D1–D4).
 - Toasts here pass `theme: "gold"` to `useAppToast().show`.
 - Inputs are 16px (not Figma's 14) so iOS never zooms on focus.
