@@ -62,6 +62,8 @@ import {
 } from "../utils/positionSummary";
 import useIsMobile from "../../components/mobile/useIsMobile.js";
 import MobileDnBuilder from "../../components/mobile/agents/MobileDnBuilder.jsx";
+import Dn2Builder from "../../components/mobile/dn2/Dn2Builder.jsx";
+import Dn2VariationalSheet from "../../components/mobile/dn2/Dn2VariationalSheet.jsx";
 import {
   formatApr,
   formatCompactPct,
@@ -1279,6 +1281,9 @@ export type DeltaVaultBuilderResult = {
   delta: number;
   estAprPct: number;
   fundingEarnedProjection: number;
+  /** How the vault was sized. The phone vault card and its toast quote them. */
+  marginUsd?: number;
+  leverage?: number;
 };
 
 type DeltaVaultBuilderProps = {
@@ -1299,6 +1304,15 @@ type DeltaVaultBuilderProps = {
    * layout and the palette are not the same decision.
    */
   summaryPlacement?: "panel" | "market-strip";
+  /**
+   * Phone only. "stack" is the single-column builder both versions shipped with
+   * (MobileDnBuilder); "page" is Delta Neutral 2's mobile-native layout -- a
+   * Cross-DEX setup card on the Vaults tab that opens the builder as a pushed
+   * page (Dn2Builder). Desktop ignores it.
+   */
+  phoneLayout?: "stack" | "page";
+  /** "page" layout: whether the Vaults tab is showing, which is where its setup card lives. */
+  phoneHeroVisible?: boolean;
 };
 
 // Both default venues start connected so the builder opens on a vault that can
@@ -1330,6 +1344,8 @@ export function DeltaVaultBuilder({
   onActivate,
   variant = "default",
   summaryPlacement = "panel",
+  phoneLayout = "stack",
+  phoneHeroVisible = true,
 }: DeltaVaultBuilderProps) {
   const isV2Shell = variant === "v2";
   const summaryInStrip = summaryPlacement === "market-strip";
@@ -1344,10 +1360,11 @@ export function DeltaVaultBuilder({
   const [legA, setLegA] = useState<InstrumentType>("Perp");
   const [legB, setLegB] = useState<InstrumentType>("Perp");
   const structure = legStructureFor(legA, legB);
-  // The phone opens on Categories / Top Picks, the landing state of Figma
-  // "Agents / Delta Neutral" (951:4142); desktop keeps its token-pair start.
+  // The stacked phone builder opens on Categories / Top Picks, the landing state
+  // of Figma "Agents / Delta Neutral" (951:4142). Desktop and the Delta Neutral 2
+  // phone page (Figma B1, 4493:30) keep the token-pair start.
   const [market, setMarket] = useState<MarketSelection>(() =>
-    isMobile
+    isMobile && phoneLayout !== "page"
       ? { mode: "themes", themes: ["Top Picks"], token: "BTC-USDC" }
       : { mode: "tokens", themes: [], token: "BTC-USDC" },
   );
@@ -1639,6 +1656,14 @@ export function DeltaVaultBuilder({
     });
   };
 
+  /** Venue A and B trade places, each keeping the book it trades on. */
+  const handleSwapVenues = () => {
+    setDexA(dexB);
+    setDexB(dexA);
+    setLegA(legB);
+    setLegB(legA);
+  };
+
   const handleModeChange = (mode: MarketMode) => {
     setMarket((prev) => ({ ...prev, mode }));
   };
@@ -1706,6 +1731,8 @@ export function DeltaVaultBuilder({
       delta,
       estAprPct: summary?.netAprOnCapitalPct ?? 0,
       fundingEarnedProjection: summary?.incomeUsd.annual ?? 0,
+      marginUsd: totalAmount,
+      leverage,
     };
     setIsPreparing(true);
     window.setTimeout(() => {
@@ -1943,6 +1970,70 @@ export function DeltaVaultBuilder({
     `summaryPlacement` shapes collapse to it -- the summary readouts are a desktop
     layout decision, and the phone frame carries neither.
   */
+  /*
+    Phone, Delta Neutral 2: Figma "Delta Neutral 2 · Mobile-native" (4476:2), drawn
+    by Dn2Builder off the same state. It brings its own full-screen opening state
+    (B8) and the Variational sheet (E1-E3) in place of the desktop overlay and modal.
+  */
+  if (isMobile && phoneLayout === "page") {
+    return (
+      <>
+        <Dn2VariationalSheet
+          open={variationalModalOpen}
+          onOpenChange={setVariationalModalOpen}
+          onConnected={handleVariationalConnected}
+          pairedDex={selectedVenues.find((id) => id !== "Variational")}
+        />
+        <Dn2Builder
+          heroVisible={phoneHeroVisible}
+          dexOptions={Object.keys(DEX_PROFILES) as ManagedDexId[]}
+          dexA={dexA}
+          dexB={dexB}
+          onDexAChange={setDexA}
+          onDexBChange={setDexB}
+          onSwapVenues={handleSwapVenues}
+          legA={legA}
+          legB={legB}
+          onLegInstrumentChange={handleLegInstrumentChange}
+          dexConnected={dexConnected}
+          dexBalances={dexBalances}
+          dexWallets={dexWallets}
+          onConnectDex={handleConnectDex}
+          onDepositDex={handleDepositDex}
+          onChangeWalletDex={handleChangeWalletDex}
+          market={market}
+          marketDisabled={dexA === "" || dexB === ""}
+          structure={structure}
+          onModeChange={handleModeChange}
+          onThemesChange={handleThemesChange}
+          onTokenChange={handleTokenChange}
+          amount={amount}
+          percent={participationRate}
+          maxAmount={deployableMaxUsd}
+          marginDisabled={!dualValid}
+          marginInfo={vaultMarginTooltip}
+          onAmountChange={handleAmountChange}
+          onPercentChange={handlePercentChange}
+          leverage={leverage}
+          minLeverage={MIN_LEVERAGE}
+          maxLeverage={MAX_LEVERAGE}
+          leverageDisabled={!dualValid}
+          leverageInfo={leverageInfoText}
+          onLeverageChange={setLeverage}
+          dualValid={dualValid}
+          showPairWarning={hasBothDexSelected && !dualValid}
+          firstDisconnectedVenue={firstDisconnectedVenue ?? null}
+          primaryLabel={primaryLabel}
+          onPrimary={handlePrimaryAction}
+          preparing={isPreparing}
+          summary={summary}
+          metrics={strategyMetrics}
+          legSlippage={legSlippage}
+        />
+      </>
+    );
+  }
+
   if (isMobile) {
     return (
       <>

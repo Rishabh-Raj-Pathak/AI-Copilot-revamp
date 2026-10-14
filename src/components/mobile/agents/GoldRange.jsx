@@ -3,10 +3,12 @@
  *
  * `size="lg"` — Delta Neutral Margin / Leverage (Figma "Slider", 952:4097):
  * 8px track, bronze→gold fill, 20px gradient thumb.
+ * `size="md"` — Delta Neutral 2 Margin / Leverage (Terminal file, 4493:170):
+ * 4px track, 18px gradient thumb with a drop shadow.
  * `size="sm"` — Alpha agent allocation (Figma "Allocation", 950:4068):
  * 4px recessed track, 16px flat gold thumb.
  *
- * In both, the thumb is centred on the fill's end, so at 0 and 100 it hangs
+ * In each, the thumb is centred on the fill's end, so at 0 and 100 it hangs
  * half a thumb past the track — give the parent that much side room.
  *
  * A native range input sits on top for drag, keyboard and screen readers. It
@@ -19,6 +21,14 @@ const SIZES = {
     track: "h-2 rounded-full bg-white/[0.14]",
     fill: "h-2 rounded-full bg-[linear-gradient(90deg,#8f6a33_0%,#d6b06a_100%)]",
     knob: "border border-[rgba(232,213,181,0.28)] bg-[linear-gradient(180deg,#f2ddb5_0%,#ba8f52_100%)]",
+    height: "h-5",
+  },
+  /* Delta Neutral 2 Margin / Leverage (Figma "Slider", 4493:170): 4px track, 18px shadowed thumb. */
+  md: {
+    thumb: 18,
+    track: "h-1 rounded-full bg-white/[0.14]",
+    fill: "h-1 rounded-full bg-[linear-gradient(90deg,#8f6a33_0%,#d6b06a_100%)]",
+    knob: "border border-[rgba(232,213,181,0.28)] bg-[linear-gradient(180deg,#f2ddb5_0%,#ba8f52_100%)] shadow-[0_2px_6px_rgba(0,0,0,0.5)]",
     height: "h-5",
   },
   sm: {

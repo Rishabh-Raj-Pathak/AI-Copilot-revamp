@@ -17,7 +17,7 @@ type BottomTab = 'positions' | 'history';
  * nothing rather than a zero — a zero would read as "flat right now" when the
  * truth is "this leg never has one". Rendered dimmed, with a hover explanation.
  */
-const NOT_APPLICABLE = '—';
+export const NOT_APPLICABLE = '—';
 const NOT_APPLICABLE_TITLE = 'Not applicable to a spot leg';
 
 /**
@@ -95,7 +95,7 @@ function daysAgoAt(daysAgo: number, clock: string) {
   return new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysAgo, h, m, s).getTime();
 }
 
-type PositionLeg = {
+export type PositionLeg = {
   dex: ManagedDexId;
   instrument: InstrumentType;
   wallet: string;
@@ -113,7 +113,7 @@ type PositionLeg = {
   expected: string;
 };
 
-type DeltaNeutralPosition = {
+export type DeltaNeutralPosition = {
   coin: string;
   category?: string;
   /** When the pair was opened (ms). Both legs fill as one vault action. */
@@ -122,7 +122,7 @@ type DeltaNeutralPosition = {
   short: PositionLeg;
 };
 
-type HistoryLeg = {
+export type HistoryLeg = {
   dex: ManagedDexId;
   instrument: InstrumentType;
   wallet: string;
@@ -141,7 +141,7 @@ type HistoryLeg = {
  * A Close always knows when its trade opened. An Open knows when its trade closed
  * only once it has — until then the trade is live and its duration is still running.
  */
-type HistoryPair = {
+export type HistoryPair = {
   coin: string;
   category?: string;
   long: HistoryLeg;
@@ -151,11 +151,11 @@ type HistoryPair = {
   | { event: 'Close'; openedAt: number; closedAt: number }
 );
 
-function eventAt(row: HistoryPair) {
+export function eventAt(row: HistoryPair) {
   return row.event === 'Close' ? row.closedAt : row.openedAt;
 }
 
-const POSITION_PAIRS: DeltaNeutralPosition[] = [
+export const POSITION_PAIRS: DeltaNeutralPosition[] = [
   {
     coin: 'BTC/USDC',
     // Rolled straight back in after the BTC close in history.
@@ -279,7 +279,7 @@ const POSITION_PAIRS: DeltaNeutralPosition[] = [
   },
 ];
 
-const HISTORY_PAIRS: HistoryPair[] = [
+export const HISTORY_PAIRS: HistoryPair[] = [
   {
     coin: 'ETH/USDC',
     event: 'Close',

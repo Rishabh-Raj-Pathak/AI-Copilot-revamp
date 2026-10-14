@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="84" height="72" viewBox="0 0 84 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Hedge Link">
+<rect id="Line" y="36" width="84" height="1" fill="url(#paint0_linear_0_4)"/>
+<circle id="Dot" cx="12" cy="36" r="2.5" fill="#785A28"/>
+<rect id="Diamond" x="42" y="30.5" width="8" height="8" transform="rotate(-45 42 30.5)" fill="#CCB17F"/>
+<circle id="Dot_2" cx="72" cy="36" r="2.5" fill="#785A28"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="0" y1="36.5" x2="84" y2="36.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#785A28" stop-opacity="0.2"/>
+<stop offset="0.5" stop-color="#CCB17F" stop-opacity="0.8"/>
+<stop offset="1" stop-color="#785A28" stop-opacity="0.2"/>
+</linearGradient>
+</defs>
+</svg>

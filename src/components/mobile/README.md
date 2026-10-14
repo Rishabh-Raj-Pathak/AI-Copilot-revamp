@@ -55,6 +55,7 @@ of drawing them.
 | Empty state (icon disc, title, message, stacked 44px actions) | `AppEmptyState.jsx` | Copilot A5 1189:12683 · B1 1222:7000 |
 | Chip (32px, 44px hit; Copilot categories, PnL Calendar months) | `AppChip.jsx` | Category Chip 937:1163 |
 | Screen transitions | `MobilePageTransition.jsx` | — |
+| Delta Neutral 2 phone screens (Vaults / Positions / History tabs, New vault page, vault sheets) | `dn2/` — see below | Terminal `kN9AkNRzaxmg4mhFVkt1Bo` 4476:2 |
 | Hardware/gesture back | `appHistory.js` (`useHistoryBack`) | — |
 
 ### Navigation
@@ -78,3 +79,23 @@ and a browser-history entry, so Android back / iOS swipe-back pops them.
 The tab bar is `fixed` and owned by `App`; give the scroll area
 `pb-[var(--app-tab-bar-h)]` so the last row clears it. Sheets portal to
 `<body>` at `z-[90]`; the tab bar is `z-50`; toasts `z-[95]`.
+
+### Delta Neutral 2 (`dn2/`)
+
+Figma "Delta Neutral 2 · Mobile-native (390)" (Terminal file, section 4476:2),
+in the vault colour theme. `DeltaNeutralVaultsV2Page` renders `Dn2Screen` on a
+phone; `DeltaVaultBuilder` draws its phone face with `phoneLayout="page"`
+(`Dn2Builder`), keeping every builder value and handler where they were. DN1
+and desktop are untouched.
+
+- `dn2Theme.js` — the vault recipes (card / hero / bronze fills, tiles, fields,
+  toggles, chips, type). `Dn2Ui.jsx` — the shared pieces (venue discs, rows,
+  `Dn2Button` on the control scale, `Dn2Sheet` = `BottomSheet` in the vault
+  theme). `dn2Data.js` — shaping for the phone copy (funding readouts, chart-feed
+  token price, PnL breakdown that sums to its total, the 8h countdown).
+- Screens: `Dn2Screen` (A, C, D), `Dn2NewVaultPage` (B1–B3), `Dn2BuilderSheets`
+  (B4 venue, B5 market, B7 cost, ⓘ), `Dn2ChartSheet` (B6 — the Copilot
+  `AppChartCard`), `Dn2OpeningScreen` (B8), `Dn2VariationalSheet` (E1–E3),
+  `Dn2Vaults` (vault card, C1–C3), `Dn2Positions` (D1–D4).
+- Toasts here pass `theme: "gold"` to `useAppToast().show`.
+- Inputs are 16px (not Figma's 14) so iOS never zooms on focus.

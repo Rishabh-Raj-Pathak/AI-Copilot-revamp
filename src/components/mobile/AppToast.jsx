@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, X } from "lucide-react";
 import AppIcon from "./AppIcon.jsx";
 import { appIcons } from "./mobileAssets.js";
 import { ToastContext } from "./appToastContext.js";
@@ -12,7 +13,10 @@ const AUTO_DISMISS_MS = 4000;
  * auto-dismisses after 4s. One toast at a time — a new one replaces the old,
  * which is how a native snackbar behaves.
  *
- * `show({ title, message, tone, action: { label, onPress } })`
+ * `show({ title, message, tone, theme, action: { label, onPress } })`
+ *
+ * `theme: "gold"` is the vault-themed toast of Delta Neutral 2 (Figma
+ * "Toast / Success" 4492:989): warm black, bronze edge, champagne title.
  */
 export function AppToastProvider({ children }) {
   const [toast, setToast] = useState(null);
@@ -46,6 +50,7 @@ function AppToastViewport({ toast, onDismiss }) {
   const reduceMotion = useReducedMotion();
   if (typeof document === "undefined") return null;
   const negative = toast?.tone === "error";
+  const gold = toast?.theme === "gold";
   return createPortal(
     <div
       className="pointer-events-none fixed inset-x-0 z-[95] flex justify-center px-4 tablet:hidden"
@@ -59,7 +64,11 @@ function AppToastViewport({ toast, onDismiss }) {
           <motion.div
             key={toast.id}
             role="status"
-            className="pointer-events-auto flex w-full max-w-[528px] items-center gap-2.5 rounded-xl border border-app-line bg-app-subtle px-3 py-2.5 shadow-[0_8px_12px_rgba(0,0,0,0.5)]"
+            className={`pointer-events-auto flex w-full max-w-[528px] items-center gap-2.5 rounded-xl border px-3 py-2.5 ${
+              gold
+                ? "border-[rgba(120,90,40,0.5)] bg-[#0c0a08] shadow-[0_8px_12px_rgba(0,0,0,0.6)]"
+                : "border-app-line bg-app-subtle shadow-[0_8px_12px_rgba(0,0,0,0.5)]"
+            }`}
             initial={{ opacity: 0, y: reduceMotion ? 0 : 16, scale: reduceMotion ? 1 : 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
@@ -71,26 +80,42 @@ function AppToastViewport({ toast, onDismiss }) {
               if (Math.abs(info.offset.x) > 80) onDismiss();
             }}
           >
-            <span
-              className={`flex size-6 shrink-0 items-center justify-center rounded-full ${
-                negative ? "bg-app-negative-subtle text-app-negative" : "bg-app-positive-subtle text-app-positive"
-              }`}
-            >
-              <AppIcon
-                src={negative ? appIcons.circleXLine16 : appIcons.circleCheckLine16}
-                size={16}
-              />
-            </span>
+            {gold ? (
+              <span
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full border ${
+                  negative
+                    ? "border-[rgba(229,72,77,0.3)] bg-[rgba(229,72,77,0.1)] text-[#f87171]"
+                    : "border-[rgba(0,188,125,0.25)] bg-[rgba(0,188,125,0.1)] text-[#00d492]"
+                }`}
+              >
+                {negative ? <X size={14} aria-hidden /> : <Check size={14} aria-hidden />}
+              </span>
+            ) : (
+              <span
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full ${
+                  negative ? "bg-app-negative-subtle text-app-negative" : "bg-app-positive-subtle text-app-positive"
+                }`}
+              >
+                <AppIcon
+                  src={negative ? appIcons.circleXLine16 : appIcons.circleCheckLine16}
+                  size={16}
+                />
+              </span>
+            )}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <p className="text-app-callout font-medium text-ink">{toast.title}</p>
+              <p className={`text-app-callout font-medium ${gold ? "text-[#e8d5b5]" : "text-ink"}`}>{toast.title}</p>
               {toast.message ? (
-                <p className="text-app-caption text-ink-muted">{toast.message}</p>
+                <p className={gold ? "truncate text-app-caption text-[#8f90a1]" : "text-app-caption text-ink-muted"}>
+                  {toast.message}
+                </p>
               ) : null}
             </div>
             {toast.action ? (
               <button
                 type="button"
-                className="app-pressable shrink-0 text-app-callout font-medium text-app-accent"
+                className={`app-pressable shrink-0 font-medium ${
+                  gold ? "text-app-caption text-[#ccb17f]" : "text-app-callout text-app-accent"
+                }`}
                 onClick={() => {
                   toast.action.onPress?.();
                   onDismiss();

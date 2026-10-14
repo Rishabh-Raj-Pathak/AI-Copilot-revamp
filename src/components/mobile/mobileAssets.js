@@ -63,6 +63,8 @@ export const appIcons = {
   circleXLine16: icon("circle-x-line-16"),
   shieldCheck16: icon("shield-check-16"),
   info14: icon("info-14"),
+  /** The bare "i" of Figma "Icon / ig" — drawn inside a 16px ring (Delta Neutral 2 info buttons). */
+  infoGlyph11: icon("info-glyph-11"),
 
   // Category chips (14px)
   chipBluechip: icon("chip-bluechip"),
@@ -122,6 +124,12 @@ export const appImages = {
   coinBronze: logo("coin-bronze.png"),
   tokenEth: logo("token-eth.png"),
   tokenBtc: logo("token-btc.png"),
+  /** ETH / SOL on their own discs (Figma "Token / ETH", "Token / SOL" — Delta Neutral 2 pair cards). */
+  tokenEthDisc: logo("token-eth-disc.png"),
+  tokenSolDisc: logo("token-sol-disc.png"),
+  /** Delta Neutral 2 "Opening vault" art (Figma B8 4496:245): backdrop glow and the leg link. */
+  dnOpeningGlow: "/mobile/dn/opening-glow.svg",
+  dnHedgeLink: "/mobile/dn/hedge-link.svg",
   venue: {
     hyperliquid: logo("venue-hyperliquid.png"),
     zklighter: logo("venue-lighter.svg"),

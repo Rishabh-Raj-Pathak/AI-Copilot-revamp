@@ -25,14 +25,14 @@ import {
  * A direct video file (…​.mp4/.webm) renders in a <video>; anything else falls
  * back to the styled placeholder.
  */
-const VARIATIONAL_VIDEO_SRC = "";
+export const VARIATIONAL_VIDEO_SRC = "";
 
 /** Cookie-Editor on the Chrome Web Store. */
-const COOKIE_EDITOR_URL =
+export const COOKIE_EDITOR_URL =
   "https://chromewebstore.google.com/detail/cookie-editor/ookdjilphngeeeghgngjabigmpepanpl";
-const VARIATIONAL_URL = "https://variational.io/";
+export const VARIATIONAL_URL = "https://variational.io/";
 /** The live BTC market — where the session must be active to copy it. */
-const VARIATIONAL_MARKET_URL = "https://omni.variational.io/perpetual/BTC";
+export const VARIATIONAL_MARKET_URL = "https://omni.variational.io/perpetual/BTC";
 
 /**
  * The three things the user does on variational.io. Clicking a row (or its

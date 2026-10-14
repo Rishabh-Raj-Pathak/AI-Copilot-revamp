@@ -59,6 +59,16 @@ const DEX_ACCENT: Record<ManagedDexId, string> = {
   Variational: '#c7ab74',
 };
 
+/**
+ * The last point of a venue's 24h funding series -- the figure each chart labels
+ * "Latest". Exported for the Delta Neutral 2 phone card, which shows the number
+ * without the chart.
+ */
+export function latestFundingFor(dex: ManagedDexId): number {
+  const rows = DEX_SERIES[dex];
+  return rows[rows.length - 1]?.value ?? 0;
+}
+
 type StrategyDeepDiveVariant = 'default' | 'v2';
 
 type StrategyDeepDiveProps = {

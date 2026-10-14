@@ -46,6 +46,21 @@ export default function DeltaNeutralVaultsPage({
    * version body. The global tab bar is fixed, so the scroll
    * area clears it; the positions drawer the body pins above it is cleared by the body.
    */
+  if (isMobile && version === 2) {
+    /*
+     * Delta Neutral 2 (Figma 4476:2) brings its own Vaults / Positions / History
+     * tabs, pinned under this header, and scrolls each tab's body itself.
+     */
+    return (
+      <div className="delta-neutral-root vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-white">
+        <AppTopBar title="Agents" meta="Fully non-custodial">
+          <AgentsSwitcher />
+        </AppTopBar>
+        <VersionPage />
+      </div>
+    );
+  }
+
   if (isMobile) {
     return (
       <div className="delta-neutral-root flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-white">
