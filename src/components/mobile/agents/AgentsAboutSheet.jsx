@@ -9,14 +9,14 @@ const FACTS = [
 ];
 
 /**
- * "How it works" — Figma "02 Agents - Alpha Agents" A5. The Alpha Agents intro
+ * "More info" — Figma "02 Agents - Alpha Agents" A5. The Alpha Agents intro
  * paragraph used to sit above the shelves and cost a third of the first screen;
- * it now opens from the toolbar link and the section ⓘ, its three promises
- * pulled out as rows.
+ * it now opens from the toolbar's "More info" link, its three promises pulled
+ * out as rows.
  */
 export default function AgentsAboutSheet({ open, onClose }) {
   return (
-    <Dn2Sheet open={open} onClose={onClose} title="How it works">
+    <Dn2Sheet open={open} onClose={onClose} title="More info">
       <div className="flex flex-col gap-4 px-4 pt-4">
         <p className="text-[13px] leading-5 text-[#b0b0be]">
           AI agents trade perps for you, live, 24/7. Your agent trades on your behalf, but your funds stay fully

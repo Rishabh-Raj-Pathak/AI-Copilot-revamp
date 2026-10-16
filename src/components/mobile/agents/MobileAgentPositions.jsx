@@ -1,14 +1,17 @@
 import { Dn2Button, ExpandButton, SideBadge, TokenIcon } from "../dn2/Dn2Ui.jsx";
 import { withMinus } from "../dn2/dn2Data.js";
 import { CARD, CARD_EDGE, CARD_EDGE_OPEN, CARD_FILL, TILE } from "../dn2/dn2Theme.js";
+import { formatSignedPct, formatSignedUsd, formatSizeUnit, formatUsd } from "../positions/positionsFormat.js";
+import { expectedPnl, positionPnl, positionValue } from "../positions/positionsMath.js";
 
 /**
  * Alpha Agents Positions and History sub-tabs — Figma "02 Agents - Alpha
  * Agents" C1–C3 / D1–D2 (DoY28sP7SwidihlLGoGrEa, 1220:38293). The same cards
  * as Delta Neutral 2's sub-tabs: a collapsed card names the trade, expanding
  * adds a Details tile with the rest of the web's columns. Rows are the web
- * Positions / History table's (`vaultsPositionsHistoryMock`). No pagination:
- * the list scrolls.
+ * Positions / History table's (`vaultsPositionsHistoryMock`); positions come in
+ * as numbers (`toAgentPosition`) so Edit and Close can change them. No
+ * pagination: the list scrolls.
  */
 
 const VENUE_NAMES = { hyperliquid: "Hyperliquid", paradex: "Paradex", nado: "Nado" };
@@ -88,63 +91,74 @@ function DetailsTile({ groups, label }) {
 
 /* ── Positions ────────────────────────────────────────────────────────── */
 
-function PositionCard({ row, expanded, onToggle }) {
-  const mode = row.marginMode === "cross" ? "Cross" : "Isolated";
+/** "+$232.18 (7.77%)": an expected P/L and its share of the position value. */
+function withShare(value, base) {
+  if (value == null) return "—";
+  const share = base > 0 ? (Math.abs(value) / base) * 100 : 0;
+  return `${formatSignedUsd(value)} (${share.toFixed(2)}%)`;
+}
+
+function PositionCard({ position, expanded, onToggle, onEdit, onClose }) {
+  const pnl = positionPnl(position);
+  const value = positionValue(position);
+  const expected = expectedPnl(position);
   return (
     <article
       className={`${CARD} ${expanded ? CARD_EDGE_OPEN : CARD_EDGE}`}
       style={CARD_FILL}
-      aria-label={`${row.symbol} position`}
+      aria-label={`${position.coin} position`}
     >
       <CardHeader
-        symbol={row.symbol}
+        symbol={position.coin}
         tags={
           <>
-            <SideBadge side={row.direction} />
-            <LeverageTag leverage={row.leverage} />
+            <SideBadge side={position.direction} />
+            <LeverageTag leverage={position.leverage} />
           </>
         }
-        subline={`${venueName(row.venue)} · ${mode}`}
-        value={withMinus(row.pnlUsd)}
-        valueTone={toneOf(row.pnlPositive)}
-        label={withMinus(row.pnlPct)}
+        subline={`${venueName(position.venue)} · ${position.marginMode}`}
+        value={formatSignedUsd(pnl)}
+        valueTone={toneOf(pnl >= 0)}
+        label={formatSignedPct(value > 0 ? (pnl / value) * 100 : 0)}
         expanded={expanded}
         onToggle={onToggle}
       />
       <FigureTile
         items={[
-          ["Size", row.sizeLabel],
-          ["Entry", row.entryPrice],
-          ["Current", row.currPrice],
+          ["Size", formatSizeUnit(position.size, position.coin)],
+          ["Entry", formatUsd(position.entryPrice)],
+          ["Current", formatUsd(position.currentPrice)],
         ]}
       />
       {expanded ? (
         <DetailsTile
-          label={`${row.symbol} position details`}
+          label={`${position.coin} position details`}
           groups={[
             [
-              { label: "Position value", value: row.posValue },
-              { label: "Margin", value: `${row.margin} · ${mode}` },
+              { label: "Position value", value: formatUsd(value) },
+              { label: "Margin", value: `${formatUsd(position.margin)} · ${position.marginMode}` },
             ],
             [
-              { label: "Liq. price", value: row.liqPrice },
-              { label: "Funding", value: withMinus(row.funding), tone: toneOf(row.fundingPositive) },
+              { label: "Liq. price", value: formatUsd(position.liqPrice) },
+              { label: "Funding", value: formatSignedUsd(position.funding), tone: toneOf(position.funding >= 0) },
             ],
             [
-              { label: "TP", value: row.tp, tone: GREEN },
-              { label: "SL", value: row.sl, tone: RED },
+              { label: "TP", value: position.tp != null ? formatUsd(position.tp) : "—", tone: position.tp != null ? GREEN : undefined },
+              { label: "SL", value: position.sl != null ? formatUsd(position.sl) : "—", tone: position.sl != null ? RED : undefined },
             ],
             [
-              { label: "Exp. profit", value: `${row.expProfit} ${row.expProfitPct}` },
-              { label: "Exp. loss", value: `${withMinus(row.expLoss)} ${row.expLossPct}` },
+              { label: "Exp. profit", value: withShare(expected.profit, value) },
+              { label: "Exp. loss", value: withShare(expected.loss, value) },
             ],
           ]}
         />
       ) : null}
-      {/* The web position card's two actions; like the web they are not wired yet. */}
+      {/* The web card's two actions: Edit sets TP/SL, Close confirms in a sheet. */}
       <div className="flex gap-3">
-        <Dn2Button className="flex-1">Edit</Dn2Button>
-        <Dn2Button variant="danger" className="px-5">
+        <Dn2Button className="flex-1" onClick={onEdit}>
+          Edit
+        </Dn2Button>
+        <Dn2Button variant="danger" className="px-5" onClick={onClose}>
           Close
         </Dn2Button>
       </div>
@@ -152,13 +166,20 @@ function PositionCard({ row, expanded, onToggle }) {
   );
 }
 
-export function AgentPositionsView({ rows, expandedKey, onToggle, emptyState }) {
-  if (!rows.length) return emptyState;
+export function AgentPositionsView({ positions, expandedKey, onToggle, onEdit, onClose, emptyState }) {
+  if (!positions.length) return emptyState;
   return (
     <>
       <p className={PANEL_NOTE}>Positions opened by your active agents.</p>
-      {rows.map((row) => (
-        <PositionCard key={row.id} row={row} expanded={expandedKey === row.id} onToggle={() => onToggle(row.id)} />
+      {positions.map((position) => (
+        <PositionCard
+          key={position.id}
+          position={position}
+          expanded={expandedKey === position.id}
+          onToggle={() => onToggle(position.id)}
+          onEdit={() => onEdit(position)}
+          onClose={() => onClose(position)}
+        />
       ))}
     </>
   );

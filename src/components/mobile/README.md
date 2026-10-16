@@ -119,8 +119,9 @@ handler (venue filter, per-vault `rowUi`, `onPatch`, the product tour) stays in
 
 - Same chrome as Delta Neutral 2: `SubTabs` (Agents | Positions | History),
   20px gutters, 12px gaps, `SectionTitle`, DN2 cards, fields, pills and sheets.
-- Agents tab: venue chip (`AgentVenueSheet`) + "How it works"
-  (`AgentsAboutSheet`, the intro paragraph that used to sit on the page), then
+- Agents tab: venue chip (`AgentVenueSheet`, the toolbar's main control) + a
+  quiet grey "More info" link (`AgentsAboutSheet`, the intro paragraph that
+  used to sit on the page). Shelf titles carry no ⓘ. Then
   sideways shelves — Activated vaults, Alpha Agents, Prime Agents. 280px cards
   snap one at a time and bleed to the screen edge so the next one peeks in.
   Activated agents lift out of their shelf, as on web.
@@ -131,7 +132,11 @@ handler (venue filter, per-vault `rowUi`, `onPatch`, the product tour) stays in
   sheets in the DN2 scale; desktop keeps the default.
 - `MobileAgentPositions` — `AgentPositionsView` / `AgentHistoryView`, the DN2
   card pattern over the web table rows (`vaultsPositionsHistoryMock`); expand
-  adds a Details tile. No pagination. Edit / Close are unwired, as on web.
+  adds a Details tile. No pagination. Rows become numeric positions
+  (`agentPositionsData.js`) so Edit opens `EditTpSlSheet` and Close opens
+  `ClosePositionSheet` — the Positions & Orders sheets (Figma 1103:24131). A
+  market close shrinks or removes the position and adds a History row; a limit
+  close only confirms with a toast.
 - The `data-tour` anchors (`vaults-overview`, `vaults-dex-tabs`,
   `vaults-opportunities`, `vaults-featured-tour-controls`) live on the toolbar,
   venue chip, shelves and first Alpha card.
