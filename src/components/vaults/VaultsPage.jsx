@@ -213,28 +213,28 @@ export default function VaultsPage({
   );
 
   /*
-   * Phone: Figma "Agents / Alpha Agents -- Full Page" (953:4116) -- app top bar over a
-   * scroll area that clears the global tab bar. Same state and handlers as below, so
-   * the product tour, venue filter and activation flow are shared with desktop.
+   * Phone: Figma "02 Agents - Alpha Agents" (DoY28sP7SwidihlLGoGrEa, 1220:38293) -- the
+   * app top bar, then Agents | Positions | History sub-tabs that pin under it and
+   * scroll their own body, as Delta Neutral 2 does. Same state and handlers as
+   * below, so the product tour, venue filter and activation flow are shared with
+   * desktop.
    */
   if (isMobile) {
     return (
-      <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0c0a08] text-white">
+      <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-white">
         <AppTopBar title="Agents" meta="Fully non-custodial">
           <AgentsSwitcher />
         </AppTopBar>
-        <div className="vaults-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
-          <MobileAlphaAgents
-            dexTabs={dexTabs}
-            dexId={dexId}
-            onDexChange={handleDexChange}
-            activated={activatedVaultsOrdered}
-            featured={inactiveFeatured}
-            available={inactiveAvailable}
-            rowUi={rowUi}
-            onPatch={patchRow}
-          />
-        </div>
+        <MobileAlphaAgents
+          dexTabs={dexTabs}
+          dexId={dexId}
+          onDexChange={handleDexChange}
+          activated={activatedVaultsOrdered}
+          featured={inactiveFeatured}
+          available={inactiveAvailable}
+          rowUi={rowUi}
+          onPatch={patchRow}
+        />
       </div>
     );
   }

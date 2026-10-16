@@ -1,183 +1,213 @@
-import { useState } from "react";
-import AppIcon from "../AppIcon.jsx";
-import { appIcons } from "../mobileAssets.js";
-import { useMobileApp } from "../MobileAppContext.js";
-import { historyTableMock, positionsTableMock } from "../../vaults/vaultsPositionsHistoryMock.js";
-import { AgentVenueMark } from "./AgentVenueSheet.jsx";
+import { Dn2Button, ExpandButton, SideBadge, TokenIcon } from "../dn2/Dn2Ui.jsx";
+import { withMinus } from "../dn2/dn2Data.js";
+import { CARD, CARD_EDGE, CARD_EDGE_OPEN, CARD_FILL, TILE } from "../dn2/dn2Theme.js";
 
-const PAGE_SIZE = 5;
+/**
+ * Alpha Agents Positions and History sub-tabs — Figma "02 Agents - Alpha
+ * Agents" C1–C3 / D1–D2 (DoY28sP7SwidihlLGoGrEa, 1220:38293). The same cards
+ * as Delta Neutral 2's sub-tabs: a collapsed card names the trade, expanding
+ * adds a Details tile with the rest of the web's columns. Rows are the web
+ * Positions / History table's (`vaultsPositionsHistoryMock`). No pagination:
+ * the list scrolls.
+ */
 
-const TABS = [
-  { id: "positions", label: "Positions", empty: "Open positions will appear here" },
-  { id: "history", label: "History", empty: "Closed trades will appear here" },
-];
+const VENUE_NAMES = { hyperliquid: "Hyperliquid", paradex: "Paradex", nado: "Nado" };
+const venueName = (id) => VENUE_NAMES[id] ?? id;
 
-function SideTag({ side, leverage }) {
-  const long = side === "long";
+const PANEL_NOTE = "text-[10px] leading-[14px] text-[#8d8e99]";
+const HAIRLINE = "h-px w-full shrink-0 bg-white/[0.06]";
+const GREEN = "text-[#00d492]";
+const RED = "text-[#e5484d]";
+const toneOf = (positive) => (positive ? GREEN : RED);
+
+function LeverageTag({ leverage }) {
   return (
-    <span
-      className={`rounded px-1.5 py-px text-[10px] uppercase leading-[15px] tracking-[0.3px] ${
-        long
-          ? "border border-[rgba(0,212,146,0.16)] bg-[rgba(0,212,146,0.07)] text-[rgba(0,212,146,0.85)]"
-          : "border border-[rgba(229,72,77,0.16)] bg-[rgba(229,72,77,0.07)] text-[rgba(229,72,77,0.85)]"
-      }`}
-    >
-      {long ? "Long" : "Short"}
-      {leverage ? ` ${leverage}×` : ""}
+    <span className="shrink-0 whitespace-nowrap rounded-full border border-[rgba(196,168,112,0.16)] bg-[rgba(196,168,112,0.07)] px-[7px] py-0.5 text-[9px] font-semibold leading-3 tracking-[0.4px] text-[rgba(196,168,112,0.85)]">
+      {leverage}×
     </span>
   );
 }
 
-function Row({ venue, symbol, side, leverage, detail, value, sub, positive }) {
+/** Coin, symbol + tags, a sub line, the P&L with its label, and the expand circle. */
+function CardHeader({ symbol, tags, subline, value, valueTone, label, labelTone = "text-[#717182]", expanded, onToggle }) {
   return (
-    <li className="flex items-center gap-3 border-b border-white/[0.05] py-3 last:border-b-0">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-app-raised">
-        <AgentVenueMark id={venue} size={18} />
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <span className="text-app-body font-medium text-[#e8d5b5]">{symbol}</span>
-          <SideTag side={side} leverage={leverage} />
+    <header className="flex items-center gap-2.5">
+      <TokenIcon pair={symbol} size={28} />
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <h3 className="truncate text-[15px] font-medium leading-5 text-[#e8d5b5]">{symbol}</h3>
+          {tags}
         </div>
-        <span className="truncate text-app-label text-[#717182]">{detail}</span>
+        <p className="truncate text-[11px] leading-[14px] text-[#8f90a1]">{subline}</p>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className={`text-app-body font-medium ${positive ? "text-[#00d492]" : "text-[#e5484d]"}`}>
-          {value}
-        </span>
-        <span className="text-app-label text-[#717182]">{sub}</span>
+      <div className="flex shrink-0 flex-col items-end gap-0.5 whitespace-nowrap">
+        <p className={`text-right text-[15px] font-semibold leading-5 ${valueTone}`}>{value}</p>
+        <p className={`text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] ${labelTone}`}>{label}</p>
       </div>
-    </li>
+      <ExpandButton expanded={expanded} onPress={onToggle} label={expanded ? `Collapse ${symbol}` : `Expand ${symbol}`} />
+    </header>
   );
 }
 
-function PageButton({ label, icon, onPress, disabled }) {
+/** Figma "Position" tile: three figures side by side. */
+function FigureTile({ items }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      disabled={disabled}
-      onClick={onPress}
-      className="app-pressable relative flex size-8 items-center justify-center rounded-md bg-app-subtle text-ink after:absolute after:-inset-1.5 disabled:opacity-50"
-    >
-      <AppIcon src={icon} size={12} />
-    </button>
+    <dl className={`${TILE} flex gap-2 p-2.5`}>
+      {items.map(([label, value]) => (
+        <div key={label} className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <dt className="text-[10px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#717182]">{label}</dt>
+          <dd className="truncate text-[12px] leading-4 text-[#dcdce8]">{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
-/**
- * Figma "Agent Positions" (953:4374): Positions / History tabs with a gold
- * underline, the empty state and the pager.
- *
- * Rows only exist behind a connected wallet; disconnected, both tabs show
- * their empty line as in Figma. `venueId` narrows the rows to the venue the
- * carousels are filtered on.
- */
-export default function MobileAgentPositions({ venueId = "all" }) {
-  const app = useMobileApp();
-  const [tab, setTab] = useState("positions");
-  const [page, setPage] = useState(0);
-
-  const source = tab === "positions" ? positionsTableMock : historyTableMock;
-  const rows = !app.walletConnected
-    ? []
-    : venueId === "all"
-      ? source
-      : source.filter((row) => row.venue === venueId);
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const current = Math.min(page, pageCount - 1);
-  const visible = rows.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
-  const activeTab = TABS.find((t) => t.id === tab) ?? TABS[0];
-
+/** Figma "Details": sentence-case rows in hairline-split groups, one value column. */
+function DetailsTile({ groups, label }) {
   return (
-    <section
-      className="flex flex-col rounded-2xl border border-[#1e1b18] bg-[#080808] p-4"
-      aria-label="Agent positions and history"
-    >
-      <div role="tablist" className="flex gap-[19px] border-b border-white/[0.05]">
-        {TABS.map((item) => {
-          const active = item.id === tab;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => {
-                setTab(item.id);
-                setPage(0);
-              }}
-              className={`relative px-5 pb-[13px] pt-[11px] text-[14px] font-medium uppercase leading-[22px] tracking-[0.15px] transition-colors ${
-                active ? "text-[#e0d5c2]" : "text-[#4a4a5c]"
-              }`}
-            >
-              {item.label}
-              {active ? (
-                <span
-                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[linear-gradient(90deg,#785a28_0%,#ccb17f_100%)]"
-                  aria-hidden
-                />
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-
-      {visible.length === 0 ? (
-        <div className="flex h-[164px] items-center justify-center">
-          <p className="text-[14px] leading-5 text-[#717182]">{activeTab.empty}</p>
+    <div className={`${TILE} flex flex-col gap-2 p-3`} role="table" aria-label={label}>
+      {groups.map((rows, gi) => (
+        <div key={gi} className="flex flex-col gap-2" role="rowgroup">
+          {gi > 0 ? <span className={HAIRLINE} aria-hidden /> : null}
+          {rows.map((row) => (
+            <div key={row.label} className="flex items-center justify-between gap-3" role="row">
+              <span role="rowheader" className="truncate text-[12px] leading-4 text-[#8f90a1]">
+                {row.label}
+              </span>
+              <span role="cell" className={`shrink-0 text-right text-[12px] leading-4 ${row.tone ?? "text-[#dcdce8]"}`}>
+                {row.value}
+              </span>
+            </div>
+          ))}
         </div>
-      ) : (
-        <ul className="flex flex-col py-1">
-          {tab === "positions"
-            ? visible.map((row) => (
-                <Row
-                  key={row.id}
-                  venue={row.venue}
-                  symbol={row.symbol}
-                  side={row.direction}
-                  leverage={row.leverage}
-                  detail={`${row.sizeLabel} · Entry ${row.entryPrice}`}
-                  value={row.pnlUsd}
-                  sub={row.pnlPct}
-                  positive={row.pnlPositive}
-                />
-              ))
-            : visible.map((row) => (
-                <Row
-                  key={row.id}
-                  venue={row.venue}
-                  symbol={row.symbol}
-                  side={row.side}
-                  detail={`${row.time} · ${row.size}`}
-                  value={row.pnl}
-                  sub={row.status}
-                  positive={row.pnlPositive}
-                />
-              ))}
-        </ul>
-      )}
+      ))}
+    </div>
+  );
+}
 
-      <div className="flex items-center justify-end gap-2">
-        <PageButton
-          label="Previous page"
-          icon={appIcons.chevronLeft16}
-          disabled={current === 0}
-          onPress={() => setPage(current - 1)}
+/* ── Positions ────────────────────────────────────────────────────────── */
+
+function PositionCard({ row, expanded, onToggle }) {
+  const mode = row.marginMode === "cross" ? "Cross" : "Isolated";
+  return (
+    <article
+      className={`${CARD} ${expanded ? CARD_EDGE_OPEN : CARD_EDGE}`}
+      style={CARD_FILL}
+      aria-label={`${row.symbol} position`}
+    >
+      <CardHeader
+        symbol={row.symbol}
+        tags={
+          <>
+            <SideBadge side={row.direction} />
+            <LeverageTag leverage={row.leverage} />
+          </>
+        }
+        subline={`${venueName(row.venue)} · ${mode}`}
+        value={withMinus(row.pnlUsd)}
+        valueTone={toneOf(row.pnlPositive)}
+        label={withMinus(row.pnlPct)}
+        expanded={expanded}
+        onToggle={onToggle}
+      />
+      <FigureTile
+        items={[
+          ["Size", row.sizeLabel],
+          ["Entry", row.entryPrice],
+          ["Current", row.currPrice],
+        ]}
+      />
+      {expanded ? (
+        <DetailsTile
+          label={`${row.symbol} position details`}
+          groups={[
+            [
+              { label: "Position value", value: row.posValue },
+              { label: "Margin", value: `${row.margin} · ${mode}` },
+            ],
+            [
+              { label: "Liq. price", value: row.liqPrice },
+              { label: "Funding", value: withMinus(row.funding), tone: toneOf(row.fundingPositive) },
+            ],
+            [
+              { label: "TP", value: row.tp, tone: GREEN },
+              { label: "SL", value: row.sl, tone: RED },
+            ],
+            [
+              { label: "Exp. profit", value: `${row.expProfit} ${row.expProfitPct}` },
+              { label: "Exp. loss", value: `${withMinus(row.expLoss)} ${row.expLossPct}` },
+            ],
+          ]}
         />
-        <span
-          className="flex size-8 items-center justify-center rounded-md bg-[#2f2b1d] text-[14px] font-medium leading-5 text-ink"
-          aria-label={`Page ${current + 1} of ${pageCount}`}
-        >
-          {current + 1}
-        </span>
-        <PageButton
-          label="Next page"
-          icon={appIcons.chevronRight16}
-          disabled={current >= pageCount - 1}
-          onPress={() => setPage(current + 1)}
-        />
+      ) : null}
+      {/* The web position card's two actions; like the web they are not wired yet. */}
+      <div className="flex gap-3">
+        <Dn2Button className="flex-1">Edit</Dn2Button>
+        <Dn2Button variant="danger" className="px-5">
+          Close
+        </Dn2Button>
       </div>
-    </section>
+    </article>
+  );
+}
+
+export function AgentPositionsView({ rows, expandedKey, onToggle, emptyState }) {
+  if (!rows.length) return emptyState;
+  return (
+    <>
+      <p className={PANEL_NOTE}>Positions opened by your active agents.</p>
+      {rows.map((row) => (
+        <PositionCard key={row.id} row={row} expanded={expandedKey === row.id} onToggle={() => onToggle(row.id)} />
+      ))}
+    </>
+  );
+}
+
+/* ── History ──────────────────────────────────────────────────────────── */
+
+function HistoryCard({ row, expanded, onToggle }) {
+  return (
+    <article
+      className={`${CARD} ${expanded ? CARD_EDGE_OPEN : CARD_EDGE}`}
+      style={CARD_FILL}
+      aria-label={`${row.symbol} ${row.status.toLowerCase()} trade`}
+    >
+      <CardHeader
+        symbol={row.symbol}
+        tags={<SideBadge side={row.side} />}
+        subline={`${row.time} · ${venueName(row.venue)}`}
+        value={withMinus(row.pnl)}
+        valueTone={toneOf(row.pnlPositive)}
+        label={row.status}
+        labelTone={row.status === "Liquidated" ? RED : undefined}
+        expanded={expanded}
+        onToggle={onToggle}
+      />
+      {expanded ? (
+        <DetailsTile
+          label={`${row.symbol} trade details`}
+          groups={[
+            [
+              { label: "Size", value: row.size },
+              { label: "Entry", value: row.entry },
+              { label: "Exit", value: row.exit },
+            ],
+          ]}
+        />
+      ) : null}
+    </article>
+  );
+}
+
+export function AgentHistoryView({ rows, expandedKey, onToggle, emptyState }) {
+  if (!rows.length) return emptyState;
+  return (
+    <>
+      <p className={PANEL_NOTE}>Closed trades from your agents, newest first.</p>
+      {rows.map((row) => (
+        <HistoryCard key={row.id} row={row} expanded={expandedKey === row.id} onToggle={() => onToggle(row.id)} />
+      ))}
+    </>
   );
 }

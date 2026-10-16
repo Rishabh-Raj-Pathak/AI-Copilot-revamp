@@ -10,6 +10,8 @@ import { createPortal } from "react-dom";
 import { NARROW_VIEWPORT_MEDIA } from "../../styles/breakpoints.js";
 import AppIcon from "../mobile/AppIcon.jsx";
 import BottomSheet from "../mobile/BottomSheet.jsx";
+import { Dn2Sheet } from "../mobile/dn2/Dn2Ui.jsx";
+import { FIELD, TILE } from "../mobile/dn2/dn2Theme.js";
 import { appIcons } from "../mobile/mobileAssets.js";
 
 const RISK_STYLES = {
@@ -179,6 +181,7 @@ function StrategyInfoPopover({
  * was opened from; close always dismisses the sheet.
  */
 function VaultStrategyMobileSheet({
+  appearance = "default",
   open,
   mode,
   strategies,
@@ -193,16 +196,18 @@ function VaultStrategyMobileSheet({
   const highlighted =
     strategies.find((s) => s.id === highlightId) ?? strategies[0];
   const isPicker = mode === "picker";
+  // The phone Agents tab draws its sheets in the Delta Neutral 2 chrome.
+  const Sheet = appearance === "agent" ? Dn2Sheet : BottomSheet;
 
   return (
-    <BottomSheet
+    <Sheet
       open={open}
       onClose={onClose}
       title={isPicker ? "Choose strategy" : "Strategy details"}
       onBack={!isPicker && returnToPicker ? onBackToPicker : undefined}
       className="vaults-root"
     >
-      <div className="px-4 pt-4">
+      <div className="vaults-root px-4 pt-4">
         {isPicker ? (
           <>
             <p className="mb-3 text-app-caption text-[#717182]">
@@ -261,7 +266,7 @@ function VaultStrategyMobileSheet({
           </div>
         )}
       </div>
-    </BottomSheet>
+    </Sheet>
   );
 }
 
@@ -274,8 +279,11 @@ export default function VaultStrategySelector({
   disabled,
   onSelect,
   inline = false,
+  appearance = "default",
 }) {
   const isNarrow = useNarrowViewport();
+  // "agent": the phone Alpha Agents card in the Delta Neutral 2 control scale (44 → 40px field, r12 tiles).
+  const agent = appearance === "agent" && isNarrow;
   const listId = useId();
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
@@ -441,10 +449,16 @@ export default function VaultStrategySelector({
   return (
     <div
       ref={rootRef}
-      className={`flex min-w-0 flex-col gap-1.5 ${inline ? "shrink-0 tablet:w-[130px]" : "w-full"}`}
+      className={`flex min-w-0 flex-col ${agent ? "gap-2" : "gap-1.5"} ${inline ? "shrink-0 tablet:w-[130px]" : "w-full"}`}
     >
       {isNarrow ? (
-        <span className="text-[10px] font-semibold uppercase leading-[13px] tracking-[0.35px] text-[#717182]">
+        <span
+          className={
+            agent
+              ? "text-[11px] font-medium uppercase leading-[14px] tracking-[0.4px] text-[#9c9cac]"
+              : "text-[10px] font-semibold uppercase leading-[13px] tracking-[0.35px] text-[#717182]"
+          }
+        >
           Strategy
         </span>
       ) : null}
@@ -478,18 +492,24 @@ export default function VaultStrategySelector({
           if (menuOpen) return;
           scheduleClosePreview();
         }}
-        className={`relative flex w-full min-w-0 items-center border bg-[#0c0a08] pl-3 pr-8 text-left text-xs font-medium text-[#e8d5b5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${
-          disabled
-            ? "cursor-default border-[rgba(255,255,255,0.06)] opacity-60"
-            : "cursor-pointer border-[rgba(120,90,40,0.22)] hover:border-[#785a28] focus-visible:border-[#ccb17f]"
-        }`}
+        className={
+          agent
+            ? `relative flex h-10 w-full min-w-0 items-center ${FIELD} pl-3 pr-9 text-left text-[13px] leading-[18px] text-[#e8d5b5] outline-none ${
+                disabled ? "cursor-default" : "cursor-pointer active:border-[rgba(120,90,40,0.45)]"
+              }`
+            : `relative flex w-full min-w-0 items-center border bg-[#0c0a08] pl-3 pr-8 text-left text-xs font-medium text-[#e8d5b5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-colors ${controlHeight} ${controlRadius} ${
+                disabled
+                  ? "cursor-default border-[rgba(255,255,255,0.06)] opacity-60"
+                  : "cursor-pointer border-[rgba(120,90,40,0.22)] hover:border-[#785a28] focus-visible:border-[#ccb17f]"
+              }`
+        }
       >
         <span className="truncate">{active.name}</span>
         {isNarrow ? (
           <AppIcon
             src={appIcons.chevronDown14}
             size={14}
-            className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] transition-transform ${
+            className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${agent ? "text-[#8f90a1]" : "text-[#717182]"} transition-transform ${
               sheetOpen ? "rotate-180" : ""
             } ${disabled ? "opacity-50" : ""}`}
           />
@@ -505,18 +525,32 @@ export default function VaultStrategySelector({
       </button>
 
       {!disabled && isNarrow && selectedId ? (
-        <div className="flex flex-col gap-1.5 rounded-[10px] border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 py-[11px]">
+        <div
+          className={
+            agent
+              ? `${TILE} flex flex-col gap-1.5 px-3 py-2.5`
+              : "flex flex-col gap-1.5 rounded-[10px] border border-[rgba(255,255,255,0.05)] bg-[#0c0a08] px-3 py-[11px]"
+          }
+        >
           <div className="flex items-center justify-between gap-2">
             <StrategyRiskBadge risk={active.risk} className="py-[3px] leading-[11px]" />
             <button
               type="button"
               onClick={() => openMobileSheet("details")}
-              className="relative shrink-0 text-[11px] font-medium uppercase leading-[14px] tracking-[0.3px] text-[#ccb17f] after:absolute after:-inset-3 active:opacity-70"
+              className={`relative shrink-0 uppercase tracking-[0.3px] text-[#ccb17f] after:absolute after:-inset-3 active:opacity-70 ${
+                agent ? "text-[10px] font-semibold leading-[14px]" : "text-[11px] font-medium leading-[14px]"
+              }`}
             >
               Details
             </button>
           </div>
-          <p className="line-clamp-2 max-w-[200px] text-[11px] leading-[15.95px] text-[#717182]">
+          <p
+            className={
+              agent
+                ? "line-clamp-2 text-[11px] leading-4 text-[#8f90a1]"
+                : "line-clamp-2 max-w-[200px] text-[11px] leading-[15.95px] text-[#717182]"
+            }
+          >
             {active.description}
           </p>
         </div>
@@ -524,6 +558,7 @@ export default function VaultStrategySelector({
 
       {isNarrow ? (
         <VaultStrategyMobileSheet
+          appearance={agent ? "agent" : "default"}
           open={sheetOpen}
           mode={sheetMode}
           strategies={strategies}

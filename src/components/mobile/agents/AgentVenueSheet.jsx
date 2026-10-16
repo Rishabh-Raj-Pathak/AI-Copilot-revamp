@@ -1,6 +1,6 @@
 import { Layers } from "lucide-react";
-import BottomSheet from "../BottomSheet.jsx";
 import { appImages } from "../mobileAssets.js";
+import { Dn2Sheet } from "../dn2/Dn2Ui.jsx";
 
 /** Venue mark for a vault DEX filter id; "all" has no single venue, so it gets the stack glyph. */
 export function AgentVenueMark({ id, size = 24 }) {
@@ -19,13 +19,13 @@ export function AgentVenueMark({ id, size = 24 }) {
 }
 
 /**
- * Venue filter for the Alpha Agents carousels — the phone sheet behind the
- * "Venue Selector" pill (Figma 953:4156). Rows are the page's `dexTabs`.
+ * Venue filter for the Alpha Agents shelves — Figma "02 Agents - Alpha Agents"
+ * A6, in the Delta Neutral 2 sheet chrome. Rows are the page's `dexTabs`.
  */
 export default function AgentVenueSheet({ open, onClose, tabs, value, onChange }) {
   return (
-    <BottomSheet open={open} onClose={onClose} title="Select venue">
-      <ul className="flex flex-col gap-1 px-4 pt-2" role="listbox" aria-label="Venue">
+    <Dn2Sheet open={open} onClose={onClose} title="Select venue">
+      <ul className="flex flex-col gap-0.5 px-4 pt-2" role="listbox" aria-label="Venue">
         {tabs.map((tab) => {
           const active = tab.id === value;
           return (
@@ -38,7 +38,7 @@ export default function AgentVenueSheet({ open, onClose, tabs, value, onChange }
                   onChange(tab.id);
                   onClose();
                 }}
-                className={`flex h-[53px] w-full items-center gap-2.5 rounded-xl px-3 transition-colors active:bg-white/[0.05] ${
+                className={`flex h-12 w-full items-center gap-2.5 rounded-[12px] px-3 transition-colors active:bg-white/[0.05] ${
                   active ? "bg-[rgba(204,177,127,0.1)]" : ""
                 }`}
               >
@@ -46,20 +46,18 @@ export default function AgentVenueSheet({ open, onClose, tabs, value, onChange }
                   <AgentVenueMark id={tab.id} size={20} />
                 </span>
                 <span
-                  className={`min-w-0 flex-1 truncate text-left text-app-body font-medium uppercase tracking-[0.35px] ${
-                    active ? "text-[#e8d5b5]" : "text-[#717182]"
+                  className={`min-w-0 flex-1 truncate text-left text-[14px] font-medium uppercase leading-[19px] tracking-[0.35px] ${
+                    active ? "text-[#e8d5b5]" : "text-[#8f90a1]"
                   }`}
                 >
                   {tab.label}
                 </span>
-                {active ? (
-                  <img alt="" src={appImages.activeDot} className="size-1.5 shrink-0" />
-                ) : null}
+                {active ? <img alt="" src={appImages.activeDot} className="size-1.5 shrink-0" /> : null}
               </button>
             </li>
           );
         })}
       </ul>
-    </BottomSheet>
+    </Dn2Sheet>
   );
 }

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Info, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, Info, X } from "lucide-react";
 import BottomSheet from "../BottomSheet.jsx";
 import { TOKEN_PARTS } from "../positions/positionsMockData.js";
 import { TokenIcon as LayeredTokenIcon } from "../positions/PositionsUi.jsx";
@@ -116,6 +116,69 @@ export function StackRow({ label, value, sub, tone = "text-[#dcdce8]", size = "t
         <span className={`${size} font-medium leading-4 ${tone}`}>{value}</span>
         {sub ? <span className="text-[10px] leading-[13px] text-[#717182]">{sub}</span> : null}
       </dd>
+    </div>
+  );
+}
+
+/**
+ * Figma "DN Tabs": the uppercase sub-tabs with a gradient underline pinned under
+ * the Agents header — Vaults | Positions | History on Delta Neutral 2,
+ * Agents | Positions | History on Alpha Agents. No counts (the web tabs have none).
+ */
+export function SubTabs({ tabs, value, onChange, ariaLabel }) {
+  return (
+    <div
+      role="tablist"
+      aria-label={ariaLabel}
+      className="flex shrink-0 items-start gap-[22px] border-b border-white/[0.06] bg-black px-5 max-[374px]:px-4"
+    >
+      {tabs.map((tab) => {
+        const on = tab.id === value;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            onClick={() => onChange(tab.id)}
+            className="relative flex h-[42px] items-center justify-center"
+          >
+            <span
+              className={`text-[12px] font-semibold uppercase leading-4 tracking-[0.6px] ${
+                on ? "text-[#f0ddb9]" : "text-[#8f90a1]"
+              }`}
+            >
+              {tab.label}
+            </span>
+            {on ? (
+              <span
+                className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[linear-gradient(90deg,#785a28_0%,#ccb17f_100%)]"
+                aria-hidden
+              />
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Figma "Section Head": hairlines fading in towards a centred title, an
+ * optional caption under it, and an optional `aside` (an ⓘ) beside the title.
+ */
+export function SectionTitle({ children, caption, aside = null }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex w-full items-center gap-3 pt-2">
+        <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(0,0,0,0)_0%,rgba(255,255,255,0.08)_100%)]" aria-hidden />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <h2 className="text-[16px] font-medium leading-[22px] text-[#e8d5b5]">{children}</h2>
+          {aside}
+        </div>
+        <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_0%,rgba(0,0,0,0)_100%)]" aria-hidden />
+      </div>
+      {caption ? <p className="text-center text-[11px] leading-[14px] text-[#8f90a1]">{caption}</p> : null}
     </div>
   );
 }
@@ -269,8 +332,8 @@ export function SideBadge({ side, children }) {
 
 /* ── Sheets ───────────────────────────────────────────────────────────── */
 
-/** Figma "Sheet / Header": handle, centred champagne title, 32px close. */
-function SheetHead({ title, titleId, onClose, dragHandleProps }) {
+/** Figma "Sheet / Header": handle, centred champagne title, 32px close; a back chevron when `onBack` is set. */
+function SheetHead({ title, titleId, onClose, onBack, dragHandleProps }) {
   return (
     <div
       className="flex shrink-0 touch-none select-none flex-col items-center gap-3 border-b border-white/[0.06] px-4 pb-3 pt-2"
@@ -278,7 +341,18 @@ function SheetHead({ title, titleId, onClose, dragHandleProps }) {
     >
       <span className="h-1 w-10 shrink-0 rounded-full bg-[#3a3026]" aria-hidden />
       <div className="flex h-9 w-full items-center">
-        <span className="size-8 shrink-0" aria-hidden />
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back"
+            className="app-pressable relative flex size-8 shrink-0 items-center justify-center rounded-full text-[#e8d5b5] after:absolute after:-inset-1.5 active:bg-white/[0.06]"
+          >
+            <ChevronLeft size={20} aria-hidden />
+          </button>
+        ) : (
+          <span className="size-8 shrink-0" aria-hidden />
+        )}
         <h2 id={titleId} className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold leading-6 text-[#e8d5b5]">
           {title}
         </h2>
@@ -317,7 +391,13 @@ export function Dn2Sheet({ title, header, children, bodyClassName = "", ...rest 
       header={
         header ??
         (({ dragHandleProps, titleId }) => (
-          <SheetHead title={title} titleId={titleId} onClose={rest.onClose} dragHandleProps={dragHandleProps} />
+          <SheetHead
+            title={title}
+            titleId={titleId}
+            onClose={rest.onClose}
+            onBack={rest.onBack}
+            dragHandleProps={dragHandleProps}
+          />
         ))
       }
     >

@@ -5,7 +5,7 @@ import { useAppToast } from "../appToastContext.js";
 import ConnectNetworkSheet from "../sheets/ConnectNetworkSheet.jsx";
 import Dn2ChartSheet from "./Dn2ChartSheet.jsx";
 import { Dn2ClosePairSheet, Dn2HistoryView, Dn2PositionsView } from "./Dn2Positions.jsx";
-import { Dn2Button, EmptyCard, GroupToggle } from "./Dn2Ui.jsx";
+import { Dn2Button, EmptyCard, GroupToggle, SectionTitle, SubTabs } from "./Dn2Ui.jsx";
 import { Dn2DeactivateSheet, Dn2PnlSheet, Dn2VaultCard } from "./Dn2Vaults.jsx";
 import { payoutCountdown, useNow } from "./dn2Data.js";
 
@@ -33,59 +33,6 @@ const TABS = [
   { id: "positions", label: "Positions" },
   { id: "history", label: "History" },
 ];
-
-/** Figma "DN Tabs": uppercase, gradient underline (no counts — the web tabs have none). */
-function Dn2SubTabs({ value, onChange }) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Delta Neutral"
-      className="flex shrink-0 items-start gap-[22px] border-b border-white/[0.06] bg-black px-5 max-[374px]:px-4"
-    >
-      {TABS.map((tab) => {
-        const on = tab.id === value;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(tab.id)}
-            className="relative flex h-[42px] items-center justify-center"
-          >
-            <span
-              className={`text-[12px] font-semibold uppercase leading-4 tracking-[0.6px] ${
-                on ? "text-[#f0ddb9]" : "text-[#8f90a1]"
-              }`}
-            >
-              {tab.label}
-            </span>
-            {on ? (
-              <span
-                className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[linear-gradient(90deg,#785a28_0%,#ccb17f_100%)]"
-                aria-hidden
-              />
-            ) : null}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Figma "Section Head": hairlines fading in towards a centred title, the web caption under it. */
-function SectionTitle({ children, caption }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex w-full items-center gap-3 pt-2">
-        <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(0,0,0,0)_0%,rgba(255,255,255,0.08)_100%)]" aria-hidden />
-        <h2 className="shrink-0 text-[16px] font-medium leading-[22px] text-[#e8d5b5]">{children}</h2>
-        <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_0%,rgba(0,0,0,0)_100%)]" aria-hidden />
-      </div>
-      {caption ? <p className="text-center text-[11px] leading-[14px] text-[#8f90a1]">{caption}</p> : null}
-    </div>
-  );
-}
 
 /** The web Active vaults caption for each filter (DeltaNeutralVaultsV2Page). */
 const GROUP_CAPTION = {
@@ -212,7 +159,7 @@ export default function Dn2Screen({ vaults, onAddVault, onStop, renderBuilder })
 
   return (
     <>
-      <Dn2SubTabs value={tab} onChange={goTo} />
+      <SubTabs tabs={TABS} value={tab} onChange={goTo} ariaLabel="Delta Neutral" />
       <div
         ref={setScrollEl}
         className="delta-neutral-minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]"

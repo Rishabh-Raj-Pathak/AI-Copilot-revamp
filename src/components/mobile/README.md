@@ -56,6 +56,7 @@ of drawing them.
 | Chip (32px, 44px hit; Copilot categories, PnL Calendar months) | `AppChip.jsx` | Category Chip 937:1163 |
 | Screen transitions | `MobilePageTransition.jsx` | — |
 | Delta Neutral 2 phone screens (Vaults / Positions / History tabs, Set up vault page, vault sheets) | `dn2/` — see below | Terminal `kN9AkNRzaxmg4mhFVkt1Bo` 4476:2 |
+| Alpha Agents phone screen (Agents / Positions / History tabs, agent shelves, sheets) | `agents/` — see below | `DoY28sP7SwidihlLGoGrEa` 1220:38293 |
 | Hardware/gesture back | `appHistory.js` (`useHistoryBack`) | — |
 
 ### Navigation
@@ -97,8 +98,9 @@ or pair + action, no extra figures) and the Copilot chart sheet (A6).
 
 - `dn2Theme.js` — the vault recipes (card / hero / bronze fills, tiles, fields,
   toggles, chips, type). `Dn2Ui.jsx` — the shared pieces (venue discs, rows,
-  `Dn2Button` on the control scale, `Dn2Sheet` = `BottomSheet` in the vault
-  theme). `dn2Data.js` — shaping for the phone copy (funding readouts, chart-feed
+  `SubTabs`, `SectionTitle`, `Dn2Button` on the control scale, `Dn2Sheet` =
+  `BottomSheet` in the vault theme, with a back chevron when given `onBack`).
+  Alpha Agents uses the same pieces. `dn2Data.js` — shaping for the phone copy (funding readouts, chart-feed
   token price, PnL breakdown that sums to its total, the 8h countdown).
 - Screens: `Dn2Screen` (A, C, D), `Dn2NewVaultPage` (B1–B3: setup, rates,
   margin & leverage, estimates), `Dn2BuilderSheets` (B4 DEX, B5 market, B6
@@ -107,3 +109,29 @@ or pair + action, no extra figures) and the Copilot chart sheet (A6).
   card with PnL breakdown + Deactivate, C2–C4), `Dn2Positions` (D1–D4).
 - Toasts here pass `theme: "gold"` to `useAppToast().show`.
 - Inputs are 16px (not Figma's 14) so iOS never zooms on focus.
+
+### Alpha Agents (`agents/`)
+
+Figma "02 Agents - Alpha Agents" (`DoY28sP7SwidihlLGoGrEa`, 1220:38293). `VaultsPage`
+renders `MobileAlphaAgents` on a phone under the Agents header; every value and
+handler (venue filter, per-vault `rowUi`, `onPatch`, the product tour) stays in
+`VaultsPage`, shared with desktop.
+
+- Same chrome as Delta Neutral 2: `SubTabs` (Agents | Positions | History),
+  20px gutters, 12px gaps, `SectionTitle`, DN2 cards, fields, pills and sheets.
+- Agents tab: venue chip (`AgentVenueSheet`) + "How it works"
+  (`AgentsAboutSheet`, the intro paragraph that used to sit on the page), then
+  sideways shelves — Activated vaults, Alpha Agents, Prime Agents. 280px cards
+  snap one at a time and bleed to the screen edge so the next one peeks in.
+  Activated agents lift out of their shelf, as on web.
+- `MobileAgentCard` — the proto card's fields (stats, allocation, amount + Max,
+  strategy, Backtest + Activate). `ActivatedAgentCard` adds PnL, keeps the
+  inputs locked until Edit, and Deactivate sends it back to its shelf.
+  `VaultStrategySelector appearance="agent"` draws the strategy field, tile and
+  sheets in the DN2 scale; desktop keeps the default.
+- `MobileAgentPositions` — `AgentPositionsView` / `AgentHistoryView`, the DN2
+  card pattern over the web table rows (`vaultsPositionsHistoryMock`); expand
+  adds a Details tile. No pagination. Edit / Close are unwired, as on web.
+- The `data-tour` anchors (`vaults-overview`, `vaults-dex-tabs`,
+  `vaults-opportunities`, `vaults-featured-tour-controls`) live on the toolbar,
+  venue chip, shelves and first Alpha card.
