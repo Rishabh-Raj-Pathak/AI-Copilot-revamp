@@ -26,7 +26,9 @@ export const PUSHED_PAGES = new Set([
 /** Which tab a page belongs to; pushed screens highlight none (per Figma). */
 export function tabForPage(page) {
   if (page === "copilot") return "copilot";
-  if (page === "vaults" || page === "dn-vaults-1" || page === "dn-vaults-2") return "agents";
+  if (page === "vaults" || page.startsWith("dn-vaults") || page.startsWith("market-making")) {
+    return "agents";
+  }
   if (page === "trade") return "trade";
   if (page === "rewards" || page === "kol") return "rewards";
   return null;

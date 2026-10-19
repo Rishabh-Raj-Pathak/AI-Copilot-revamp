@@ -7,8 +7,10 @@
 @import "./styles/design-tokens.css";
 @import "./styles/mobile-app.css";
 @import "./delta-neutral/styles/theme.css";
+@import "./market-making/styles/theme.css";
 
 @source "../src/delta-neutral/**/*.{js,jsx,ts,tsx}";
+@source "../src/market-making/**/*.{ts,tsx}";
 
 /** Active step capsule — gentle horizontal shimmer. */
 @keyframes hyprearn-tour-segment-flow {

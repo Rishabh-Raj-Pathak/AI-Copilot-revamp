@@ -1,0 +1,133 @@
+/*
+ * Market Making theme, ported from the standalone Vite app in `/market-making`.
+ *
+ * Every token and helper class carries an `mm-` prefix. The original names
+ * (`surface`, `gold-300`, `ink-1`, `pos`, `.num`, `.rule` …) are generic, and
+ * `--color-surface` already belongs to `design-tokens.css`; Tailwind themes
+ * are global, so unprefixed they would collide or leak into every other page.
+ *
+ * Onest is already loaded app-wide by `src/index.css`.
+ */
+
+@theme {
+  /* Surfaces, layered by elevation */
+  --color-mm-canvas: #050505;
+  --color-mm-recessed: #0c0a08;
+  --color-mm-panel: #0d0d0d;
+  --color-mm-surface: #121212;
+  --color-mm-raised: #1e1b18;
+  --color-mm-elevated: #242424;
+
+  /* Gold accent. The only accent hue in the system */
+  --color-mm-gold-50: #f5ead6;
+  --color-mm-gold-100: #f0ddb9;
+  --color-mm-gold-200: #e8d5b5;
+  --color-mm-gold-300: #ccb17f;
+  --color-mm-gold-400: #d6b06a;
+  --color-mm-gold-500: #8f6a33;
+  --color-mm-gold-600: #785a28;
+
+  /* Neutral ink ladder */
+  --color-mm-ink-1: #f5f5f5;
+  --color-mm-ink-2: #d4d4d8;
+  --color-mm-ink-3: #bfbfbf;
+  --color-mm-ink-4: #8f90a1;
+  --color-mm-ink-5: #717182;
+  --color-mm-ink-6: #63646f;
+
+  /* Semantic, used deliberately */
+  --color-mm-pos: #4ade80;
+  --color-mm-neg: #e5484d;
+
+  --radius-mm-card: 16px;
+  --radius-mm-panel: 20px;
+}
+
+@layer base {
+  /* What the standalone app set on <html>/<body>, scoped to its subtree. */
+  .mm-root {
+    background: var(--color-mm-canvas);
+    color: var(--color-mm-ink-3);
+    font-family: "Onest", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * `delta-neutral/styles/theme.css` is imported app-wide and sizes bare
+   * button/label/input/h1-h4 (16-24px, weight 500) and recolours every border.
+   * The market-making screens were built on plain preflight, where those all
+   * inherit. Specificity (0,1,1) beats the element selectors; utilities still win.
+   */
+  .mm-root :is(button, label, input, select, textarea, h1, h2, h3, h4) {
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+  }
+
+  .mm-root *,
+  .mm-root ::before,
+  .mm-root ::after {
+    border-color: currentColor;
+  }
+
+  .mm-root input[type="number"]::-webkit-inner-spin-button,
+  .mm-root input[type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+  .mm-root input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+}
+
+/* Numbers align in columns */
+@utility mm-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small uppercase letterspaced tan, used for every section label */
+@utility mm-micro {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-mm-gold-300);
+}
+
+@utility mm-micro-muted {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-mm-ink-5);
+}
+
+@utility mm-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cream to gold page title */
+@utility mm-title-gradient {
+  background-image: linear-gradient(135deg, #fdf7ea 0%, #ecdcbd 38%, #b3925b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Divider that fades at both ends, never a flat rule */
+@utility mm-rule {
+  height: 1px;
+  background-image: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+@utility mm-no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

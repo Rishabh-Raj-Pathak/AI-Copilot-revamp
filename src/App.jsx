@@ -3,10 +3,11 @@ import { destroyCopilotProductTourIfStillActive } from "./copilot/copilotTour.js
 import { destroyVaultsProductTourIfStillActive } from "./copilot/vaultsTour.js";
 import CompetePage from "./components/compete/CompetePage.jsx";
 import DeltaNeutralVaultsPage from "./components/delta-neutral-vaults/DeltaNeutralVaultsPage.jsx";
+import MarketMakingPage from "./components/market-making/MarketMakingPage.jsx";
 import { pushHistoryLayer, releaseHistoryLayer } from "./components/mobile/appHistory.js";
 import AppTabBar from "./components/mobile/AppTabBar.jsx";
 import { AppToastProvider } from "./components/mobile/AppToast.jsx";
-import { MobileAppProvider, PUSHED_PAGES } from "./components/mobile/MobileAppContext.js";
+import { MobileAppProvider, PUSHED_PAGES, tabForPage } from "./components/mobile/MobileAppContext.js";
 import MobilePageTransition from "./components/mobile/MobilePageTransition.jsx";
 import MobilePnlCalendarPage from "./components/mobile/pnl/MobilePnlCalendarPage.jsx";
 import MobilePointsPage from "./components/mobile/points/MobilePointsPage.jsx";
@@ -35,7 +36,7 @@ export default function App() {
   /** Where the back arrow on the support page returns to. */
   const [supportReturnPage, setSupportReturnPage] = useState("copilot");
   /**
-   * Phone tabs reopen the last sub-view they showed (Agents → DN or Alpha).
+   * Phone tabs reopen the last sub-view they showed (Agents → DN, Alpha or MM).
    * Agents starts on Delta Neutral 2, the mobile-native build (Figma 4476:2);
    * DN1 stays one re-tap away in the tab bar's picker. Desktop menus route
    * through `handleVaultViewChange` and are unaffected.
@@ -75,7 +76,7 @@ export default function App() {
       // A tab switch resets the stack, like tapping a tab in a native app.
       const entries = mobileStackRef.current.splice(0);
       for (const entry of entries.reverse()) releaseHistoryLayer(entry.layer);
-      if (resolved === "vaults" || resolved.startsWith("dn-vaults")) setLastAgentsPage(resolved);
+      if (tabForPage(resolved) === "agents") setLastAgentsPage(resolved);
       if (resolved === "rewards" || resolved === "kol") setLastRewardsPage(resolved);
     }
     setPage(resolved);
@@ -96,6 +97,11 @@ export default function App() {
   const handleVaultViewChange = (viewId) => {
     if (viewId?.startsWith("delta-neutral")) {
       setPage(viewId === "delta-neutral-2" ? "dn-vaults-2" : "dn-vaults-1");
+      return;
+    }
+    // Market Making's view ids are its page ids.
+    if (viewId?.startsWith("market-making")) {
+      setPage(viewId);
       return;
     }
     setPage("vaults");
@@ -260,6 +266,23 @@ export default function App() {
         // v2 inherits whatever v1 was mid-way through setting up.
         key={page}
         version={page === "dn-vaults-2" ? 2 : 1}
+        {...sharedWalletProps}
+        onOpenCopilot={() => setPage("copilot")}
+        onOpenTrade={openTrade}
+        onOpenRewards={openRewards}
+        onOpenCompete={openCompete}
+        onOpenCopilotTutorial={() => {
+          destroyVaultsProductTourIfStillActive();
+          setRunCopilotTourOnEnter(true);
+          setPage("copilot");
+        }}
+        onVaultViewChange={handleVaultViewChange}
+      />
+    ) : page.startsWith("market-making") ? (
+      <MarketMakingPage
+        // Same reason as Delta Neutral: each layout keeps its own form and agents.
+        key={page}
+        version={Number(page.slice("market-making-".length)) || 2}
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}

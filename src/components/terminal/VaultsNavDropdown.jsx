@@ -8,11 +8,17 @@ import { Check } from "lucide-react";
  *
  * "delta-neutral" split into two numbered views. They render the same page today; v2
  * exists so it can be changed without touching v1, which is the version in use.
+ *
+ * Market Making (ported from the standalone app in /market-making) arrives as its three
+ * layouts, numbered the same way: 2 is that app's default, 1 and 3 its alternates.
  */
 export const VAULT_VIEWS = [
   { id: "featured", label: "Featured Vaults" },
   { id: "delta-neutral-1", label: "Delta Neutral 1" },
   { id: "delta-neutral-2", label: "Delta Neutral 2" },
+  { id: "market-making-1", label: "Market Making 1" },
+  { id: "market-making-2", label: "Market Making 2" },
+  { id: "market-making-3", label: "Market Making 3" },
 ];
 
 function NavChevron({ className }) {

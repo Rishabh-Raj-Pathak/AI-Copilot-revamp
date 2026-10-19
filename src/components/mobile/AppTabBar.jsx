@@ -23,6 +23,9 @@ const TAB_VIEWS = {
     { page: "dn-vaults-1", label: "Delta Neutral" },
     { page: "dn-vaults-2", label: "Delta Neutral 2" },
     { page: "vaults", label: "Alpha Agents" },
+    { page: "market-making-1", label: "Market Making 1" },
+    { page: "market-making-2", label: "Market Making 2" },
+    { page: "market-making-3", label: "Market Making 3" },
   ],
   rewards: [
     { page: "rewards", label: "Referral rewards" },
