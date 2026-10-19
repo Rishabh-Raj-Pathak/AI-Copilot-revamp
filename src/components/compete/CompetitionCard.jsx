@@ -226,7 +226,7 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
           </div>
 
           <header className="relative flex items-center justify-between gap-3">
-            <VenueLockup venueId={id} venue={venue} />
+            <VenueLockup venueId={competition.venueId ?? id} venue={venue} />
             <StatusPill live={live} />
           </header>
 

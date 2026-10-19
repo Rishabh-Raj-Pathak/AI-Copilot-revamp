@@ -37,9 +37,47 @@ const NOW = Date.now();
  * card is a visible grey box with a hard edge — the one thing that breaks the
  * illusion the cut exists to create.
  */
+const VENUE_ART = {
+  lighter: { src: "/compete/lighter-coin.png", width: 32.6, top: 2.7, right: 1.85 },
+  pacifica: { src: "/compete/pacifica-coin.png", width: 32.6, top: 4.7, right: 1.39 },
+};
+
+/**
+ * Earlier seasons on the same two venues, newest first. Settled, so they only
+ * open their results. Art and mark are per venue, so each season points at
+ * its venue through `venueId` rather than reusing the venue as its own id.
+ */
+function pastSeason({ id, venueId, venue, title, pool, participants, volume, endedDaysAgo, winner }) {
+  return {
+    id,
+    venueId,
+    venue,
+    title,
+    tagline: `A past ${venue} competition, settled and paid out to the top 10 wallets.`,
+    status: "ended",
+    art: VENUE_ART[venueId],
+    prizePool: { funded: pool, total: pool },
+    participants,
+    volume,
+    winner,
+    endedAt: NOW - endedDaysAgo * DAY,
+    windowLabel: "14 days · fully distributed",
+  };
+}
+
+const PAST_SEASONS = [
+  pastSeason({ id: "lighter-s2", venueId: "lighter", venue: "Lighter", title: "Lighter Volume Sprint", pool: 12000, participants: 962, volume: 5620000, endedDaysAgo: 25, winner: { wallet: "0x7a1…4c02be913", volume: 902300, prize: 3000 } }),
+  pastSeason({ id: "pacifica-s2", venueId: "pacifica", venue: "Pacifica", title: "Pacifica Maker Cup", pool: 8000, participants: 744, volume: 3980000, endedDaysAgo: 39, winner: { wallet: "0x3d9…e81a07c55", volume: 640800, prize: 2000 } }),
+  pastSeason({ id: "lighter-s1", venueId: "lighter", venue: "Lighter", title: "Lighter Trading Championship", pool: 15000, participants: 1108, volume: 7240000, endedDaysAgo: 53, winner: { wallet: "0xb42…19fd6a2e0", volume: 1186500, prize: 3750 } }),
+  pastSeason({ id: "pacifica-s1", venueId: "pacifica", venue: "Pacifica", title: "Pacifica Volume Championship", pool: 10000, participants: 1016, volume: 6050000, endedDaysAgo: 67, winner: { wallet: "0x58e…c7730b4d1", volume: 978200, prize: 2500 } }),
+  pastSeason({ id: "lighter-launch", venueId: "lighter", venue: "Lighter", title: "Lighter Launch Week", pool: 5000, participants: 531, volume: 1870000, endedDaysAgo: 81, winner: { wallet: "0x91c…2ab4f07e8", volume: 312700, prize: 1250 } }),
+  pastSeason({ id: "pacifica-launch", venueId: "pacifica", venue: "Pacifica", title: "Pacifica Launch Week", pool: 5000, participants: 488, volume: 1540000, endedDaysAgo: 95, winner: { wallet: "0x0f6…d3e95c174", volume: 268400, prize: 1250 } }),
+];
+
 export const COMPETITIONS = [
   {
     id: "lighter",
+    venueId: "lighter",
     venue: "Lighter",
     title: "Lighter Trading Competition",
     tagline:
@@ -63,6 +101,7 @@ export const COMPETITIONS = [
   },
   {
     id: "pacifica",
+    venueId: "pacifica",
     venue: "Pacifica",
     title: "Pacifica Trading Competition",
     tagline:
@@ -76,6 +115,7 @@ export const COMPETITIONS = [
     endedAt: NOW - 11 * DAY,
     windowLabel: "14 days · fully distributed",
   },
+  ...PAST_SEASONS,
 ];
 
 /**

@@ -89,7 +89,9 @@ export default function MobileCompetitionCard({ competition, entered = false, on
   const { id, venue, title, status, prizePool, participants, volume, endedAt } = competition;
   const live = status === "live";
   const tint = live ? LIVE_ICON : INK_MUTED;
-  const mark = VENUE_MARK[id];
+  // Assets are per venue, not per competition: a venue runs many seasons.
+  const venueKey = competition.venueId ?? id;
+  const mark = VENUE_MARK[venueKey];
 
   return (
     <article
@@ -100,7 +102,7 @@ export default function MobileCompetitionCard({ competition, entered = false, on
         <div className="relative flex flex-col gap-4 overflow-hidden pt-4">
           <img
             alt=""
-            src={ART[id] ?? competition.art?.src}
+            src={ART[venueKey] ?? competition.art?.src}
             className="pointer-events-none absolute -right-[3px] top-1 size-[104px] select-none object-contain"
           />
           <div className="relative flex items-center justify-between gap-3">
