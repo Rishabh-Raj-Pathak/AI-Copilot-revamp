@@ -242,7 +242,7 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
               line naming one wallet was the card telling you about somebody
               else. */}
           <div className="relative mt-4 w-[72%]">
-            <h2 className="text-headline text-ink">{title}</h2>
+            <h3 className="text-headline text-ink">{title}</h3>
           </div>
         </div>
 

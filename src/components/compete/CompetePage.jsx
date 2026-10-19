@@ -5,7 +5,7 @@ import MobileCompetePage from "../mobile/compete/MobileCompetePage.jsx";
 import useIsMobile from "../mobile/useIsMobile.js";
 import CompeteEntryModal from "./CompeteEntryModal.jsx";
 import CompeteEntryPrompt from "./CompeteEntryPrompt.jsx";
-import CompetitionCard from "./CompetitionCard.jsx";
+import CompeteListing from "./CompeteListing.jsx";
 import { COMPETITIONS } from "./competeMockData.js";
 import {
   dismissEntryPrompt,
@@ -159,21 +159,13 @@ export default function CompetePage({
             ) : null}
           </header>
 
-          {/* The hub holds a season of these, so the grid is built to grow:
-              one up on a phone, two from `lg`, three from `xl`. The fourth
-              column waits for `wide` (1800px) rather than 2xl: at 1536 the fluid type
-              is already at its ceiling while the tile would be at its narrowest,
-              so the venue name and the stat labels start truncating. */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3 xl:gap-5 wide:grid-cols-4">
-            {COMPETITIONS.map((competition) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                entered={enteredIds.has(competition.id)}
-                onOpen={openEntry}
-              />
-            ))}
-          </div>
+          {/* The hub holds a season of these, so live and ended are split:
+              tabs filter, and the All view groups (see `CompeteListing`). */}
+          <CompeteListing
+            competitions={COMPETITIONS}
+            enteredIds={enteredIds}
+            onOpen={openEntry}
+          />
         </div>
       </main>
 
