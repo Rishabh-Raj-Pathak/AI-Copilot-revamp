@@ -9,7 +9,7 @@ import { LIVE_GREEN } from "./competeTheme.js";
  * The season will hold far more settled competitions than running ones, so the
  * two cannot share one undifferentiated grid: the one you can still enter
  * would sink under the ones you can only read. Three tabs filter; the All view
- * groups. The groups are separated by whitespace and a heading, not a rule.
+ * groups. Each group opens with a heading, a count chip and a hairline.
  * The 64px between groups is three times the 20px card gap, so the break reads
  * as a section and not as another row.
  *
@@ -22,13 +22,6 @@ const TABS = [
   { id: "live", label: "Live" },
   { id: "ended", label: "Ended" },
 ];
-
-/**
- * How many ended competitions the All view shows before deferring to the
- * Ended tab. Two rows at the three-up width. Live is never capped: it is the
- * group you came for.
- */
-const ENDED_PREVIEW = 6;
 
 /** Same pulse as the card's status pill — `ds-live-dot` in design-tokens.css. */
 export function LiveDot({ className = "size-2" }) {
@@ -63,20 +56,24 @@ function CardGrid({ competitions, enteredIds, onOpen }) {
   );
 }
 
-function Group({ id, title, count, live = false, action, children }) {
+function Group({ id, title, count, live = false, children }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-5">
       <header>
         {/* 24px, the Rewards section-heading size (`ReferralActivityPanel`):
             above the 20px card titles in the grid and below the 32px page
-            title, so the three levels read in order. */}
+            title, so the three levels read in order. The count is a small
+            chip beside it, and a hairline runs out to the edge so each group
+            reads as its own band. */}
         <div className="flex items-center gap-2.5">
           {live ? <LiveDot /> : null}
           <h2 id={id} className="text-2xl font-semibold leading-[1.2] text-ink">
             {title}
           </h2>
-          <span className="text-2xl leading-[1.2] text-ink-faint">{count}</span>
-          {action ? <div className="ml-auto">{action}</div> : null}
+          <span className="text-data rounded-md border border-[#242424] px-1.5 py-0.5 leading-none text-ink-subtle">
+            {count}
+          </span>
+          <span aria-hidden className="ml-2 h-px flex-1 bg-[#242424]" />
         </div>
       </header>
       {children}
@@ -118,8 +115,6 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
 
   const live = competitions.filter((item) => item.status === "live");
   const ended = competitions.filter((item) => item.status !== "live");
-  const counts = { all: competitions.length, live: live.length, ended: ended.length };
-
   const showEnded = () => setTab("ended");
 
   const liveEmpty = (
@@ -136,18 +131,14 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
 
   return (
     <div className="flex flex-col gap-10">
-      {/* The same segmented control as the Rewards page's "Reward path"
-          switch (`ReferralTiersPanel`): a #242424 track, the active tab filled
-          in the same grey. Weight tops out at 500, so the fill carries the
-          selection rather than a bolder label.
-
-          The radii are nested: a tab sits 5px in from the track's outer edge
-          (1px border + 4px padding), so the track is the tab's 8px + 5 = 13px.
-          Equal radii pinch the gap at the corners. */}
+      {/* The app's one selector: the header nav item (`VaultsNavDropdown`,
+          `HeaderTerminal`) — 6px radius, the active option filled #3e2e00 with
+          #f2b500 text, the rest plain ink that greys on hover. No track and no
+          counts: the group headings below carry the counts. */}
       <div
         role="tablist"
         aria-label="Filter competitions"
-        className="flex w-fit items-center rounded-[13px] border border-[#242424] p-1"
+        className="flex w-fit items-center gap-1"
       >
         {TABS.map(({ id, label }) => {
           const active = tab === id;
@@ -160,17 +151,14 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
               aria-selected={active}
               aria-controls="compete-panel"
               onClick={() => setTab(id)}
-              className={`text-copy flex items-center gap-1.5 rounded-[8px] px-5 py-2.5 leading-[1.2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+              className={`text-control flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
                 active
-                  ? "bg-[#242424] font-medium text-ink"
-                  : "text-ink-muted hover:text-ink"
+                  ? "bg-[#3e2e00] text-[#f2b500]"
+                  : "text-ink-muted hover:bg-white/5 hover:text-ink"
               }`}
             >
-              {id === "live" && counts.live > 0 ? <LiveDot className="size-1.5" /> : null}
+              {id === "live" && live.length > 0 ? <LiveDot className="size-1.5" /> : null}
               {label}
-              <span className={`text-data leading-[1.2] ${active ? "text-ink-muted" : "text-ink-faint"}`}>
-                {counts[id]}
-              </span>
             </button>
           );
         })}
@@ -194,17 +182,8 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
               </Group>
             ) : null}
             {ended.length ? (
-              <Group
-                id="compete-ended"
-                title="Ended"
-                count={ended.length}
-                action={<TextLink onClick={showEnded}>View all ended</TextLink>}
-              >
-                <CardGrid
-                  competitions={ended.slice(0, ENDED_PREVIEW)}
-                  enteredIds={enteredIds}
-                  onOpen={onOpen}
-                />
+              <Group id="compete-ended" title="Ended" count={ended.length}>
+                <CardGrid competitions={ended} enteredIds={enteredIds} onOpen={onOpen} />
               </Group>
             ) : null}
             {!live.length && !ended.length ? liveEmpty : null}
