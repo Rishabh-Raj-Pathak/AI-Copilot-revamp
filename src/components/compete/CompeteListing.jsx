@@ -139,11 +139,15 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
       {/* The same segmented control as the Rewards page's "Reward path"
           switch (`ReferralTiersPanel`): a #242424 track, the active tab filled
           in the same grey. Weight tops out at 500, so the fill carries the
-          selection rather than a bolder label. */}
+          selection rather than a bolder label.
+
+          The radii are nested: a tab sits 5px in from the track's outer edge
+          (1px border + 4px padding), so the track is the tab's 8px + 5 = 13px.
+          Equal radii pinch the gap at the corners. */}
       <div
         role="tablist"
         aria-label="Filter competitions"
-        className="flex w-fit items-center rounded-[10px] border border-[#242424] p-1"
+        className="flex w-fit items-center rounded-[13px] border border-[#242424] p-1"
       >
         {TABS.map(({ id, label }) => {
           const active = tab === id;
@@ -156,7 +160,7 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
               aria-selected={active}
               aria-controls="compete-panel"
               onClick={() => setTab(id)}
-              className={`text-copy flex items-center gap-1.5 rounded-lg px-5 py-2.5 leading-[1.2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+              className={`text-copy flex items-center gap-1.5 rounded-[8px] px-5 py-2.5 leading-[1.2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                 active
                   ? "bg-[#242424] font-medium text-ink"
                   : "text-ink-muted hover:text-ink"
