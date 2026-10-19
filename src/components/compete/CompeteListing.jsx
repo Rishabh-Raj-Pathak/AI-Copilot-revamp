@@ -131,14 +131,17 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
 
   return (
     <div className="flex flex-col gap-10">
-      {/* The app's one selector: the header nav item (`VaultsNavDropdown`,
-          `HeaderTerminal`) — 6px radius, the active option filled #3e2e00 with
-          #f2b500 text, the rest plain ink that greys on hover. No track and no
-          counts: the group headings below carry the counts. */}
+      {/* The app's page-level segmented control, measured off the Rewards
+          "Reward path" switch (`ReferralTiersPanel`): a 10px #242424-bordered
+          track with 4px padding, 14px tabs at 10px radius and 20px side
+          padding, 36.8px tall, inactive #bfbfbf. (The 2px-padded track in
+          `TradeOrderPanel` is the dense in-panel variant.) Selection takes the
+          header nav's #3e2e00 fill with #f2b500 text. No counts: the group
+          headings below carry them. */}
       <div
         role="tablist"
         aria-label="Filter competitions"
-        className="flex w-fit items-center gap-1"
+        className="flex w-fit items-center rounded-[10px] border border-[#242424] p-1"
       >
         {TABS.map(({ id, label }) => {
           const active = tab === id;
@@ -151,15 +154,15 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
               aria-selected={active}
               aria-controls="compete-panel"
               onClick={() => setTab(id)}
-              className={`text-control flex h-7.5 items-center gap-1.5 rounded-md px-3 font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
+              className={`flex h-[36.8px] items-center gap-1.5 rounded-lg px-5 text-sm font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
                 active
                   ? "bg-[#3e2e00] text-[#f2b500]"
-                  : "text-ink-muted hover:bg-white/5 hover:text-ink"
+                  : "text-ink-muted hover:text-ink"
               }`}
             >
               {id === "live" && live.length > 0 ? <LiveDot className="size-1.5" /> : null}
               {/* Onest's ascent is taller than its descent, and Windows rounds
-                  the two unevenly at 13px, so a padded line box sat the
+                  the two unevenly at small sizes, so a padded line box sat the
                   letters ~1.5px above centre. Trimming the box to cap height
                   lets the fixed-height flex row centre the glyphs themselves,
                   level with the live dot. */}
