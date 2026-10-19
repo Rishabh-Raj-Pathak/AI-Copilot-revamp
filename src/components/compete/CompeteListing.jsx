@@ -151,14 +151,19 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
               aria-selected={active}
               aria-controls="compete-panel"
               onClick={() => setTab(id)}
-              className={`text-control flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
+              className={`text-control flex h-7.5 items-center gap-1.5 rounded-md px-3 font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
                 active
                   ? "bg-[#3e2e00] text-[#f2b500]"
                   : "text-ink-muted hover:bg-white/5 hover:text-ink"
               }`}
             >
               {id === "live" && live.length > 0 ? <LiveDot className="size-1.5" /> : null}
-              {label}
+              {/* Onest's ascent is taller than its descent, and Windows rounds
+                  the two unevenly at 13px, so a padded line box sat the
+                  letters ~1.5px above centre. Trimming the box to cap height
+                  lets the fixed-height flex row centre the glyphs themselves,
+                  level with the live dot. */}
+              <span className="[text-box:trim-both_cap_alphabetic]">{label}</span>
             </button>
           );
         })}
