@@ -63,19 +63,21 @@ function CardGrid({ competitions, enteredIds, onOpen }) {
   );
 }
 
-function Group({ id, title, count, description, live = false, action, children }) {
+function Group({ id, title, count, live = false, action, children }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-5">
       <header>
-        <div className="flex items-center gap-2">
+        {/* 24px, the Rewards section-heading size (`ReferralActivityPanel`):
+            above the 20px card titles in the grid and below the 32px page
+            title, so the three levels read in order. */}
+        <div className="flex items-center gap-2.5">
           {live ? <LiveDot /> : null}
-          <h2 id={id} className="text-figure text-ink">
+          <h2 id={id} className="text-2xl font-semibold leading-[1.2] text-ink">
             {title}
           </h2>
-          <span className="text-copy text-ink-faint">{count}</span>
+          <span className="text-2xl leading-[1.2] text-ink-faint">{count}</span>
           {action ? <div className="ml-auto">{action}</div> : null}
         </div>
-        <p className="text-copy mt-1 text-ink-subtle">{description}</p>
       </header>
       {children}
     </section>
@@ -97,7 +99,7 @@ function TextLink({ children, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="text-control flex items-center gap-1 font-medium text-ink-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+      className="text-copy flex items-center gap-1 font-medium text-ink-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
     >
       {children}
       <ArrowRight className="size-3.5" aria-hidden />
@@ -134,9 +136,15 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
 
   return (
     <div className="flex flex-col gap-10">
-      {/* The tab rail. Each tab's 2px underline sits over the rail's 1px
-          border (`-mb-px`), so the selection reads as part of the line. */}
-      <div role="tablist" aria-label="Filter competitions" className="flex gap-7 border-b border-[#242424]">
+      {/* The same segmented control as the Rewards page's "Reward path"
+          switch (`ReferralTiersPanel`): a #242424 track, the active tab filled
+          in the same grey. Weight tops out at 500, so the fill carries the
+          selection rather than a bolder label. */}
+      <div
+        role="tablist"
+        aria-label="Filter competitions"
+        className="flex w-fit items-center rounded-[10px] border border-[#242424] p-1"
+      >
         {TABS.map(({ id, label }) => {
           const active = tab === id;
           return (
@@ -148,15 +156,15 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
               aria-selected={active}
               aria-controls="compete-panel"
               onClick={() => setTab(id)}
-              className={`text-control -mb-px flex items-center gap-1.5 border-b-2 pb-3 pt-2 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+              className={`text-copy flex items-center gap-1.5 rounded-lg px-5 py-2.5 leading-[1.2] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                 active
-                  ? "border-[#f2b500] text-ink"
-                  : "border-transparent text-ink-subtle hover:text-ink-muted"
+                  ? "bg-[#242424] font-medium text-ink"
+                  : "text-ink-muted hover:text-ink"
               }`}
             >
               {id === "live" && counts.live > 0 ? <LiveDot className="size-1.5" /> : null}
               {label}
-              <span className={`text-micro ${active ? "text-ink-muted" : "text-ink-faint"}`}>
+              <span className={`text-data leading-[1.2] ${active ? "text-ink-muted" : "text-ink-faint"}`}>
                 {counts[id]}
               </span>
             </button>
@@ -176,7 +184,6 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
                 id="compete-live"
                 title="Live now"
                 count={live.length}
-                description="Running right now. Enter before the timer runs out."
                 live
               >
                 <CardGrid competitions={live} enteredIds={enteredIds} onOpen={onOpen} />
@@ -187,7 +194,6 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
                 id="compete-ended"
                 title="Ended"
                 count={ended.length}
-                description="Settled competitions. Open one for the final leaderboard."
                 action={<TextLink onClick={showEnded}>View all ended</TextLink>}
               >
                 <CardGrid
