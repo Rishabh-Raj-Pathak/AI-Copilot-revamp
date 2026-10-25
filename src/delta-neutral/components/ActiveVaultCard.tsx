@@ -89,15 +89,17 @@ type ActiveVaultCardProps = {
 
 type RiskTone = "good" | "caution" | "danger";
 
-function usePayoutCountdown() {
-  const [secondsLeft, setSecondsLeft] = useState(0);
+function secondsToNextEpoch() {
+  const now = Date.now();
+  const next = Math.ceil(now / FUNDING_EPOCH_MS) * FUNDING_EPOCH_MS;
+  return Math.max(0, Math.floor((next - now) / 1000));
+}
+
+/** Seconds to the next funding settlement. Shared with the stat strip's "Next payout". */
+export function usePayoutCountdown() {
+  const [secondsLeft, setSecondsLeft] = useState(secondsToNextEpoch);
   useEffect(() => {
-    const tick = () => {
-      const now = Date.now();
-      const next = Math.ceil(now / FUNDING_EPOCH_MS) * FUNDING_EPOCH_MS;
-      setSecondsLeft(Math.max(0, Math.floor((next - now) / 1000)));
-    };
-    tick();
+    const tick = () => setSecondsLeft(secondsToNextEpoch());
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, []);

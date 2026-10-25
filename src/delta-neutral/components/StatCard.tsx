@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { clsx } from 'clsx';
-import { motion, useMotionValue, useTransform, animate } from 'motion/react';
+import { motion, useMotionValue, useMotionValueEvent, animate } from 'motion/react';
 import { Coins, LineChart, Shield } from 'lucide-react';
 
 type StatCardVariant = 'default' | 'v2' | 'vaults';
@@ -14,27 +14,41 @@ interface StatCardProps {
   mobileTitle?: string;
 }
 
+/**
+ * Splits "$2.48M" into "$", 2.48 at 2dp and "M", so the number can count up while the
+ * symbols around it stay put. Anything else -- a countdown, a dash -- is shown as written.
+ */
+function parseFigure(value: string) {
+  const match = /^(\$?)([\d,]+(?:\.(\d+))?)([KMB%]?)$/.exec(value);
+  if (!match) return null;
+  return {
+    prefix: match[1],
+    target: Number(match[2].replace(/,/g, '')),
+    decimals: match[3]?.length ?? 0,
+    suffix: match[4],
+  };
+}
+
 export function StatCard({ title, value, subtext, variant = 'default', mobileTitle }: StatCardProps) {
   const StatIcon = title === 'Total Volume' ? Coins : title === 'Yield Distributed' ? LineChart : Shield;
-  const numericValue = parseFloat(value.replace(/[^0-9.]/g, ''));
-  const prefix = value.startsWith('$') ? '$' : '';
-  const suffix = value.endsWith('%') ? '%' : '';
+  const figure = parseFigure(value);
+  const target = figure?.target ?? 0;
 
   const count = useMotionValue(0);
-
-  const rounded = useTransform(count, (latest) => {
-    const hasDecimals = value.includes('.');
-    const decimals = hasDecimals ? (value.split('.')[1]?.length || 2) : 0;
-    const formattedNumber = latest.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return `${prefix}${formattedNumber}${suffix}`;
-  });
+  const [latest, setLatest] = useState(0);
+  useMotionValueEvent(count, 'change', setLatest);
 
   useEffect(() => {
-    animate(count, numericValue, {
+    const controls = animate(count, target, {
       duration: 1.5,
       ease: [0.25, 0.1, 0.25, 1],
     });
-  }, [numericValue, count]);
+    return () => controls.stop();
+  }, [target, count]);
+
+  const rounded = figure
+    ? `${figure.prefix}${latest.toFixed(figure.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${figure.suffix}`
+    : value;
 
   const isV2 = variant === 'v2';
   const isVaults = variant === 'vaults';

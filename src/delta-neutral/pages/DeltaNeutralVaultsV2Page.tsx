@@ -14,15 +14,13 @@
  */
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { CircleAlert } from 'lucide-react';
-import { StatCard } from '../components/StatCard';
+import { UserStatsStrip } from '../components/UserStatsStrip';
 import { DeltaVaultBuilder, type DeltaVaultBuilderResult } from '../components/DeltaVaultBuilder';
 import { ActiveVaultCard, type ActiveVaultCardModel, type VaultSettings } from '../components/ActiveVaultCard';
 import { StrategyDeepDive } from '../components/StrategyDeepDive';
 import { PerpBottomPanel } from '../components/PerpBottomPanel';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
 import { walletForDex } from '../utils/wallet';
+import { carryOver, INITIAL_LEDGER, recordClose, recordTrade, userVaultStats } from '../utils/userStats';
 import useIsMobile from '../../components/mobile/useIsMobile.js';
 import Dn2Screen from '../../components/mobile/dn2/Dn2Screen.jsx';
 
@@ -232,25 +230,10 @@ const seedVaults: Omit<ActiveVaultCardModel, 'longWallet' | 'shortWallet'>[] = [
   },
 ];
 
-const PLATFORM_METRIC_EXPLANATIONS = [
-  {
-    title: 'Total Volume',
-    body: 'Total money that has flowed through the vault system so far.',
-  },
-  {
-    title: 'Yield Distributed',
-    body: 'Total profit paid out to users from delta-neutral vault strategies.',
-  },
-  {
-    title: 'Hedge Uptime',
-    body: 'How often the hedge stayed active and protective. Higher means your position stayed neutral more consistently.',
-  },
-];
-
 export function DeltaNeutralVaultsV2Page() {
   const [vaults, setVaults] = useState<ActiveVaultCardModel[]>(() => seedVaults.map(withVaultWallets));
+  const [ledger, setLedger] = useState(INITIAL_LEDGER);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [platformMetricsOpen, setPlatformMetricsOpen] = useState(false);
   const [activeVaultTab, setActiveVaultTab] = useState<ActiveVaultTab>('all');
   const isMobile = useIsMobile();
 
@@ -260,9 +243,13 @@ export function DeltaNeutralVaultsV2Page() {
       : vaults.filter(v => v.marketType === activeVaultTab);
   const categoryVaults = filteredVaults.filter(v => v.marketType === 'category');
   const tokenVaults = filteredVaults.filter(v => v.marketType === 'token');
+  const userStats = userVaultStats(vaults, ledger);
 
   const handleActivate = (payload: DeltaVaultBuilderResult) => {
-    setVaults(prev => [resultToVaultModel(payload), ...prev].slice(0, 6));
+    const next = [resultToVaultModel(payload), ...vaults];
+    setVaults(next.slice(0, 6));
+    // Vaults pushed off the six-row list still count toward the lifetime stats.
+    setLedger(prev => recordTrade(carryOver(prev, next.slice(6))));
     setExpandedId(null);
   };
 
@@ -284,6 +271,7 @@ export function DeltaNeutralVaultsV2Page() {
       volume7dUsd: 0,
     };
     setVaults(prev => [model, ...prev]);
+    setLedger(recordTrade);
     return model;
   };
 
@@ -308,7 +296,9 @@ export function DeltaNeutralVaultsV2Page() {
   };
 
   const handleStop = (id: string) => {
+    const stopped = vaults.find(v => v.id === id);
     setVaults(prev => prev.filter(v => v.id !== id));
+    if (stopped) setLedger(prev => recordClose(prev, stopped));
     if (expandedId === id) setExpandedId(null);
   };
 
@@ -362,7 +352,7 @@ export function DeltaNeutralVaultsV2Page() {
     Phone: Figma "Delta Neutral 2 · Mobile-native (390)" (kN9AkNRzaxmg4mhFVkt1Bo, 4476:2).
     Same vault state and handlers as below. The builder becomes a Cross-DEX setup card
     that opens a "New vault" page, and the bottom Positions / History panel becomes
-    two sub-tabs beside Vaults -- so no PerpBottomPanel here. Platform stats are not
+    two sub-tabs beside Vaults -- so no PerpBottomPanel here. The stat strip is not
     shown on the phone. Signed out, the lists are empty states (Figma A4).
   */
   if (isMobile) {
@@ -392,61 +382,7 @@ export function DeltaNeutralVaultsV2Page() {
           </p>
         </div>
 
-        <div className="relative">
-          <div className="absolute right-0 top-0 z-10 flex items-center max-tablet:-top-0.5">
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Explain platform metrics"
-                  className="hidden h-7 w-7 items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] text-[#8f90a1] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#d6b06a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(214,176,106,0.5)] tablet:inline-flex"
-                >
-                  <CircleAlert className="h-3.5 w-3.5" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-[330px] border-[rgba(146,111,56,0.45)] bg-[linear-gradient(180deg,rgba(14,12,10,0.98)_0%,rgba(8,8,8,0.98)_100%)] p-3.5 text-[#e8d5b5]">
-                <p className="text-[12px] font-semibold uppercase tracking-[1px] text-[#ccb17f]">Platform Metrics</p>
-                <div className="mt-2 space-y-2">
-                  {PLATFORM_METRIC_EXPLANATIONS.map(item => (
-                    <div key={item.title} className="text-[11px] leading-relaxed">
-                      <p className="font-semibold text-[#e8d5b5]">{item.title}</p>
-                      <p className="text-[#9c9cac]">{item.body}</p>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <button
-              type="button"
-              aria-label="Explain platform metrics"
-              onClick={() => setPlatformMetricsOpen(true)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] text-[#8f90a1] transition-colors hover:border-[rgba(214,176,106,0.4)] hover:text-[#d6b06a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(214,176,106,0.5)] tablet:hidden"
-            >
-              <CircleAlert className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2.5 tablet:gap-4">
-            <StatCard variant="vaults" mobileTitle="Volume" title="Total Volume" value="$128.4M" subtext="Capital routed" />
-            <StatCard variant="vaults" mobileTitle="Yield" title="Yield Distributed" value="$6.2M" subtext="Paid to users" />
-            <StatCard variant="vaults" mobileTitle="Uptime" title="Hedge Uptime" value="99.94%" subtext="Strategy reliability" />
-          </div>
-        </div>
-        <Dialog open={platformMetricsOpen} onOpenChange={setPlatformMetricsOpen}>
-          <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-[14px] border border-[rgba(146,111,56,0.55)] bg-[linear-gradient(180deg,rgba(12,12,12,0.98)_0%,rgba(6,6,6,0.98)_100%)] p-4 text-[#f5f5f5]">
-            <DialogTitle className="font-['Onest',sans-serif] text-[14px] text-[#e8d5b5]">Platform Metrics</DialogTitle>
-            <DialogDescription className="mt-1 text-[12px] text-[#a5a6b3]">
-              Core trust and reliability indicators for delta-neutral vault operations.
-            </DialogDescription>
-            <div className="mt-2 space-y-2">
-              {PLATFORM_METRIC_EXPLANATIONS.map(item => (
-                <div key={item.title} className="text-[12px] leading-relaxed">
-                  <p className="font-semibold text-[#e8d5b5]">{item.title}</p>
-                  <p className="text-[#9c9cac]">{item.body}</p>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <UserStatsStrip stats={userStats} />
       </section>
 
       <DeltaVaultBuilder onActivate={handleActivate} />
