@@ -375,10 +375,10 @@ export function DeltaNeutralVaultsV2Page() {
       <section className="flex flex-col gap-4 max-tablet:gap-3">
         <div className="flex flex-col gap-2 max-tablet:gap-1 pr-8">
           <h1 className="vaults-hero-title-gradient w-fit text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.05] tracking-[-0.02em] max-tablet:text-[clamp(1.625rem,5vw,2rem)] max-tablet:leading-[1.1]">
-            Delta Neutral Vaults
+            Delta Neutral
           </h1>
           <p className="max-w-[680px] text-[15px] leading-6 text-white/90 max-tablet:line-clamp-2 max-tablet:text-[13px] max-tablet:leading-5">
-            Show the math, hide the mess — delta-neutral funding vaults with live hedge health and proof-of-neutrality.
+            Funding yield, engineered to be directionless. HyprEarn continuously routes into the highest-volume pair between your two venues to tighten execution and maximize funding capture.
           </p>
         </div>
 
