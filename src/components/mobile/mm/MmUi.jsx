@@ -276,7 +276,7 @@ export function StatStrip({ items }) {
             {item.label}
             {item.aside}
           </dt>
-          <dd className="truncate text-[18px] font-semibold leading-[22px] text-[#f0ddb9]">{item.value}</dd>
+          <dd className="truncate text-[16px] font-medium leading-5 text-[#f0ddb9]">{item.value}</dd>
           <dd className="text-[10px] leading-[13px] text-[#717182]">{item.sub}</dd>
         </div>
       ))}
@@ -292,7 +292,7 @@ export function StatTile({ label, value, sub, tone, aside = null }) {
         <span className="truncate">{label}</span>
         {aside}
       </p>
-      <p className={`truncate text-[18px] font-semibold leading-[22px] ${tone ?? "text-[#f0ddb9]"}`}>{value}</p>
+      <p className={`truncate text-[16px] font-medium leading-5 ${tone ?? "text-[#f0ddb9]"}`}>{value}</p>
       <p className="truncate text-[10px] leading-[13px] text-[#717182]">{sub}</p>
     </div>
   );
@@ -386,7 +386,7 @@ export function VolumeChart({ points }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[18px] font-semibold leading-[22px] text-[#f0ddb9]">{usdCompact(shown?.v ?? 0)}</p>
+        <p className="text-[16px] font-medium leading-5 text-[#f0ddb9]">{usdCompact(shown?.v ?? 0)}</p>
         <p className="text-[11px] leading-[14px] text-[#717182]">{hover !== null ? stamp(shown.t) : "Total"}</p>
       </div>
       <div className="relative h-[180px]">

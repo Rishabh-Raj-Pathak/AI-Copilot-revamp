@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { useMobileApp } from "../MobileAppContext.js";
 import { useAppToast } from "../appToastContext.js";
 import ConnectNetworkSheet from "../sheets/ConnectNetworkSheet.jsx";
@@ -97,7 +97,16 @@ export default function MmScreen() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
           <p className={EYEBROW}>Market making</p>
-          <InfoButton label="About Market Making" onPress={() => setAbout(true)} />
+          {/* Alpha Agents' "More info": a quiet grey link, not a gold control */}
+          <button
+            type="button"
+            onClick={() => setAbout(true)}
+            aria-haspopup="dialog"
+            className="app-pressable relative flex shrink-0 items-center gap-1 rounded-full text-[12px] leading-4 text-[#8f90a1] after:absolute after:-inset-x-2 after:-inset-y-3 active:text-[#dcdce8]"
+          >
+            <Info size={13} strokeWidth={1.75} aria-hidden />
+            More info
+          </button>
         </div>
         <p className="text-[12px] leading-4 text-[#b4b5c2]">
           Run a market making agent on autopilot. Maker orders keep fees low, you earn the spread, no directional bets.
@@ -163,7 +172,7 @@ export default function MmScreen() {
               label: "Avg CPM",
               value: mm.totals.cpm !== null ? `$${mm.totals.cpm.toFixed(2)}` : "—",
               sub: "Execution cost",
-              aside: <InfoButton label="About average CPM" onPress={() => setCpmTip(true)} />,
+              aside: <InfoButton quiet label="About average CPM" onPress={() => setCpmTip(true)} />,
             },
             { label: "Active agents", value: String(mm.active.length), sub: `${running} running · ${paused} paused` },
           ]}
@@ -204,7 +213,6 @@ export default function MmScreen() {
     <EmptyCard title="No completed runs yet" message="A run lands here once its agent is deactivated or its timer ends." />
   ) : (
     <>
-      <SectionTitle caption={`${mm.completed.length} runs · newest first`}>Completed runs</SectionTitle>
       {mm.completed.slice(0, shown).map((a) => (
         <AgentCard key={a.id} agent={a} onOpen={() => openAgent(a.id)} />
       ))}

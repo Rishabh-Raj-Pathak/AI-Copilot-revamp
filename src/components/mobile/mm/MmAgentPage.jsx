@@ -186,7 +186,7 @@ export default function MmAgentPage({ open, onClose, detail, pending, onEdit, on
             <StrategyDisc id={s.strategyId} live={s.phase === "running"} size={36} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
-                <p className="shrink-0 text-[17px] font-semibold leading-[22px] text-[#e8d5b5]">{s.marketSymbol}</p>
+                <p className="shrink-0 text-[16px] font-medium leading-5 text-[#e8d5b5]">{s.marketSymbol}</p>
                 <StatusChip agent={s} />
               </div>
               <AgentMeta agent={s} />
@@ -199,9 +199,9 @@ export default function MmAgentPage({ open, onClose, detail, pending, onEdit, on
                 <p className="text-[11px] font-medium uppercase leading-[14px] tracking-[0.5px] text-[#8f90a1]">
                   Starting equity · managed
                 </p>
-                <p className="text-[28px] font-semibold leading-8 text-[#f5ead6]">
+                <p className="text-[24px] font-semibold leading-[30px] text-[#f5ead6]">
                   {usdFine(s.margin).split(".")[0]}
-                  <span className="text-[18px] text-[#ccb17f]">.{usdFine(s.margin).split(".")[1]}</span>
+                  <span className="text-[16px] text-[#ccb17f]">.{usdFine(s.margin).split(".")[1]}</span>
                 </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -247,7 +247,7 @@ export default function MmAgentPage({ open, onClose, detail, pending, onEdit, on
             value={s.cpm === null ? "—" : `$${s.cpm.toFixed(2)}`}
             tone={s.cpm !== null && s.cpm <= 0 ? "text-[#00d492]" : undefined}
             sub={s.cpm === null ? "Needs $10k of volume" : `${detail.roundTrips} round trips`}
-            aside={<InfoButton label="About CPM" onPress={() => setCpmTip(true)} />}
+            aside={<InfoButton quiet label="About CPM" onPress={() => setCpmTip(true)} />}
           />
         </div>
 

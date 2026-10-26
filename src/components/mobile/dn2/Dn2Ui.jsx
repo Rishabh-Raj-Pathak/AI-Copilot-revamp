@@ -141,7 +141,7 @@ export function SubTabs({ tabs, value, onChange, ariaLabel }) {
             role="tab"
             aria-selected={on}
             onClick={() => onChange(tab.id)}
-            className="relative flex h-[42px] items-center justify-center"
+            className="relative flex h-[42px] items-center justify-center rounded-[6px] outline-offset-[-4px]"
           >
             <span
               className={`text-[12px] font-semibold uppercase leading-4 tracking-[0.6px] ${
@@ -204,18 +204,21 @@ export function ExpandButton({ expanded, onPress, label }) {
 /**
  * Gold Lucide `Info` (Figma "Info"): one drawn glyph, so the "i" is centred in its
  * ring by construction, and it sits on the label's centre line. 16px, with a
- * 40px hit area.
+ * 40px hit area. `quiet` is Alpha Agents' grey 13px glyph, for an ⓘ inside a
+ * figure's label where a gold one would outweigh the text.
  */
-export function InfoButton({ label, onPress }) {
+export function InfoButton({ label, onPress, quiet = false }) {
   return (
     <button
       type="button"
       onClick={onPress}
       aria-label={label}
       aria-haspopup="dialog"
-      className="app-pressable relative flex size-4 shrink-0 items-center justify-center text-[#ccb17f]/85 after:absolute after:-inset-3 active:text-[#e8d5b5]"
+      className={`app-pressable relative flex shrink-0 items-center justify-center rounded-full after:absolute after:-inset-3 ${
+        quiet ? "size-[13px] text-[#8f90a1] active:text-[#dcdce8]" : "size-4 text-[#ccb17f]/85 active:text-[#e8d5b5]"
+      }`}
     >
-      <Info size={16} strokeWidth={1.75} aria-hidden />
+      <Info size={quiet ? 13 : 16} strokeWidth={1.75} aria-hidden />
     </button>
   );
 }

@@ -54,12 +54,26 @@ const TIPS = {
 const DURATION_RANGE = { hr: [1, 168], min: [5, 60] };
 const UNIT_WORD = { hr: "hours", min: "minutes" };
 const UNIT_DEFAULT = { hr: 10, min: 30 };
-const DERIVED = "font-[ui-monospace,SF_Mono,Menlo,Consolas,monospace] text-[11px] leading-[16px] text-[#717182]";
+const DERIVED = "text-[11px] leading-[15px] text-[#8f90a1]";
 const MAX_LABEL = "text-[10px] font-semibold uppercase leading-[14px] tracking-[0.3px] text-[#ccb17f]";
 /** The balance bar joined to its action, as on the Delta Neutral 2 DEX card (36 tall). */
 const BAR = "flex h-9 items-stretch overflow-hidden rounded-[10px] border border-white/[0.07]";
 const BAR_ACTION =
   "app-pressable flex shrink-0 items-center gap-1.5 border-l border-white/[0.07] bg-white/[0.02] px-4 text-[12px] font-medium leading-4 text-[#ccb17f] disabled:text-[#5f606c]";
+
+/**
+ * Round stops under the leverage slider: 1x, even steps, then the max
+ * (1 · 10 · 20 · 30 · 40 for 40x; 1 · 5 · 10 for 10x). A step too close to
+ * the max is dropped so two labels never touch.
+ */
+function leverageTicks(max) {
+  if (max <= 1) return [1];
+  const step = [1, 2, 5, 10, 25, 50, 100].find((s) => Math.ceil((max - 1) / s) <= 4) ?? 100;
+  const ticks = [1];
+  for (let v = step; v < max; v += step) if (v > 1 && max - v >= step * 0.6) ticks.push(v);
+  ticks.push(max);
+  return ticks;
+}
 
 function Card({ label, tip, onTip, right = null, hero = false, children }) {
   return (
@@ -180,6 +194,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
   const market = markets.find((m) => m.symbol === config.marketSymbol) ?? null;
   const strategy = overview.strategies.find((s) => s.id === config.strategyId) ?? null;
   const maxLev = maxLeverage(market);
+  const ticks = leverageTicks(maxLev);
   const estimate = estimateVolume(config, strategy);
   const balanceMax = floorCents(dex.balance);
   const ceiling = cutoffCeiling(config.margin);
@@ -482,33 +497,38 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
             />
           }
         >
-          <div className="flex items-center gap-3">
-            <GoldRange
-              size="md"
-              className="flex-1"
-              value={Math.min(config.leverage, maxLev)}
-              min={1}
-              max={Math.max(1, maxLev)}
-              onChange={(v) => patch({ leverage: v })}
-              ariaLabel="Leverage"
-              ariaValueText={`${config.leverage}x`}
-            />
-            <span className={`flex h-11 w-[72px] shrink-0 items-center justify-center gap-0.5 ${FIELD}`}>
-              <span className="text-[16px] font-semibold leading-5 text-[#f0ddb9]">{Math.min(config.leverage, maxLev)}</span>
-              <span className="text-[13px] font-medium leading-5 text-[#ccb17f]">x</span>
+          <div className="flex items-start gap-3">
+            {/* The ticks share the slider's column, so each sits under its own value, inside the track */}
+            <div className="flex min-w-0 flex-1 flex-col gap-2.5 pt-3">
+              <GoldRange
+                size="md"
+                value={Math.min(config.leverage, maxLev)}
+                min={1}
+                max={Math.max(1, maxLev)}
+                onChange={(v) => patch({ leverage: v })}
+                ariaLabel="Leverage"
+                ariaValueText={`${config.leverage}x`}
+              />
+              <div className="relative h-3">
+                {ticks.map((v, i) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => patch({ leverage: v })}
+                    style={{ left: `${((v - 1) / (maxLev - 1 || 1)) * 100}%` }}
+                    className={`absolute top-0 text-[10px] leading-3 text-[#717182] after:absolute after:-inset-2 active:text-[#ccb17f] ${
+                      i === 0 ? "" : i === ticks.length - 1 ? "-translate-x-full" : "-translate-x-1/2"
+                    }`}
+                  >
+                    {v}x
+                  </button>
+                ))}
+              </div>
+            </div>
+            <span className={`flex h-11 w-[72px] shrink-0 items-center justify-center gap-1 ${FIELD}`}>
+              <span className="text-[16px] leading-5 text-[#f0f0f0]">{Math.min(config.leverage, maxLev)}</span>
+              <span className="text-[14px] font-medium leading-5 text-[#d6b06a]">x</span>
             </span>
-          </div>
-          <div className="flex justify-between">
-            {[1, Math.round(1 + (maxLev - 1) / 2), maxLev].map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => patch({ leverage: v })}
-                className="relative text-[10px] font-medium uppercase leading-3 tracking-[0.4px] text-[#717182] after:absolute after:-inset-2 active:text-[#ccb17f]"
-              >
-                {v}x
-              </button>
-            ))}
           </div>
           <p className={DERIVED}>
             buying power ≈ {usdFine(buyingPower(config))} · max {maxLev}x
@@ -520,8 +540,10 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
           {estimate ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[20px] font-semibold leading-6 text-[#f0ddb9]">
-                  {usdCompact(estimate.low)} to {usdCompact(estimate.high)}
+                <p className="text-[16px] font-medium leading-[22px] text-[#f0ddb9]">
+                  {usdCompact(estimate.low)}
+                  <span className="text-[13px] text-[#8f90a1]"> to </span>
+                  {usdCompact(estimate.high)}
                 </p>
                 <span className="rounded-[6px] border border-white/[0.08] px-1.5 py-[3px] text-[9px] font-semibold uppercase leading-none tracking-[0.08em] text-[#717182]">
                   Estimate
