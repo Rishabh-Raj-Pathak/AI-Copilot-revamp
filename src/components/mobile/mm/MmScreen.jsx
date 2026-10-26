@@ -4,14 +4,13 @@ import { useMobileApp } from "../MobileAppContext.js";
 import { useAppToast } from "../appToastContext.js";
 import ConnectNetworkSheet from "../sheets/ConnectNetworkSheet.jsx";
 import { Dn2Button, EmptyCard, InfoButton, SectionTitle, SubTabs } from "../dn2/Dn2Ui.jsx";
-import { CARD, EYEBROW, HERO_EDGE, HERO_FILL } from "../dn2/dn2Theme.js";
-import { DexLogo } from "../../../market-making/ui.tsx";
+import { CARD, CARD_EDGE, CARD_FILL, EYEBROW } from "../dn2/dn2Theme.js";
 import { estimateVolume, useConfigAutofill } from "../../../market-making/Configure.tsx";
 import { usdCompact, usdFineSigned } from "../../../market-making/lib.ts";
 import { useMarketMaking } from "../../../market-making/useMarketMaking.ts";
 import MmAgentPage from "./MmAgentPage.jsx";
 import MmSetupPage from "./MmSetupPage.jsx";
-import { AgentCard, InfoSheet, StatStrip } from "./MmUi.jsx";
+import { AgentCard, InfoSheet, MarketIcon, StatStrip } from "./MmUi.jsx";
 
 /**
  * Market Making on a phone, under the Agents header — production's page
@@ -93,7 +92,7 @@ export default function MmScreen() {
   );
 
   const hero = (
-    <section className={`${CARD} ${HERO_EDGE} gap-3.5!`} style={HERO_FILL} aria-label="Market making">
+    <section className={`${CARD} ${CARD_EDGE} gap-3.5!`} style={CARD_FILL} aria-label="Market making">
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
           <p className={EYEBROW}>Market making</p>
@@ -114,11 +113,7 @@ export default function MmScreen() {
       </div>
 
       <div className="flex items-center gap-3 rounded-[12px] border border-white/[0.06] bg-black/[0.28] p-3">
-        {venue ? (
-          <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border border-white/[0.05] bg-[#121212]">
-            <DexLogo dex={venue.id} className="h-[17px] w-[17px] rounded-full" />
-          </span>
-        ) : null}
+        {market ? <MarketIcon symbol={market.symbol} size={30} /> : null}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="truncate text-[15px] font-medium leading-5 text-[#e8d5b5]">{market?.symbol ?? "Pick a market"}</p>
           <p className="truncate text-[11px] leading-[14px] text-[#8f90a1]">

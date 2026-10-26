@@ -4,6 +4,7 @@ import { Dn2Sheet } from "../dn2/Dn2Ui.jsx";
 import { CHIP, CHIP_ON, FIELD, TILE } from "../dn2/dn2Theme.js";
 import { CategoryGlyph, DexLogo } from "../../../market-making/ui.tsx";
 import { HIDDEN_CATEGORIES } from "../../../market-making/lib.ts";
+import { MarketIcon } from "./MmUi.jsx";
 
 /**
  * Production's two dropdowns as phone sheets: the venue list (connection dot,
@@ -146,12 +147,16 @@ export function MmMarketSheet({ open, onClose, markets, categories, value, onSel
                       selected ? "rounded-[8px] bg-[rgba(204,177,127,0.06)]" : ""
                     }`}
                   >
-                    <span
-                      className={`min-w-0 flex-1 truncate py-0.5 text-[14px] font-medium leading-[18px] ${
-                        selected ? "text-[#e8d5b5]" : "text-[#dcdce8]"
-                      }`}
-                    >
-                      {m.symbol}
+                    <MarketIcon symbol={m.symbol} size={28} />
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span
+                        className={`truncate text-[14px] font-medium leading-[18px] ${
+                          selected ? "text-[#e8d5b5]" : "text-[#dcdce8]"
+                        }`}
+                      >
+                        {m.symbol}
+                      </span>
+                      <span className="truncate text-[11px] leading-[14px] text-[#717182]">{m.name}</span>
                     </span>
                     {selected ? <Check size={16} className="shrink-0 text-[#ccb17f]" aria-hidden /> : null}
                   </button>

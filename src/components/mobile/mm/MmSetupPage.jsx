@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, LoaderCircle, Lock, Wallet } from "lucide-react
 import GoldRange from "../agents/GoldRange.jsx";
 import { useAppToast } from "../appToastContext.js";
 import { Dn2Button, GroupToggle, InfoButton } from "../dn2/Dn2Ui.jsx";
-import { CARD, CARD_EDGE, CARD_FILL, EYEBROW, FIELD, HERO_EDGE, HERO_FILL, LABEL, TILE } from "../dn2/dn2Theme.js";
+import { CARD, CARD_EDGE, CARD_FILL, EYEBROW, FIELD, LABEL, TILE } from "../dn2/dn2Theme.js";
 import { DexLogo, StrategyGlyph } from "../../../market-making/ui.tsx";
 import { blockingReason, estimateVolume } from "../../../market-making/Configure.tsx";
 import {
@@ -19,7 +19,7 @@ import {
   usdCompact,
   usdFine,
 } from "../../../market-making/lib.ts";
-import { InfoSheet, MmPage, Switch } from "./MmUi.jsx";
+import { InfoSheet, MarketIcon, MmPage, Switch } from "./MmUi.jsx";
 import { MmMarketSheet, MmVenueSheet } from "./MmSetupSheets.jsx";
 
 /**
@@ -27,29 +27,20 @@ import { MmMarketSheet, MmVenueSheet } from "./MmSetupSheets.jsx";
  * (Delta Neutral 2's "Set up vault" pattern) with production's sections in
  * its order — Venue setup, Market, Strategy, Margin, Leverage, Expected
  * volume, Cut-off, Duration — and the CTA pinned above the home indicator.
- * The dropdowns become sheets, the ⓘ tooltips become info sheets.
+ * The dropdowns become sheets; of production's six ⓘ tooltips only Leverage stays.
  *
  * Every rule (defaults, auto-margin, what blocks activation, the estimate) is
  * the desktop form's own, from `market-making/Configure.tsx`.
  */
 
-const TIPS = {
-  market: ["Market", "Volume decides your cost. Deeper books fill more often and cost less per million traded."],
-  strategy: ["Strategy", "How HyprEarn quotes. This drives your fill rate, your turnover and your cost."],
-  margin: ["Margin", "The more margin your agent has, the bigger each order and the faster your volume grows."],
-  leverage: [
-    "Leverage",
-    "How hard each quote leans. Cross shares one margin pool across inventory; isolated ring fences margin per position so losses cannot reach the rest of your balance.",
-  ],
-  volume: [
-    "Expected volume",
-    "A modelled range, not a promise. Actual volume moves with book depth, volatility and how long your quotes rest.",
-  ],
-  cutoff: [
-    "Cut-off",
-    "A hard floor. The agent cancels every quote and flattens inventory the moment equity falls this far below where it started.",
-  ],
-};
+/**
+ * One ⓘ on the page, on Leverage: Cross vs Isolated is the only term here the
+ * card itself does not explain. Every other section says what it does in its
+ * own copy (strategy lines, the derived lines, the estimate's inputs, the
+ * cut-off and duration hints), so an ⓘ there would only repeat it.
+ */
+const LEVERAGE_TIP =
+  "How hard each quote leans. Cross shares one margin pool across inventory; isolated ring fences margin per position so losses cannot reach the rest of your balance.";
 
 const DURATION_RANGE = { hr: [1, 168], min: [5, 60] };
 const UNIT_WORD = { hr: "hours", min: "minutes" };
@@ -75,13 +66,13 @@ function leverageTicks(max) {
   return ticks;
 }
 
-function Card({ label, tip, onTip, right = null, hero = false, children }) {
+function Card({ label, info = null, right = null, children }) {
   return (
-    <section className={`${CARD} ${hero ? HERO_EDGE : CARD_EDGE}`} style={hero ? HERO_FILL : CARD_FILL} aria-label={label}>
+    <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label={label}>
       <div className="flex min-h-5 items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">
           <h2 className={EYEBROW}>{label}</h2>
-          {tip ? <InfoButton label={`About ${label.toLowerCase()}`} onPress={() => onTip(tip)} /> : null}
+          {info}
         </div>
         {right}
       </div>
@@ -186,7 +177,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
   // Functional, so two changes in one tick (a fast double tap) both land
   const patch = (p) => setConfig((c) => ({ ...c, ...p }));
   const [sheet, setSheet] = useState(null);
-  const [tip, setTip] = useState(null);
+  const [levTip, setLevTip] = useState(false);
   const [inputsOpen, setInputsOpen] = useState(false);
 
   const venue = overview.venues.find((v) => v.id === config.venueId) ?? null;
@@ -275,7 +266,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         ) : null}
 
         {/* Venue setup */}
-        <Card label="Venue setup" hero>
+        <Card label="Venue setup">
           <SelectField label={`DEX venue: ${venue?.id ?? "none"}`} locked={locked} onPress={() => setSheet("venue")}>
             {venue ? (
               <>
@@ -346,7 +337,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         </Card>
 
         {/* Market */}
-        <Card label="Market" tip={TIPS.market} onTip={setTip}>
+        <Card label="Market">
           <SelectField
             label={`Market token: ${market?.symbol ?? "none"}`}
             locked={locked}
@@ -354,7 +345,11 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
             onPress={() => setSheet("market")}
           >
             {market ? (
-              <span className="truncate text-[14px] font-medium leading-[18px] text-[#dcdce8]">{market.symbol}</span>
+              <>
+                <MarketIcon symbol={market.symbol} size={24} />
+                <span className="truncate text-[14px] font-medium leading-[18px] text-[#dcdce8]">{market.symbol}</span>
+                <span className="truncate text-[12px] leading-4 text-[#717182]">{market.name}</span>
+              </>
             ) : (
               <span className="text-[14px] leading-[18px] text-[#717182]">Select token</span>
             )}
@@ -372,7 +367,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         </Card>
 
         {/* Strategy */}
-        <Card label="Strategy" tip={TIPS.strategy} onTip={setTip}>
+        <Card label="Strategy">
           <div className="flex flex-col gap-2" role="radiogroup" aria-label="Strategy">
             {overview.strategies.map((s) => {
               const allowed = strategyAllowed(market, s.id);
@@ -430,8 +425,6 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         {/* Margin */}
         <Card
           label="Margin"
-          tip={TIPS.margin}
-          onTip={setTip}
           right={
             dex.isConnected ? (
               <button
@@ -481,8 +474,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         {/* Leverage */}
         <Card
           label="Leverage"
-          tip={TIPS.leverage}
-          onTip={setTip}
+          info={<InfoButton quiet label="About leverage" onPress={() => setLevTip(true)} />}
           right={
             <GroupToggle
               ariaLabel="Margin mode"
@@ -536,7 +528,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         </Card>
 
         {/* Expected volume */}
-        <Card label="Expected volume" tip={TIPS.volume} onTip={setTip}>
+        <Card label="Expected volume">
           {estimate ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
@@ -589,8 +581,6 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         {/* Cut-off */}
         <Card
           label="Cut-off"
-          tip={TIPS.cutoff}
-          onTip={setTip}
           right={
             <label className="flex items-center gap-2.5">
               <span className="text-[12px] leading-4 text-[#bfbfbf]">Stop on drawdown</span>
@@ -613,7 +603,9 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
               <p className="text-[12px] leading-[17px] text-[#8f90a1]">Halts and flattens {usd(cut, 0)} below start.</p>
             </>
           ) : (
-            <p className="text-[12px] leading-[17px] text-[#8f90a1]">No custom floor added.</p>
+            <p className="text-[12px] leading-[17px] text-[#8f90a1]">
+              Off. Turn it on to stop and flatten if equity falls a set amount below where it started.
+            </p>
           )}
         </Card>
 
@@ -681,7 +673,7 @@ export default function MmSetupPage({ open, onClose, mm, onLogin, onDone }) {
         value={config.marketSymbol}
         onSelect={(m) => patch({ marketSymbol: m.symbol, leverage: Math.max(1, Math.min(config.leverage, maxLeverage(m))) })}
       />
-      <InfoSheet open={tip !== null} onClose={() => setTip(null)} title={tip?.[0] ?? ""} body={tip?.[1] ?? ""} />
+      <InfoSheet open={levTip} onClose={() => setLevTip(false)} title="Leverage" body={LEVERAGE_TIP} />
     </>
   );
 }

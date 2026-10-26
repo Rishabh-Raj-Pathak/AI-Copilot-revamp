@@ -4,9 +4,9 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, ChevronRight, Clock, OctagonX, Pause, TrendingDown, TriangleAlert } from "lucide-react";
 import AppNavBar from "../AppNavBar.jsx";
 import { useHistoryBack } from "../appHistory.js";
-import { Dn2Sheet } from "../dn2/Dn2Ui.jsx";
+import { Dn2Sheet, TokenIcon } from "../dn2/Dn2Ui.jsx";
 import { CARD, CARD_EDGE, CARD_FILL, LABEL, TILE } from "../dn2/dn2Theme.js";
-import { DexLogo, StrategyGlyph } from "../../../market-making/ui.tsx";
+import { DexLogo } from "../../../market-making/ui.tsx";
 import { niceScale } from "../../../market-making/Dashboard.tsx";
 import {
   PHASE_LABEL,
@@ -94,20 +94,23 @@ export function MmPage({ open, onClose, title, label, footer = null, children })
 
 /* ── Marks ────────────────────────────────────────────────────────────── */
 
-/** A strategy's glyph in a 32px bronze disc (gold while it runs). */
-export function StrategyDisc({ id, live = true, size = 32 }) {
+/**
+ * Coin art for the markets Delta Neutral has none for: Hyperliquid's own
+ * coin icons (app.hyperliquid.xyz/coins), vendored to public/market-making/tokens.
+ */
+const MARKET_ICONS = new Set(["XRP", "DOGE", "FARTCOIN", "GOLD", "TSLA", "NVDA", "EUR"]);
+
+/** A market's coin: the app's art for BTC / ETH / SOL / HYPE, vendored art for the rest. */
+export function MarketIcon({ symbol, size = 32 }) {
+  const coin = String(symbol ?? "").toUpperCase();
+  if (!MARKET_ICONS.has(coin)) return <TokenIcon pair={coin} size={size} />;
   return (
-    <span
-      className={`flex shrink-0 items-center justify-center rounded-full border ${
-        live
-          ? "border-[rgba(173,134,73,0.56)] bg-[linear-gradient(180deg,rgba(50,40,28,0.98)_0%,rgba(27,22,16,0.99)_100%)] text-[#ccb17f]"
-          : "border-white/[0.08] bg-white/[0.03] text-[#8f90a1]"
-      }`}
+    <img
+      alt=""
+      src={`/market-making/tokens/${coin}.svg`}
+      className="shrink-0 rounded-full object-cover"
       style={{ width: size, height: size }}
-      aria-hidden
-    >
-      <StrategyGlyph id={id} className="h-4 w-4" />
-    </span>
+    />
   );
 }
 
@@ -245,7 +248,7 @@ export function AgentCard({ agent, onOpen }) {
       style={CARD_FILL}
     >
       <div className="flex w-full items-center gap-3">
-        <StrategyDisc id={agent.strategyId} live={running} />
+        <MarketIcon symbol={agent.marketSymbol} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex min-w-0 items-center gap-2">
             <p className="shrink-0 text-[15px] font-medium leading-5 text-[#e8d5b5]">{agent.marketSymbol}</p>

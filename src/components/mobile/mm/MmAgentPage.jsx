@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check, LoaderCircle, TriangleAlert } from "lucide-react";
 import { CancelButton, DataRow, Divider, Dn2Button, Dn2Sheet, InfoButton, SideBadge } from "../dn2/Dn2Ui.jsx";
-import { CARD, CARD_EDGE, CARD_FILL, EYEBROW, HERO_EDGE, HERO_FILL, TILE } from "../dn2/dn2Theme.js";
+import { CARD, CARD_EDGE, CARD_FILL, EYEBROW, TILE } from "../dn2/dn2Theme.js";
 import { runSeries, statusLine } from "../../../market-making/Dashboard.tsx";
 import {
   ago,
@@ -22,11 +22,11 @@ import {
   AgentMeta,
   Counter,
   InfoSheet,
+  MarketIcon,
   MmPage,
   StatTile,
   StatusChip,
   StatusPill,
-  StrategyDisc,
   VolumeChart,
 } from "./MmUi.jsx";
 
@@ -87,13 +87,12 @@ function EventRow({ event, now }) {
   );
 }
 
-function Section({ label, right = null, tip, onTip, children }) {
+function Section({ label, right = null, children }) {
   return (
     <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label={label}>
       <div className="flex min-h-6 items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">
           <h2 className={EYEBROW}>{label}</h2>
-          {tip ? <InfoButton label={`About ${label}`} onPress={onTip} /> : null}
         </div>
         {right}
       </div>
@@ -115,7 +114,7 @@ function Chip({ label, value }) {
 function AgentSummaryTile({ agent, aside = null }) {
   return (
     <div className={`${TILE} flex items-center gap-2.5 px-3 py-2.5`}>
-      <StrategyDisc id={agent.strategyId} live={agent.phase === "running"} size={28} />
+      <MarketIcon symbol={agent.marketSymbol} size={28} />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-medium leading-[18px] text-[#e8d5b5]">{agent.marketSymbol}</p>
         <AgentMeta agent={agent} />
@@ -181,9 +180,9 @@ export default function MmAgentPage({ open, onClose, detail, pending, onEdit, on
         footer={footer}
       >
         {/* Identity */}
-        <section className={`${CARD} ${HERO_EDGE}`} style={HERO_FILL} aria-label={live ? "Agent" : "Run"}>
+        <section className={`${CARD} ${CARD_EDGE}`} style={CARD_FILL} aria-label={live ? "Agent" : "Run"}>
           <div className="flex items-center gap-3">
-            <StrategyDisc id={s.strategyId} live={s.phase === "running"} size={36} />
+            <MarketIcon symbol={s.marketSymbol} size={36} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
                 <p className="shrink-0 text-[16px] font-medium leading-5 text-[#e8d5b5]">{s.marketSymbol}</p>
