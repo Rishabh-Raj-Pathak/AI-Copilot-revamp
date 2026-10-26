@@ -3,8 +3,8 @@
  * `rewardsMockData.js`).
  *
  * Dates are derived from load time rather than hardcoded so the proto always
- * demos in the same state: Lighter perpetually mid-flight with a live
- * countdown, Pacifica perpetually settled. A hardcoded ISO date would quietly
+ * demos in the same state: Decibel perpetually mid-flight with a live
+ * countdown, Lighter and Pacifica perpetually settled. A hardcoded ISO date would quietly
  * turn the "live" card into an expired one a few weeks from now.
  */
 
@@ -40,6 +40,7 @@ const NOW = Date.now();
 const VENUE_ART = {
   lighter: { src: "/compete/lighter-coin.png", width: 32.6, top: 2.7, right: 1.85 },
   pacifica: { src: "/compete/pacifica-coin.png", width: 32.6, top: 4.7, right: 1.39 },
+  decibel: { src: "/mobile/logos/compete-decibel-art.png", width: 34.5, top: 6.5, right: 1.4 },
 };
 
 /**
@@ -74,30 +75,46 @@ const PAST_SEASONS = [
   pastSeason({ id: "pacifica-launch", venueId: "pacifica", venue: "Pacifica", title: "Pacifica Launch Week", pool: 5000, participants: 488, volume: 1540000, endedDaysAgo: 95, winner: { wallet: "0x0f6…d3e95c174", volume: 268400, prize: 1250 } }),
 ];
 
+/** 9d 20h 03m 06s — the countdown app.hyprearn.com/compete showed when cloned. */
+const DECIBEL_REMAINING = 9 * DAY + 20 * 60 * 60 * 1000 + 3 * 60 * 1000 + 6 * 1000;
+
 export const COMPETITIONS = [
+  /**
+   * The one live card on production (app.hyprearn.com/compete): Decibel's
+   * Halloween Edition, cloned as it stood — $500 pool, 40 traders, no volume
+   * yet. Lighter, which used to hold this slot, has settled below.
+   */
+  {
+    id: "decibel-halloween",
+    venueId: "decibel",
+    venue: "Decibel",
+    title: "Decibel Trading Competition: Halloween Edition",
+    tagline:
+      "Trade Decibel through HyprEarn. Every position counts toward your volume.",
+    status: "live",
+    art: VENUE_ART.decibel,
+    prizePool: { funded: 500, total: 500 },
+    participants: 40,
+    volume: 0,
+    startedAt: NOW - 4 * DAY,
+    endsAt: NOW + DECIBEL_REMAINING,
+    windowLabel: "14 days · top 10 split the pool",
+  },
   {
     id: "lighter",
     venueId: "lighter",
     venue: "Lighter",
     title: "Lighter Trading Competition",
     tagline:
-      "Trade Lighter through HyprEarn. Every position counts toward your volume.",
-    status: "live",
-    art: { src: "/compete/lighter-coin.png", width: 32.6, top: 2.7, right: 1.85 },
-    prizePool: { funded: 6240, total: 15000 },
+      "Trade Lighter through HyprEarn. Settled and paid out to the top 10 wallets.",
+    status: "ended",
+    art: VENUE_ART.lighter,
+    prizePool: { funded: 15000, total: 15000 },
     participants: 418,
     volume: 2140000,
-    /**
-     * Rank 1 on the live leaderboard, by volume — the rule the board itself
-     * ranks on. Carried by address, which is the honest default: the board's
-     * own column is "X Handle / Wallet", and linking X is what entering the
-     * competition asks for, so a leader is a wallet until they have done it.
-     * Add an optional `handle` and `formatTrader` names them instead.
-     */
-    leader: { wallet: "0x0ef…09284071f", volume: 486210, share: 0.25 },
-    startedAt: NOW - 3 * DAY,
-    endsAt: NOW + 4.5 * DAY,
-    windowLabel: "14 days · top 10 split the pool",
+    winner: { wallet: "0x0ef…09284071f", volume: 486210, prize: 3750 },
+    endedAt: NOW - 4 * DAY,
+    windowLabel: "14 days · fully distributed",
   },
   {
     id: "pacifica",
@@ -138,17 +155,22 @@ export function formatUsd(value) {
   return `$${value.toLocaleString("en-US")}`;
 }
 
-/** `4d 12h` while days remain, then `12h 04m`, then `04m 21s` in the last hour. */
+/**
+ * `9d 20h 03m 06s` — the production countdown, seconds and all. Leading units
+ * drop away as they reach zero: `20h 03m 06s`, then `03m 06s`.
+ */
 export function formatRemaining(ms) {
   if (ms <= 0) return "Ended";
-  const totalMinutes = Math.floor(ms / 60000);
-  const days = Math.floor(totalMinutes / (60 * 24));
-  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-  const minutes = totalMinutes % 60;
-  const seconds = Math.floor((ms % 60000) / 1000);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, "0")}m`;
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  const tail = `${pad(minutes)}m ${pad(seconds)}s`;
+  if (days > 0) return `${days}d ${pad(hours)}h ${tail}`;
+  if (hours > 0) return `${pad(hours)}h ${tail}`;
+  return tail;
 }
 
 /**

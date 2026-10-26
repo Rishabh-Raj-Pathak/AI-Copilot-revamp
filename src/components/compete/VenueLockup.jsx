@@ -42,6 +42,11 @@ const VENUE_MARKS = {
     render: (cls) => <img src={pacificaLogo} alt="" aria-hidden className={cls} />,
     className: "size-[1.79em] shrink-0 object-contain",
   },
+  // The white mark the phone venue picker already ships.
+  decibel: {
+    render: (cls) => <img src="/mobile/logos/venue-decibel.png" alt="" aria-hidden className={cls} />,
+    className: "size-[1.79em] shrink-0 object-contain",
+  },
 };
 
 /**

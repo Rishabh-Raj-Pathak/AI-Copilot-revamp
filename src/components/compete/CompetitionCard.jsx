@@ -6,7 +6,7 @@ import {
   Check,
   Coins,
   Timer,
-  User,
+  Users,
 } from "lucide-react";
 import VenueLockup from "./VenueLockup.jsx";
 import {
@@ -266,7 +266,7 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
             className="pr-2"
           />
           <StatCell
-            icon={User}
+            icon={Users}
             tint={tint}
             value={participants.toLocaleString("en-US")}
             label="Traders"
