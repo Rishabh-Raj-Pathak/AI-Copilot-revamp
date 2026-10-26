@@ -2,23 +2,26 @@ import HeaderTerminal from "../terminal/HeaderTerminal.jsx";
 import AppTopBar from "../mobile/AppTopBar.jsx";
 import useIsMobile from "../mobile/useIsMobile.js";
 import AgentsSwitcher from "../mobile/agents/AgentsSwitcher.jsx";
+import MmScreen from "../mobile/mm/MmScreen.jsx";
 import { MarketMakingApp } from "../../market-making/MarketMakingApp.tsx";
 
 /*
  * Market Making, the third kind of agent beside Delta Neutral and Alpha Agents.
  *
- * The body is the standalone app from /market-making, ported to
- * src/market-making. Its own fake navbar is gone; this shell supplies the real
- * chrome, the same way `DeltaNeutralVaultsPage` does: `HeaderTerminal` on
- * desktop, the app top bar and Agents tabs on a phone.
+ * The body is a clone of production's page (app.hyprearn.com/market-making),
+ * in src/market-making. This shell supplies the chrome around it, the same way
+ * `DeltaNeutralVaultsPage` does: `HeaderTerminal` on desktop, the app top bar
+ * and Agents tabs on a phone. The desktop <main> is production's own, padding
+ * and all. On a phone the body is `MmScreen` (components/mobile/mm), the same
+ * page in the Delta Neutral 2 phone pattern. Signing in is the prototype's
+ * wallet connection.
  *
- * `version` is the standalone app's layout (1-3), picked from VAULT_VIEWS.
- * `.mm-root` scopes that app's base styles (see its styles/theme.css).
+ * `.mm-root` scopes the page's base styles (see its styles/theme.css).
  */
-const LAYOUT_FOR_VERSION = { 1: "v1", 2: "v2", 3: "v3" };
+const MAIN =
+  "mx-auto flex min-h-screen w-full max-w-[1280px] flex-1 flex-col gap-4 px-4 pb-[calc(128px+env(safe-area-inset-bottom))] pt-6 font-['Onest',sans-serif] md:px-5 md:pb-[164px] lg:pt-8";
 
 export default function MarketMakingPage({
-  version = 2,
   walletConnected,
   onWalletConnected,
   onWalletDisconnect,
@@ -33,20 +36,20 @@ export default function MarketMakingPage({
   onOpenCopilotTutorial,
   onVaultViewChange,
 }) {
-  const variant = LAYOUT_FOR_VERSION[version] ?? "v2";
   const isMobile = useIsMobile();
+  const body = (
+    <main className={MAIN}>
+      <MarketMakingApp signedIn={!!walletConnected} onLogin={() => onWalletConnected?.()} />
+    </main>
+  );
 
   if (isMobile) {
     return (
-      <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-white">
+      <div className="vaults-root flex h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-white">
         <AppTopBar title="Agents" meta="Fully non-custodial">
           <AgentsSwitcher />
         </AppTopBar>
-        <div className="mm-root min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[var(--app-tab-bar-h)]">
-          <div className="px-5 pt-5 pb-8 max-[374px]:px-4">
-            <MarketMakingApp variant={variant} compact />
-          </div>
-        </div>
+        <MmScreen />
       </div>
     );
   }
@@ -55,7 +58,7 @@ export default function MarketMakingPage({
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[#050505] text-white">
       <HeaderTerminal
         activeNavItem="Vaults"
-        vaultView={`market-making-${version}`}
+        vaultView="market-making"
         onVaultViewChange={onVaultViewChange}
         onNavItemClick={(label) => {
           if (label === "AI Copilot") onOpenCopilot?.();
@@ -75,11 +78,7 @@ export default function MarketMakingPage({
         onTerminalPlatformChange={onTerminalPlatformChange}
       />
 
-      <div className="mm-root minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <main className="mx-auto max-w-[1240px] px-5 pt-6 pb-16 lg:px-8 lg:pt-8">
-          <MarketMakingApp variant={variant} />
-        </main>
-      </div>
+      <div className="mm-root minimal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-contain">{body}</div>
     </div>
   );
 }

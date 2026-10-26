@@ -99,8 +99,8 @@ export default function App() {
       setPage(viewId === "delta-neutral-2" ? "dn-vaults-2" : "dn-vaults-1");
       return;
     }
-    // Market Making's view ids are its page ids.
-    if (viewId?.startsWith("market-making")) {
+    // Market Making's view id is its page id.
+    if (viewId === "market-making") {
       setPage(viewId);
       return;
     }
@@ -278,11 +278,8 @@ export default function App() {
         }}
         onVaultViewChange={handleVaultViewChange}
       />
-    ) : page.startsWith("market-making") ? (
+    ) : page === "market-making" ? (
       <MarketMakingPage
-        // Same reason as Delta Neutral: each layout keeps its own form and agents.
-        key={page}
-        version={Number(page.slice("market-making-".length)) || 2}
         {...sharedWalletProps}
         onOpenCopilot={() => setPage("copilot")}
         onOpenTrade={openTrade}

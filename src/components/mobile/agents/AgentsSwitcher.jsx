@@ -7,20 +7,19 @@ import { useMobileApp } from "../MobileAppContext.js";
  * Portfolio (Figma "02 Agents · v3.1 consistent"). It used to be a gold pill
  * segmented control at the top of each Agents body.
  *
- * Delta Neutral goes to v2, the mobile-native build, and Market Making to its
- * layout 2, that app's default — unless a page of the same kind is already
- * showing: the other versions stay real routes, reached from the tab bar's
- * re-tap picker, and this control must not bounce the user out of them.
+ * Delta Neutral goes to v2, the mobile-native build — unless a page of the same
+ * kind is already showing: the other versions stay real routes, reached from the
+ * tab bar's re-tap picker, and this control must not bounce the user out of them.
  */
 const TAB_HOME = {
   "delta-neutral": "dn-vaults-2",
   "alpha-agents": "vaults",
-  "market-making": "market-making-2",
+  "market-making": "market-making",
 };
 
 function tabForAgentsPage(page) {
   if (page.startsWith("dn-vaults")) return "delta-neutral";
-  if (page.startsWith("market-making")) return "market-making";
+  if (page === "market-making") return "market-making";
   return "alpha-agents";
 }
 

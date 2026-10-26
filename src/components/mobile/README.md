@@ -56,6 +56,7 @@ of drawing them.
 | Chip (32px, 44px hit; Copilot categories, PnL Calendar months) | `AppChip.jsx` | Category Chip 937:1163 |
 | Screen transitions | `MobilePageTransition.jsx` | — |
 | Delta Neutral 2 phone screens (Vaults / Positions / History tabs, Set up vault page, vault sheets) | `dn2/` — see below | Terminal `kN9AkNRzaxmg4mhFVkt1Bo` 4476:2 |
+| Market Making phone screen (Agents / History tabs, Set up agent page, agent page, sheets) | `mm/` — see below | production app.hyprearn.com/market-making |
 | Alpha Agents phone screen (Agents / Positions / History tabs, agent shelves, sheets) | `agents/` — see below | `DoY28sP7SwidihlLGoGrEa` 1220:38293 |
 | Hardware/gesture back | `appHistory.js` (`useHistoryBack`) | — |
 
@@ -140,3 +141,37 @@ handler (venue filter, per-vault `rowUi`, `onPatch`, the product tour) stays in
 - The `data-tour` anchors (`vaults-overview`, `vaults-dex-tabs`,
   `vaults-opportunities`, `vaults-featured-tour-controls`) live on the toolbar,
   venue chip, shelves and first Alpha card.
+
+### Market Making (`mm/`)
+
+Production's Market Making page (app.hyprearn.com/market-making, cloned for
+desktop in `src/market-making`) in the Delta Neutral 2 phone pattern.
+`MarketMakingPage` renders `MmScreen` under the Agents header on a phone. State
+and actions are the desktop page's own hook, `useMarketMaking`, and the form
+rules (defaults, auto-margin, what blocks activation, the estimate) are
+exported from `market-making/Configure.tsx`, so both layouts behave the same.
+
+- `MmScreen`: `SubTabs` Agents | History. The Agents tab has a setup hero
+  (pre-filled market, venue, strategy and est. volume, then "Set up agent →"),
+  a totals strip (Total volume, Avg CPM, Active agents) and the active agent
+  cards. History lists completed runs, 10 at a time with "Show more".
+  Production's All / Active / Completed filter became the two tabs, and its
+  Configure / Dashboard switch became the hero plus a pushed page. Signed out,
+  both tabs ask you to connect (`ConnectNetworkSheet`).
+- `MmSetupPage`: production's Configure as a pushed page (`MmPage`, the
+  DN2 "Set up vault" shell). Sections: venue, market, strategy, margin,
+  leverage, expected volume, cut-off, duration. The CTA is pinned with
+  production's label ladder (Connect wallet → Connect {venue} wallet →
+  Activate agent / Save changes) and its blocking reason above it. While
+  editing, venue, market and strategy are locked.
+- `MmSetupSheets`: the venue and market dropdowns as sheets.
+- `MmAgentPage`: an agent, or a finished run's results, as a pushed page.
+  It has 2×2 figures, status, positions as tiles, the latest 5 activity rows
+  plus an "All activity" sheet, and a scrubbable volume chart. Edit, Pause /
+  Resume and Deactivate are pinned in the footer. Pause and Deactivate
+  confirm in a sheet first, and Deactivate ends on a receipt step.
+- `MmUi`: `MmPage`, `AgentCard`, `StatusChip` / `StatusPill`, `StatStrip`,
+  `StatTile`, `Switch`, `InfoSheet` (ⓘ tips) and `VolumeChart`.
+- Production's toasts ("Strategy activated.", "Changes saved.", "Strategy
+  paused.", "Strategy resumed.") use the gold toast. Venue logos are
+  production's SVGs (`public/market-making/dex`).
