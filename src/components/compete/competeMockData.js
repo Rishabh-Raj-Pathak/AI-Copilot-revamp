@@ -75,27 +75,32 @@ const PAST_SEASONS = [
   pastSeason({ id: "pacifica-launch", venueId: "pacifica", venue: "Pacifica", title: "Pacifica Launch Week", pool: 5000, participants: 488, volume: 1540000, endedDaysAgo: 95, winner: { wallet: "0x0f6…d3e95c174", volume: 268400, prize: 1250 } }),
 ];
 
-/** 9d 20h 03m 06s — the countdown app.hyprearn.com/compete showed when cloned. */
-const DECIBEL_REMAINING = 9 * DAY + 20 * 60 * 60 * 1000 + 3 * 60 * 1000 + 6 * 1000;
+/** 13d 03h 06m 45s — the countdown app.hyprearn.com/compete showed when cloned. */
+const DECIBEL_REMAINING = 13 * DAY + 3 * 60 * 60 * 1000 + 6 * 60 * 1000 + 45 * 1000;
 
 export const COMPETITIONS = [
   /**
    * The one live card on production (app.hyprearn.com/compete): Decibel's
-   * Halloween Edition, cloned as it stood — $500 pool, 40 traders, no volume
-   * yet. Lighter, which used to hold this slot, has settled below.
+   * Halloween Edition, cloned as it stood — $500 pool, 40 traders, $4K of
+   * volume. Lighter, which used to hold this slot, has settled below.
    */
   {
     id: "decibel-halloween",
     venueId: "decibel",
     venue: "Decibel",
-    title: "Decibel Trading Competition: Halloween Edition",
+    title: "Decibel Trading Challenge: Halloween Edition",
     tagline:
       "Trade Decibel through HyprEarn. Every position counts toward your volume.",
     status: "live",
     art: VENUE_ART.decibel,
+    /**
+     * The Halloween scene from the launch announcement fills this card in
+     * place of the coin. Cut at row 577 of 789 — see CardBackdrop.jsx.
+     */
+    backdrop: { src: "/compete/decibel-halloween-bg.webp", split: 73.1 },
     prizePool: { funded: 500, total: 500 },
     participants: 40,
-    volume: 0,
+    volume: 4000,
     startedAt: NOW - 4 * DAY,
     endsAt: NOW + DECIBEL_REMAINING,
     windowLabel: "14 days · top 10 split the pool",

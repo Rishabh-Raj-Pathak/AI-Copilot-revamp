@@ -1,4 +1,5 @@
 import AppIcon from "../AppIcon.jsx";
+import CardBackdrop from "../../compete/CardBackdrop.jsx";
 import { appIcons, appImages } from "../mobileAssets.js";
 import {
   formatEndedOn,
@@ -86,24 +87,39 @@ const CTA =
   "app-pressable relative flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-[7px] text-app-body font-semibold leading-[18.2px] after:absolute after:-inset-y-1.5 after:inset-x-0";
 
 export default function MobileCompetitionCard({ competition, entered = false, onEnter, onResults }) {
-  const { id, venue, title, status, prizePool, participants, volume, endedAt } = competition;
+  const { id, venue, title, status, backdrop, prizePool, participants, volume, endedAt } = competition;
   const live = status === "live";
   const tint = live ? LIVE_ICON : INK_MUTED;
   // Assets are per venue, not per competition: a venue runs many seasons.
   const venueKey = competition.venueId ?? id;
   const mark = VENUE_MARK[venueKey];
+  /*
+   * A backdrop card keeps the size of every other card, like the desktop one
+   * (Figma 4630:2): its scene leaves room for the copy, so there is no extra
+   * floor. The two-line title's second line comes out of the four gaps above
+   * the footer, 16 → 11 each; the step into the footer stays 16.
+   */
+  const gap = backdrop ? "gap-[11px]" : "gap-4";
 
   return (
     <article
       className="w-full rounded-[14px] p-px"
       style={{ background: live ? EDGE_SWEEP : EDGE_ENDED }}
     >
-      <div className="flex flex-col gap-4 overflow-hidden rounded-[13px] bg-app-bg px-4 pb-4">
-        <div className="relative flex flex-col gap-4 overflow-hidden pt-4">
+      <div
+        className={`relative flex flex-col overflow-hidden rounded-[13px] bg-app-bg px-4 pb-4 ${gap}`}
+      >
+        {/* A seasonal scene behind the card; the coin still sits on it. */}
+        {backdrop ? <CardBackdrop src={backdrop.src} split={backdrop.split} /> : null}
+        <div className={`relative flex flex-col overflow-hidden pt-4 ${gap}`}>
+          {/* Pinned to the hero's foot (the first rule), not its top, so the
+              rule cuts the same 15.4px off every coin and each one reads as
+              passing behind the stats. Pinned to the top, a two-line title
+              pushed the rule down and left the Decibel coin whole. */}
           <img
             alt=""
             src={ART[venueKey] ?? competition.art?.src}
-            className="pointer-events-none absolute -right-[3px] top-1 size-[104px] select-none object-contain"
+            className="pointer-events-none absolute -bottom-[15.4px] -right-[3px] size-[104px] select-none object-contain"
           />
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
@@ -122,7 +138,7 @@ export default function MobileCompetitionCard({ competition, entered = false, on
           <div className="relative h-px w-full bg-[#262626]" />
         </div>
 
-        <div className="flex w-full items-start">
+        <div className="relative flex w-full items-start">
           <Stat icon={appIcons.coins20} tint={tint} value={formatUsdCompact(prizePool.total)} label="Pool" />
           <Stat
             icon={appIcons.users20}
@@ -134,9 +150,9 @@ export default function MobileCompetitionCard({ competition, entered = false, on
           <Stat icon={appIcons.activity20} tint={tint} value={formatUsdCompact(volume)} label="Volume" divided />
         </div>
 
-        <div className="h-px w-full bg-[#262626]" />
+        <div className="relative h-px w-full bg-[#262626]" />
 
-        <footer className="flex items-center justify-between gap-3">
+        <footer className={`relative flex items-center justify-between gap-3${backdrop ? " mt-[5px]" : ""}`}>
           <p className="flex min-w-0 items-center gap-[11px]">
             <span className="flex shrink-0" style={{ color: tint }}>
               <AppIcon src={live ? appIcons.timer20 : appIcons.calendar20} size={20} />

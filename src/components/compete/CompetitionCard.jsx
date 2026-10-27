@@ -8,6 +8,7 @@ import {
   Timer,
   Users,
 } from "lucide-react";
+import CardBackdrop from "./CardBackdrop.jsx";
 import VenueLockup from "./VenueLockup.jsx";
 import {
   formatEndedOn,
@@ -179,6 +180,7 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
     title,
     status,
     art,
+    backdrop,
     prizePool,
     participants,
     volume,
@@ -193,6 +195,18 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
   const ctaBase =
     "text-figure flex h-[2.3em] w-[6.2em] shrink-0 items-center justify-center gap-[0.5em] rounded-lg sm:w-[7.4em] transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black";
 
+  /*
+   * A backdrop card keeps the standard card's size (Figma 4630:2, 514x264 at
+   * 1680): its scene is drawn with room for the copy, so the card needs no
+   * floor of its own. Its title runs to two lines, though, so the extra line
+   * comes out of the gaps above the stats — 10 under the lockup, 14 around
+   * the first rule and the stats, 15.5 into the footer — and the card comes
+   * out the same height as every other one.
+   */
+  const rhythm = backdrop
+    ? { zone: "-bottom-3.5", title: "mt-2.5", rule: "mt-3.5", stats: "pt-3.5", footer: "mt-[15.5px]" }
+    : { zone: "-bottom-4 xl:-bottom-5", title: "mt-4", rule: "mt-4 xl:mt-5", stats: "pt-4 xl:pt-5", footer: "mt-4" };
+
   return (
     // A 1px gradient edge cannot be a border, so the card is a padded sweep
     // with a black face sitting inside it.
@@ -201,9 +215,10 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
       style={{ background: live ? EDGE_SWEEP : EDGE_ENDED }}
     >
       <div className="relative flex h-full flex-col overflow-hidden rounded-[13px] bg-black p-4 xl:p-5">
+        {backdrop ? <CardBackdrop src={backdrop.src} split={backdrop.split} /> : null}
         <div className="relative">
           <div
-            className="pointer-events-none absolute -inset-x-4 -bottom-4 -top-4 select-none overflow-hidden xl:-inset-x-5 xl:-bottom-5 xl:-top-5"
+            className={`pointer-events-none absolute -inset-x-4 -top-4 select-none overflow-hidden xl:-inset-x-5 xl:-top-5 ${rhythm.zone}`}
             style={ART_MASK}
             aria-hidden
           >
@@ -241,7 +256,7 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
               row under this already does that in three numbers, and a fourth
               line naming one wallet was the card telling you about somebody
               else. */}
-          <div className="relative mt-4 w-[72%]">
+          <div className={`relative w-[72%] ${rhythm.title}`}>
             <h3 className="text-headline text-ink">{title}</h3>
           </div>
         </div>
@@ -255,9 +270,9 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
             The step into the footer stays at 16: that rule and the row under
             it are one unit, and the CTA is tall enough that a wider gap above
             it opens a hole in the bottom of the card. */}
-        <div className="relative mt-4 h-px w-full shrink-0 bg-[#262626] xl:mt-5" />
+        <div className={`relative h-px w-full shrink-0 bg-[#262626] ${rhythm.rule}`} />
 
-        <div className="relative mt-auto grid grid-cols-3 divide-x divide-[#262626] pt-4 xl:pt-5">
+        <div className={`relative mt-auto grid grid-cols-3 divide-x divide-[#262626] ${rhythm.stats}`}>
           <StatCell
             icon={Coins}
             tint={tint}
@@ -281,9 +296,9 @@ export default function CompetitionCard({ competition, entered = false, onOpen }
           />
         </div>
 
-        <div className="relative mt-4 h-px w-full shrink-0 bg-[#262626] xl:mt-5" />
+        <div className={`relative h-px w-full shrink-0 bg-[#262626] ${rhythm.rule}`} />
 
-        <footer className="relative mt-4 flex items-center justify-between gap-3">
+        <footer className={`relative flex items-center justify-between gap-3 ${rhythm.footer}`}>
           <p className="text-copy flex min-w-0 items-center gap-[0.9em] text-ink-muted">
             {live ? (
               <Timer
