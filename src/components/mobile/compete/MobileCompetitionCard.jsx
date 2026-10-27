@@ -113,13 +113,14 @@ export default function MobileCompetitionCard({ competition, entered = false, on
         {backdrop ? <CardBackdrop src={backdrop.src} split={backdrop.split} /> : null}
         <div className={`relative flex flex-col overflow-hidden pt-4 ${gap}`}>
           {/* Pinned to the hero's foot (the first rule), not its top, so the
-              rule cuts the same 15.4px off every coin and each one reads as
-              passing behind the stats. Pinned to the top, a two-line title
-              pushed the rule down and left the Decibel coin whole. */}
+              rule cuts the same amount off every coin however the title wraps.
+              32px of overhang: the renders carry ~8px of empty pad under the
+              disc, so this hides about a quarter of the disc itself — enough
+              that it reads as passing behind the stats, not resting on them. */}
           <img
             alt=""
             src={ART[venueKey] ?? competition.art?.src}
-            className="pointer-events-none absolute -bottom-[15.4px] -right-[3px] size-[104px] select-none object-contain"
+            className="pointer-events-none absolute -bottom-8 -right-[3px] size-[104px] select-none object-contain"
           />
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
