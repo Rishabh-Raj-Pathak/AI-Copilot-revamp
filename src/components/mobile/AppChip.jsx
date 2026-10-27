@@ -14,8 +14,11 @@ import { appIcons } from "./mobileAssets.js";
  * chip): white SemiBold label, a chevron that turns to point right — at the
  * list that opens beside it — while open, filled while open. `disabled` drops
  * the chevron — there is nothing to open.
+ *
+ * `leading` takes a node instead of an icon file — the Compete "Live" chip
+ * puts the blinking live dot there.
  */
-export default function AppChip({ active, label, icon, onClick, ariaLabel, expanded, disabled = false }) {
+export default function AppChip({ active, label, icon, leading = null, onClick, ariaLabel, expanded, disabled = false }) {
   const disclosure = expanded !== undefined;
   return (
     <button
@@ -35,7 +38,7 @@ export default function AppChip({ active, label, icon, onClick, ariaLabel, expan
             : "border-white/[0.07] font-medium text-ink-subtle active:bg-white/[0.04]"
       }`}
     >
-      {icon ? <AppIcon src={icon} size={13} /> : null}
+      {icon ? <AppIcon src={icon} size={13} /> : leading}
       <span className="whitespace-nowrap">{label}</span>
       {disclosure && !disabled ? (
         <AppIcon
