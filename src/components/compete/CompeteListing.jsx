@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search, X } from "lucide-react";
 import CompetitionCard from "./CompetitionCard.jsx";
+import { matchesQuery } from "./competeMockData.js";
 import { LIVE_GREEN } from "./competeTheme.js";
 
 /**
@@ -22,6 +23,38 @@ const TABS = [
   { id: "live", label: "Live" },
   { id: "ended", label: "Ended" },
 ];
+
+/**
+ * The production page's search (app.hyprearn.com/compete), right of the tabs:
+ * the same 36.8px-inside-a-4px-track height as the tab switch so the two sit
+ * on one line, the same #242424 edge. A clear button appears once there is
+ * something to clear.
+ */
+function SearchField({ value, onChange }) {
+  return (
+    <label className="flex h-[46.8px] w-full items-center gap-2.5 rounded-[10px] border border-[#242424] px-3.5 text-ink-subtle transition-colors focus-within:border-[#3e3e3e] sm:w-[300px]">
+      <Search className="size-4 shrink-0" aria-hidden />
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search competitions"
+        aria-label="Search competitions"
+        className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle [&::-webkit-search-cancel-button]:hidden"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label="Clear search"
+          className="flex size-5 shrink-0 items-center justify-center rounded-full text-ink-subtle hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        >
+          <X className="size-3.5" aria-hidden />
+        </button>
+      ) : null}
+    </label>
+  );
+}
 
 /** Same pulse as the card's status pill — `ds-live-dot` in design-tokens.css. */
 export function LiveDot({ className = "size-2" }) {
@@ -112,10 +145,22 @@ function TextLink({ children, onClick }) {
  */
 export default function CompeteListing({ competitions, enteredIds, onOpen }) {
   const [tab, setTab] = useState("all");
+  const [query, setQuery] = useState("");
 
-  const live = competitions.filter((item) => item.status === "live");
-  const ended = competitions.filter((item) => item.status !== "live");
+  // Search narrows first; the tabs, groups and counts all read the result.
+  const found = competitions.filter((item) => matchesQuery(item, query));
+  const live = found.filter((item) => item.status === "live");
+  const ended = found.filter((item) => item.status !== "live");
   const showEnded = () => setTab("ended");
+  const searching = query.trim() !== "";
+
+  const noMatches = (
+    <EmptyState
+      title={`No competitions match "${query.trim()}"`}
+      message="Try a venue name, like Decibel or Lighter."
+      action={<TextLink onClick={() => setQuery("")}>Clear search</TextLink>}
+    />
+  );
 
   const liveEmpty = (
     <EmptyState
@@ -138,41 +183,52 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
           `TradeOrderPanel` is the dense in-panel variant.) Selection takes the
           header nav's #3e2e00 fill with #f2b500 text. No counts: the group
           headings below carry them. */}
-      <div
-        role="tablist"
-        aria-label="Filter competitions"
-        className="flex w-fit items-center rounded-[10px] border border-[#242424] p-1"
-      >
-        {TABS.map(({ id, label }) => {
-          const active = tab === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              id={`compete-tab-${id}`}
-              aria-selected={active}
-              aria-controls="compete-panel"
-              onClick={() => setTab(id)}
-              className={`flex h-[36.8px] items-center gap-1.5 rounded-lg px-5 text-sm font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
-                active
-                  ? "bg-[#3e2e00] text-[#f2b500]"
-                  : "text-ink-muted hover:text-ink"
-              }`}
-            >
-              {id === "live" && live.length > 0 ? <LiveDot className="size-1.5" /> : null}
-              {/* Onest's ascent is taller than its descent, and Windows rounds
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div
+          role="tablist"
+          aria-label="Filter competitions"
+          className="flex w-fit items-center rounded-[10px] border border-[#242424] p-1"
+        >
+          {TABS.map(({ id, label }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`compete-tab-${id}`}
+                aria-selected={active}
+                aria-controls="compete-panel"
+                onClick={() => setTab(id)}
+                className={`flex h-[36.8px] items-center gap-1.5 rounded-lg px-5 text-sm font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b500]/40 ${
+                  active
+                    ? "bg-[#3e2e00] text-[#f2b500]"
+                    : "text-ink-muted hover:text-ink"
+                }`}
+              >
+                {id === "live" && live.length > 0 ? (
+                  <LiveDot className="size-1.5" />
+                ) : null}
+                {/* Onest's ascent is taller than its descent, and Windows rounds
                   the two unevenly at small sizes, so a padded line box sat the
                   letters ~1.5px above centre. Trimming the box to cap height
                   lets the fixed-height flex row centre the glyphs themselves,
                   level with the live dot. */}
-              <span className="[text-box:trim-both_cap_alphabetic]">{label}</span>
-            </button>
-          );
-        })}
+                <span className="[text-box:trim-both_cap_alphabetic]">
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <SearchField value={query} onChange={setQuery} />
       </div>
 
-      <div id="compete-panel" role="tabpanel" aria-labelledby={`compete-tab-${tab}`}>
+      <div
+        id="compete-panel"
+        role="tabpanel"
+        aria-labelledby={`compete-tab-${tab}`}
+      >
         {tab === "all" ? (
           <div className="flex flex-col gap-16">
             {/* Live always leads: it is the only group you can act on. An empty
@@ -186,21 +242,39 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
                 count={live.length}
                 live
               >
-                <CardGrid competitions={live} enteredIds={enteredIds} onOpen={onOpen} />
+                <CardGrid
+                  competitions={live}
+                  enteredIds={enteredIds}
+                  onOpen={onOpen}
+                />
               </Group>
             ) : null}
             {ended.length ? (
               <Group id="compete-ended" title="Ended" count={ended.length}>
-                <CardGrid competitions={ended} enteredIds={enteredIds} onOpen={onOpen} />
+                <CardGrid
+                  competitions={ended}
+                  enteredIds={enteredIds}
+                  onOpen={onOpen}
+                />
               </Group>
             ) : null}
-            {!live.length && !ended.length ? liveEmpty : null}
+            {!live.length && !ended.length
+              ? searching
+                ? noMatches
+                : liveEmpty
+              : null}
           </div>
         ) : null}
 
         {tab === "live" ? (
           live.length ? (
-            <CardGrid competitions={live} enteredIds={enteredIds} onOpen={onOpen} />
+            <CardGrid
+              competitions={live}
+              enteredIds={enteredIds}
+              onOpen={onOpen}
+            />
+          ) : searching ? (
+            noMatches
           ) : (
             liveEmpty
           )
@@ -208,7 +282,13 @@ export default function CompeteListing({ competitions, enteredIds, onOpen }) {
 
         {tab === "ended" ? (
           ended.length ? (
-            <CardGrid competitions={ended} enteredIds={enteredIds} onOpen={onOpen} />
+            <CardGrid
+              competitions={ended}
+              enteredIds={enteredIds}
+              onOpen={onOpen}
+            />
+          ) : searching ? (
+            noMatches
           ) : (
             <EmptyState
               title="No ended competitions yet"

@@ -81,7 +81,7 @@ const DECIBEL_REMAINING = 13 * DAY + 3 * 60 * 60 * 1000 + 6 * 60 * 1000 + 45 * 1
 export const COMPETITIONS = [
   /**
    * The one live card on production (app.hyprearn.com/compete): Decibel's
-   * Halloween Edition, cloned as it stood — $500 pool, 40 traders, $4K of
+   * Halloween Edition, cloned as it stood — $500 pool, 40 traders, $4.4K of
    * volume. Lighter, which used to hold this slot, has settled below.
    */
   {
@@ -100,7 +100,7 @@ export const COMPETITIONS = [
     backdrop: { src: "/compete/decibel-halloween-bg.webp", split: 73.1 },
     prizePool: { funded: 500, total: 500 },
     participants: 40,
-    volume: 4000,
+    volume: 4400,
     startedAt: NOW - 4 * DAY,
     endsAt: NOW + DECIBEL_REMAINING,
     windowLabel: "14 days · top 10 split the pool",
@@ -215,4 +215,14 @@ export function formatEndedOn(timestamp) {
     month: "short",
     year: "numeric",
   });
+}
+
+/**
+ * Title or venue, case-blind — the two things a trader would type. Shared with
+ * the phone page so both filter the same way.
+ */
+export function matchesQuery(competition, query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return `${competition.title} ${competition.venue}`.toLowerCase().includes(q);
 }
