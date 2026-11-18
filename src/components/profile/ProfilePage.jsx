@@ -6,6 +6,7 @@ import MobileProfilePage from "../mobile/profile/MobileProfilePage.jsx";
 import useIsMobile from "../mobile/useIsMobile.js";
 import { Toast, ToastViewport } from "../ui/toast.jsx";
 import ConnectionsCard from "./ConnectionsCard.jsx";
+import DexTradingCard from "./DexTradingCard.jsx";
 import ProfileChecklistCard from "./ProfileChecklistCard.jsx";
 import ProfileCompleteModal from "./ProfileCompleteModal.jsx";
 import ProfileIdentityCard from "./ProfileIdentityCard.jsx";
@@ -126,6 +127,10 @@ export default function ProfilePage({
           ) : (
             <ProfileSimpleCard onNotify={notify} />
           )}
+
+          {/* Trading access isn't part of either profile view's story — it's
+              account settings, so both views end with it. */}
+          <DexTradingCard onNotify={notify} />
         </div>
       </main>
 

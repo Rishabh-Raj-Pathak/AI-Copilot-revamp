@@ -9,6 +9,7 @@ import { copyText } from "../../../lib/clipboard.js";
 import { WALLET_CHAIN, addressExplorerUrl, truncateAddress } from "../../../lib/wallet.js";
 import { useProfile } from "../../profile/ProfileContext.jsx";
 import ConnectXSheet from "./ConnectXSheet.jsx";
+import MobileDexTrading from "./MobileDexTrading.jsx";
 import { ActionRow, Card, DividedRows, Pill, Section } from "./profileUi.jsx";
 
 /**
@@ -42,6 +43,7 @@ export default function MobileProfilePage() {
               )
             }
             onConnectX={() => setSheet("x")}
+            onNotify={notify}
             onDisconnect={app.disconnectWallet}
             onDelete={() => app.navigate("delete-account")}
           />
@@ -63,7 +65,15 @@ export default function MobileProfilePage() {
   );
 }
 
-function ConnectedProfile({ address, x, onCopied, onConnectX, onDisconnect, onDelete }) {
+function ConnectedProfile({
+  address,
+  x,
+  onCopied,
+  onConnectX,
+  onNotify,
+  onDisconnect,
+  onDelete,
+}) {
   const xProfileUrl = x ? `https://x.com/${x.handle.replace(/^@/, "")}` : null;
 
   return (
@@ -133,6 +143,8 @@ function ConnectedProfile({ address, x, onCopied, onConnectX, onDisconnect, onDe
           </div>
         </Card>
       </Section>
+
+      <MobileDexTrading onNotify={onNotify} />
 
       <Section label="ACCOUNT">
         <Card>

@@ -67,6 +67,33 @@ export function ProfileProvider({
     patch({ pnlSharedAt: new Date().toISOString() });
   }, [patch, address]);
 
+  /**
+   * Trading approval per DEX (the agent wallet HyprEarn places orders with).
+   * Unlike a social link this can be taken back, so there's a revoke.
+   *
+   * Both read the store rather than the render's `record`, for the same reason
+   * `connectSocial` does: two rows settling in one tick must not drop each other.
+   */
+  const enableDexTrading = useCallback(
+    (venueId) =>
+      patch({
+        dexTrading: {
+          ...readProfile(address).dexTrading,
+          [venueId]: new Date().toISOString(),
+        },
+      }),
+    [patch, address],
+  );
+
+  const revokeDexTrading = useCallback(
+    (venueId) => {
+      const next = { ...readProfile(address).dexTrading };
+      delete next[venueId];
+      patch({ dexTrading: next });
+    },
+    [patch, address],
+  );
+
   const dismissBanner = useCallback(
     () => patch({ bannerDismissedAt: new Date().toISOString() }),
     [patch],
@@ -127,6 +154,9 @@ export function ProfileProvider({
       dismissBanner,
       markCelebrated,
       eraseProfile,
+      dexTrading: record.dexTrading,
+      enableDexTrading,
+      revokeDexTrading,
     }),
     [
       address,
@@ -142,6 +172,9 @@ export function ProfileProvider({
       dismissBanner,
       markCelebrated,
       eraseProfile,
+      record.dexTrading,
+      enableDexTrading,
+      revokeDexTrading,
     ],
   );
 
