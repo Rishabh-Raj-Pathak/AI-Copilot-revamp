@@ -36,7 +36,7 @@ const normalize = (address) => String(address ?? "").toLowerCase();
  * @property {string|null} pnlSharedAt  When the first PnL card was posted — the second half of the X step.
  * @property {string|null} bannerDismissedAt
  * @property {boolean} completionCelebrated
- * @property {Record<string, string>} dexTrading  Venue id → when trading was enabled there. A venue is absent until enabled, and removed again on revoke.
+ * @property {Record<string, {keyApprovedAt: string, connected: boolean}>} dexTrading  Venue id → its HyprEarn API key. Absent until the first connect and again after a revoke; `connected: false` after a disconnect, while the key is still approved.
  */
 
 /** @param {string} address @returns {ProfileRecord} */
@@ -54,11 +54,15 @@ export function emptyProfile(address) {
     bannerDismissedAt: null,
     completionCelebrated: false,
     /**
-     * Hyperliquid is the default venue, so a fresh profile starts with trading
-     * already enabled there. That also keeps both row states (enabled and not)
-     * on screen in the demo without a click.
+     * Hyperliquid is the default venue, so a fresh profile starts connected
+     * there. Pacifica is connected too, so the demo shows both disconnect
+     * paths without a click: Hyperliquid has open positions (blocked),
+     * Pacifica has none (goes through).
      */
-    dexTrading: { hyperliquid: new Date().toISOString() },
+    dexTrading: {
+      hyperliquid: { keyApprovedAt: new Date().toISOString(), connected: true },
+      pacifica: { keyApprovedAt: new Date().toISOString(), connected: true },
+    },
   };
 }
 

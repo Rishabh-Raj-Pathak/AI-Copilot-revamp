@@ -68,24 +68,41 @@ export function ProfileProvider({
   }, [patch, address]);
 
   /**
-   * Trading approval per DEX (the agent wallet HyprEarn places orders with).
-   * Unlike a social link this can be taken back, so there's a revoke.
+   * Trading access per DEX. Each entry is `{ keyApprovedAt, connected }`:
+   * Connect approves HyprEarn's API key there (or reuses one that's still
+   * approved), Disconnect stops using it but leaves it approved, and Revoke
+   * removes the key, so the venue drops out of the map.
    *
-   * Both read the store rather than the render's `record`, for the same reason
-   * `connectSocial` does: two rows settling in one tick must not drop each other.
+   * All three read the store rather than the render's `record`, for the same
+   * reason `connectSocial` does: two rows settling in one tick must not drop
+   * each other.
    */
-  const enableDexTrading = useCallback(
-    (venueId) =>
+  const connectDex = useCallback(
+    (venueId) => {
+      const all = readProfile(address).dexTrading;
       patch({
         dexTrading: {
-          ...readProfile(address).dexTrading,
-          [venueId]: new Date().toISOString(),
+          ...all,
+          [venueId]: {
+            keyApprovedAt: all[venueId]?.keyApprovedAt ?? new Date().toISOString(),
+            connected: true,
+          },
         },
-      }),
+      });
+    },
     [patch, address],
   );
 
-  const revokeDexTrading = useCallback(
+  const disconnectDex = useCallback(
+    (venueId) => {
+      const all = readProfile(address).dexTrading;
+      if (!all[venueId]) return;
+      patch({ dexTrading: { ...all, [venueId]: { ...all[venueId], connected: false } } });
+    },
+    [patch, address],
+  );
+
+  const revokeDexKey = useCallback(
     (venueId) => {
       const next = { ...readProfile(address).dexTrading };
       delete next[venueId];
@@ -155,8 +172,9 @@ export function ProfileProvider({
       markCelebrated,
       eraseProfile,
       dexTrading: record.dexTrading,
-      enableDexTrading,
-      revokeDexTrading,
+      connectDex,
+      disconnectDex,
+      revokeDexKey,
     }),
     [
       address,
@@ -173,8 +191,9 @@ export function ProfileProvider({
       markCelebrated,
       eraseProfile,
       record.dexTrading,
-      enableDexTrading,
-      revokeDexTrading,
+      connectDex,
+      disconnectDex,
+      revokeDexKey,
     ],
   );
 
